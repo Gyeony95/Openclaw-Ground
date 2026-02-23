@@ -142,6 +142,7 @@ export default function App() {
   const reviewLockRef = useRef(false);
   const addLockRef = useRef(false);
   const addUnlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousHadDueCardRef = useRef(false);
 
   const dueCard = dueCards[0];
   const retentionScore = useMemo(() => {
@@ -299,6 +300,18 @@ export default function App() {
       wordInputRef.current?.focus();
     });
   }
+
+  useEffect(() => {
+    const hasDueCardInQueue = Boolean(dueCard);
+    if (loading) {
+      previousHadDueCardRef.current = hasDueCardInQueue;
+      return;
+    }
+    if (previousHadDueCardRef.current && !hasDueCardInQueue) {
+      focusAddForm();
+    }
+    previousHadDueCardRef.current = hasDueCardInQueue;
+  }, [dueCard, loading]);
 
   function handleAddCard() {
     if (loading || addLockRef.current) {
@@ -667,7 +680,9 @@ export default function App() {
                     <Text style={styles.primaryBtnText}>{isAddBusy ? 'Adding...' : 'Add card'}</Text>
                   </View>
                 </Pressable>
-                <Text style={[styles.addHint, { color: addHintTone }]}>{addFormHint}</Text>
+                <Text style={[styles.addHint, { color: addHintTone }]} accessibilityLiveRegion="polite">
+                  {addFormHint}
+                </Text>
               </View>
             </Animated.View>
           </View>

@@ -217,15 +217,19 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
   const canonicalRuntimeIso = Number.isFinite(runtimeMs) ? new Date(runtimeMs).toISOString() : undefined;
   const runtimeTooFarAheadOfWall = Number.isFinite(runtimeMs) && runtimeMs - wallClockMs > MAX_CLOCK_SKEW_MS;
   const renderedTooFarAheadOfWall = Number.isFinite(renderedMs) && renderedMs - wallClockMs > MAX_CLOCK_SKEW_MS;
+  const renderedTooFarBehindWall = Number.isFinite(renderedMs) && wallClockMs - renderedMs > MAX_CLOCK_SKEW_MS;
 
   if (Number.isFinite(renderedMs) && Number.isFinite(runtimeMs)) {
     if (runtimeTooFarAheadOfWall) {
-      if (renderedTooFarAheadOfWall) {
+      if (renderedTooFarAheadOfWall || renderedTooFarBehindWall) {
         return wallClockIso;
       }
       return canonicalRenderedIso ?? wallClockIso;
     }
     if (renderedMs - runtimeMs > MAX_CLOCK_SKEW_MS) {
+      if (renderedTooFarBehindWall) {
+        return wallClockIso;
+      }
       if (!renderedTooFarAheadOfWall) {
         return canonicalRenderedIso ?? wallClockIso;
       }
@@ -240,7 +244,7 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
     return canonicalRuntimeIso ?? wallClockIso;
   }
   if (Number.isFinite(renderedMs)) {
-    if (renderedTooFarAheadOfWall) {
+    if (renderedTooFarAheadOfWall || renderedTooFarBehindWall) {
       return wallClockIso;
     }
     return canonicalRenderedIso ?? wallClockIso;
