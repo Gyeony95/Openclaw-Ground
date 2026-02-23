@@ -1399,6 +1399,35 @@ describe('fsrs scheduler', () => {
     expect(missingReview.scheduledDays).toBe(validReview.scheduledDays);
   });
 
+  it('caps missing mature review dueAt fallback to a conservative week-long schedule anchor', () => {
+    const updatedAt = NOW;
+    const valid = {
+      ...createNewCard('missing-due-mature-valid', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt,
+      createdAt: NOW,
+      dueAt: addDaysIso(updatedAt, 7),
+      reps: 30,
+      lapses: 3,
+      stability: 120,
+      difficulty: 5,
+    };
+    const missingDue = {
+      ...valid,
+      id: 'missing-due-mature',
+      dueAt: undefined as unknown as string,
+    };
+    const reviewAt = addDaysIso(updatedAt, 7);
+
+    const validReview = reviewCard(valid, 3, reviewAt);
+    const missingReview = reviewCard(missingDue, 3, reviewAt);
+
+    expect(missingReview.card.state).toBe('review');
+    expect(missingReview.card.updatedAt).toBe(validReview.card.updatedAt);
+    expect(missingReview.card.stability).toBeCloseTo(validReview.card.stability, 6);
+    expect(missingReview.scheduledDays).toBe(validReview.scheduledDays);
+  });
+
   it('keeps invalid review dueAt conservative when inferred stability schedule is pathological', () => {
     const corrupted = {
       ...createNewCard('invalid-due-conservative', 'letter', NOW),

@@ -649,6 +649,7 @@ export default function App() {
                   maxLength={WORD_MAX_LENGTH}
                   selectionColor={colors.primary}
                   autoFocus={shouldAutoFocusAddInput}
+                  blurOnSubmit={false}
                   editable={isFormEditable}
                   accessibilityLabel="Word input"
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
@@ -666,6 +667,7 @@ export default function App() {
                   returnKeyType="next"
                   maxLength={MEANING_MAX_LENGTH}
                   selectionColor={colors.primary}
+                  blurOnSubmit={false}
                   editable={isFormEditable}
                   accessibilityLabel="Meaning input"
                   onSubmitEditing={() => {
@@ -687,6 +689,7 @@ export default function App() {
                   style={[styles.input, styles.notesInput]}
                   placeholderTextColor={colors.subInk}
                   multiline
+                  textAlignVertical="top"
                   maxLength={NOTES_MAX_LENGTH}
                   selectionColor={colors.primary}
                   editable={isFormEditable}

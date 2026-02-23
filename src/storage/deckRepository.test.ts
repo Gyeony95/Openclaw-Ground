@@ -237,6 +237,32 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
   });
 
+  it('uses capped stability fallback when a mature review card is missing dueAt', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'missing-due-mature-review',
+            word: 'gamma',
+            meaning: 'third',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            stability: 120,
+            difficulty: 5,
+            reps: 30,
+            lapses: 3,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-03-01T00:00:00.000Z');
+  });
+
   it('drops cards when all timestamps are invalid', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

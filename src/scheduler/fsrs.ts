@@ -160,11 +160,17 @@ function normalizeTimeline(
       : scheduleFallbackForState(normalizedState);
   const fallbackDueAt = addDaysIso(updatedAt, reviewFallbackDueDays);
   const timelineRepairDueAt = addDaysIso(updatedAt, scheduleFallbackForState(normalizedState));
-  const rawDueAt = isValidIso(card.dueAt) ? card.dueAt : undefined;
+  const rawDueAtIsValid = isValidIso(card.dueAt);
+  const rawDueAt = rawDueAtIsValid ? card.dueAt : undefined;
   const rawDueMs = rawDueAt ? Date.parse(rawDueAt) : Number.NaN;
   const updatedAtMs = Date.parse(updatedAt);
   const dueDaysFromUpdated = Number.isFinite(rawDueMs) ? (rawDueMs - updatedAtMs) / DAY_MS : Number.NaN;
   const expectedReviewScheduleDays = normalizeScheduledDays(card.stability, 'review');
+  const repairedReviewScheduleDays = clamp(
+    expectedReviewScheduleDays,
+    REVIEW_SCHEDULE_FLOOR_DAYS,
+    REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
+  );
   const dueBeyondStateWindow =
     normalizedState !== 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
@@ -176,7 +182,8 @@ function normalizeTimeline(
       Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, expectedReviewScheduleDays * 6, 30);
   const useReviewStabilityFallbackForInvalidDue = shouldUseReviewStabilityFallbackForInvalidDue(
     normalizedState,
-    rawDueAt,
+    card.dueAt,
+    rawDueAtIsValid,
     expectedReviewScheduleDays,
   );
   const dueNeedsRepair =
@@ -187,7 +194,7 @@ function normalizeTimeline(
     dueBeyondReviewStabilityWindow;
   const dueTimelineAnchor = dueNeedsRepair
     ? useReviewStabilityFallbackForInvalidDue
-      ? fallbackDueAt
+      ? addDaysIso(updatedAt, repairedReviewScheduleDays)
       : timelineRepairDueAt
     : rawDueAt ?? fallbackDueAt;
   const dueAnchorMs = Date.parse(dueTimelineAnchor ?? fallbackDueAt);
@@ -268,12 +275,20 @@ function maxScheduleDaysForState(state: ReviewState): number {
   return STABILITY_MAX;
 }
 
-function shouldUseReviewStabilityFallbackForInvalidDue(state: ReviewState, dueAt?: string, stabilityDays?: number): boolean {
-  if (state !== 'review' || dueAt) {
+function shouldUseReviewStabilityFallbackForInvalidDue(
+  state: ReviewState,
+  dueAt: unknown,
+  dueAtIsValid: boolean,
+  stabilityDays?: number,
+): boolean {
+  if (state !== 'review' || dueAtIsValid) {
     return false;
   }
   if (!Number.isFinite(stabilityDays)) {
     return false;
+  }
+  if (typeof dueAt !== 'string') {
+    return true;
   }
   return stabilityDays <= REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS;
 }
