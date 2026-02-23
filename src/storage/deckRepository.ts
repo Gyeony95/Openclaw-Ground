@@ -172,7 +172,7 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   if (scheduleDays <= 0) {
     const shouldUseReviewStabilityFallback =
       raw.state === 'review' &&
-      !dueIsValid;
+      Number.isFinite(normalizedStability);
     const fallbackDays = shouldUseReviewStabilityFallback
       ? clamp(
           normalizedStability,

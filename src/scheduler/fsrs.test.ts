@@ -697,6 +697,27 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.state).toBe('review');
   });
 
+  it('repairs collapsed review due dates using stability rather than half-day fallback', () => {
+    const mature = {
+      ...createNewCard('rho-collapsed-due', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+      stability: 3,
+      difficulty: 5,
+      reps: 18,
+      lapses: 2,
+    };
+
+    const hard = reviewCard(mature, 2, mature.updatedAt);
+    const good = reviewCard(mature, 3, mature.updatedAt);
+
+    expect(hard.card.state).toBe('review');
+    expect(good.card.state).toBe('review');
+    expect(hard.scheduledDays).toBeGreaterThanOrEqual(1);
+    expect(good.scheduledDays).toBeGreaterThanOrEqual(2);
+  });
+
   it('does not pin review time to slightly-future createdAt when updatedAt is current', () => {
     const card = {
       ...createNewCard('created-at-skew', 'letter', NOW),

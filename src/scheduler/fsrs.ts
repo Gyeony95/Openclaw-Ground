@@ -193,9 +193,10 @@ function normalizeTimeline(
     Number.isFinite(dueDaysFromUpdated) &&
     dueDaysFromUpdated >
       Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, expectedReviewScheduleDays * 6, 30);
-  const useReviewStabilityFallbackForInvalidDue = shouldUseReviewStabilityFallbackForInvalidDue(
+  const useReviewStabilityFallbackForDueRepair = shouldUseReviewStabilityFallbackForDueRepair(
     normalizedState,
     rawDueAtIsValid,
+    dueNotAfterUpdatedAt,
     expectedReviewScheduleDays,
   );
   const useReviewStabilityFallbackForOutlierDue =
@@ -209,7 +210,7 @@ function normalizeTimeline(
     dueBeyondReviewMaxWindow ||
     dueBeyondReviewStabilityWindow;
   const dueTimelineAnchor = dueNeedsRepair
-    ? useReviewStabilityFallbackForInvalidDue
+    ? useReviewStabilityFallbackForDueRepair
       ? addDaysIso(updatedAt, repairedReviewScheduleDaysForInvalidDue)
       : useReviewStabilityFallbackForOutlierDue
         ? addDaysIso(updatedAt, repairedReviewScheduleDaysForOutlierDue)
@@ -293,12 +294,16 @@ function maxScheduleDaysForState(state: ReviewState): number {
   return STABILITY_MAX;
 }
 
-function shouldUseReviewStabilityFallbackForInvalidDue(
+function shouldUseReviewStabilityFallbackForDueRepair(
   state: ReviewState,
   dueAtIsValid: boolean,
+  dueNotAfterUpdatedAt: boolean,
   stabilityDays?: number,
 ): boolean {
-  if (state !== 'review' || dueAtIsValid) {
+  if (state !== 'review') {
+    return false;
+  }
+  if (dueAtIsValid && !dueNotAfterUpdatedAt) {
     return false;
   }
   return Number.isFinite(stabilityDays);
