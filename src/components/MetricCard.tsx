@@ -11,7 +11,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const displayValue = Number.isFinite(value) ? value.toLocaleString() : '--';
 
   return (
-    <View style={styles.card}>
+    <View style={styles.card} accessible accessibilityLabel={`${label}: ${displayValue}`}>
       <View style={[styles.topBorder, { backgroundColor: accent }]} />
       <View style={styles.head}>
         <View style={[styles.dot, { backgroundColor: accent }]} />

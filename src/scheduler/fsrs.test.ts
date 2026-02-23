@@ -884,6 +884,35 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
+  it('recovers invalid review dueAt using stability-derived schedule fallback', () => {
+    const updatedAt = NOW;
+    const valid = {
+      ...createNewCard('invalid-due-recovery-valid', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt,
+      createdAt: NOW,
+      dueAt: addDaysIso(updatedAt, 6),
+      reps: 12,
+      lapses: 2,
+      stability: 6,
+      difficulty: 5,
+    };
+    const invalid = {
+      ...valid,
+      id: 'invalid-due-recovery',
+      dueAt: 'bad-time',
+    };
+    const reviewAt = addDaysIso(updatedAt, 6);
+
+    const validReview = reviewCard(valid, 3, reviewAt);
+    const invalidReview = reviewCard(invalid, 3, reviewAt);
+
+    expect(invalidReview.card.state).toBe('review');
+    expect(invalidReview.card.updatedAt).toBe(validReview.card.updatedAt);
+    expect(invalidReview.card.stability).toBeCloseTo(validReview.card.stability, 6);
+    expect(invalidReview.scheduledDays).toBe(validReview.scheduledDays);
+  });
+
   it('keeps overdue relearning graduation growth bounded', () => {
     const card = createNewCard('omega', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;

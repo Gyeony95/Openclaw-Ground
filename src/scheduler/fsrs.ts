@@ -147,7 +147,13 @@ function normalizeTimeline(
   const createdMs = Date.parse(createdAt);
   const updatedMs = Date.parse(rawUpdatedAt);
   const updatedAt = new Date(Math.max(createdMs, updatedMs)).toISOString();
-  const rawDueAt = isValidIso(card.dueAt) ? card.dueAt : updatedAt;
+  const normalizedState = normalizeState(card.state);
+  const fallbackDueDays =
+    normalizedState === 'review'
+      ? normalizeScheduledDays(card.stability, 'review')
+      : scheduleFallbackForState(normalizedState);
+  const fallbackDueAt = addDaysIso(updatedAt, fallbackDueDays);
+  const rawDueAt = isValidIso(card.dueAt) ? card.dueAt : fallbackDueAt;
   const dueAt = new Date(Math.max(Date.parse(rawDueAt), Date.parse(updatedAt))).toISOString();
   const resolvedCurrentIso = resolveReviewIso(updatedAt, requestedNowIso);
   const currentIso = new Date(Math.max(Date.parse(resolvedCurrentIso), createdMs)).toISOString();

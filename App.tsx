@@ -118,6 +118,7 @@ export default function App() {
   const notesInputRef = useRef<TextInput>(null);
   const reviewLockRef = useRef(false);
   const addLockRef = useRef(false);
+  const addUnlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dueCard = dueCards[0];
   const retentionScore = useMemo(() => {
@@ -225,6 +226,14 @@ export default function App() {
     }).start();
   }, [entryAnim]);
 
+  useEffect(() => {
+    return () => {
+      if (addUnlockTimerRef.current) {
+        clearTimeout(addUnlockTimerRef.current);
+      }
+    };
+  }, []);
+
   function handleAddCard() {
     if (loading || addLockRef.current) {
       return;
@@ -243,8 +252,12 @@ export default function App() {
     setWord('');
     setMeaning('');
     setNotes('');
-    setTimeout(() => {
+    if (addUnlockTimerRef.current) {
+      clearTimeout(addUnlockTimerRef.current);
+    }
+    addUnlockTimerRef.current = setTimeout(() => {
       addLockRef.current = false;
+      addUnlockTimerRef.current = null;
     }, 250);
     requestAnimationFrame(() => {
       wordInputRef.current?.focus();
