@@ -230,6 +230,14 @@ function updateDifficulty(prevDifficulty: number, rating: Rating): number {
   return clamp(previous + ratingShift + meanReversion, DIFFICULTY_MIN, DIFFICULTY_MAX);
 }
 
+function nextDifficultyForPhase(prevDifficulty: number, currentState: ReviewState, rating: Rating): number {
+  // Learning misses are short-step retries and should not permanently harden card difficulty.
+  if (currentState === 'learning' && rating <= 2) {
+    return clampFinite(prevDifficulty, DIFFICULTY_MIN, DIFFICULTY_MAX, DIFFICULTY_MEAN_REVERSION);
+  }
+  return updateDifficulty(prevDifficulty, rating);
+}
+
 function updateStability(
   prevStability: number,
   prevDifficulty: number,
@@ -362,7 +370,7 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   const phase = currentState;
   const lapseIncrement = shouldCountLapse(currentState, normalizedRating) ? 1 : 0;
 
-  const nextDifficulty = updateDifficulty(card.difficulty, normalizedRating);
+  const nextDifficulty = nextDifficultyForPhase(card.difficulty, currentState, normalizedRating);
   const nextStability = updateStability(
     card.stability,
     card.difficulty,

@@ -83,6 +83,18 @@ describe('fsrs scheduler', () => {
     expect(easy.scheduledDays).toBe(1);
   });
 
+  it('does not permanently inflate difficulty from repeated failed learning steps', () => {
+    const clean = reviewCard(createNewCard('upsilon-diff-clean', 'letter', NOW), 4, NOW).card;
+    const retriesBase = createNewCard('upsilon-diff-retries', 'letter', NOW);
+    const fail1 = reviewCard(retriesBase, 1, NOW).card;
+    const fail2 = reviewCard(fail1, 1, '2026-02-23T12:10:00.000Z').card;
+    const fail3 = reviewCard(fail2, 1, '2026-02-23T12:20:00.000Z').card;
+    const retries = reviewCard(fail3, 4, '2026-02-23T12:30:00.000Z').card;
+
+    expect(retries.state).toBe('review');
+    expect(retries.difficulty).toBeLessThanOrEqual(clean.difficulty + 0.01);
+  });
+
   it('keeps relearning graduation intervals bounded to sub-day or one day', () => {
     const card = createNewCard('omicron-2', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;

@@ -135,7 +135,7 @@ export default function App() {
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 
   const canAdd = useMemo(() => word.trim().length > 0 && meaning.trim().length > 0, [word, meaning]);
-  const notesRemaining = 240 - notes.length;
+  const notesRemaining = Math.max(0, 240 - notes.length);
   const noteCountTone = notesRemaining <= 20 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
   const isReviewBusy = pendingReviewCardId !== null;
