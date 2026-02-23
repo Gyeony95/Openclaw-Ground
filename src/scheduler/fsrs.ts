@@ -101,7 +101,8 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
 
 function normalizeRating(input: Rating): Rating {
   if (!Number.isFinite(input)) {
-    return 1;
+    // Runtime-corrupted ratings should degrade to a neutral review score.
+    return 3;
   }
 
   const rounded = Math.round(input);

@@ -388,7 +388,13 @@ export default function App() {
     addLockRef.current = true;
     setIsAddBusy(true);
     const shouldReturnToWordInput = !dueCard;
-    addCard(trimmedWord, trimmedMeaning, trimmedNotes || undefined);
+    try {
+      addCard(trimmedWord, trimmedMeaning, trimmedNotes || undefined);
+    } catch {
+      addLockRef.current = false;
+      setIsAddBusy(false);
+      return;
+    }
     meaningInputRef.current?.blur();
     notesInputRef.current?.blur();
     if (shouldReturnToWordInput) {

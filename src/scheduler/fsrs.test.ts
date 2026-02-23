@@ -120,6 +120,25 @@ describe('fsrs scheduler', () => {
     expect(review.scheduledDays).toBeLessThan(0.002);
   });
 
+  it('treats malformed ratings as neutral reviews instead of punitive lapses', () => {
+    const reviewCardBase = {
+      ...createNewCard('invalid-rating-review', 'letter', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 1),
+      updatedAt: NOW,
+      reps: 5,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(reviewCardBase, Number.NaN as Rating, addDaysIso(NOW, 1));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.card.lapses).toBe(reviewCardBase.lapses);
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
   it('uses an intermediate hard step before graduating learning cards', () => {
     const card = createNewCard('learning-hard-step', 'definition', NOW);
     const hard = reviewCard(card, 2, NOW);

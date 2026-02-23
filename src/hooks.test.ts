@@ -11,7 +11,8 @@ import {
   selectLatestReviewedAt,
 } from './hooks';
 import { createNewCard } from './scheduler/fsrs';
-import type { Card } from './types';
+import { addDaysIso } from './utils/time';
+import type { Card, Rating } from './types';
 
 const NOW = '2026-02-23T12:00:00.000Z';
 
@@ -132,6 +133,27 @@ describe('applyDueReview', () => {
     expect(result.reviewed).toBe(true);
     expect(result.reviewedAt).toBe('2026-02-23T12:10:00.000Z');
     expect(result.cards[0].updatedAt).toBe('2026-02-23T12:10:00.000Z');
+  });
+
+  it('handles malformed ratings defensively without forcing a lapse', () => {
+    const due = {
+      ...createNewCard('invalid-rating-hook', 'safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 1),
+      updatedAt: NOW,
+      reps: 3,
+      lapses: 1,
+      stability: 2,
+      difficulty: 5,
+    };
+    const reviewAt = addDaysIso(NOW, 1);
+
+    const result = applyDueReview([due], due.id, Number.NaN as Rating, reviewAt);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0].state).toBe('review');
+    expect(result.cards[0].lapses).toBe(1);
+    expect(Date.parse(result.cards[0].dueAt)).toBeGreaterThan(Date.parse(result.cards[0].updatedAt));
   });
 });
 
