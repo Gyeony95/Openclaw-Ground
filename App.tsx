@@ -135,7 +135,8 @@ export default function App() {
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 
   const canAdd = useMemo(() => word.trim().length > 0 && meaning.trim().length > 0, [word, meaning]);
-  const noteCountTone = notes.length >= 220 ? colors.warn : colors.subInk;
+  const notesRemaining = 240 - notes.length;
+  const noteCountTone = notesRemaining <= 20 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
   const isReviewBusy = pendingReviewCardId !== null;
 
@@ -396,7 +397,7 @@ export default function App() {
                   blurOnSubmit
                   onSubmitEditing={handleAddCard}
                 />
-                <Text style={[styles.charCount, { color: noteCountTone }]}>{notes.length}/240</Text>
+                <Text style={[styles.charCount, { color: noteCountTone }]}>{notesRemaining} chars left</Text>
 
                 <Pressable
                   style={({ pressed }) => [

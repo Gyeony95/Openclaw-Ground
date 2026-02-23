@@ -240,6 +240,12 @@ describe('countUpcomingDueCards', () => {
 
     expect(countUpcomingDueCards([upcoming], NOW, Number.NaN)).toBe(0);
   });
+
+  it('returns zero when hours overflow the millisecond window math', () => {
+    const upcoming = { ...createNewCard('upcoming-window-3', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
+
+    expect(countUpcomingDueCards([upcoming], NOW, Number.MAX_VALUE)).toBe(0);
+  });
 });
 
 describe('selectLatestReviewedAt', () => {

@@ -542,6 +542,28 @@ describe('fsrs scheduler', () => {
     expect(preview[3]).toBeLessThanOrEqual(preview[4]);
   });
 
+  it('keeps preview intervals ordered for corrupted relearning cards', () => {
+    const card = createNewCard('chi-relearning-preview', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const failed = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+    const corrupted = {
+      ...failed,
+      stability: Number.NaN,
+      difficulty: Number.POSITIVE_INFINITY,
+      dueAt: failed.updatedAt,
+    };
+
+    const preview = previewIntervals(corrupted, failed.updatedAt);
+
+    expect(Number.isFinite(preview[1])).toBe(true);
+    expect(Number.isFinite(preview[2])).toBe(true);
+    expect(Number.isFinite(preview[3])).toBe(true);
+    expect(Number.isFinite(preview[4])).toBe(true);
+    expect(preview[1]).toBeLessThanOrEqual(preview[2]);
+    expect(preview[2]).toBeLessThanOrEqual(preview[3]);
+    expect(preview[3]).toBeLessThanOrEqual(preview[4]);
+  });
+
   it('treats corrupted relearning schedules like the 10-minute relearning floor', () => {
     const card = createNewCard('psi', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;

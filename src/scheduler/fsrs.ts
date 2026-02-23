@@ -336,6 +336,19 @@ function graduationIntervalDays(rating: Rating): number {
   return rating === 4 ? 1 : 0.5;
 }
 
+function ensureOrderedPreview(intervals: RatingIntervalPreview): RatingIntervalPreview {
+  const again = intervals[1];
+  const hard = Math.max(intervals[2], again);
+  const good = Math.max(intervals[3], hard);
+  const easy = Math.max(intervals[4], good);
+  return {
+    1: again,
+    2: hard,
+    3: good,
+    4: easy,
+  };
+}
+
 export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewResult {
   const normalizedRating = normalizeRating(rating);
   const currentState = normalizeState(card.state);
@@ -392,18 +405,15 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
 }
 
 export function previewIntervals(card: Card, nowIso: string): RatingIntervalPreview {
-  const stableNowIso = isValidIso(nowIso)
-    ? nowIso
-    : isValidIso(card.updatedAt)
-      ? card.updatedAt
-      : currentNowIso();
-
-  return {
-    1: reviewCard(card, 1, stableNowIso).scheduledDays,
-    2: reviewCard(card, 2, stableNowIso).scheduledDays,
-    3: reviewCard(card, 3, stableNowIso).scheduledDays,
-    4: reviewCard(card, 4, stableNowIso).scheduledDays,
+  const { currentIso } = normalizeTimeline(card, nowIso);
+  const preview = {
+    1: reviewCard(card, 1, currentIso).scheduledDays,
+    2: reviewCard(card, 2, currentIso).scheduledDays,
+    3: reviewCard(card, 3, currentIso).scheduledDays,
+    4: reviewCard(card, 4, currentIso).scheduledDays,
   };
+
+  return ensureOrderedPreview(preview);
 }
 
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
