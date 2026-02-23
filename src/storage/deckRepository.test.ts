@@ -433,6 +433,44 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
   });
 
+  it('prefers earlier dueAt when duplicate cards are otherwise tied', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'dup-due-priority',
+            word: 'alpha',
+            meaning: 'later-due',
+            dueAt: '2026-02-27T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-23T00:00:00.000Z',
+            state: 'review',
+            reps: 5,
+            lapses: 1,
+          },
+          {
+            id: 'dup-due-priority',
+            word: 'beta',
+            meaning: 'earlier-due',
+            dueAt: '2026-02-24T00:00:00.000Z',
+            createdAt: '2026-02-21T00:00:00.000Z',
+            updatedAt: '2026-02-23T00:00:00.000Z',
+            state: 'review',
+            reps: 5,
+            lapses: 1,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].id).toBe('dup-due-priority');
+    expect(deck.cards[0].meaning).toBe('earlier-due');
+    expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
+  });
+
   it('keeps valid cards when malformed field types are present in the same payload', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

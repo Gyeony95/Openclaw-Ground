@@ -131,6 +131,11 @@ export default function App() {
   const queueShareLabel = loading
     ? '--'
     : `${stats.dueNow.toLocaleString()} due / ${stats.total.toLocaleString()} total`;
+  const reviewQueueLabel = loading
+    ? '--'
+    : dueCard
+      ? `Card 1 of ${stats.dueNow.toLocaleString()} due`
+      : queueShareLabel;
   const nextUpcomingCard = useMemo(() => {
     const nowMs = Date.parse(clockIso);
     if (!Number.isFinite(nowMs)) {
@@ -340,7 +345,7 @@ export default function App() {
                   </View>
                   <View style={styles.panelKpiWrap}>
                     <Text style={[styles.panelKpi, { color: queueLabelTone }]}>{queueLabel}</Text>
-                    <Text style={styles.panelSubKpi}>{queueShareLabel}</Text>
+                    <Text style={styles.panelSubKpi}>{reviewQueueLabel}</Text>
                   </View>
                 </View>
                 {loading ? <Text style={styles.info}>Loading deck...</Text> : null}

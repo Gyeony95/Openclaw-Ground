@@ -75,10 +75,11 @@ function pickFreshestDuplicate(existing: Card, incoming: Card): Card {
 
   const existingDue = parseTimeOrMin(existing.dueAt);
   const incomingDue = parseTimeOrMin(incoming.dueAt);
-  if (incomingDue > existingDue) {
+  // On full ties, keep the earlier due card to avoid postponing overdue work.
+  if (incomingDue < existingDue) {
     return incoming;
   }
-  if (incomingDue < existingDue) {
+  if (incomingDue > existingDue) {
     return existing;
   }
 

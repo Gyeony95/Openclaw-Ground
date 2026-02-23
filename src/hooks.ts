@@ -60,10 +60,11 @@ function pickFreshestCard(existing: Card, loaded: Card): Card {
 
   const existingDue = parseTimeOrMin(existing.dueAt);
   const loadedDue = parseTimeOrMin(loaded.dueAt);
-  if (loadedDue > existingDue) {
+  // On full ties, keep the earlier due card to avoid delaying a due review.
+  if (loadedDue < existingDue) {
     return loaded;
   }
-  if (loadedDue < existingDue) {
+  if (loadedDue > existingDue) {
     return existing;
   }
 
