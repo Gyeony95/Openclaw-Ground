@@ -379,13 +379,13 @@ export default function App() {
             </Animated.View>
 
             <View style={styles.metrics}>
-              <MetricCard label="Due now" value={stats.dueNow} accent={colors.primary} />
-              <MetricCard label="Overdue" value={overdueNow} accent={colors.danger} />
-              <MetricCard label="Upcoming 24h" value={dueWithinDay} accent={colors.accent} />
-              <MetricCard label="Learning" value={stats.learning} accent={colors.warn} />
-              <MetricCard label="Review" value={stats.review} accent={colors.success} />
-              <MetricCard label="Relearning" value={stats.relearning} accent={colors.danger} />
-              <MetricCard label="Total cards" value={stats.total} accent={colors.accent} />
+              <MetricCard label="Due now" value={loading ? Number.NaN : stats.dueNow} accent={colors.primary} />
+              <MetricCard label="Overdue" value={loading ? Number.NaN : overdueNow} accent={colors.danger} />
+              <MetricCard label="Upcoming 24h" value={loading ? Number.NaN : dueWithinDay} accent={colors.accent} />
+              <MetricCard label="Learning" value={loading ? Number.NaN : stats.learning} accent={colors.warn} />
+              <MetricCard label="Review" value={loading ? Number.NaN : stats.review} accent={colors.success} />
+              <MetricCard label="Relearning" value={loading ? Number.NaN : stats.relearning} accent={colors.danger} />
+              <MetricCard label="Total cards" value={loading ? Number.NaN : stats.total} accent={colors.accent} />
             </View>
 
             <Animated.View

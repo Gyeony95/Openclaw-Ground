@@ -325,6 +325,16 @@ describe('fsrs scheduler', () => {
     expect(onTimeHard.scheduledDays).toBe(0.5);
   });
 
+  it('promotes overdue hard reviews on half-day schedules to at least one day', () => {
+    const card = createNewCard('halfday-hard-overdue-floor', 'letter', NOW);
+    const graduated = reviewCard(card, 3, NOW).card;
+    const overdueIso = addDaysIso(graduated.updatedAt, 1.5);
+    const overdueHard = reviewCard(graduated, 2, overdueIso);
+
+    expect(overdueHard.card.state).toBe('review');
+    expect(overdueHard.scheduledDays).toBe(1);
+  });
+
   it('keeps very-early good reviews on low-stability half-day schedules within sub-day cadence', () => {
     const base = createNewCard('halfday-good-cadence', 'letter', NOW);
     const subDayReview = {
