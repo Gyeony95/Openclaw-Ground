@@ -63,6 +63,9 @@ function scheduleFallbackForState(state: ReviewState): number {
 }
 
 function maxScheduleDaysForState(state: ReviewState): number {
+  if (state === 'review') {
+    return STABILITY_MAX;
+  }
   if (state === 'relearning') {
     return RELEARNING_MAX_SCHEDULE_DAYS;
   }
@@ -155,9 +158,11 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   const normalizedUpdatedMs = Math.max(updatedMs, createdMs);
   const normalizedUpdatedAt = new Date(normalizedUpdatedMs).toISOString();
   let normalizedDueMs = Math.max(dueMs, normalizedUpdatedMs);
-  if (raw.state !== 'review') {
-    const scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
-    if (scheduleDays > maxScheduleDaysForState(raw.state)) {
+  const scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
+  if (scheduleDays > maxScheduleDaysForState(raw.state)) {
+    if (raw.state === 'review') {
+      normalizedDueMs = normalizedUpdatedMs + STABILITY_MAX * DAY_MS;
+    } else {
       normalizedDueMs = normalizedUpdatedMs + scheduleFallbackForState(raw.state) * DAY_MS;
     }
   }

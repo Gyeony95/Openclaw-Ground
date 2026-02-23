@@ -623,6 +623,32 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2026-02-22T00:10:00.000Z');
   });
 
+  it('caps pathologically-future review dueAt values to the max supported review schedule', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'review-future-due',
+            word: 'gamma',
+            meaning: 'third',
+            dueAt: '2099-01-01T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    const scheduleDays =
+      (Date.parse(deck.cards[0].dueAt) - Date.parse(deck.cards[0].updatedAt)) / (24 * 60 * 60 * 1000);
+
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(scheduleDays).toBe(36500);
+  });
+
   it('sanitizes and deduplicates cards before persisting deck data', async () => {
     mockedStorage.setItem.mockResolvedValueOnce();
 
@@ -741,5 +767,37 @@ describe('deck repository', () => {
     expect(savedDeck.cards[0].word).toHaveLength(80);
     expect(savedDeck.cards[0].meaning).toHaveLength(180);
     expect(savedDeck.cards[0].notes).toHaveLength(240);
+  });
+
+  it('caps pathologically-future review dueAt values before persisting deck data', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: 'review-future-save',
+          word: 'delta',
+          meaning: 'fourth',
+          dueAt: '2099-01-01T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'review',
+          reps: 3,
+          lapses: 1,
+          stability: 120,
+          difficulty: 5,
+        },
+      ],
+      lastReviewedAt: '2026-02-23T00:00:00.000Z',
+    });
+
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as {
+      cards: Array<{ dueAt: string; updatedAt: string }>;
+    };
+    const savedCard = savedDeck.cards[0];
+    const scheduleDays = (Date.parse(savedCard.dueAt) - Date.parse(savedCard.updatedAt)) / (24 * 60 * 60 * 1000);
+
+    expect(scheduleDays).toBe(36500);
   });
 });

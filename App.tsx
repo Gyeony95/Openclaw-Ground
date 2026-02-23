@@ -174,6 +174,11 @@ export default function App() {
   const overdueNow = useMemo(() => {
     return countOverdueCards(cards, clockIso);
   }, [cards, clockIso]);
+  const overdueQueueLabel = loading
+    ? '--'
+    : overdueNow === 0
+      ? 'No overdue cards'
+      : `${overdueNow.toLocaleString()} overdue`;
   const exactDueLabel = exactDateLabel(dueCard?.dueAt);
   const relativeDueLabel = dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Schedule unavailable';
   const asOf = asOfLabel(clockIso);
@@ -414,6 +419,14 @@ export default function App() {
                       {queueLabel}
                     </Text>
                     <Text style={styles.panelSubKpi}>{reviewQueueLabel}</Text>
+                    <Text
+                      style={[
+                        styles.panelSubKpi,
+                        overdueNow > 0 && !loading ? styles.panelSubKpiAlert : null,
+                      ]}
+                    >
+                      {overdueQueueLabel}
+                    </Text>
                   </View>
                 </View>
                 {loading ? <Text style={styles.info}>Loading deck...</Text> : null}
@@ -865,6 +878,9 @@ const styles = StyleSheet.create({
     color: colors.subInk,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
+  },
+  panelSubKpiAlert: {
+    color: colors.danger,
   },
   info: {
     color: colors.subInk,
