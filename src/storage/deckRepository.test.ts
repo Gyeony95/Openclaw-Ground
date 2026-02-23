@@ -210,6 +210,33 @@ describe('deck repository', () => {
     expect(deck.cards[1].dueAt).toBe('2026-02-22T12:00:00.000Z');
   });
 
+  it('uses stability fallback for review cards with invalid dueAt when stability is still young', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'missing-due-young-review',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: 'not-a-date',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            stability: 2,
+            difficulty: 5,
+            reps: 12,
+            lapses: 1,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
+  });
+
   it('drops cards when all timestamps are invalid', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
@@ -839,6 +866,34 @@ describe('deck repository', () => {
     expect(persisted.cards[0].state).toBe('review');
     expect(persisted.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
     expect(persisted.cards[0].dueAt).toBe('2026-02-22T12:00:00.000Z');
+  });
+
+  it('saturates positive infinite counters before persisting deck data', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: 'counter-saturation-save',
+          word: 'epsilon',
+          meaning: 'fifth',
+          dueAt: '2026-02-23T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'review',
+          reps: Number.POSITIVE_INFINITY,
+          lapses: Number.POSITIVE_INFINITY,
+          stability: 1.5,
+          difficulty: 5,
+        },
+      ],
+    });
+
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as { cards: Array<{ reps: number; lapses: number }> };
+    expect(savedDeck.cards).toHaveLength(1);
+    expect(savedDeck.cards[0].reps).toBe(Number.MAX_SAFE_INTEGER);
+    expect(savedDeck.cards[0].lapses).toBe(Number.MAX_SAFE_INTEGER);
   });
 
   it('keeps only valid lastReviewedAt when persisting', async () => {

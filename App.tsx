@@ -486,19 +486,27 @@ export default function App() {
                     <Text
                       style={[styles.panelKpi, { color: queueLabelTone }]}
                       accessibilityLiveRegion="polite"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
                       {queueLabel}
                     </Text>
-                    <Text style={styles.panelSubKpi}>{reviewQueueLabel}</Text>
+                    <Text style={styles.panelSubKpi} numberOfLines={1} ellipsizeMode="tail">
+                      {reviewQueueLabel}
+                    </Text>
                     <Text
                       style={[
                         styles.panelSubKpi,
                         overdueNow > 0 && !loading ? styles.panelSubKpiAlert : null,
                       ]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
                       {overdueQueueLabel}
                     </Text>
-                    <Text style={styles.panelSubKpi}>{followUpQueueLabel}</Text>
+                    <Text style={styles.panelSubKpi} numberOfLines={1} ellipsizeMode="tail">
+                      {followUpQueueLabel}
+                    </Text>
                   </View>
                 </View>
                 {loading ? (

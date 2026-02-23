@@ -21,6 +21,7 @@ const RELEARNING_SCHEDULE_FALLBACK_DAYS = 10 * MINUTE_IN_DAYS;
 const LEARNING_MAX_SCHEDULE_DAYS = 1;
 const RELEARNING_MAX_SCHEDULE_DAYS = 2;
 const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
+const REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS = 7;
 
 const VALID_STATES: ReviewState[] = ['learning', 'review', 'relearning'];
 function clamp(value: number, min: number, max: number): number {
@@ -32,6 +33,9 @@ function asFiniteNumber(value: unknown): number | null {
 }
 
 function asNonNegativeInt(value: unknown, fallback: number): number {
+  if (value === Number.POSITIVE_INFINITY) {
+    return COUNTER_MAX;
+  }
   const numeric = asFiniteNumber(value);
   if (numeric === null) {
     return fallback;
@@ -155,7 +159,8 @@ function normalizeCard(raw: Partial<Card>): Card | null {
 
   const normalizedCreatedAt = toCanonicalIso(createdAt);
   const updatedAt = isValidIso(raw.updatedAt) ? raw.updatedAt : createdAt;
-  const dueAt = isValidIso(raw.dueAt) ? raw.dueAt : updatedAt;
+  const dueIsValid = isValidIso(raw.dueAt);
+  const dueAt = dueIsValid ? raw.dueAt : updatedAt;
   const normalizedStability = clamp(asFiniteNumber(raw.stability) ?? 0.5, STABILITY_MIN, STABILITY_MAX);
   const createdMs = Date.parse(normalizedCreatedAt);
   const updatedMs = Date.parse(updatedAt);
@@ -165,7 +170,14 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   let normalizedDueMs = Math.max(dueMs, normalizedUpdatedMs);
   let scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
   if (scheduleDays <= 0) {
-    normalizedDueMs = normalizedUpdatedMs + scheduleFallbackForState(raw.state) * DAY_MS;
+    const shouldUseReviewStabilityFallback =
+      raw.state === 'review' &&
+      !dueIsValid &&
+      normalizedStability <= REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS;
+    const fallbackDays = shouldUseReviewStabilityFallback
+      ? clamp(normalizedStability, REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX)
+      : scheduleFallbackForState(raw.state);
+    normalizedDueMs = normalizedUpdatedMs + fallbackDays * DAY_MS;
     scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
   }
   if (scheduleDays > maxScheduleDaysForState(raw.state)) {
