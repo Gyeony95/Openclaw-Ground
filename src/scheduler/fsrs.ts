@@ -63,6 +63,18 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     return fallback;
   }
 
+  if (
+    requestedValid &&
+    Number.isFinite(wallClockMs) &&
+    candidateMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS
+  ) {
+    // Ignore pathological future runtime clocks to prevent runaway elapsed intervals.
+    if (fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+      return wallClockIso;
+    }
+    return fallback;
+  }
+
   // Keep review time monotonic to avoid negative elapsed intervals on clock drift.
   if (candidateMs < fallbackMs) {
     const skewMs = fallbackMs - candidateMs;

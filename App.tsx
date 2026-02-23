@@ -187,6 +187,9 @@ export default function App() {
     setWord('');
     setMeaning('');
     setNotes('');
+    requestAnimationFrame(() => {
+      wordInputRef.current?.focus();
+    });
   }
 
   function handleRate(rating: Rating) {
@@ -334,6 +337,7 @@ export default function App() {
                         disabled={isReviewBusy}
                         accessibilityRole="button"
                         accessibilityLabel="Reveal answer"
+                        accessibilityState={{ disabled: isReviewBusy }}
                       >
                         <Text style={styles.primaryBtnText}>Reveal answer</Text>
                       </Pressable>
@@ -423,6 +427,7 @@ export default function App() {
                   disabled={!canAdd}
                   accessibilityRole="button"
                   accessibilityLabel="Add card"
+                  accessibilityState={{ disabled: !canAdd }}
                 >
                   <Text style={styles.primaryBtnText}>Add card</Text>
                 </Pressable>

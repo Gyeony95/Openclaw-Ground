@@ -304,6 +304,32 @@ describe('fsrs scheduler', () => {
     expect(skewed.card.state).toBe('review');
   });
 
+  it('ignores pathological future runtime clocks when timeline is healthy', () => {
+    const card = createNewCard('sigma-future-now', 'letter', NOW);
+    const graduated = reviewCard(card, 4, '2026-02-24T12:00:00.000Z').card;
+    const skewed = reviewCard(graduated, 3, '2099-01-01T00:00:00.000Z');
+
+    expect(skewed.card.updatedAt).toBe(graduated.updatedAt);
+    expect(skewed.card.state).toBe('review');
+    expect(Date.parse(skewed.card.dueAt)).toBeGreaterThan(Date.parse(skewed.card.updatedAt));
+  });
+
+  it('falls back to wall clock when both updatedAt and runtime clock are pathologically future', () => {
+    const card = createNewCard('sigma-double-future', 'letter', NOW);
+    const corrupted = {
+      ...reviewCard(card, 4, NOW).card,
+      updatedAt: '2030-01-01T00:00:00.000Z',
+      dueAt: '2030-01-02T00:00:00.000Z',
+      state: 'review' as const,
+    };
+    const reviewed = reviewCard(corrupted, 3, '2099-01-01T00:00:00.000Z');
+
+    expect(Date.parse(reviewed.card.updatedAt)).toBeLessThanOrEqual(Date.now());
+    expect(Date.parse(reviewed.card.updatedAt)).toBeGreaterThanOrEqual(Date.parse('2025-01-01T00:00:00.000Z'));
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    expect(reviewed.card.state).toBe('review');
+  });
+
   it('recovers from pathological future updatedAt timestamps when skew is very large', () => {
     const card = createNewCard('sigma-future', 'letter', NOW);
     const corrupted = {
