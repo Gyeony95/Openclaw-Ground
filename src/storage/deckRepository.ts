@@ -30,6 +30,52 @@ function isValidIso(value: unknown): value is string {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
 }
 
+function parseTimeOrMin(iso: string): number {
+  const parsed = Date.parse(iso);
+  return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
+}
+
+function pickFreshestDuplicate(existing: Card, incoming: Card): Card {
+  const existingUpdated = parseTimeOrMin(existing.updatedAt);
+  const incomingUpdated = parseTimeOrMin(incoming.updatedAt);
+  if (incomingUpdated > existingUpdated) {
+    return incoming;
+  }
+  if (incomingUpdated < existingUpdated) {
+    return existing;
+  }
+
+  const existingDue = parseTimeOrMin(existing.dueAt);
+  const incomingDue = parseTimeOrMin(incoming.dueAt);
+  if (incomingDue > existingDue) {
+    return incoming;
+  }
+  if (incomingDue < existingDue) {
+    return existing;
+  }
+
+  if (incoming.reps > existing.reps) {
+    return incoming;
+  }
+  if (incoming.reps < existing.reps) {
+    return existing;
+  }
+
+  if (incoming.lapses > existing.lapses) {
+    return incoming;
+  }
+  if (incoming.lapses < existing.lapses) {
+    return existing;
+  }
+
+  const existingCreated = parseTimeOrMin(existing.createdAt);
+  const incomingCreated = parseTimeOrMin(incoming.createdAt);
+  if (incomingCreated < existingCreated) {
+    return incoming;
+  }
+  return existing;
+}
+
 function normalizeCard(raw: Partial<Card>): Card | null {
   const id = typeof raw.id === 'string' ? raw.id.trim() : '';
   if (
@@ -91,18 +137,20 @@ export async function loadDeck(): Promise<Deck> {
   try {
     const parsed = JSON.parse(serialized) as Partial<Deck>;
     const rawCards = Array.isArray(parsed.cards) ? parsed.cards : [];
-    const seenIds = new Set<string>();
     const cards = rawCards
       .map((item) => normalizeCard(item as Partial<Card>))
       .filter((item): item is Card => item !== null)
       .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
-    const uniqueCards = cards.filter((card) => {
-      if (seenIds.has(card.id)) {
-        return false;
+    const dedupedById = new Map<string, Card>();
+    for (const card of cards) {
+      const existing = dedupedById.get(card.id);
+      if (!existing) {
+        dedupedById.set(card.id, card);
+        continue;
       }
-      seenIds.add(card.id);
-      return true;
-    });
+      dedupedById.set(card.id, pickFreshestDuplicate(existing, card));
+    }
+    const uniqueCards = [...dedupedById.values()].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
 
     return {
       cards: uniqueCards,

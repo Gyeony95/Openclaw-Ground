@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -98,6 +98,8 @@ export default function App() {
   const [showMeaning, setShowMeaning] = useState(false);
   const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
   const [entryAnim] = useState(() => new Animated.Value(0));
+  const meaningInputRef = useRef<TextInput>(null);
+  const notesInputRef = useRef<TextInput>(null);
 
   const dueCard = dueCards[0];
   const retentionScore = useMemo(() => {
@@ -133,6 +135,7 @@ export default function App() {
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 
   const canAdd = useMemo(() => word.trim().length > 0 && meaning.trim().length > 0, [word, meaning]);
+  const noteCountTone = notes.length >= 220 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
 
   useEffect(() => {
@@ -346,8 +349,10 @@ export default function App() {
                   returnKeyType="next"
                   maxLength={80}
                   accessibilityLabel="Word input"
+                  onSubmitEditing={() => meaningInputRef.current?.focus()}
                 />
                 <TextInput
+                  ref={meaningInputRef}
                   value={meaning}
                   onChangeText={setMeaning}
                   placeholder="Meaning"
@@ -356,9 +361,10 @@ export default function App() {
                   returnKeyType="next"
                   maxLength={180}
                   accessibilityLabel="Meaning input"
-                  onSubmitEditing={handleAddCard}
+                  onSubmitEditing={() => notesInputRef.current?.focus()}
                 />
                 <TextInput
+                  ref={notesInputRef}
                   value={notes}
                   onChangeText={setNotes}
                   placeholder="Notes (optional)"
@@ -367,8 +373,11 @@ export default function App() {
                   multiline
                   maxLength={240}
                   accessibilityLabel="Notes input"
+                  returnKeyType="done"
+                  blurOnSubmit
+                  onSubmitEditing={handleAddCard}
                 />
-                <Text style={styles.charCount}>{notes.length}/240</Text>
+                <Text style={[styles.charCount, { color: noteCountTone }]}>{notes.length}/240</Text>
 
                 <Pressable
                   style={({ pressed }) => [

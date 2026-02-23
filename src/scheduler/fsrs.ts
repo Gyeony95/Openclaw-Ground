@@ -97,7 +97,8 @@ function normalizeTimeline(
   const updatedAt = new Date(Math.max(createdMs, updatedMs)).toISOString();
   const rawDueAt = isValidIso(card.dueAt) ? card.dueAt : updatedAt;
   const dueAt = new Date(Math.max(Date.parse(rawDueAt), Date.parse(updatedAt))).toISOString();
-  const currentIso = resolveReviewIso(updatedAt, requestedNowIso);
+  const resolvedCurrentIso = resolveReviewIso(updatedAt, requestedNowIso);
+  const currentIso = new Date(Math.max(Date.parse(resolvedCurrentIso), createdMs)).toISOString();
 
   return { createdAt, currentIso, updatedAt, dueAt };
 }
