@@ -23,6 +23,34 @@ describe('fsrs scheduler', () => {
     expect(card.notes).toHaveLength(240);
   });
 
+  it('normalizes oversized card text fields while reviewing existing cards', () => {
+    const card = {
+      ...createNewCard('phi-text', 'letter', NOW),
+      word: ` ${'w'.repeat(120)} `,
+      meaning: ` ${'m'.repeat(220)} `,
+      notes: ` ${'n'.repeat(320)} `,
+    };
+
+    const reviewed = reviewCard(card, 3, NOW);
+
+    expect(reviewed.card.word).toHaveLength(80);
+    expect(reviewed.card.meaning).toHaveLength(180);
+    expect(reviewed.card.notes).toHaveLength(240);
+    expect(reviewed.card.word.startsWith(' ')).toBe(false);
+    expect(reviewed.card.meaning.startsWith(' ')).toBe(false);
+  });
+
+  it('drops whitespace-only notes while reviewing existing cards', () => {
+    const card = {
+      ...createNewCard('phi-notes', 'letter', NOW),
+      notes: '    ',
+    };
+
+    const reviewed = reviewCard(card, 3, NOW);
+
+    expect(reviewed.card.notes).toBeUndefined();
+  });
+
   it('generates unique ids for rapid card creation at the same timestamp', () => {
     const first = createNewCard('alpha-id-1', 'first', NOW);
     const second = createNewCard('alpha-id-2', 'second', NOW);

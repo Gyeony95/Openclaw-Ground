@@ -167,9 +167,18 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
     if (renderedMs - runtimeMs > MAX_CLOCK_SKEW_MS) {
       return runtimeNowIso;
     }
+    if (runtimeMs - wallClockMs > MAX_CLOCK_SKEW_MS) {
+      if (renderedMs - wallClockMs > MAX_CLOCK_SKEW_MS) {
+        return wallClockIso;
+      }
+      return renderedClockIso;
+    }
     return runtimeMs < renderedMs ? renderedClockIso : runtimeNowIso;
   }
   if (Number.isFinite(runtimeMs)) {
+    if (runtimeMs - wallClockMs > MAX_CLOCK_SKEW_MS) {
+      return wallClockIso;
+    }
     return runtimeNowIso;
   }
   if (Number.isFinite(renderedMs)) {

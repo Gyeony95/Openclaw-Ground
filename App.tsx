@@ -138,7 +138,11 @@ export default function App() {
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 
   const canAdd = useMemo(() => !loading && word.trim().length > 0 && meaning.trim().length > 0, [loading, word, meaning]);
+  const wordRemaining = Math.max(0, WORD_MAX_LENGTH - word.length);
+  const meaningRemaining = Math.max(0, MEANING_MAX_LENGTH - meaning.length);
   const notesRemaining = Math.max(0, NOTES_MAX_LENGTH - notes.length);
+  const wordCountTone = wordRemaining === 0 ? colors.danger : wordRemaining <= 12 ? colors.warn : colors.subInk;
+  const meaningCountTone = meaningRemaining === 0 ? colors.danger : meaningRemaining <= 20 ? colors.warn : colors.subInk;
   const noteCountTone = notesRemaining === 0 ? colors.danger : notesRemaining <= 20 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
   const isReviewBusy = pendingReviewCardId !== null;
@@ -250,7 +254,9 @@ export default function App() {
                 <Text style={styles.heroTag}>{queueShareLabel}</Text>
               </View>
               <View style={styles.metaLine}>
-                <Text style={styles.subMeta}>{lastReviewedLabel}</Text>
+                <Text style={styles.subMeta} numberOfLines={1} ellipsizeMode="tail">
+                  {lastReviewedLabel}
+                </Text>
                 <Text style={styles.asOfMeta}>{asOf}</Text>
               </View>
               <View style={styles.scoreRow}>
@@ -307,8 +313,12 @@ export default function App() {
                   <View style={styles.reviewCard}>
                     <View style={styles.reviewTimeline}>
                       <Text style={styles.reviewTimelineLabel}>Scheduled for</Text>
-                      <Text style={styles.reviewTimelineValue}>{exactDueLabel}</Text>
-                      <Text style={styles.reviewTimelineSubValue}>{relativeDueLabel}</Text>
+                      <Text style={styles.reviewTimelineValue} numberOfLines={1}>
+                        {exactDueLabel}
+                      </Text>
+                      <Text style={styles.reviewTimelineSubValue} numberOfLines={1}>
+                        {relativeDueLabel}
+                      </Text>
                     </View>
                     <View style={styles.reviewHeader}>
                       <Text style={styles.word}>{dueCard.word}</Text>
@@ -393,6 +403,9 @@ export default function App() {
                   accessibilityLabel="Word input"
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
                 />
+                <Text style={[styles.charCount, { color: wordCountTone }]}>
+                  {wordRemaining} chars left
+                </Text>
                 <TextInput
                   ref={meaningInputRef}
                   value={meaning}
@@ -412,6 +425,9 @@ export default function App() {
                     notesInputRef.current?.focus();
                   }}
                 />
+                <Text style={[styles.charCount, { color: meaningCountTone }]}>
+                  {meaningRemaining} chars left
+                </Text>
                 <TextInput
                   ref={notesInputRef}
                   value={notes}
@@ -565,6 +581,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.15,
+    flex: 1,
   },
   metaLine: {
     flexDirection: 'row',
@@ -577,6 +594,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.55,
+    flexShrink: 0,
   },
   scoreRow: {
     marginTop: 8,
