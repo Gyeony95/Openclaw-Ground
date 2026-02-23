@@ -244,6 +244,21 @@ describe('fsrs scheduler', () => {
     expect(skewed.card.dueAt).toBe('2026-02-26T12:00:00.000Z');
   });
 
+  it('recovers from pathological future updatedAt timestamps when skew is very large', () => {
+    const card = createNewCard('sigma-future', 'letter', NOW);
+    const corrupted = {
+      ...reviewCard(card, 4, NOW).card,
+      updatedAt: '2030-01-01T00:00:00.000Z',
+      dueAt: '2030-01-02T00:00:00.000Z',
+      state: 'review' as const,
+    };
+    const reviewed = reviewCard(corrupted, 3, '2026-02-26T12:00:00.000Z');
+
+    expect(reviewed.card.updatedAt).toBe('2026-02-26T12:00:00.000Z');
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    expect(reviewed.card.state).toBe('review');
+  });
+
   it('falls back to the current clock for invalid create timestamps', () => {
     const card = createNewCard('tau', 'letter', 'bad-timestamp');
 

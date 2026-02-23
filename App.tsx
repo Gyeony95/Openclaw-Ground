@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { MetricCard } from './src/components/MetricCard';
 import { RatingRow } from './src/components/RatingRow';
-import { useDeck } from './src/hooks';
+import { countUpcomingDueCards, useDeck } from './src/hooks';
 import { previewIntervals } from './src/scheduler/fsrs';
 import { colors, radii } from './src/theme';
 import { formatDueLabel } from './src/utils/due';
@@ -111,15 +111,7 @@ export default function App() {
   const queueLabelTone = queueTone({ label: queueLabel, loading, hasDueCard: Boolean(dueCard) });
   const queueShareLabel = loading ? '--' : `${stats.dueNow} due / ${stats.total} total`;
   const dueWithinDay = useMemo(() => {
-    const nowMs = Date.parse(clockIso);
-    if (!Number.isFinite(nowMs)) {
-      return 0;
-    }
-    const dayMs = 24 * 60 * 60 * 1000;
-    return cards.filter((card) => {
-      const dueMs = Date.parse(card.dueAt);
-      return Number.isFinite(dueMs) && dueMs <= nowMs + dayMs;
-    }).length;
+    return countUpcomingDueCards(cards, clockIso, 24);
   }, [cards, clockIso]);
   const exactDueLabel = exactDateLabel(dueCard?.dueAt);
   const relativeDueLabel = dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Schedule unavailable';
@@ -240,7 +232,7 @@ export default function App() {
 
             <View style={styles.metrics}>
               <MetricCard label="Due now" value={stats.dueNow} accent={colors.primary} />
-              <MetricCard label="Due <=24h" value={dueWithinDay} accent={colors.accent} />
+              <MetricCard label="Upcoming <=24h" value={dueWithinDay} accent={colors.accent} />
               <MetricCard label="Learning" value={stats.learning} accent={colors.warn} />
               <MetricCard label="Review" value={stats.review} accent={colors.success} />
               <MetricCard label="Relearning" value={stats.relearning} accent={colors.danger} />

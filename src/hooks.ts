@@ -19,6 +19,61 @@ function parseTimeOrMin(iso?: string): number {
   return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
 }
 
+function isValidIso(value?: string): value is string {
+  return typeof value === 'string' && Number.isFinite(Date.parse(value));
+}
+
+function pickFreshestCard(existing: Card, loaded: Card): Card {
+  const existingUpdated = parseTimeOrMin(existing.updatedAt);
+  const loadedUpdated = parseTimeOrMin(loaded.updatedAt);
+  if (loadedUpdated > existingUpdated) {
+    return loaded;
+  }
+  if (loadedUpdated < existingUpdated) {
+    return existing;
+  }
+
+  const existingDue = parseTimeOrMin(existing.dueAt);
+  const loadedDue = parseTimeOrMin(loaded.dueAt);
+  if (loadedDue > existingDue) {
+    return loaded;
+  }
+  if (loadedDue < existingDue) {
+    return existing;
+  }
+
+  if (loaded.reps > existing.reps) {
+    return loaded;
+  }
+  if (loaded.reps < existing.reps) {
+    return existing;
+  }
+
+  if (loaded.lapses > existing.lapses) {
+    return loaded;
+  }
+  if (loaded.lapses < existing.lapses) {
+    return existing;
+  }
+
+  return existing;
+}
+
+export function countUpcomingDueCards(cards: Card[], currentIso: string, hours = 24): number {
+  const nowMs = Date.parse(currentIso);
+  if (!Number.isFinite(nowMs)) {
+    return 0;
+  }
+  const safeHours = Number.isFinite(hours) && hours > 0 ? hours : 24;
+  const windowMs = safeHours * 60 * 60 * 1000;
+  const cutoffMs = nowMs + windowMs;
+
+  return cards.filter((card) => {
+    const dueMs = Date.parse(card.dueAt);
+    return Number.isFinite(dueMs) && dueMs > nowMs && dueMs <= cutoffMs;
+  }).length;
+}
+
 export function compareDueCards(a: Card, b: Card): number {
   const dueDelta = parseTimeOrMax(a.dueAt) - parseTimeOrMax(b.dueAt);
   if (dueDelta !== 0) {
@@ -43,19 +98,26 @@ export function mergeDeckCards(existingCards: Card[], loadedCards: Card[]): Card
     return existingCards;
   }
 
-  const seenIds = new Set(existingCards.map((card) => card.id));
-  const merged = [...existingCards];
-  for (const loaded of loadedCards) {
-    if (!seenIds.has(loaded.id)) {
-      merged.push(loaded);
-      seenIds.add(loaded.id);
+  const loadedById = new Map(loadedCards.map((card) => [card.id, card] as const));
+  const merged = existingCards.map((existing) => {
+    const loaded = loadedById.get(existing.id);
+    if (!loaded) {
+      return existing;
     }
+    loadedById.delete(existing.id);
+    return pickFreshestCard(existing, loaded);
+  });
+
+  for (const loaded of loadedById.values()) {
+    merged.push(loaded);
   }
   return merged;
 }
 
 export function selectLatestReviewedAt(current?: string, incoming?: string): string | undefined {
-  return parseTimeOrMin(incoming) > parseTimeOrMin(current) ? incoming : current;
+  const currentValid = isValidIso(current) ? current : undefined;
+  const incomingValid = isValidIso(incoming) ? incoming : undefined;
+  return parseTimeOrMin(incomingValid) > parseTimeOrMin(currentValid) ? incomingValid : currentValid;
 }
 
 export function applyDueReview(cards: Card[], cardId: string, rating: Rating, currentIso: string): { cards: Card[]; reviewed: boolean } {

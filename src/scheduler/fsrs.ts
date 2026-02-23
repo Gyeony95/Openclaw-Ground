@@ -12,6 +12,7 @@ import {
 const FSRS_DECAY = -0.5;
 const FSRS_FACTOR = 19 / 81;
 const ON_TIME_TOLERANCE_DAYS = MINUTE_IN_DAYS;
+const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 
 export interface ReviewResult {
   card: Card;
@@ -51,7 +52,11 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
   }
 
   // Keep review time monotonic to avoid negative elapsed intervals on clock drift.
-  return candidateMs < fallbackMs ? fallback : candidate;
+  if (candidateMs < fallbackMs) {
+    const skewMs = fallbackMs - candidateMs;
+    return skewMs <= MAX_MONOTONIC_CLOCK_SKEW_MS ? fallback : candidate;
+  }
+  return candidate;
 }
 
 function normalizeRating(input: Rating): Rating {

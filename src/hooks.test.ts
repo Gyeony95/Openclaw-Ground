@@ -1,4 +1,11 @@
-import { applyDueReview, compareDueCards, hasDueCard, mergeDeckCards, selectLatestReviewedAt } from './hooks';
+import {
+  applyDueReview,
+  compareDueCards,
+  countUpcomingDueCards,
+  hasDueCard,
+  mergeDeckCards,
+  selectLatestReviewedAt,
+} from './hooks';
 import { createNewCard } from './scheduler/fsrs';
 
 const NOW = '2026-02-23T12:00:00.000Z';
@@ -140,6 +147,53 @@ describe('mergeDeckCards', () => {
     expect(mergeDeckCards([local], [])).toEqual([local]);
     expect(mergeDeckCards([], [loaded])).toEqual([loaded]);
   });
+
+  it('prefers fresher loaded duplicates when updatedAt is newer', () => {
+    const local = {
+      ...createNewCard('shared', 'old-local', NOW),
+      id: 'shared-id',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 2,
+    };
+    const loaded = {
+      ...createNewCard('shared', 'new-loaded', NOW),
+      id: 'shared-id',
+      updatedAt: '2026-02-23T11:00:00.000Z',
+      dueAt: '2026-02-24T11:00:00.000Z',
+      reps: 3,
+    };
+
+    const merged = mergeDeckCards([local], [loaded]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].meaning).toBe('new-loaded');
+    expect(merged[0].updatedAt).toBe('2026-02-23T11:00:00.000Z');
+    expect(merged[0].reps).toBe(3);
+  });
+
+  it('keeps in-memory duplicate when timestamps are tied', () => {
+    const local = {
+      ...createNewCard('tie', 'local', NOW),
+      id: 'tie-id',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 2,
+      lapses: 1,
+    };
+    const loaded = {
+      ...createNewCard('tie', 'loaded', NOW),
+      id: 'tie-id',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 2,
+      lapses: 1,
+    };
+
+    const merged = mergeDeckCards([local], [loaded]);
+
+    expect(merged[0].meaning).toBe('local');
+  });
 });
 
 describe('hasDueCard', () => {
@@ -157,6 +211,23 @@ describe('hasDueCard', () => {
   });
 });
 
+describe('countUpcomingDueCards', () => {
+  it('counts only cards due after now and within the upcoming window', () => {
+    const now = NOW;
+    const dueNow = createNewCard('due-now', 'now', now);
+    const overdue = { ...createNewCard('overdue', 'past', now), dueAt: '2026-02-23T11:00:00.000Z' };
+    const upcoming = { ...createNewCard('upcoming', 'soon', now), dueAt: '2026-02-23T18:00:00.000Z' };
+    const tooFar = { ...createNewCard('too-far', 'later', now), dueAt: '2026-02-24T12:00:01.000Z' };
+
+    expect(countUpcomingDueCards([dueNow, overdue, upcoming, tooFar], now)).toBe(1);
+  });
+
+  it('returns zero for invalid runtime clocks', () => {
+    const card = createNewCard('invalid-clock-upcoming', 'test', NOW);
+    expect(countUpcomingDueCards([card], 'bad-clock')).toBe(0);
+  });
+});
+
 describe('selectLatestReviewedAt', () => {
   it('prefers the latest valid timestamp', () => {
     expect(selectLatestReviewedAt('2026-02-23T10:00:00.000Z', '2026-02-23T11:00:00.000Z')).toBe(
@@ -170,5 +241,10 @@ describe('selectLatestReviewedAt', () => {
   it('ignores invalid incoming values', () => {
     expect(selectLatestReviewedAt('2026-02-23T11:00:00.000Z', 'bad-time')).toBe('2026-02-23T11:00:00.000Z');
     expect(selectLatestReviewedAt(undefined, 'bad-time')).toBeUndefined();
+  });
+
+  it('drops invalid current values and keeps valid incoming ones', () => {
+    expect(selectLatestReviewedAt('bad-time', '2026-02-23T12:00:00.000Z')).toBe('2026-02-23T12:00:00.000Z');
+    expect(selectLatestReviewedAt('bad-time', 'also-bad')).toBeUndefined();
   });
 });
