@@ -369,6 +369,14 @@ export default function App() {
                     ) : (
                       <Text style={styles.emptyQueueMeta}>No upcoming cards scheduled yet.</Text>
                     )}
+                    <Pressable
+                      style={({ pressed }) => [styles.emptyQueueAction, pressed && styles.ghostBtnPressed]}
+                      onPress={() => wordInputRef.current?.focus()}
+                      accessibilityRole="button"
+                      accessibilityLabel="Start adding words"
+                    >
+                      <Text style={styles.emptyQueueActionText}>Start adding words</Text>
+                    </Pressable>
                   </View>
                 ) : null}
                 {!loading && dueCard ? (
@@ -791,6 +799,22 @@ const styles = StyleSheet.create({
   },
   emptyQueue: {
     gap: 6,
+  },
+  emptyQueueAction: {
+    marginTop: 4,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.pill,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: colors.surface,
+  },
+  emptyQueueActionText: {
+    fontSize: 12,
+    color: colors.ink,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   emptyQueueMeta: {
     color: colors.primary,

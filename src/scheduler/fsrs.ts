@@ -266,7 +266,16 @@ function intervalFromStability(stability: number, desiredRetention: number): num
   const s = clampFinite(stability, STABILITY_MIN, STABILITY_MAX, 0.5);
   const retention = clamp(desiredRetention, 0.7, 0.98);
   const interval = (s / FSRS_FACTOR) * (Math.pow(retention, 1 / FSRS_DECAY) - 1);
-  return clamp(interval, 1, STABILITY_MAX);
+  return clamp(interval, REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX);
+}
+
+function quantizeReviewIntervalDays(intervalDays: number, scheduledDays: number): number {
+  const minReviewInterval = scheduledDays < 1 ? REVIEW_SCHEDULE_FLOOR_DAYS : 1;
+  if (scheduledDays < 1) {
+    const halfDayQuantized = Math.round(intervalDays * 2) / 2;
+    return clamp(halfDayQuantized, minReviewInterval, STABILITY_MAX);
+  }
+  return clamp(Math.round(intervalDays), minReviewInterval, STABILITY_MAX);
 }
 
 function updateDifficulty(prevDifficulty: number, rating: Rating): number {
@@ -346,29 +355,32 @@ function rawReviewIntervalDays(
   const scheduled = Number.isFinite(scheduledDays) ? Math.max(scheduledDays, MINUTE_IN_DAYS) : 1;
   const timingRatio = clamp(elapsed / scheduled, 0.5, 2.5);
   const timingScale = phase === 'review' ? clamp(0.75 + timingRatio * 0.25, 0.75, 1.35) : 1;
-  const rawInterval = clamp(Math.round(baseInterval * ratingScale * timingScale), 1, STABILITY_MAX);
-  let floorFromSchedule = rating === 4 ? Math.ceil(scheduled) : 1;
+  const rawInterval = quantizeReviewIntervalDays(baseInterval * ratingScale * timingScale, scheduled);
+  const scheduleFloor = scheduled < 1 ? REVIEW_SCHEDULE_FLOOR_DAYS : Math.ceil(scheduled);
+  let floorFromSchedule = rating === 4 ? scheduleFloor : REVIEW_SCHEDULE_FLOOR_DAYS;
 
   // Hard recalls should not shrink the schedule when the card was reviewed on-time or later.
   if (phase === 'review' && rating === 2 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {
-    floorFromSchedule = Math.max(floorFromSchedule, Math.ceil(scheduled));
+    floorFromSchedule = Math.max(floorFromSchedule, scheduleFloor);
   }
 
   // Keep "Good" on-time reviews from shrinking the schedule due to rounding/noise.
   if (phase === 'review' && rating === 3 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {
-    floorFromSchedule = Math.max(floorFromSchedule, Math.ceil(scheduled));
+    floorFromSchedule = Math.max(floorFromSchedule, scheduleFloor);
   }
 
-  const flooredInterval = Math.max(rawInterval, floorFromSchedule);
+  const flooredInterval = quantizeReviewIntervalDays(Math.max(rawInterval, floorFromSchedule), scheduled);
 
   // Keep "Hard" reviews conservative even when cards are heavily overdue.
   if (phase === 'review' && rating === 2) {
     const reviewedEarly = elapsed + ON_TIME_TOLERANCE_DAYS < scheduled;
-    const hardCap = reviewedEarly ? Math.max(1, Math.floor(scheduled)) : Math.max(1, Math.ceil(scheduled * 1.2));
-    return clamp(Math.min(flooredInterval, hardCap), 1, STABILITY_MAX);
+    const earlyCap = scheduled < 1 ? REVIEW_SCHEDULE_FLOOR_DAYS : Math.max(1, Math.floor(scheduled));
+    const onTimeOrLateCap = scheduled < 1 ? 1 : Math.max(1, Math.ceil(scheduled * 1.2));
+    const hardCap = reviewedEarly ? earlyCap : onTimeOrLateCap;
+    return quantizeReviewIntervalDays(Math.min(flooredInterval, hardCap), scheduled);
   }
 
-  return clamp(flooredInterval, 1, STABILITY_MAX);
+  return quantizeReviewIntervalDays(flooredInterval, scheduled);
 }
 
 function orderedReviewIntervals(

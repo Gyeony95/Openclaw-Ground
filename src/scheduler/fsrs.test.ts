@@ -255,6 +255,25 @@ describe('fsrs scheduler', () => {
     expect(earlyHard.scheduledDays).toBeLessThanOrEqual(scheduled);
   });
 
+  it('keeps early hard reviews on half-day schedules from extending to a full day', () => {
+    const card = createNewCard('halfday-hard-early', 'letter', NOW);
+    const graduated = reviewCard(card, 3, NOW).card;
+    const earlyIso = '2026-02-23T18:00:00.000Z';
+    const earlyHard = reviewCard(graduated, 2, earlyIso);
+
+    expect(earlyHard.card.state).toBe('review');
+    expect(earlyHard.scheduledDays).toBe(0.5);
+  });
+
+  it('keeps on-time good reviews on half-day schedules at least half-day', () => {
+    const card = createNewCard('halfday-good-ontime', 'letter', NOW);
+    const graduated = reviewCard(card, 3, NOW).card;
+    const onTime = reviewCard(graduated, 3, graduated.dueAt);
+
+    expect(onTime.card.state).toBe('review');
+    expect(onTime.scheduledDays).toBeGreaterThanOrEqual(0.5);
+  });
+
   it('does not let early hard reviews extend the current schedule', () => {
     let card = createNewCard('nu-hard-early-cap', 'letter', NOW);
     card = reviewCard(card, 4, NOW).card;
