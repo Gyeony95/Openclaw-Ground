@@ -31,13 +31,11 @@ function isValidIso(value: unknown): value is string {
 }
 
 function normalizeCard(raw: Partial<Card>): Card | null {
+  const id = typeof raw.id === 'string' ? raw.id.trim() : '';
   if (
-    !raw.id ||
+    !id ||
     !raw.word ||
     !raw.meaning ||
-    !isValidIso(raw.dueAt) ||
-    !isValidIso(raw.createdAt) ||
-    !isValidIso(raw.updatedAt) ||
     !isValidState(raw.state)
   ) {
     return null;
@@ -48,20 +46,33 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   if (!word || !meaning) {
     return null;
   }
-  const createdMs = Date.parse(raw.createdAt);
-  const updatedMs = Date.parse(raw.updatedAt);
-  const dueMs = Date.parse(raw.dueAt);
+  const createdAt = isValidIso(raw.createdAt)
+    ? raw.createdAt
+    : isValidIso(raw.updatedAt)
+      ? raw.updatedAt
+      : isValidIso(raw.dueAt)
+        ? raw.dueAt
+        : null;
+  if (!createdAt) {
+    return null;
+  }
+
+  const updatedAt = isValidIso(raw.updatedAt) ? raw.updatedAt : createdAt;
+  const dueAt = isValidIso(raw.dueAt) ? raw.dueAt : updatedAt;
+  const createdMs = Date.parse(createdAt);
+  const updatedMs = Date.parse(updatedAt);
+  const dueMs = Date.parse(dueAt);
   const normalizedUpdatedMs = Math.max(updatedMs, createdMs);
   const normalizedUpdatedAt = new Date(normalizedUpdatedMs).toISOString();
   const normalizedDueAt = new Date(Math.max(dueMs, normalizedUpdatedMs)).toISOString();
 
   return {
-    id: raw.id,
+    id,
     word,
     meaning,
     notes: raw.notes?.trim() || undefined,
     dueAt: normalizedDueAt,
-    createdAt: raw.createdAt,
+    createdAt,
     updatedAt: normalizedUpdatedAt,
     state: raw.state,
     reps: asNonNegativeInt(raw.reps, 0),
@@ -79,13 +90,22 @@ export async function loadDeck(): Promise<Deck> {
 
   try {
     const parsed = JSON.parse(serialized) as Partial<Deck>;
-    const cards = (parsed.cards ?? [])
+    const rawCards = Array.isArray(parsed.cards) ? parsed.cards : [];
+    const seenIds = new Set<string>();
+    const cards = rawCards
       .map((item) => normalizeCard(item as Partial<Card>))
       .filter((item): item is Card => item !== null)
       .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+    const uniqueCards = cards.filter((card) => {
+      if (seenIds.has(card.id)) {
+        return false;
+      }
+      seenIds.add(card.id);
+      return true;
+    });
 
     return {
-      cards,
+      cards: uniqueCards,
       lastReviewedAt: isValidIso(parsed.lastReviewedAt) ? parsed.lastReviewedAt : undefined,
     };
   } catch {

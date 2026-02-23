@@ -1,5 +1,6 @@
 import { createNewCard, previewIntervals, reviewCard } from './fsrs';
 import { Rating } from '../types';
+import { addDaysIso } from '../utils/time';
 
 const NOW = '2026-02-23T12:00:00.000Z';
 
@@ -12,6 +13,13 @@ describe('fsrs scheduler', () => {
     expect(card.notes).toBe('note');
     expect(card.state).toBe('learning');
     expect(card.reps).toBe(0);
+  });
+
+  it('generates unique ids for rapid card creation at the same timestamp', () => {
+    const first = createNewCard('alpha-id-1', 'first', NOW);
+    const second = createNewCard('alpha-id-2', 'second', NOW);
+
+    expect(first.id).not.toBe(second.id);
   });
 
   it('schedules short relearning interval on failure', () => {
@@ -29,7 +37,7 @@ describe('fsrs scheduler', () => {
     const review = reviewCard(card, 1, NOW);
 
     expect(review.card.state).toBe('learning');
-    expect(review.card.lapses).toBe(1);
+    expect(review.card.lapses).toBe(0);
     expect(review.scheduledDays).toBeLessThan(0.002);
   });
 
@@ -60,6 +68,19 @@ describe('fsrs scheduler', () => {
 
     expect(relearned.card.state).toBe('review');
     expect(relearned.card.stability).toBeLessThanOrEqual(failed.stability + 0.2);
+  });
+
+  it('keeps learning graduation intervals short even after repeated failed attempts', () => {
+    const card = createNewCard('xi-retries', 'letter', NOW);
+    const firstFail = reviewCard(card, 1, NOW).card;
+    const secondFail = reviewCard(firstFail, 1, '2026-02-23T12:10:00.000Z').card;
+    const good = reviewCard(secondFail, 3, '2026-02-23T12:20:00.000Z');
+    const easy = reviewCard(secondFail, 4, '2026-02-23T12:20:00.000Z');
+
+    expect(good.card.state).toBe('review');
+    expect(good.scheduledDays).toBe(0.5);
+    expect(easy.card.state).toBe('review');
+    expect(easy.scheduledDays).toBe(1);
   });
 
   it('keeps relearning graduation intervals bounded to sub-day or one day', () => {
@@ -138,6 +159,20 @@ describe('fsrs scheduler', () => {
       (Date.parse(second.dueAt) - Date.parse(second.updatedAt)) / (24 * 60 * 60 * 1000),
     );
     const next = reviewCard(second, 3, second.dueAt);
+
+    expect(next.scheduledDays).toBeGreaterThanOrEqual(scheduled);
+  });
+
+  it('treats near-due Good reviews as on-time for schedule floor', () => {
+    const card = createNewCard('nu-3', 'letter', NOW);
+    const first = reviewCard(card, 4, NOW).card;
+    const second = reviewCard(first, 4, '2026-02-26T12:00:00.000Z').card;
+    const scheduled = Math.round(
+      (Date.parse(second.dueAt) - Date.parse(second.updatedAt)) / (24 * 60 * 60 * 1000),
+    );
+    const nearDueIso = new Date(Date.parse(second.dueAt) - 30 * 1000).toISOString();
+
+    const next = reviewCard(second, 3, nearDueIso);
 
     expect(next.scheduledDays).toBeGreaterThanOrEqual(scheduled);
   });
@@ -267,21 +302,31 @@ describe('fsrs scheduler', () => {
     const reviewed = reviewCard(base, Number.NaN as unknown as Rating, NOW);
 
     expect(reviewed.card.state).toBe('learning');
-    expect(reviewed.card.lapses).toBe(1);
+    expect(reviewed.card.lapses).toBe(0);
     expect(reviewed.scheduledDays).toBeLessThan(0.002);
   });
 
   it('normalizes non-finite counters during review updates', () => {
     const base = createNewCard('theta-2', 'letter', NOW);
     const corrupted = {
-      ...base,
+      ...reviewCard(base, 4, NOW).card,
       reps: -4,
       lapses: Number.NaN,
     };
-    const reviewed = reviewCard(corrupted, 1, NOW);
+    const reviewed = reviewCard(corrupted, 1, '2026-02-24T12:00:00.000Z');
 
     expect(reviewed.card.reps).toBe(1);
     expect(reviewed.card.lapses).toBe(1);
+  });
+
+  it('does not double-count lapses while repeating relearning Again steps', () => {
+    const card = createNewCard('lapse-step', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const failedReview = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+    const failedRelearning = reviewCard(failedReview, 1, '2026-02-24T12:10:00.000Z').card;
+
+    expect(failedReview.lapses).toBe(1);
+    expect(failedRelearning.lapses).toBe(1);
   });
 
   it('falls back to learning behavior when runtime state is corrupted', () => {
@@ -309,6 +354,41 @@ describe('fsrs scheduler', () => {
 
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
     expect(reviewed.card.state).toBe('review');
+  });
+
+  it('uses valid sub-day review schedules instead of inflating them to one day', () => {
+    const card = createNewCard('upsilon-subday', 'letter', NOW);
+    const graduated = reviewCard(card, 3, NOW).card;
+    const inflatedSchedule = {
+      ...graduated,
+      dueAt: addDaysIso(graduated.updatedAt, 1),
+    };
+
+    const validOnTime = reviewCard(graduated, 3, graduated.dueAt);
+    const inflatedEarly = reviewCard(inflatedSchedule, 3, graduated.dueAt);
+
+    expect(validOnTime.card.stability).toBeGreaterThan(inflatedEarly.card.stability);
+    expect(validOnTime.scheduledDays).toBeGreaterThanOrEqual(inflatedEarly.scheduledDays);
+  });
+
+  it('treats corrupted minute-scale review schedules with a half-day review floor', () => {
+    const card = createNewCard('review-floor', 'letter', NOW);
+    const graduated = reviewCard(card, 3, NOW).card;
+    const reviewAt = addDaysIso(graduated.updatedAt, 0.25);
+    const normalized = {
+      ...graduated,
+      dueAt: addDaysIso(graduated.updatedAt, 0.5),
+    };
+    const corrupted = {
+      ...graduated,
+      dueAt: addDaysIso(graduated.updatedAt, 10 / 1440),
+    };
+
+    const normalizedReview = reviewCard(normalized, 3, reviewAt);
+    const corruptedReview = reviewCard(corrupted, 3, reviewAt);
+
+    expect(corruptedReview.scheduledDays).toBeLessThanOrEqual(normalizedReview.scheduledDays);
+    expect(corruptedReview.card.stability).toBeLessThanOrEqual(normalizedReview.card.stability);
   });
 
   it('uses safe timeline fallbacks when card timestamps are corrupted', () => {
@@ -339,6 +419,37 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.updatedAt).toBe('2026-02-25T12:00:00.000Z');
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThanOrEqual(Date.parse(reviewed.card.updatedAt));
+  });
+
+  it('repairs invalid createdAt using the active review timeline', () => {
+    const base = createNewCard('created-at-fix', 'letter', NOW);
+    const corrupted = {
+      ...base,
+      createdAt: 'bad-created-at',
+      updatedAt: '2026-02-24T12:00:00.000Z',
+      dueAt: '2026-02-24T12:10:00.000Z',
+      state: 'review' as const,
+    };
+
+    const reviewed = reviewCard(corrupted, 3, '2026-02-25T12:00:00.000Z');
+
+    expect(reviewed.card.createdAt).toBe('2026-02-24T12:00:00.000Z');
+    expect(Number.isFinite(Date.parse(reviewed.card.createdAt))).toBe(true);
+  });
+
+  it('uses updatedAt as timeline anchor when createdAt and runtime clock are invalid', () => {
+    const base = createNewCard('phi-3', 'letter', NOW);
+    const corrupted = {
+      ...base,
+      createdAt: 'bad-created-at',
+      updatedAt: '2026-02-20T12:00:00.000Z',
+      dueAt: '2026-02-21T12:00:00.000Z',
+      state: 'review' as const,
+    };
+    const reviewed = reviewCard(corrupted, 3, 'not-a-time');
+
+    expect(reviewed.card.updatedAt).toBe('2026-02-20T12:00:00.000Z');
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
   it('computes ordered interval previews per rating', () => {
@@ -400,5 +511,21 @@ describe('fsrs scheduler', () => {
 
     expect(overdue.scheduledDays).toBeLessThanOrEqual(onTime.scheduledDays * 2);
     expect(overdue.card.stability).toBeLessThanOrEqual(onTime.card.stability * 2);
+  });
+
+  it('keeps hard review growth capped for heavily overdue reviews', () => {
+    let card = createNewCard('zeta-hard-cap', 'letter', NOW);
+    card = reviewCard(card, 4, NOW).card;
+    card = reviewCard(card, 4, '2026-02-26T12:00:00.000Z').card;
+    card = reviewCard(card, 4, card.dueAt).card;
+
+    const scheduledDays = Math.round(
+      (Date.parse(card.dueAt) - Date.parse(card.updatedAt)) / (24 * 60 * 60 * 1000),
+    );
+    const hardOverdue = reviewCard(card, 2, addDaysIso(card.dueAt, scheduledDays * 2));
+    const goodOverdue = reviewCard(card, 3, addDaysIso(card.dueAt, scheduledDays * 2));
+
+    expect(hardOverdue.scheduledDays).toBeLessThanOrEqual(Math.ceil(scheduledDays * 1.2));
+    expect(goodOverdue.scheduledDays).toBeGreaterThanOrEqual(hardOverdue.scheduledDays);
   });
 });

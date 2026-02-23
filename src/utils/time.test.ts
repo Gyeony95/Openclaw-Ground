@@ -17,4 +17,8 @@ describe('time utils', () => {
     expect(addDaysIso('2026-02-23T00:00:00.000Z', 0.5)).toBe('2026-02-23T12:00:00.000Z');
     expect(daysBetween('2026-02-24T00:00:00.000Z', '2026-02-23T00:00:00.000Z')).toBe(0);
   });
+
+  it('falls back to zero-day offset for non-finite addDays inputs', () => {
+    expect(addDaysIso('2026-02-23T00:00:00.000Z', Number.NaN)).toBe('2026-02-23T00:00:00.000Z');
+  });
 });

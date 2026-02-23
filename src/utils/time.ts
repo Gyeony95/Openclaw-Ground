@@ -12,7 +12,8 @@ export function nowIso(): string {
 export function addDaysIso(iso: string, days: number): string {
   const base = parseIso(iso);
   const start = base === null ? Date.now() : base;
-  return new Date(start + days * DAY_MS).toISOString();
+  const safeDays = Number.isFinite(days) ? days : 0;
+  return new Date(start + safeDays * DAY_MS).toISOString();
 }
 
 export function daysBetween(fromIso: string, toIso: string): number {

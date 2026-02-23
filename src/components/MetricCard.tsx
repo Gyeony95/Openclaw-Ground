@@ -8,13 +8,16 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ label, value, accent = colors.primary }: MetricCardProps) {
+  const displayValue = Number.isFinite(value) ? value.toLocaleString() : '--';
+
   return (
     <View style={styles.card}>
+      <View style={[styles.topBorder, { backgroundColor: accent }]} />
       <View style={styles.head}>
-        <View style={[styles.accent, { backgroundColor: accent }]} />
+        <View style={[styles.dot, { backgroundColor: accent }]} />
         <Text style={styles.label}>{label}</Text>
       </View>
-      <Text style={styles.value}>{value}</Text>
+      <Text style={styles.value}>{displayValue}</Text>
     </View>
   );
 }
@@ -23,32 +26,41 @@ const styles = StyleSheet.create({
   card: {
     flexGrow: 1,
     flexBasis: '48%',
-    minHeight: 108,
+    minHeight: 112,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
-    paddingHorizontal: 16,
+    paddingHorizontal: 15,
     paddingVertical: 15,
     justifyContent: 'space-between',
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.07,
-    shadowRadius: 15,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  topBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
   },
   head: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 7,
+    minHeight: 20,
   },
-  accent: {
-    width: 9,
-    height: 9,
-    borderRadius: 999,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   value: {
-    fontSize: 31,
+    fontSize: 29,
     fontWeight: '800',
     color: colors.ink,
     letterSpacing: -0.4,
@@ -59,6 +71,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.subInk,
     textTransform: 'uppercase',
-    letterSpacing: 0.95,
+    letterSpacing: 0.9,
   },
 });

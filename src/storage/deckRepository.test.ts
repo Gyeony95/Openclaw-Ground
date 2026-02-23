@@ -94,7 +94,7 @@ describe('deck repository', () => {
     });
   });
 
-  it('drops cards with invalid timestamps', async () => {
+  it('recovers cards when one of the persisted timestamps is invalid', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
         cards: [
@@ -108,7 +108,7 @@ describe('deck repository', () => {
             state: 'learning',
           },
           {
-            id: 'bad-date',
+            id: 'missing-due',
             word: 'beta',
             meaning: 'second',
             dueAt: 'not-a-date',
@@ -121,8 +121,73 @@ describe('deck repository', () => {
     );
 
     const deck = await loadDeck();
-    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards).toHaveLength(2);
     expect(deck.cards[0].id).toBe('ok');
+    expect(deck.cards[1].id).toBe('missing-due');
+    expect(deck.cards[1].dueAt).toBe('2026-02-22T00:00:00.000Z');
+  });
+
+  it('drops cards when all timestamps are invalid', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'broken-time',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: 'not-a-date',
+            createdAt: 'also-bad',
+            updatedAt: 'still-bad',
+            state: 'review',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(0);
+  });
+
+  it('ignores non-array cards payloads safely', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: { id: 'broken-shape' },
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toEqual([]);
+  });
+
+  it('trims valid string IDs and drops cards with blank IDs', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: '  trimmed-id  ',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'learning',
+          },
+          {
+            id: '   ',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].id).toBe('trimmed-id');
   });
 
   it('falls back to defaults for non-finite scheduling numbers', async () => {
@@ -228,5 +293,37 @@ describe('deck repository', () => {
     const deck = await loadDeck();
     expect(deck.cards[0].updatedAt).toBe('2026-02-24T00:00:00.000Z');
     expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
+  });
+
+  it('keeps earliest created card when duplicate IDs are persisted', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'dup',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'learning',
+          },
+          {
+            id: 'dup',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-21T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].id).toBe('dup');
+    expect(deck.cards[0].word).toBe('alpha');
   });
 });

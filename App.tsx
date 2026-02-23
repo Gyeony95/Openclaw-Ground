@@ -1,6 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -63,13 +65,39 @@ function formatMetricNumber(value: number, digits: number): string {
   return value.toFixed(digits);
 }
 
+function queueTone({
+  label,
+  loading,
+  hasDueCard,
+}: {
+  label: string;
+  loading: boolean;
+  hasDueCard: boolean;
+}): string {
+  if (loading) {
+    return colors.subInk;
+  }
+  if (!hasDueCard) {
+    return colors.success;
+  }
+  if (label === 'Due date unavailable') {
+    return colors.warn;
+  }
+  if (label.startsWith('Overdue') || label === 'Due now') {
+    return colors.danger;
+  }
+  return colors.primary;
+}
+
 export default function App() {
-  const { loading, dueCards, stats, addCard, reviewDueCard, clockIso, lastReviewedAt } = useDeck();
+  const { loading, cards, dueCards, stats, addCard, reviewDueCard, clockIso, lastReviewedAt } = useDeck();
   const { width } = useWindowDimensions();
   const [word, setWord] = useState('');
   const [meaning, setMeaning] = useState('');
   const [notes, setNotes] = useState('');
   const [showMeaning, setShowMeaning] = useState(false);
+  const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
+  const [entryAnim] = useState(() => new Animated.Value(0));
 
   const dueCard = dueCards[0];
   const retentionScore = useMemo(() => {
@@ -80,8 +108,21 @@ export default function App() {
   }, [stats]);
   const retentionBarWidth = `${retentionScore}%`;
   const queueLabel = loading ? 'Loading' : dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Queue clear';
+  const queueLabelTone = queueTone({ label: queueLabel, loading, hasDueCard: Boolean(dueCard) });
   const queueShareLabel = loading ? '--' : `${stats.dueNow} due / ${stats.total} total`;
+  const dueWithinDay = useMemo(() => {
+    const nowMs = Date.parse(clockIso);
+    if (!Number.isFinite(nowMs)) {
+      return 0;
+    }
+    const dayMs = 24 * 60 * 60 * 1000;
+    return cards.filter((card) => {
+      const dueMs = Date.parse(card.dueAt);
+      return Number.isFinite(dueMs) && dueMs <= nowMs + dayMs;
+    }).length;
+  }, [cards, clockIso]);
   const exactDueLabel = exactDateLabel(dueCard?.dueAt);
+  const relativeDueLabel = dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Schedule unavailable';
   const asOf = asOfLabel(clockIso);
   const dueCardStateConfig = dueCard ? stateConfig(dueCard.state) : null;
   const ratingIntervals = useMemo(() => (dueCard ? previewIntervals(dueCard, clockIso) : null), [dueCard, clockIso]);
@@ -106,6 +147,24 @@ export default function App() {
     setShowMeaning(false);
   }, [dueCard?.id]);
 
+  useEffect(() => {
+    if (pendingReviewCardId === null) {
+      return;
+    }
+    if (!dueCard || dueCard.id !== pendingReviewCardId) {
+      setPendingReviewCardId(null);
+    }
+  }, [dueCard, pendingReviewCardId]);
+
+  useEffect(() => {
+    Animated.timing(entryAnim, {
+      toValue: 1,
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [entryAnim]);
+
   function handleAddCard() {
     if (!canAdd) {
       return;
@@ -117,10 +176,13 @@ export default function App() {
   }
 
   function handleRate(rating: Rating) {
-    if (!dueCard) {
+    if (!dueCard || pendingReviewCardId !== null) {
       return;
     }
-    reviewDueCard(dueCard.id, rating);
+    const reviewed = reviewDueCard(dueCard.id, rating);
+    if (reviewed) {
+      setPendingReviewCardId(dueCard.id);
+    }
   }
 
   return (
@@ -136,12 +198,31 @@ export default function App() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
-            <View style={styles.headerCard}>
+            <Animated.View
+              style={[
+                styles.headerCard,
+                {
+                  opacity: entryAnim,
+                  transform: [
+                    {
+                      translateY: entryAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [10, 0],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
               <View style={styles.headerGlowA} />
               <View style={styles.headerGlowB} />
               <Text style={styles.eyebrow}>Word Memorizer</Text>
               <Text style={styles.title}>Retention Dashboard</Text>
-              <Text style={styles.subtitle}>FSRS-inspired scheduling tuned for steady long-term recall.</Text>
+              <Text style={styles.subtitle}>FSRS-inspired scheduler calibrated for consistent long-term recall.</Text>
+              <View style={styles.heroTags}>
+                <Text style={[styles.heroTag, { color: queueLabelTone }]}>{queueLabel}</Text>
+                <Text style={styles.heroTag}>{queueShareLabel}</Text>
+              </View>
               <View style={styles.metaLine}>
                 <Text style={styles.subMeta}>{lastReviewedLabel}</Text>
                 <Text style={styles.asOfMeta}>{asOf}</Text>
@@ -155,22 +236,42 @@ export default function App() {
                   <View style={[styles.scoreFill, { width: retentionBarWidth }]} />
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             <View style={styles.metrics}>
               <MetricCard label="Due now" value={stats.dueNow} accent={colors.primary} />
+              <MetricCard label="Due <=24h" value={dueWithinDay} accent={colors.accent} />
               <MetricCard label="Learning" value={stats.learning} accent={colors.warn} />
               <MetricCard label="Review" value={stats.review} accent={colors.success} />
               <MetricCard label="Relearning" value={stats.relearning} accent={colors.danger} />
               <MetricCard label="Total cards" value={stats.total} accent={colors.accent} />
             </View>
 
-            <View style={[styles.panelGrid, isWideLayout && styles.panelGridWide]}>
+            <Animated.View
+              style={[
+                styles.panelGrid,
+                isWideLayout && styles.panelGridWide,
+                {
+                  opacity: entryAnim,
+                  transform: [
+                    {
+                      translateY: entryAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [16, 0],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
               <View style={[styles.panel, styles.reviewPanel, isWideLayout && styles.panelWide]}>
                 <View style={styles.panelHead}>
-                  <Text style={styles.panelTitle}>Review Queue</Text>
+                  <View style={styles.panelTitleWrap}>
+                    <Text style={styles.panelTitle}>Review Queue</Text>
+                    <Text style={styles.panelSubtitle}>Prioritized by due time and recency</Text>
+                  </View>
                   <View style={styles.panelKpiWrap}>
-                    <Text style={styles.panelKpi}>{queueLabel}</Text>
+                    <Text style={[styles.panelKpi, { color: queueLabelTone }]}>{queueLabel}</Text>
                     <Text style={styles.panelSubKpi}>{queueShareLabel}</Text>
                   </View>
                 </View>
@@ -179,8 +280,9 @@ export default function App() {
                 {!loading && dueCard ? (
                   <View style={styles.reviewCard}>
                     <View style={styles.reviewTimeline}>
-                      <Text style={styles.reviewTimelineLabel}>Current schedule</Text>
+                      <Text style={styles.reviewTimelineLabel}>Scheduled for</Text>
                       <Text style={styles.reviewTimelineValue}>{exactDueLabel}</Text>
+                      <Text style={styles.reviewTimelineSubValue}>{relativeDueLabel}</Text>
                     </View>
                     <View style={styles.reviewHeader}>
                       <Text style={styles.word}>{dueCard.word}</Text>
@@ -217,7 +319,11 @@ export default function App() {
                       </Pressable>
                     ) : (
                       <View style={styles.answerActions}>
-                        <RatingRow onRate={handleRate} intervalLabels={ratingIntervalLabels} />
+                        <RatingRow
+                          onRate={handleRate}
+                          intervalLabels={ratingIntervalLabels}
+                          disabled={pendingReviewCardId !== null}
+                        />
                         <Pressable
                           style={({ pressed }) => [styles.ghostBtn, pressed && styles.ghostBtnPressed]}
                           onPress={() => setShowMeaning(false)}
@@ -232,7 +338,10 @@ export default function App() {
                 ) : null}
               </View>
               <View style={[styles.panel, styles.addPanel, isWideLayout && styles.panelWide]}>
-                <Text style={styles.panelTitle}>Add Vocabulary</Text>
+                <View style={styles.panelTitleWrap}>
+                  <Text style={styles.panelTitle}>Add Vocabulary</Text>
+                  <Text style={styles.panelSubtitle}>Keep entries precise and compact</Text>
+                </View>
                 <Text style={styles.info}>Capture one precise definition and optional context note.</Text>
                 <TextInput
                   value={word}
@@ -283,7 +392,7 @@ export default function App() {
                   <Text style={styles.primaryBtnText}>Add card</Text>
                 </Pressable>
               </View>
-            </View>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -298,29 +407,29 @@ const styles = StyleSheet.create({
   },
   backgroundOrbA: {
     position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    width: 340,
+    height: 340,
+    borderRadius: 170,
     backgroundColor: colors.primarySoft,
-    top: -140,
-    right: -94,
-    opacity: 0.9,
+    top: -156,
+    right: -104,
+    opacity: 0.85,
   },
   backgroundOrbB: {
     position: 'absolute',
-    width: 236,
-    height: 236,
-    borderRadius: 118,
+    width: 270,
+    height: 270,
+    borderRadius: 135,
     backgroundColor: colors.bgMuted,
-    top: 220,
-    left: -134,
-    opacity: 0.75,
+    top: 246,
+    left: -150,
+    opacity: 0.72,
   },
   container: {
     paddingHorizontal: 16,
-    paddingTop: 10,
-    gap: 16,
-    paddingBottom: 40,
+    paddingTop: 12,
+    gap: 14,
+    paddingBottom: 44,
   },
   content: {
     width: '100%',
@@ -335,11 +444,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surfaceAlt,
     padding: 21,
-    gap: 11,
+    gap: 10,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 9 },
-    shadowOpacity: 0.11,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 22,
     elevation: 4,
   },
   headerGlowA: {
@@ -369,15 +478,35 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   title: {
-    fontSize: 31,
+    fontSize: 29,
     fontWeight: '800',
     color: colors.ink,
-    letterSpacing: -0.5,
+    letterSpacing: -0.7,
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 13.5,
     color: colors.subInk,
     lineHeight: 20,
+  },
+  heroTags: {
+    marginTop: 2,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 7,
+  },
+  heroTag: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderRadius: radii.pill,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    color: colors.ink,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.45,
+    textTransform: 'uppercase',
+    fontVariant: ['tabular-nums'],
   },
   subMeta: {
     color: colors.subInk,
@@ -398,12 +527,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.55,
   },
   scoreRow: {
-    marginTop: 7,
+    marginTop: 8,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     backgroundColor: colors.surface,
     gap: 9,
   },
@@ -413,7 +542,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreTrack: {
-    height: 9,
+    height: 8,
     backgroundColor: colors.primarySoft,
     borderRadius: radii.pill,
     overflow: 'hidden',
@@ -431,14 +560,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.7,
   },
   scoreValue: {
-    fontSize: 23,
+    fontSize: 22,
     fontWeight: '800',
     color: colors.ink,
     fontVariant: ['tabular-nums'],
   },
   metrics: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 9,
     flexWrap: 'wrap',
   },
   panelGrid: {
@@ -463,10 +592,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surfaceAlt,
     padding: 17,
-    gap: 13,
+    gap: 12,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 9 },
+    shadowOpacity: 0.08,
     shadowRadius: 17,
     elevation: 4,
   },
@@ -476,11 +605,21 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 8,
   },
+  panelTitleWrap: {
+    gap: 3,
+    flex: 1,
+  },
   panelTitle: {
-    fontSize: 16,
+    fontSize: 16.5,
     fontWeight: '800',
     color: colors.ink,
     letterSpacing: 0.1,
+  },
+  panelSubtitle: {
+    fontSize: 11,
+    color: colors.subInk,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   panelKpiWrap: {
     alignItems: 'flex-end',
@@ -521,8 +660,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
     borderRadius: radii.md,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 3,
+    paddingVertical: 9,
+    gap: 2,
   },
   reviewTimelineLabel: {
     color: colors.subInk,
@@ -537,6 +676,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
+  reviewTimelineSubValue: {
+    color: colors.primary,
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+  },
   reviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -544,10 +690,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   word: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '800',
     color: colors.ink,
-    lineHeight: 36,
+    lineHeight: 38,
     flexShrink: 1,
   },
   stateBadge: {
@@ -566,7 +712,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.ink,
-    lineHeight: 28,
+    lineHeight: 29,
   },
   notes: {
     fontSize: 14,
@@ -597,7 +743,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
     borderRadius: radii.md,
-    paddingVertical: 13,
+    paddingVertical: 12,
     paddingHorizontal: 15,
     color: colors.ink,
     fontSize: 15,
@@ -616,7 +762,7 @@ const styles = StyleSheet.create({
   primaryBtn: {
     borderRadius: radii.md,
     backgroundColor: colors.primary,
-    paddingVertical: 14,
+    paddingVertical: 13,
     alignItems: 'center',
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 8 },
@@ -635,7 +781,7 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 14.5,
     fontWeight: '800',
     letterSpacing: 0.3,
   },

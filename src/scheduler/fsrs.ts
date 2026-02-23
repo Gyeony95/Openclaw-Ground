@@ -11,6 +11,7 @@ import {
 
 const FSRS_DECAY = -0.5;
 const FSRS_FACTOR = 19 / 81;
+const ON_TIME_TOLERANCE_DAYS = MINUTE_IN_DAYS;
 
 export interface ReviewResult {
   card: Card;
@@ -21,6 +22,9 @@ export type RatingIntervalPreview = Record<Rating, number>;
 
 type SchedulerPhase = 'learning' | 'review' | 'relearning';
 type ReviewIntervalsByRating = Record<2 | 3 | 4, number>;
+const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
+
+let cardIdSequence = 0;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -69,12 +73,19 @@ function normalizeTimeline(
   card: Card,
   requestedNowIso: string,
 ): {
+  createdAt: string;
   currentIso: string;
   updatedAt: string;
   dueAt: string;
 } {
   const fallback = currentNowIso();
-  const createdAt = isValidIso(card.createdAt) ? card.createdAt : fallback;
+  const createdAt = isValidIso(card.createdAt)
+    ? card.createdAt
+    : isValidIso(card.updatedAt)
+      ? card.updatedAt
+      : isValidIso(card.dueAt)
+        ? card.dueAt
+        : fallback;
   const rawUpdatedAt = isValidIso(card.updatedAt) ? card.updatedAt : createdAt;
   const createdMs = Date.parse(createdAt);
   const updatedMs = Date.parse(rawUpdatedAt);
@@ -83,7 +94,7 @@ function normalizeTimeline(
   const dueAt = new Date(Math.max(Date.parse(rawDueAt), Date.parse(updatedAt))).toISOString();
   const currentIso = resolveReviewIso(updatedAt, requestedNowIso);
 
-  return { currentIso, updatedAt, dueAt };
+  return { createdAt, currentIso, updatedAt, dueAt };
 }
 
 function toReviewRating(rating: Rating): 2 | 3 | 4 {
@@ -107,7 +118,7 @@ function normalizeCounter(value: number): number {
   return Math.max(0, Math.floor(value));
 }
 
-function scheduleFloorForState(state: ReviewState): number {
+function scheduleFallbackForState(state: ReviewState): number {
   if (state === 'review') {
     return 1;
   }
@@ -115,6 +126,17 @@ function scheduleFloorForState(state: ReviewState): number {
     return 10 * MINUTE_IN_DAYS;
   }
   return MINUTE_IN_DAYS;
+}
+
+function normalizeScheduledDays(value: number, state: ReviewState): number {
+  if (Number.isFinite(value) && value > 0) {
+    const normalized = Math.max(value, MINUTE_IN_DAYS);
+    if (state === 'review') {
+      return Math.max(normalized, REVIEW_SCHEDULE_FLOOR_DAYS);
+    }
+    return normalized;
+  }
+  return scheduleFallbackForState(state);
 }
 
 function nextState(current: ReviewState, rating: Rating): ReviewState {
@@ -125,6 +147,11 @@ function nextState(current: ReviewState, rating: Rating): ReviewState {
     return rating >= 3 ? 'review' : 'relearning';
   }
   return rating === 1 ? 'relearning' : 'review';
+}
+
+function shouldCountLapse(current: ReviewState, rating: Rating): boolean {
+  // In FSRS-style review flow, a lapse is a failed review card, not a failed learning step.
+  return current === 'review' && rating === 1;
 }
 
 function learningIntervalDays(rating: Rating): number {
@@ -254,11 +281,19 @@ function rawReviewIntervalDays(
   let floorFromSchedule = rating === 4 ? Math.ceil(scheduled) : 1;
 
   // Keep "Good" on-time reviews from shrinking the schedule due to rounding/noise.
-  if (phase === 'review' && rating === 3 && elapsed >= scheduled) {
+  if (phase === 'review' && rating === 3 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {
     floorFromSchedule = Math.max(floorFromSchedule, Math.ceil(scheduled));
   }
 
-  return clamp(Math.max(rawInterval, floorFromSchedule), 1, STABILITY_MAX);
+  const flooredInterval = Math.max(rawInterval, floorFromSchedule);
+
+  // Keep "Hard" reviews conservative even when cards are heavily overdue.
+  if (phase === 'review' && rating === 2) {
+    const hardCap = Math.max(1, Math.ceil(scheduled * 1.2));
+    return clamp(Math.min(flooredInterval, hardCap), 1, STABILITY_MAX);
+  }
+
+  return clamp(flooredInterval, 1, STABILITY_MAX);
 }
 
 function orderedReviewIntervals(
@@ -277,14 +312,8 @@ function orderedReviewIntervals(
   };
 }
 
-function graduationIntervalDays(phase: SchedulerPhase, rating: Rating, reps: number): number {
-  if (phase === 'relearning') {
-    return rating === 4 ? 1 : 0.5;
-  }
-  if (rating === 4) {
-    return reps === 0 ? 1 : 2;
-  }
-  return reps === 0 ? 0.5 : 1;
+function graduationIntervalDays(rating: Rating): number {
+  return rating === 4 ? 1 : 0.5;
 }
 
 export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewResult {
@@ -292,12 +321,13 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   const currentState = normalizeState(card.state);
   const previousReps = normalizeCounter(card.reps);
   const previousLapses = normalizeCounter(card.lapses);
-  const { currentIso, updatedAt, dueAt } = normalizeTimeline(card, nowIso);
+  const { createdAt, currentIso, updatedAt, dueAt } = normalizeTimeline(card, nowIso);
   const elapsedDays = daysBetween(updatedAt, currentIso);
   const scheduledDays = daysBetween(updatedAt, dueAt);
-  const previousScheduledDays = Math.max(scheduledDays, scheduleFloorForState(currentState));
+  const previousScheduledDays = normalizeScheduledDays(scheduledDays, currentState);
   const state = nextState(currentState, normalizedRating);
   const phase = currentState;
+  const lapseIncrement = shouldCountLapse(currentState, normalizedRating) ? 1 : 0;
 
   const nextDifficulty = updateDifficulty(card.difficulty, normalizedRating);
   const nextStability = updateStability(
@@ -316,23 +346,25 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   } else if (state === 'relearning') {
     nextScheduledDays = relearningIntervalDays(normalizedRating);
   } else if (phase !== 'review') {
-    nextScheduledDays = graduationIntervalDays(phase, normalizedRating, previousReps);
+    nextScheduledDays = graduationIntervalDays(normalizedRating);
   } else {
     const intervals = orderedReviewIntervals(nextStability, elapsedDays, previousScheduledDays, phase);
     nextScheduledDays = intervals[toReviewRating(normalizedRating)];
   }
 
-  const nextDueAt = addDaysIso(currentIso, nextScheduledDays);
+  const safeScheduledDays = normalizeScheduledDays(nextScheduledDays, state);
+  const nextDueAt = addDaysIso(currentIso, safeScheduledDays);
 
   return {
-    scheduledDays: nextScheduledDays,
+    scheduledDays: safeScheduledDays,
     card: {
       ...card,
+      createdAt,
       state,
       difficulty: nextDifficulty,
       stability: nextStability,
       reps: previousReps + 1,
-      lapses: previousLapses + (normalizedRating === 1 ? 1 : 0),
+      lapses: previousLapses + lapseIncrement,
       updatedAt: currentIso,
       dueAt: nextDueAt,
     },
@@ -352,9 +384,12 @@ export function createNewCard(word: string, meaning: string, nowIso: string, not
   const createdAt = isValidIso(nowIso) ? nowIso : currentNowIso();
   const trimmedWord = word.trim();
   const trimmedMeaning = meaning.trim();
+  const createdAtMs = Date.parse(createdAt);
+  cardIdSequence = (cardIdSequence + 1) % 1_000_000;
+  const uniqueSuffix = `${cardIdSequence.toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
   return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `${Number.isFinite(createdAtMs) ? createdAtMs : Date.now()}-${uniqueSuffix}`,
     word: trimmedWord,
     meaning: trimmedMeaning,
     notes: notes?.trim() || undefined,
