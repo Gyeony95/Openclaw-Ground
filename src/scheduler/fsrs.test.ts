@@ -274,6 +274,15 @@ describe('fsrs scheduler', () => {
     expect(onTime.scheduledDays).toBeGreaterThanOrEqual(0.5);
   });
 
+  it('keeps on-time hard reviews on half-day schedules at half-day', () => {
+    const card = createNewCard('halfday-hard-ontime', 'letter', NOW);
+    const graduated = reviewCard(card, 3, NOW).card;
+    const onTimeHard = reviewCard(graduated, 2, graduated.dueAt);
+
+    expect(onTimeHard.card.state).toBe('review');
+    expect(onTimeHard.scheduledDays).toBe(0.5);
+  });
+
   it('keeps very-early good reviews on low-stability half-day schedules within sub-day cadence', () => {
     const base = createNewCard('halfday-good-cadence', 'letter', NOW);
     const subDayReview = {

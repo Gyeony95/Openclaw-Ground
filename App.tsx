@@ -184,6 +184,11 @@ export default function App() {
     () => !loading && trimmedWordLength > 0 && trimmedMeaningLength > 0,
     [loading, trimmedWordLength, trimmedMeaningLength],
   );
+  const addFormHint = loading
+    ? 'Loading deck...'
+    : canAdd
+      ? 'Ready to add'
+      : 'Word and meaning are required';
   const wordRemaining = Math.max(0, WORD_MAX_LENGTH - wordLength);
   const meaningRemaining = Math.max(0, MEANING_MAX_LENGTH - meaningLength);
   const notesRemaining = Math.max(0, NOTES_MAX_LENGTH - notesLength);
@@ -555,6 +560,7 @@ export default function App() {
                 >
                   <Text style={styles.primaryBtnText}>Add card</Text>
                 </Pressable>
+                <Text style={styles.addHint}>{addFormHint}</Text>
               </View>
             </Animated.View>
           </View>
@@ -956,6 +962,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.subInk,
     marginTop: -6,
+  },
+  addHint: {
+    marginTop: 6,
+    color: colors.subInk,
+    fontSize: 12,
+    fontWeight: '600',
   },
   primaryBtn: {
     borderRadius: radii.md,

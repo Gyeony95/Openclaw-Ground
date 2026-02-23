@@ -381,7 +381,8 @@ function rawReviewIntervalDays(
   if (phase === 'review' && rating === 2) {
     const reviewedEarly = elapsed + ON_TIME_TOLERANCE_DAYS < scheduled;
     const earlyCap = scheduled < 1 ? REVIEW_SCHEDULE_FLOOR_DAYS : Math.max(1, Math.floor(scheduled));
-    const onTimeOrLateCap = scheduled < 1 ? 1 : Math.max(1, Math.ceil(scheduled * 1.2));
+    // Keep sub-day review cards on sub-day cadence for "Hard" even when reviewed on time.
+    const onTimeOrLateCap = scheduled < 1 ? REVIEW_SCHEDULE_FLOOR_DAYS : Math.max(1, Math.ceil(scheduled * 1.2));
     const hardCap = reviewedEarly ? earlyCap : onTimeOrLateCap;
     return quantizeReviewIntervalDays(Math.min(flooredInterval, hardCap), scheduled);
   }
