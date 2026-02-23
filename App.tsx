@@ -49,6 +49,13 @@ function exactDateLabel(iso?: string): string {
   return new Date(iso).toLocaleString();
 }
 
+function asOfLabel(iso: string): string {
+  if (!Number.isFinite(Date.parse(iso))) {
+    return 'Clock unavailable';
+  }
+  return `As of ${new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+}
+
 function formatMetricNumber(value: number, digits: number): string {
   if (!Number.isFinite(value)) {
     return '-';
@@ -72,9 +79,10 @@ export default function App() {
     return clampPercent(((stats.review + stats.relearning * 0.5 + stats.learning * 0.2) / stats.total) * 100);
   }, [stats]);
   const retentionBarWidth = `${retentionScore}%`;
-  const queueLabel = loading ? 'Loading...' : dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Queue clear';
-  const queueShareLabel = `${stats.dueNow} due / ${stats.total} total`;
+  const queueLabel = loading ? 'Loading' : dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Queue clear';
+  const queueShareLabel = loading ? '--' : `${stats.dueNow} due / ${stats.total} total`;
   const exactDueLabel = exactDateLabel(dueCard?.dueAt);
+  const asOf = asOfLabel(clockIso);
   const dueCardStateConfig = dueCard ? stateConfig(dueCard.state) : null;
   const ratingIntervals = useMemo(() => (dueCard ? previewIntervals(dueCard, clockIso) : null), [dueCard, clockIso]);
   const ratingIntervalLabels = useMemo(
@@ -125,6 +133,7 @@ export default function App() {
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
             <View style={styles.headerCard}>
@@ -133,7 +142,10 @@ export default function App() {
               <Text style={styles.eyebrow}>Word Memorizer</Text>
               <Text style={styles.title}>Retention Dashboard</Text>
               <Text style={styles.subtitle}>FSRS-inspired scheduling tuned for steady long-term recall.</Text>
-              <Text style={styles.subMeta}>{lastReviewedLabel}</Text>
+              <View style={styles.metaLine}>
+                <Text style={styles.subMeta}>{lastReviewedLabel}</Text>
+                <Text style={styles.asOfMeta}>{asOf}</Text>
+              </View>
               <View style={styles.scoreRow}>
                 <View style={styles.scoreHeader}>
                   <Text style={styles.scoreLabel}>Retention score</Text>
@@ -306,15 +318,15 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingHorizontal: 16,
-    paddingTop: 8,
-    gap: 14,
-    paddingBottom: 36,
+    paddingTop: 10,
+    gap: 16,
+    paddingBottom: 40,
   },
   content: {
     width: '100%',
     maxWidth: 980,
     alignSelf: 'center',
-    gap: 14,
+    gap: 16,
   },
   headerCard: {
     overflow: 'hidden',
@@ -322,12 +334,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surfaceAlt,
-    padding: 20,
-    gap: 10,
+    padding: 21,
+    gap: 11,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 9 },
+    shadowOpacity: 0.11,
+    shadowRadius: 20,
     elevation: 4,
   },
   headerGlowA: {
@@ -363,9 +375,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.subInk,
-    lineHeight: 21,
+    lineHeight: 20,
   },
   subMeta: {
     color: colors.subInk,
@@ -373,12 +385,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.15,
   },
+  metaLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  asOfMeta: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.55,
+  },
   scoreRow: {
     marginTop: 7,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 12,
     backgroundColor: colors.surface,
     gap: 9,
@@ -414,7 +438,7 @@ const styles = StyleSheet.create({
   },
   metrics: {
     flexDirection: 'row',
-    gap: 11,
+    gap: 10,
     flexWrap: 'wrap',
   },
   panelGrid: {
@@ -438,27 +462,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surfaceAlt,
-    padding: 15,
+    padding: 17,
     gap: 13,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 7 },
-    shadowOpacity: 0.09,
-    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 17,
     elevation: 4,
   },
   panelHead: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: 8,
   },
   panelTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '800',
     color: colors.ink,
+    letterSpacing: 0.1,
   },
   panelKpiWrap: {
     alignItems: 'flex-end',
     gap: 2,
+    flexShrink: 1,
   },
   panelKpi: {
     fontSize: 11,
@@ -466,6 +493,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.85,
     color: colors.primary,
     fontWeight: '700',
+    textAlign: 'right',
   },
   panelSubKpi: {
     fontSize: 10,
@@ -485,7 +513,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: 16,
     borderStyle: 'solid',
-    gap: 15,
+    gap: 14,
   },
   reviewTimeline: {
     borderWidth: 1,
@@ -512,7 +540,7 @@ const styles = StyleSheet.create({
   reviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 8,
   },
   word: {
@@ -532,6 +560,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     backgroundColor: colors.surface,
+    flexShrink: 0,
   },
   meaning: {
     fontSize: 20,
@@ -568,7 +597,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
     borderRadius: radii.md,
-    paddingVertical: 14,
+    paddingVertical: 13,
     paddingHorizontal: 15,
     color: colors.ink,
     fontSize: 15,
@@ -587,7 +616,7 @@ const styles = StyleSheet.create({
   primaryBtn: {
     borderRadius: radii.md,
     backgroundColor: colors.primary,
-    paddingVertical: 15,
+    paddingVertical: 14,
     alignItems: 'center',
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 8 },

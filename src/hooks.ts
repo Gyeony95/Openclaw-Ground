@@ -26,6 +26,7 @@ export function applyDueReview(cards: Card[], cardId: string, rating: Rating, cu
 export function useDeck() {
   const [deckState, setDeckState] = useState<{ cards: Card[]; lastReviewedAt?: string }>({ cards: [] });
   const [loading, setLoading] = useState(true);
+  const [canPersist, setCanPersist] = useState(false);
   const [clockIso, setClockIso] = useState(() => nowIso());
 
   useEffect(() => {
@@ -34,7 +35,11 @@ export function useDeck() {
       .then((deck) => {
         if (active) {
           setDeckState({ cards: deck.cards, lastReviewedAt: deck.lastReviewedAt });
+          setCanPersist(true);
         }
+      })
+      .catch(() => {
+        // Keep in-memory defaults when storage is unavailable.
       })
       .finally(() => {
         if (active) {
@@ -48,13 +53,13 @@ export function useDeck() {
   }, []);
 
   useEffect(() => {
-    if (loading) {
+    if (loading || !canPersist) {
       return;
     }
     saveDeck(deckState).catch(() => {
       // Persist errors are non-fatal for in-session usage.
     });
-  }, [deckState, loading]);
+  }, [canPersist, deckState, loading]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -79,12 +84,14 @@ export function useDeck() {
     const current = nowIso();
     const created = createNewCard(trimmedWord, trimmedMeaning, current, notes);
     setClockIso(current);
+    setCanPersist(true);
     setDeckState((prev) => ({ ...prev, cards: [created, ...prev.cards] }));
   }, []);
 
   const reviewDueCard = useCallback((cardId: string, rating: Rating) => {
     const current = nowIso();
     setClockIso(current);
+    setCanPersist(true);
     setDeckState((prev) => {
       const next = applyDueReview(prev.cards, cardId, rating, current);
       if (!next.reviewed) {

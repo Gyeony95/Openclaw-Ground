@@ -20,6 +20,7 @@ export interface ReviewResult {
 export type RatingIntervalPreview = Record<Rating, number>;
 
 type SchedulerPhase = 'learning' | 'review' | 'relearning';
+type ReviewIntervalsByRating = Record<2 | 3 | 4, number>;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -50,13 +51,46 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
 }
 
 function normalizeRating(input: Rating): Rating {
-  if (input <= 1) {
+  if (!Number.isFinite(input)) {
     return 1;
   }
-  if (input >= 4) {
+
+  const rounded = Math.round(input);
+  if (rounded <= 1) {
+    return 1;
+  }
+  if (rounded >= 4) {
     return 4;
   }
-  return input === 2 ? 2 : 3;
+  return rounded === 2 ? 2 : 3;
+}
+
+function normalizeTimeline(
+  card: Card,
+  requestedNowIso: string,
+): {
+  currentIso: string;
+  updatedAt: string;
+  dueAt: string;
+} {
+  const fallback = currentNowIso();
+  const createdAt = isValidIso(card.createdAt) ? card.createdAt : fallback;
+  const rawUpdatedAt = isValidIso(card.updatedAt) ? card.updatedAt : createdAt;
+  const createdMs = Date.parse(createdAt);
+  const updatedMs = Date.parse(rawUpdatedAt);
+  const updatedAt = new Date(Math.max(createdMs, updatedMs)).toISOString();
+  const rawDueAt = isValidIso(card.dueAt) ? card.dueAt : updatedAt;
+  const dueAt = new Date(Math.max(Date.parse(rawDueAt), Date.parse(updatedAt))).toISOString();
+  const currentIso = resolveReviewIso(updatedAt, requestedNowIso);
+
+  return { currentIso, updatedAt, dueAt };
+}
+
+function toReviewRating(rating: Rating): 2 | 3 | 4 {
+  if (rating <= 2) {
+    return 2;
+  }
+  return rating === 4 ? 4 : 3;
 }
 
 function normalizeState(input: ReviewState): ReviewState {
@@ -203,7 +237,7 @@ function reviewDesiredRetention(rating: Rating): number {
   return 0.9;
 }
 
-function reviewIntervalDays(
+function rawReviewIntervalDays(
   nextStability: number,
   rating: Rating,
   elapsedDays: number,
@@ -227,6 +261,22 @@ function reviewIntervalDays(
   return clamp(Math.max(rawInterval, floorFromSchedule), 1, STABILITY_MAX);
 }
 
+function orderedReviewIntervals(
+  nextStability: number,
+  elapsedDays: number,
+  scheduledDays: number,
+  phase: SchedulerPhase,
+): ReviewIntervalsByRating {
+  const hard = rawReviewIntervalDays(nextStability, 2, elapsedDays, scheduledDays, phase);
+  const good = rawReviewIntervalDays(nextStability, 3, elapsedDays, scheduledDays, phase);
+  const easy = rawReviewIntervalDays(nextStability, 4, elapsedDays, scheduledDays, phase);
+  return {
+    2: hard,
+    3: clamp(Math.max(good, hard), 1, STABILITY_MAX),
+    4: clamp(Math.max(easy, good, hard), 1, STABILITY_MAX),
+  };
+}
+
 function graduationIntervalDays(phase: SchedulerPhase, rating: Rating, reps: number): number {
   if (phase === 'relearning') {
     return rating === 4 ? 1 : 0.5;
@@ -242,9 +292,7 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   const currentState = normalizeState(card.state);
   const previousReps = normalizeCounter(card.reps);
   const previousLapses = normalizeCounter(card.lapses);
-  const currentIso = resolveReviewIso(card.updatedAt, nowIso);
-  const updatedAt = isValidIso(card.updatedAt) ? card.updatedAt : currentIso;
-  const dueAt = isValidIso(card.dueAt) ? card.dueAt : updatedAt;
+  const { currentIso, updatedAt, dueAt } = normalizeTimeline(card, nowIso);
   const elapsedDays = daysBetween(updatedAt, currentIso);
   const scheduledDays = daysBetween(updatedAt, dueAt);
   const previousScheduledDays = Math.max(scheduledDays, scheduleFloorForState(currentState));
@@ -270,7 +318,8 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   } else if (phase !== 'review') {
     nextScheduledDays = graduationIntervalDays(phase, normalizedRating, previousReps);
   } else {
-    nextScheduledDays = reviewIntervalDays(nextStability, normalizedRating, elapsedDays, previousScheduledDays, phase);
+    const intervals = orderedReviewIntervals(nextStability, elapsedDays, previousScheduledDays, phase);
+    nextScheduledDays = intervals[toReviewRating(normalizedRating)];
   }
 
   const nextDueAt = addDaysIso(currentIso, nextScheduledDays);

@@ -168,6 +168,30 @@ describe('fsrs scheduler', () => {
     expect(good.scheduledDays).toBeLessThanOrEqual(easy.scheduledDays);
   });
 
+  it('keeps review intervals ordered by rating when overdue', () => {
+    const card = createNewCard('omicron-overdue', 'letter', NOW);
+    const base = reviewCard(card, 4, NOW).card;
+    const reviewTime = '2026-03-01T12:00:00.000Z';
+    const hard = reviewCard(base, 2, reviewTime);
+    const good = reviewCard(base, 3, reviewTime);
+    const easy = reviewCard(base, 4, reviewTime);
+
+    expect(hard.scheduledDays).toBeLessThanOrEqual(good.scheduledDays);
+    expect(good.scheduledDays).toBeLessThanOrEqual(easy.scheduledDays);
+  });
+
+  it('keeps review intervals ordered by rating on very early reviews', () => {
+    const card = createNewCard('omicron-early', 'letter', NOW);
+    const base = reviewCard(card, 4, NOW).card;
+    const earlyIso = '2026-02-23T18:00:00.000Z';
+    const hard = reviewCard(base, 2, earlyIso);
+    const good = reviewCard(base, 3, earlyIso);
+    const easy = reviewCard(base, 4, earlyIso);
+
+    expect(hard.scheduledDays).toBeLessThanOrEqual(good.scheduledDays);
+    expect(good.scheduledDays).toBeLessThanOrEqual(easy.scheduledDays);
+  });
+
   it('uses card updatedAt when review timestamp is invalid', () => {
     const card = createNewCard('pi', 'letter', NOW);
     const result = reviewCard(card, 3, 'invalid-iso-value');
@@ -227,6 +251,26 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
+  it('rounds runtime fractional rating values to the nearest valid button', () => {
+    const base = createNewCard('eta-2', 'letter', NOW);
+    const roundedHard = reviewCard(base, 1.6 as unknown as Rating, NOW);
+    const roundedGood = reviewCard(base, 2.6 as unknown as Rating, NOW);
+
+    expect(roundedHard.card.state).toBe('learning');
+    expect(roundedHard.scheduledDays).toBeGreaterThan(0.006);
+    expect(roundedGood.card.state).toBe('review');
+    expect(roundedGood.scheduledDays).toBe(0.5);
+  });
+
+  it('treats non-finite runtime ratings as Again to avoid accidental promotion', () => {
+    const base = createNewCard('eta-3', 'letter', NOW);
+    const reviewed = reviewCard(base, Number.NaN as unknown as Rating, NOW);
+
+    expect(reviewed.card.state).toBe('learning');
+    expect(reviewed.card.lapses).toBe(1);
+    expect(reviewed.scheduledDays).toBeLessThan(0.002);
+  });
+
   it('normalizes non-finite counters during review updates', () => {
     const base = createNewCard('theta-2', 'letter', NOW);
     const corrupted = {
@@ -279,6 +323,22 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.updatedAt).toBe('2026-02-23T12:00:00.000Z');
     expect(reviewed.card.dueAt).toBe('2026-02-23T12:10:00.000Z');
     expect(reviewed.card.state).toBe('learning');
+  });
+
+  it('normalizes invalid createdAt and enforces updatedAt/dueAt ordering at review time', () => {
+    const base = createNewCard('phi-2', 'letter', NOW);
+    const corrupted = {
+      ...base,
+      createdAt: 'bad-created-at',
+      updatedAt: '2026-02-24T12:00:00.000Z',
+      dueAt: '2026-02-20T12:00:00.000Z',
+      state: 'review' as const,
+    };
+    const reviewed = reviewCard(corrupted, 3, '2026-02-25T12:00:00.000Z');
+
+    expect(reviewed.card.updatedAt).toBe('2026-02-25T12:00:00.000Z');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThanOrEqual(Date.parse(reviewed.card.updatedAt));
   });
 
   it('computes ordered interval previews per rating', () => {
