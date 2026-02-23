@@ -69,6 +69,12 @@ function pickFreshestCard(existing: Card, loaded: Card): Card {
     return existing;
   }
 
+  const existingCreated = parseTimeOrMin(existing.createdAt);
+  const loadedCreated = parseTimeOrMin(loaded.createdAt);
+  if (loadedCreated < existingCreated) {
+    return loaded;
+  }
+
   return existing;
 }
 

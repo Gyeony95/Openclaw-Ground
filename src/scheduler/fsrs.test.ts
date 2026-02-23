@@ -534,6 +534,17 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
+  it('keeps stability finite when numeric operations return non-finite values', () => {
+    const powSpy = jest.spyOn(Math, 'pow').mockReturnValue(Number.NaN);
+    const base = reviewCard(createNewCard('rho-nan-math', 'letter', NOW), 4, NOW).card;
+    const reviewed = reviewCard(base, 3, '2026-02-25T12:00:00.000Z');
+    powSpy.mockRestore();
+
+    expect(Number.isFinite(reviewed.card.stability)).toBe(true);
+    expect(reviewed.card.stability).toBeGreaterThanOrEqual(0.1);
+    expect(reviewed.card.stability).toBeLessThanOrEqual(STABILITY_MAX);
+  });
+
   it('treats invalid runtime rating values as nearest supported rating', () => {
     const base = createNewCard('eta', 'letter', NOW);
     const reviewed = reviewCard(base, 9 as unknown as Rating, NOW);

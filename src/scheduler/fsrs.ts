@@ -324,18 +324,18 @@ function updateStability(
   if (rating === 1) {
     const forgetPenalty = 0.12 + 0.22 * difficultyFactor;
     const overdueFailurePenalty = timingRatio > 1 ? 1 + (timingRatio - 1) * 0.25 : 1;
-    return clamp((previous * forgetPenalty) / overdueFailurePenalty, STABILITY_MIN, STABILITY_MAX);
+    return clampFinite((previous * forgetPenalty) / overdueFailurePenalty, STABILITY_MIN, STABILITY_MAX, previous);
   }
 
   if (rating === 2) {
     const hardGain = 1 + 0.12 * (1 - r) * difficultyFactor * timingRatio;
-    return clamp(Math.max(previous + 0.05, previous * hardGain), STABILITY_MIN, STABILITY_MAX);
+    return clampFinite(Math.max(previous + 0.05, previous * hardGain), STABILITY_MIN, STABILITY_MAX, previous);
   }
 
   const recallGainBase = rating === 4 ? 0.9 : 0.62;
   const growth = 1 + recallGainBase * (1 - r) * difficultyFactor * timingRatio;
 
-  return clamp(Math.max(previous + 0.1, previous * growth), STABILITY_MIN, STABILITY_MAX);
+  return clampFinite(Math.max(previous + 0.1, previous * growth), STABILITY_MIN, STABILITY_MAX, previous);
 }
 
 function reviewDesiredRetention(rating: Rating): number {

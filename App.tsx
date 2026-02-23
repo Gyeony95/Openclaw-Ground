@@ -76,10 +76,6 @@ function trimmedLength(value: string, max: number): number {
   return value.trim().slice(0, max).length;
 }
 
-function typedLength(value: string, max: number): number {
-  return value.slice(0, max).length;
-}
-
 function queueTone({
   label,
   loading,
@@ -178,9 +174,9 @@ export default function App() {
 
   const trimmedWordLength = trimmedLength(word, WORD_MAX_LENGTH);
   const trimmedMeaningLength = trimmedLength(meaning, MEANING_MAX_LENGTH);
-  const wordLength = typedLength(word, WORD_MAX_LENGTH);
-  const meaningLength = typedLength(meaning, MEANING_MAX_LENGTH);
-  const notesLength = typedLength(notes, NOTES_MAX_LENGTH);
+  const wordLength = trimmedWordLength;
+  const meaningLength = trimmedMeaningLength;
+  const notesLength = trimmedLength(notes, NOTES_MAX_LENGTH);
   const canAdd = useMemo(
     () => !loading && !isAddBusy && trimmedWordLength > 0 && trimmedMeaningLength > 0,
     [isAddBusy, loading, trimmedWordLength, trimmedMeaningLength],
