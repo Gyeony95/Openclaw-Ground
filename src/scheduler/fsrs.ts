@@ -227,6 +227,13 @@ function normalizeScheduledDays(value: number, state: ReviewState): number {
   return scheduleFallbackForState(state);
 }
 
+function normalizeElapsedDays(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return clamp(value, 0, STABILITY_MAX);
+}
+
 function nextState(current: ReviewState, rating: Rating): ReviewState {
   if (current === 'learning') {
     return rating >= 3 ? 'review' : 'learning';
@@ -478,7 +485,7 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   const previousReps = normalizeCounter(card.reps);
   const previousLapses = normalizeCounter(card.lapses);
   const { createdAt, currentIso, updatedAt, dueAt } = normalizeTimeline(card, nowIso);
-  const elapsedDays = daysBetween(updatedAt, currentIso);
+  const elapsedDays = normalizeElapsedDays(daysBetween(updatedAt, currentIso));
   const scheduledDays = daysBetween(updatedAt, dueAt);
   const previousScheduledDays = normalizeScheduledDays(scheduledDays, currentState);
   const state = nextState(currentState, normalizedRating);
