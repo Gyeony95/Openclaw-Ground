@@ -447,8 +447,10 @@ function ensureOrderedPreview(intervals: RatingIntervalPreview): RatingIntervalP
 function normalizeCardText(
   card: Pick<Card, 'word' | 'meaning' | 'notes'>,
 ): Pick<Card, 'word' | 'meaning' | 'notes'> {
-  const word = card.word.trim().slice(0, WORD_MAX_LENGTH);
-  const meaning = card.meaning.trim().slice(0, MEANING_MAX_LENGTH);
+  const normalizedWord = card.word.trim().slice(0, WORD_MAX_LENGTH);
+  const normalizedMeaning = card.meaning.trim().slice(0, MEANING_MAX_LENGTH);
+  const word = normalizedWord.length > 0 ? normalizedWord : '[invalid word]';
+  const meaning = normalizedMeaning.length > 0 ? normalizedMeaning : '[invalid meaning]';
   const trimmedNotes = card.notes?.trim().slice(0, NOTES_MAX_LENGTH);
 
   return {

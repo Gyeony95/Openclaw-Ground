@@ -188,6 +188,8 @@ export default function App() {
   const wordLength = trimmedWordLength;
   const meaningLength = trimmedMeaningLength;
   const notesLength = trimmedLength(notes, NOTES_MAX_LENGTH);
+  const missingWord = trimmedWordLength === 0;
+  const missingMeaning = trimmedMeaningLength === 0;
   const canAdd = useMemo(
     () => !loading && !isAddBusy && trimmedWordLength > 0 && trimmedMeaningLength > 0,
     [isAddBusy, loading, trimmedWordLength, trimmedMeaningLength],
@@ -196,9 +198,14 @@ export default function App() {
     ? 'Loading deck...'
     : isAddBusy
       ? 'Adding card...'
-    : canAdd
-      ? 'Ready to add'
-      : 'Word and meaning are required';
+      : canAdd
+        ? 'Ready to add'
+        : missingWord && missingMeaning
+          ? 'Word and meaning are required'
+          : missingWord
+            ? 'Word is required'
+            : 'Meaning is required';
+  const addHintTone = canAdd ? colors.success : colors.subInk;
   const wordRemaining = Math.max(0, WORD_MAX_LENGTH - wordLength);
   const meaningRemaining = Math.max(0, MEANING_MAX_LENGTH - meaningLength);
   const notesRemaining = Math.max(0, NOTES_MAX_LENGTH - notesLength);
@@ -579,7 +586,7 @@ export default function App() {
                     <Text style={styles.primaryBtnText}>{isAddBusy ? 'Adding...' : 'Add card'}</Text>
                   </View>
                 </Pressable>
-                <Text style={styles.addHint}>{addFormHint}</Text>
+                <Text style={[styles.addHint, { color: addHintTone }]}>{addFormHint}</Text>
               </View>
             </Animated.View>
           </View>

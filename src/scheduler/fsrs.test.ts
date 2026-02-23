@@ -52,6 +52,19 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.notes).toBeUndefined();
   });
 
+  it('repairs whitespace-only word and meaning values during review normalization', () => {
+    const card = {
+      ...createNewCard('phi-placeholders', 'letter', NOW),
+      word: '   ',
+      meaning: '   ',
+    };
+
+    const reviewed = reviewCard(card, 3, NOW);
+
+    expect(reviewed.card.word).toBe('[invalid word]');
+    expect(reviewed.card.meaning).toBe('[invalid meaning]');
+  });
+
   it('generates unique ids for rapid card creation at the same timestamp', () => {
     const first = createNewCard('alpha-id-1', 'first', NOW);
     const second = createNewCard('alpha-id-2', 'second', NOW);

@@ -339,7 +339,7 @@ export function useDeck() {
     if (!trimmedWord || !trimmedMeaning) {
       return;
     }
-    const current = nowIso();
+    const current = resolveReviewClock(clockIso, nowIso());
     const created = createNewCard(trimmedWord, trimmedMeaning, current, notes);
     setClockIso(current);
     setCanPersist(true);
@@ -348,7 +348,7 @@ export function useDeck() {
       deckStateRef.current = next;
       return next;
     });
-  }, []);
+  }, [clockIso]);
 
   const reviewDueCard = useCallback((cardId: string, rating: Rating): boolean => {
     const current = resolveReviewClock(clockIso, nowIso());
