@@ -18,6 +18,13 @@ function parseTimeOrNaN(iso: string): number {
   return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
+function parseDueAtOrNaN(dueAt: unknown): number {
+  if (typeof dueAt !== 'string') {
+    return Number.NaN;
+  }
+  return parseTimeOrNaN(dueAt);
+}
+
 function parseTimeOrMin(iso?: string): number {
   if (!iso) {
     return Number.MIN_SAFE_INTEGER;
@@ -97,7 +104,7 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
   const cutoffMs = nowMs + windowMs;
 
   return cards.filter((card) => {
-    const dueMs = Date.parse(card.dueAt);
+    const dueMs = parseDueAtOrNaN(card.dueAt);
     return Number.isFinite(dueMs) && dueMs > nowMs && dueMs <= cutoffMs;
   }).length;
 }
@@ -110,7 +117,7 @@ export function countOverdueCards(cards: Card[], currentIso: string): number {
   const overdueCutoff = nowMs - OVERDUE_GRACE_MS;
 
   return cards.filter((card) => {
-    const dueMs = Date.parse(card.dueAt);
+    const dueMs = parseDueAtOrNaN(card.dueAt);
     return Number.isFinite(dueMs) && dueMs <= overdueCutoff;
   }).length;
 }
@@ -262,14 +269,29 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
 }
 
 export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: string): string {
+  const wallClockMs = Date.now();
+  const wallClockIso = new Date(wallClockMs).toISOString();
+  const normalizeWallSafeIso = (candidate?: string): string | undefined => {
+    if (!isValidIso(candidate)) {
+      return undefined;
+    }
+    const candidateMs = Date.parse(candidate);
+    if (Math.abs(candidateMs - wallClockMs) > MAX_CLOCK_SKEW_MS) {
+      return undefined;
+    }
+    return toCanonicalIso(candidate);
+  };
+
   const resolved = selectLatestReviewedAt(currentClockIso, reviewedAtIso);
-  if (resolved) {
-    return resolved;
+  const wallSafeResolved = normalizeWallSafeIso(resolved);
+  if (wallSafeResolved) {
+    return wallSafeResolved;
   }
-  if (isValidIso(currentClockIso)) {
-    return toCanonicalIso(currentClockIso);
+  const wallSafeCurrent = normalizeWallSafeIso(currentClockIso);
+  if (wallSafeCurrent) {
+    return wallSafeCurrent;
   }
-  return nowIso();
+  return wallClockIso;
 }
 
 export function useDeck() {

@@ -183,8 +183,25 @@ export default function App() {
     }
     return clampPercent(((stats.review + stats.relearning * 0.5 + stats.learning * 0.2) / stats.total) * 100);
   }, [stats]);
+  const nextUpcomingCard = useMemo(() => {
+    const nowMs = Date.parse(clockIso);
+    if (!Number.isFinite(nowMs)) {
+      return undefined;
+    }
+    return cards
+      .filter((card) => {
+        const dueMs = Date.parse(card.dueAt);
+        return Number.isFinite(dueMs) && dueMs > nowMs;
+      })
+      .sort(compareDueCards)[0];
+  }, [cards, clockIso]);
   const retentionBarWidth = `${retentionScore}%`;
   const queueLabel = loading ? 'Loading' : dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Queue clear';
+  const nextUpcomingLabel = loading
+    ? '--'
+    : nextUpcomingCard
+      ? `Next ${formatDueLabel(nextUpcomingCard.dueAt, clockIso)}`
+      : 'No upcoming card';
   const queueLabelTone = queueTone({
     dueAt: dueCard?.dueAt,
     clockIso,
@@ -209,18 +226,6 @@ export default function App() {
     : dueCard
       ? formatQueuePositionLabel(1, Math.max(1, stats.dueNow))
       : 'Queue empty';
-  const nextUpcomingCard = useMemo(() => {
-    const nowMs = Date.parse(clockIso);
-    if (!Number.isFinite(nowMs)) {
-      return undefined;
-    }
-    return cards
-      .filter((card) => {
-        const dueMs = Date.parse(card.dueAt);
-        return Number.isFinite(dueMs) && dueMs > nowMs;
-      })
-      .sort(compareDueCards)[0];
-  }, [cards, clockIso]);
   const dueWithinDay = useMemo(() => {
     return countUpcomingDueCards(cards, clockIso, 24);
   }, [cards, clockIso]);
@@ -463,6 +468,7 @@ export default function App() {
               <View style={styles.heroTags}>
                 <Text style={[styles.heroTag, { color: queueLabelTone }]}>{queueLabel}</Text>
                 <Text style={styles.heroTag}>{queueShareLabel}</Text>
+                <Text style={styles.heroTag}>{nextUpcomingLabel}</Text>
               </View>
               <View style={styles.metaLine}>
                 <Text style={styles.subMeta} numberOfLines={1} ellipsizeMode="tail">

@@ -11,6 +11,7 @@ import {
   selectLatestReviewedAt,
 } from './hooks';
 import { createNewCard } from './scheduler/fsrs';
+import type { Card } from './types';
 
 const NOW = '2026-02-23T12:00:00.000Z';
 
@@ -478,6 +479,12 @@ describe('countUpcomingDueCards', () => {
     expect(countUpcomingDueCards([card], 'bad-clock')).toBe(0);
   });
 
+  it('ignores cards with malformed dueAt values at runtime', () => {
+    const malformed = { ...createNewCard('malformed-upcoming', 'test', NOW), dueAt: null } as unknown as Card;
+
+    expect(countUpcomingDueCards([malformed], NOW)).toBe(0);
+  });
+
   it('returns zero when the requested upcoming window is non-positive', () => {
     const upcoming = { ...createNewCard('upcoming-window', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
 
@@ -519,6 +526,12 @@ describe('countOverdueCards', () => {
   it('returns zero for invalid runtime clocks', () => {
     const overdue = { ...createNewCard('overdue-invalid-clock', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };
     expect(countOverdueCards([overdue], 'bad-clock')).toBe(0);
+  });
+
+  it('ignores cards with malformed dueAt values at runtime', () => {
+    const malformed = { ...createNewCard('malformed-overdue', 'test', NOW), dueAt: null } as unknown as Card;
+
+    expect(countOverdueCards([malformed], NOW)).toBe(0);
   });
 });
 
@@ -672,6 +685,22 @@ describe('resolveNextUiClock', () => {
   it('falls back to wall clock when both current and reviewed clock values are invalid', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
     const resolved = resolveNextUiClock('bad-current-time', 'bad-reviewed-time');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:34:56.000Z');
+  });
+
+  it('keeps the current clock when reviewedAt is pathologically far in the future', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const resolved = resolveNextUiClock('2026-02-23T12:10:00.000Z', '2099-01-01T00:00:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:10:00.000Z');
+  });
+
+  it('falls back to wall clock when current and reviewed values are both pathologically skewed', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const resolved = resolveNextUiClock('2026-02-20T00:00:00.000Z', '2099-01-01T00:00:00.000Z');
     nowSpy.mockRestore();
 
     expect(resolved).toBe('2026-02-23T12:34:56.000Z');
