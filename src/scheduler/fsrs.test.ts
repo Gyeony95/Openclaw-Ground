@@ -1236,4 +1236,46 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.updatedAt).toBe('2028-01-01T00:00:00.000Z');
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
+
+  it('repairs review cards with dueAt at-or-before updatedAt using a short fallback schedule', () => {
+    const corrupted = {
+      ...reviewCard(createNewCard('due-repair', 'definition', NOW), 4, NOW).card,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T11:00:00.000Z',
+      stability: 240,
+      state: 'review' as const,
+    };
+
+    const reviewed = reviewCard(corrupted, 3, '2026-02-24T12:00:00.000Z');
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeLessThan(60);
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
+  it('keeps repaired invalid review dueAt behavior aligned with a short scheduled fallback', () => {
+    const updatedAt = '2026-02-23T12:00:00.000Z';
+    const base = reviewCard(createNewCard('due-repair-aligned', 'definition', NOW), 4, NOW).card;
+    const repaired = {
+      ...base,
+      updatedAt,
+      dueAt: '2026-02-23T09:00:00.000Z',
+      stability: 400,
+      state: 'review' as const,
+    };
+    const shortScheduled = {
+      ...base,
+      updatedAt,
+      dueAt: addDaysIso(updatedAt, 0.5),
+      stability: 400,
+      state: 'review' as const,
+    };
+
+    const reviewedAt = '2026-02-24T12:00:00.000Z';
+    const repairedResult = reviewCard(repaired, 3, reviewedAt);
+    const shortScheduleResult = reviewCard(shortScheduled, 3, reviewedAt);
+
+    expect(repairedResult.card.stability).toBeCloseTo(shortScheduleResult.card.stability, 6);
+    expect(repairedResult.scheduledDays).toBe(shortScheduleResult.scheduledDays);
+  });
 });

@@ -302,9 +302,6 @@ export default function App() {
       setIsAddBusy(false);
       addUnlockTimerRef.current = null;
     }, 250);
-    if (!dueCard) {
-      focusAddForm();
-    }
   }
 
   function handleRate(rating: Rating) {
@@ -431,6 +428,7 @@ export default function App() {
                       onPress={focusAddForm}
                       accessibilityRole="button"
                       accessibilityLabel="Start adding words"
+                      accessibilityHint="Scrolls to the add form and focuses the word input"
                     >
                       <Text style={styles.emptyQueueActionText}>Start adding words</Text>
                     </Pressable>
