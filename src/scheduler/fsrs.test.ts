@@ -525,7 +525,7 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBe(0.5);
   });
 
-  it('uses a one-day schedule floor for corrupted review cards', () => {
+  it('uses a half-day schedule floor for corrupted review cards', () => {
     const base = createNewCard('upsilon', 'letter', NOW);
     const graduated = reviewCard(base, 4, NOW).card;
     const corrupted = {
@@ -536,7 +536,7 @@ describe('fsrs scheduler', () => {
     };
     const reviewed = reviewCard(corrupted, 3, '2026-02-25T12:00:00.000Z');
 
-    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(0.5);
     expect(reviewed.card.state).toBe('review');
   });
 
@@ -573,6 +573,26 @@ describe('fsrs scheduler', () => {
 
     expect(corruptedReview.scheduledDays).toBeLessThanOrEqual(normalizedReview.scheduledDays);
     expect(corruptedReview.card.stability).toBeLessThanOrEqual(normalizedReview.card.stability);
+  });
+
+  it('treats zero-length review schedules like the half-day review floor', () => {
+    const card = createNewCard('review-zero-floor', 'letter', NOW);
+    const graduated = reviewCard(card, 3, NOW).card;
+    const reviewAt = addDaysIso(graduated.updatedAt, 0.25);
+    const normalized = {
+      ...graduated,
+      dueAt: addDaysIso(graduated.updatedAt, 0.5),
+    };
+    const zeroLength = {
+      ...graduated,
+      dueAt: graduated.updatedAt,
+    };
+
+    const normalizedReview = reviewCard(normalized, 3, reviewAt);
+    const zeroLengthReview = reviewCard(zeroLength, 3, reviewAt);
+
+    expect(zeroLengthReview.card.stability).toBeCloseTo(normalizedReview.card.stability, 6);
+    expect(zeroLengthReview.scheduledDays).toBe(normalizedReview.scheduledDays);
   });
 
   it('uses safe timeline fallbacks when card timestamps are corrupted', () => {

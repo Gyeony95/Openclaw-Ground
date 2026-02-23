@@ -71,8 +71,12 @@ function formatMetricNumber(value: number, digits: number): string {
   return value.toFixed(digits);
 }
 
-function normalizedLength(value: string, max: number): number {
+function trimmedLength(value: string, max: number): number {
   return value.trim().slice(0, max).length;
+}
+
+function typedLength(value: string, max: number): number {
+  return value.slice(0, max).length;
 }
 
 function queueTone({
@@ -146,16 +150,18 @@ export default function App() {
   );
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 
-  const trimmedWordLength = normalizedLength(word, WORD_MAX_LENGTH);
-  const trimmedMeaningLength = normalizedLength(meaning, MEANING_MAX_LENGTH);
-  const trimmedNotesLength = normalizedLength(notes, NOTES_MAX_LENGTH);
+  const trimmedWordLength = trimmedLength(word, WORD_MAX_LENGTH);
+  const trimmedMeaningLength = trimmedLength(meaning, MEANING_MAX_LENGTH);
+  const wordLength = typedLength(word, WORD_MAX_LENGTH);
+  const meaningLength = typedLength(meaning, MEANING_MAX_LENGTH);
+  const notesLength = typedLength(notes, NOTES_MAX_LENGTH);
   const canAdd = useMemo(
     () => !loading && trimmedWordLength > 0 && trimmedMeaningLength > 0,
     [loading, trimmedWordLength, trimmedMeaningLength],
   );
-  const wordRemaining = Math.max(0, WORD_MAX_LENGTH - trimmedWordLength);
-  const meaningRemaining = Math.max(0, MEANING_MAX_LENGTH - trimmedMeaningLength);
-  const notesRemaining = Math.max(0, NOTES_MAX_LENGTH - trimmedNotesLength);
+  const wordRemaining = Math.max(0, WORD_MAX_LENGTH - wordLength);
+  const meaningRemaining = Math.max(0, MEANING_MAX_LENGTH - meaningLength);
+  const notesRemaining = Math.max(0, NOTES_MAX_LENGTH - notesLength);
   const wordCountTone = wordRemaining === 0 ? colors.danger : wordRemaining <= 12 ? colors.warn : colors.subInk;
   const meaningCountTone = meaningRemaining === 0 ? colors.danger : meaningRemaining <= 20 ? colors.warn : colors.subInk;
   const noteCountTone = notesRemaining === 0 ? colors.danger : notesRemaining <= 20 ? colors.warn : colors.subInk;

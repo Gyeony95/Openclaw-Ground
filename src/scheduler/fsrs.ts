@@ -176,7 +176,7 @@ function normalizeCounter(value: number): number {
 
 function scheduleFallbackForState(state: ReviewState): number {
   if (state === 'review') {
-    return 1;
+    return REVIEW_SCHEDULE_FLOOR_DAYS;
   }
   if (state === 'relearning') {
     return 10 * MINUTE_IN_DAYS;
