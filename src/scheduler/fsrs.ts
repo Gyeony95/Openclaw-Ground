@@ -530,10 +530,13 @@ function graduationIntervalDays(rating: Rating): number {
 }
 
 function ensureOrderedPreview(intervals: RatingIntervalPreview): RatingIntervalPreview {
-  const again = intervals[1];
-  const hard = Math.max(intervals[2], again);
-  const good = Math.max(intervals[3], hard);
-  const easy = Math.max(intervals[4], good);
+  const again = clampFinite(intervals[1], MINUTE_IN_DAYS, STABILITY_MAX, MINUTE_IN_DAYS);
+  const hardBase = clampFinite(intervals[2], MINUTE_IN_DAYS, STABILITY_MAX, again);
+  const goodBase = clampFinite(intervals[3], MINUTE_IN_DAYS, STABILITY_MAX, hardBase);
+  const easyBase = clampFinite(intervals[4], MINUTE_IN_DAYS, STABILITY_MAX, goodBase);
+  const hard = Math.max(hardBase, again);
+  const good = Math.max(goodBase, hard);
+  const easy = Math.max(easyBase, good);
   return {
     1: again,
     2: hard,

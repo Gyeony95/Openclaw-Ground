@@ -380,10 +380,15 @@ export default function App() {
     setAddAttempted(false);
     addLockRef.current = true;
     setIsAddBusy(true);
+    const shouldReturnToWordInput = !dueCard;
     addCard(trimmedWord, trimmedMeaning, trimmedNotes || undefined);
-    wordInputRef.current?.blur();
     meaningInputRef.current?.blur();
     notesInputRef.current?.blur();
+    if (shouldReturnToWordInput) {
+      wordInputRef.current?.focus();
+    } else {
+      wordInputRef.current?.blur();
+    }
     setWord('');
     setMeaning('');
     setNotes('');
@@ -393,6 +398,11 @@ export default function App() {
     addUnlockTimerRef.current = setTimeout(() => {
       addLockRef.current = false;
       setIsAddBusy(false);
+      if (shouldReturnToWordInput) {
+        requestAnimationFrame(() => {
+          wordInputRef.current?.focus();
+        });
+      }
       addUnlockTimerRef.current = null;
     }, 250);
   }

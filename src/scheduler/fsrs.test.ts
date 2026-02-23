@@ -1227,6 +1227,31 @@ describe('fsrs scheduler', () => {
     expect(preview[3]).toBeLessThanOrEqual(preview[4]);
   });
 
+  it('keeps preview intervals within scheduler safety bounds for malformed review cards', () => {
+    const malformed = {
+      ...createNewCard('chi-preview-bounds', 'letter', NOW),
+      state: 'review' as const,
+      createdAt: 'bad-created',
+      updatedAt: 'bad-updated',
+      dueAt: 'bad-due',
+      stability: Number.NaN,
+      difficulty: Number.NaN,
+      reps: Number.POSITIVE_INFINITY,
+      lapses: Number.POSITIVE_INFINITY,
+    };
+
+    const preview = previewIntervals(malformed, 'bad-runtime');
+
+    expect(preview[1]).toBeGreaterThanOrEqual(1 / 1440);
+    expect(preview[2]).toBeGreaterThanOrEqual(preview[1]);
+    expect(preview[3]).toBeGreaterThanOrEqual(preview[2]);
+    expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
+    expect(preview[1]).toBeLessThanOrEqual(STABILITY_MAX);
+    expect(preview[2]).toBeLessThanOrEqual(STABILITY_MAX);
+    expect(preview[3]).toBeLessThanOrEqual(STABILITY_MAX);
+    expect(preview[4]).toBeLessThanOrEqual(STABILITY_MAX);
+  });
+
   it('treats corrupted relearning schedules like the 10-minute relearning floor', () => {
     const card = createNewCard('psi', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;
