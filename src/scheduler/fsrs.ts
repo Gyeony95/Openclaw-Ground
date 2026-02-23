@@ -156,7 +156,28 @@ function normalizeTimeline(
   const rawDueAt = isValidIso(card.dueAt) ? card.dueAt : fallbackDueAt;
   const dueAt = new Date(Math.max(Date.parse(rawDueAt), Date.parse(updatedAt))).toISOString();
   const resolvedCurrentIso = resolveReviewIso(updatedAt, requestedNowIso);
-  const currentIso = new Date(Math.max(Date.parse(resolvedCurrentIso), Date.parse(updatedAt))).toISOString();
+  const resolvedCurrentMs = Date.parse(resolvedCurrentIso);
+  const updatedAtMs = Date.parse(updatedAt);
+  const wallClockMs = Date.parse(currentNowIso());
+  const updatedAtLooksCorruptedFuture =
+    Number.isFinite(updatedAtMs) &&
+    Number.isFinite(wallClockMs) &&
+    updatedAtMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS;
+  const recoveryWantsRollback =
+    Number.isFinite(updatedAtMs) &&
+    Number.isFinite(resolvedCurrentMs) &&
+    updatedAtMs - resolvedCurrentMs > MAX_MONOTONIC_CLOCK_SKEW_MS;
+  const monotonicMs = Number.isFinite(resolvedCurrentMs) && Number.isFinite(updatedAtMs)
+    ? Math.max(resolvedCurrentMs, updatedAtMs)
+    : Number.isFinite(updatedAtMs)
+      ? updatedAtMs
+      : Number.isFinite(resolvedCurrentMs)
+        ? resolvedCurrentMs
+        : fallbackMs;
+  const currentIso =
+    updatedAtLooksCorruptedFuture && recoveryWantsRollback && Number.isFinite(resolvedCurrentMs)
+      ? new Date(resolvedCurrentMs).toISOString()
+      : new Date(monotonicMs).toISOString();
 
   return { createdAt, currentIso, updatedAt, dueAt };
 }

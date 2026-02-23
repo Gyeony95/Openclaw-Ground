@@ -207,6 +207,7 @@ export default function App() {
   const noteCountTone = notesRemaining === 0 ? colors.danger : notesRemaining <= 20 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
   const isReviewBusy = pendingReviewCardId !== null;
+  const isFormEditable = !loading && !isAddBusy;
 
   useEffect(() => {
     setShowMeaning(false);
@@ -511,6 +512,7 @@ export default function App() {
                   maxLength={WORD_MAX_LENGTH}
                   selectionColor={colors.primary}
                   autoFocus
+                  editable={isFormEditable}
                   accessibilityLabel="Word input"
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
                 />
@@ -527,6 +529,7 @@ export default function App() {
                   returnKeyType="next"
                   maxLength={MEANING_MAX_LENGTH}
                   selectionColor={colors.primary}
+                  editable={isFormEditable}
                   accessibilityLabel="Meaning input"
                   onSubmitEditing={() => {
                     if (notes.trim().length === 0) {
@@ -549,6 +552,7 @@ export default function App() {
                   multiline
                   maxLength={NOTES_MAX_LENGTH}
                   selectionColor={colors.primary}
+                  editable={isFormEditable}
                   accessibilityLabel="Notes input"
                   returnKeyType="done"
                   blurOnSubmit
@@ -570,7 +574,10 @@ export default function App() {
                   accessibilityLabel="Add card"
                   accessibilityState={{ disabled: !canAdd }}
                 >
-                  <Text style={styles.primaryBtnText}>{isAddBusy ? 'Adding...' : 'Add card'}</Text>
+                  <View style={styles.primaryBtnContent}>
+                    {isAddBusy ? <ActivityIndicator size="small" color="#fff" /> : null}
+                    <Text style={styles.primaryBtnText}>{isAddBusy ? 'Adding...' : 'Add card'}</Text>
+                  </View>
                 </Pressable>
                 <Text style={styles.addHint}>{addFormHint}</Text>
               </View>
@@ -1006,6 +1013,12 @@ const styles = StyleSheet.create({
     fontSize: 14.5,
     fontWeight: '800',
     letterSpacing: 0.3,
+  },
+  primaryBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   answerActions: {
     gap: 10,

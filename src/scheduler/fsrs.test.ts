@@ -443,6 +443,23 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(skewed.card.dueAt)).toBeGreaterThan(Date.parse(skewed.card.updatedAt));
   });
 
+  it('keeps slight future updatedAt drift monotonic when under skew threshold', () => {
+    const nearFutureUpdatedAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
+    const card = {
+      ...createNewCard('sigma-small-future', 'letter', NOW),
+      state: 'review' as const,
+      createdAt: NOW,
+      updatedAt: nearFutureUpdatedAt,
+      dueAt: addDaysIso(nearFutureUpdatedAt, 1),
+    };
+
+    const reviewed = reviewCard(card, 3, 'invalid-runtime-clock');
+
+    expect(reviewed.card.updatedAt).toBe(nearFutureUpdatedAt);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    expect(reviewed.card.state).toBe('review');
+  });
+
   it('falls back to wall clock when both updatedAt and runtime clock are pathologically future', () => {
     const card = createNewCard('sigma-double-future', 'letter', NOW);
     const corrupted = {
