@@ -11,6 +11,11 @@ function parseTimeOrMax(iso: string): number {
   return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
 }
 
+function parseTimeOrNaN(iso: string): number {
+  const parsed = Date.parse(iso);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
 function parseTimeOrMin(iso?: string): number {
   if (!iso) {
     return Number.MIN_SAFE_INTEGER;
@@ -135,6 +140,22 @@ export function hasDueCard(cards: Card[], cardId: string, currentIso: string): b
   return cards.some((card) => card.id === cardId && isDue(card.dueAt, currentIso));
 }
 
+export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: string): string {
+  const renderedMs = parseTimeOrNaN(renderedClockIso);
+  const runtimeMs = parseTimeOrNaN(runtimeNowIso);
+
+  if (Number.isFinite(renderedMs) && Number.isFinite(runtimeMs)) {
+    return runtimeMs < renderedMs ? renderedClockIso : runtimeNowIso;
+  }
+  if (Number.isFinite(runtimeMs)) {
+    return runtimeNowIso;
+  }
+  if (Number.isFinite(renderedMs)) {
+    return renderedClockIso;
+  }
+  return nowIso();
+}
+
 export function useDeck() {
   const [deckState, setDeckState] = useState<{ cards: Card[]; lastReviewedAt?: string }>({ cards: [] });
   const [loading, setLoading] = useState(true);
@@ -204,7 +225,7 @@ export function useDeck() {
   }, []);
 
   const reviewDueCard = useCallback((cardId: string, rating: Rating): boolean => {
-    const current = nowIso();
+    const current = resolveReviewClock(clockIso, nowIso());
     const reviewed = hasDueCard(deckState.cards, cardId, current);
     if (!reviewed) {
       return false;
@@ -224,7 +245,7 @@ export function useDeck() {
     setClockIso(current);
     setCanPersist(true);
     return true;
-  }, [deckState.cards]);
+  }, [clockIso, deckState.cards]);
 
   const stats = useMemo(() => computeDeckStats(deckState.cards, clockIso), [deckState.cards, clockIso]);
 

@@ -137,6 +137,7 @@ export default function App() {
   const canAdd = useMemo(() => word.trim().length > 0 && meaning.trim().length > 0, [word, meaning]);
   const noteCountTone = notes.length >= 220 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
+  const isReviewBusy = pendingReviewCardId !== null;
 
   useEffect(() => {
     setShowMeaning(false);
@@ -305,8 +306,13 @@ export default function App() {
 
                     {!showMeaning ? (
                       <Pressable
-                        style={({ pressed }) => [styles.primaryBtn, pressed && styles.primaryBtnPressed]}
+                        style={({ pressed }) => [
+                          styles.primaryBtn,
+                          pressed && styles.primaryBtnPressed,
+                          isReviewBusy && styles.primaryBtnDisabled,
+                        ]}
                         onPress={() => setShowMeaning(true)}
+                        disabled={isReviewBusy}
                         accessibilityRole="button"
                         accessibilityLabel="Reveal answer"
                       >
@@ -314,19 +320,21 @@ export default function App() {
                       </Pressable>
                     ) : (
                       <View style={styles.answerActions}>
-                        <RatingRow
-                          onRate={handleRate}
-                          intervalLabels={ratingIntervalLabels}
-                          disabled={pendingReviewCardId !== null}
-                        />
+                        <RatingRow onRate={handleRate} intervalLabels={ratingIntervalLabels} disabled={isReviewBusy} />
                         <Pressable
-                          style={({ pressed }) => [styles.ghostBtn, pressed && styles.ghostBtnPressed]}
+                          style={({ pressed }) => [
+                            styles.ghostBtn,
+                            pressed && styles.ghostBtnPressed,
+                            isReviewBusy && styles.ghostBtnDisabled,
+                          ]}
                           onPress={() => setShowMeaning(false)}
+                          disabled={isReviewBusy}
                           accessibilityRole="button"
                           accessibilityLabel="Hide answer"
                         >
                           <Text style={styles.ghostBtnText}>Hide answer</Text>
                         </Pressable>
+                        {isReviewBusy ? <Text style={styles.reviewingHint}>Recording review...</Text> : null}
                       </View>
                     )}
                   </View>
@@ -801,11 +809,21 @@ const styles = StyleSheet.create({
     transform: [{ translateY: 1 }],
     opacity: 0.9,
   },
+  ghostBtnDisabled: {
+    opacity: 0.55,
+  },
   ghostBtnText: {
     color: colors.subInk,
     fontSize: 13,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  reviewingHint: {
+    color: colors.subInk,
+    fontSize: 11.5,
+    fontWeight: '600',
+    letterSpacing: 0.25,
+    textAlign: 'center',
   },
 });

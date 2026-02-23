@@ -4,6 +4,7 @@ import {
   countUpcomingDueCards,
   hasDueCard,
   mergeDeckCards,
+  resolveReviewClock,
   selectLatestReviewedAt,
 } from './hooks';
 import { createNewCard } from './scheduler/fsrs';
@@ -246,5 +247,24 @@ describe('selectLatestReviewedAt', () => {
   it('drops invalid current values and keeps valid incoming ones', () => {
     expect(selectLatestReviewedAt('bad-time', '2026-02-23T12:00:00.000Z')).toBe('2026-02-23T12:00:00.000Z');
     expect(selectLatestReviewedAt('bad-time', 'also-bad')).toBeUndefined();
+  });
+});
+
+describe('resolveReviewClock', () => {
+  it('uses runtime clock when it is current or ahead of the rendered clock', () => {
+    expect(resolveReviewClock('2026-02-23T12:00:00.000Z', '2026-02-23T12:00:10.000Z')).toBe(
+      '2026-02-23T12:00:10.000Z',
+    );
+  });
+
+  it('keeps rendered clock when runtime clock moves backward', () => {
+    expect(resolveReviewClock('2026-02-23T12:00:10.000Z', '2026-02-23T12:00:00.000Z')).toBe(
+      '2026-02-23T12:00:10.000Z',
+    );
+  });
+
+  it('falls back to the valid timestamp when one clock value is invalid', () => {
+    expect(resolveReviewClock('bad-time', '2026-02-23T12:00:00.000Z')).toBe('2026-02-23T12:00:00.000Z');
+    expect(resolveReviewClock('2026-02-23T12:00:00.000Z', 'bad-time')).toBe('2026-02-23T12:00:00.000Z');
   });
 });
