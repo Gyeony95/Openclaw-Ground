@@ -319,6 +319,22 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.state).toBe('review');
   });
 
+  it('uses wall clock fallback when runtime clock is invalid and updatedAt is pathologically future', () => {
+    const card = createNewCard('sigma-future-invalid-now', 'letter', NOW);
+    const corrupted = {
+      ...reviewCard(card, 4, NOW).card,
+      updatedAt: '2030-01-01T00:00:00.000Z',
+      dueAt: '2030-01-02T00:00:00.000Z',
+      state: 'review' as const,
+    };
+    const reviewed = reviewCard(corrupted, 3, 'not-a-time');
+
+    expect(Date.parse(reviewed.card.updatedAt)).toBeLessThanOrEqual(Date.now());
+    expect(Date.parse(reviewed.card.updatedAt)).toBeGreaterThanOrEqual(Date.parse('2025-01-01T00:00:00.000Z'));
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    expect(reviewed.card.state).toBe('review');
+  });
+
   it('falls back to the current clock for invalid create timestamps', () => {
     const card = createNewCard('tau', 'letter', 'bad-timestamp');
 

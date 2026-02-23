@@ -160,7 +160,25 @@ export async function loadDeck(): Promise<Deck> {
 }
 
 export async function saveDeck(deck: Deck): Promise<void> {
-  await AsyncStorage.setItem(KEY, JSON.stringify(deck));
+  const normalizedCards = deck.cards
+    .map((card) => normalizeCard(card))
+    .filter((card): card is Card => card !== null)
+    .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+  const dedupedById = new Map<string, Card>();
+  for (const card of normalizedCards) {
+    const existing = dedupedById.get(card.id);
+    if (!existing) {
+      dedupedById.set(card.id, card);
+      continue;
+    }
+    dedupedById.set(card.id, pickFreshestDuplicate(existing, card));
+  }
+  const cards = [...dedupedById.values()].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+  const safeDeck: Deck = {
+    cards,
+    lastReviewedAt: isValidIso(deck.lastReviewedAt) ? deck.lastReviewedAt : undefined,
+  };
+  await AsyncStorage.setItem(KEY, JSON.stringify(safeDeck));
 }
 
 export function computeDeckStats(cards: Card[], currentIso = nowIso()): DeckStats {

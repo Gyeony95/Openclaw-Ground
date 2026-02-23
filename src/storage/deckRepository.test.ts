@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { computeDeckStats, loadDeck } from './deckRepository';
+import { computeDeckStats, loadDeck, saveDeck } from './deckRepository';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
@@ -11,11 +11,13 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 
 const mockedStorage = AsyncStorage as unknown as {
   getItem: jest.Mock<Promise<string | null>, [string]>;
+  setItem: jest.Mock<Promise<void>, [string, string]>;
 };
 
 describe('deck repository', () => {
   beforeEach(() => {
     mockedStorage.getItem.mockReset();
+    mockedStorage.setItem.mockReset();
   });
 
   it('normalizes persisted cards and clamps scheduling values', async () => {
@@ -386,5 +388,80 @@ describe('deck repository', () => {
     expect(deck.cards).toHaveLength(1);
     expect(deck.cards[0].id).toBe('valid-notes');
     expect(deck.cards[0].notes).toBeUndefined();
+  });
+
+  it('sanitizes and deduplicates cards before persisting deck data', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: '  dup  ',
+          word: ' beta ',
+          meaning: ' second ',
+          dueAt: '2026-02-23T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'learning',
+          reps: 1,
+          lapses: 0,
+          stability: 1,
+          difficulty: 5,
+        },
+        {
+          id: 'dup',
+          word: 'beta',
+          meaning: 'freshest',
+          dueAt: '2026-02-24T00:00:00.000Z',
+          createdAt: '2026-02-21T00:00:00.000Z',
+          updatedAt: '2026-02-23T00:00:00.000Z',
+          state: 'review',
+          reps: 2,
+          lapses: 1,
+          stability: Number.POSITIVE_INFINITY,
+          difficulty: Number.NaN,
+        },
+        {
+          id: 'invalid',
+          word: ' ',
+          meaning: 'dropped',
+          dueAt: '2026-02-24T00:00:00.000Z',
+          createdAt: '2026-02-21T00:00:00.000Z',
+          updatedAt: '2026-02-23T00:00:00.000Z',
+          state: 'review',
+          reps: 0,
+          lapses: 0,
+          stability: 0.5,
+          difficulty: 5,
+        },
+      ],
+      lastReviewedAt: 'bad-time',
+    });
+
+    expect(mockedStorage.setItem).toHaveBeenCalledTimes(1);
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as {
+      cards: Array<{ id: string; meaning: string; stability: number; difficulty: number }>;
+      lastReviewedAt?: string;
+    };
+    expect(savedDeck.cards).toHaveLength(1);
+    expect(savedDeck.cards[0].id).toBe('dup');
+    expect(savedDeck.cards[0].meaning).toBe('freshest');
+    expect(savedDeck.cards[0].stability).toBe(0.5);
+    expect(savedDeck.cards[0].difficulty).toBe(5);
+    expect(savedDeck.lastReviewedAt).toBeUndefined();
+  });
+
+  it('keeps only valid lastReviewedAt when persisting', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [],
+      lastReviewedAt: '2026-02-23T12:00:00.000Z',
+    });
+
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as { lastReviewedAt?: string };
+    expect(savedDeck.lastReviewedAt).toBe('2026-02-23T12:00:00.000Z');
   });
 });

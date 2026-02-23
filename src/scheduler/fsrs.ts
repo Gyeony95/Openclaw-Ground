@@ -44,9 +44,21 @@ function isValidIso(value: string): boolean {
 
 function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): string {
   const fallback = isValidIso(cardUpdatedAt) ? cardUpdatedAt : currentNowIso();
-  const candidate = isValidIso(requestedNowIso) ? requestedNowIso : fallback;
-  const candidateMs = Date.parse(candidate);
+  const requestedValid = isValidIso(requestedNowIso);
+  const wallClockIso = currentNowIso();
+  const wallClockMs = Date.parse(wallClockIso);
   const fallbackMs = Date.parse(fallback);
+  if (
+    !requestedValid &&
+    Number.isFinite(fallbackMs) &&
+    Number.isFinite(wallClockMs) &&
+    fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS
+  ) {
+    return wallClockIso;
+  }
+
+  const candidate = requestedValid ? requestedNowIso : fallback;
+  const candidateMs = Date.parse(candidate);
   if (!Number.isFinite(candidateMs) || !Number.isFinite(fallbackMs)) {
     return fallback;
   }
@@ -59,7 +71,6 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     }
 
     // Only roll backward when the card timestamp itself looks corrupted far into the future.
-    const wallClockMs = Date.parse(currentNowIso());
     if (Number.isFinite(wallClockMs) && fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
       return candidate;
     }

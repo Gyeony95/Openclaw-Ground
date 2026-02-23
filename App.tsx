@@ -177,6 +177,8 @@ export default function App() {
       return;
     }
     addCard(word, meaning, notes);
+    meaningInputRef.current?.blur();
+    notesInputRef.current?.blur();
     setWord('');
     setMeaning('');
     setNotes('');
@@ -381,7 +383,13 @@ export default function App() {
                   returnKeyType="next"
                   maxLength={180}
                   accessibilityLabel="Meaning input"
-                  onSubmitEditing={() => notesInputRef.current?.focus()}
+                  onSubmitEditing={() => {
+                    if (notes.trim().length === 0) {
+                      handleAddCard();
+                      return;
+                    }
+                    notesInputRef.current?.focus();
+                  }}
                 />
                 <TextInput
                   ref={notesInputRef}
