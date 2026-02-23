@@ -146,6 +146,38 @@ describe('applyReviewToDeckState', () => {
     expect(result.reviewed).toBe(true);
     expect(result.deckState.lastReviewedAt).toBe('2026-02-23T12:10:00.000Z');
   });
+
+  it('keeps lastReviewedAt monotonic when provided review clock is older', () => {
+    const due = createNewCard('state-monotonic', 'clock', NOW);
+    const result = applyReviewToDeckState(
+      { cards: [due], lastReviewedAt: '2026-02-23T13:00:00.000Z' },
+      due.id,
+      3,
+      NOW,
+    );
+
+    expect(result.reviewed).toBe(true);
+    expect(result.deckState.lastReviewedAt).toBe('2026-02-23T13:00:00.000Z');
+  });
+
+  it('normalizes newer scheduler reviewedAt values into canonical ISO format', () => {
+    const skewedDue = {
+      ...createNewCard('state-monotonic-canonical', 'clock', NOW),
+      updatedAt: '2026-02-23T12:10:00Z',
+      dueAt: NOW,
+      state: 'review' as const,
+    };
+
+    const result = applyReviewToDeckState(
+      { cards: [skewedDue], lastReviewedAt: '2026-02-23T12:00:00.000Z' },
+      skewedDue.id,
+      3,
+      NOW,
+    );
+
+    expect(result.reviewed).toBe(true);
+    expect(result.deckState.lastReviewedAt).toBe('2026-02-23T12:10:00.000Z');
+  });
 });
 
 describe('compareDueCards', () => {

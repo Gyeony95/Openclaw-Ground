@@ -128,7 +128,9 @@ export default function App() {
   const retentionBarWidth = `${retentionScore}%`;
   const queueLabel = loading ? 'Loading' : dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Queue clear';
   const queueLabelTone = queueTone({ label: queueLabel, loading, hasDueCard: Boolean(dueCard) });
-  const queueShareLabel = loading ? '--' : `${stats.dueNow} due / ${stats.total} total`;
+  const queueShareLabel = loading
+    ? '--'
+    : `${stats.dueNow.toLocaleString()} due / ${stats.total.toLocaleString()} total`;
   const dueWithinDay = useMemo(() => {
     return countUpcomingDueCards(cards, clockIso, 24);
   }, [cards, clockIso]);
@@ -294,7 +296,7 @@ export default function App() {
 
             <View style={styles.metrics}>
               <MetricCard label="Due now" value={stats.dueNow} accent={colors.primary} />
-              <MetricCard label="Upcoming <=24h" value={dueWithinDay} accent={colors.accent} />
+              <MetricCard label="Upcoming 24h" value={dueWithinDay} accent={colors.accent} />
               <MetricCard label="Learning" value={stats.learning} accent={colors.warn} />
               <MetricCard label="Review" value={stats.review} accent={colors.success} />
               <MetricCard label="Relearning" value={stats.relearning} accent={colors.danger} />
@@ -432,6 +434,7 @@ export default function App() {
                   returnKeyType="next"
                   maxLength={WORD_MAX_LENGTH}
                   selectionColor={colors.primary}
+                  autoFocus
                   accessibilityLabel="Word input"
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
                 />

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createNewCard, reviewCard } from './scheduler/fsrs';
 import { computeDeckStats, loadDeck, saveDeck } from './storage/deckRepository';
 import { Card, Rating } from './types';
@@ -177,7 +177,7 @@ export function applyReviewToDeckState(
     reviewed: true,
     deckState: {
       cards: next.cards,
-      lastReviewedAt: next.reviewedAt ?? currentIso,
+      lastReviewedAt: selectLatestReviewedAt(deckState.lastReviewedAt, next.reviewedAt ?? currentIso),
     },
   };
 }
@@ -228,16 +228,25 @@ export function useDeck() {
   const [loading, setLoading] = useState(true);
   const [canPersist, setCanPersist] = useState(false);
   const [clockIso, setClockIso] = useState(() => nowIso());
+  const deckStateRef = useRef(deckState);
+
+  useEffect(() => {
+    deckStateRef.current = deckState;
+  }, [deckState]);
 
   useEffect(() => {
     let active = true;
     loadDeck()
       .then((deck) => {
         if (active) {
-          setDeckState((prev) => ({
-            cards: mergeDeckCards(prev.cards, deck.cards),
-            lastReviewedAt: selectLatestReviewedAt(prev.lastReviewedAt, deck.lastReviewedAt),
-          }));
+          setDeckState((prev) => {
+            const next = {
+              cards: mergeDeckCards(prev.cards, deck.cards),
+              lastReviewedAt: selectLatestReviewedAt(prev.lastReviewedAt, deck.lastReviewedAt),
+            };
+            deckStateRef.current = next;
+            return next;
+          });
           setCanPersist(true);
         }
       })
@@ -288,21 +297,22 @@ export function useDeck() {
     const created = createNewCard(trimmedWord, trimmedMeaning, current, notes);
     setClockIso(current);
     setCanPersist(true);
-    setDeckState((prev) => ({ ...prev, cards: [created, ...prev.cards] }));
+    setDeckState((prev) => {
+      const next = { ...prev, cards: [created, ...prev.cards] };
+      deckStateRef.current = next;
+      return next;
+    });
   }, []);
 
   const reviewDueCard = useCallback((cardId: string, rating: Rating): boolean => {
     const current = resolveReviewClock(clockIso, nowIso());
-    let reviewed = false;
-
-    setDeckState((prev) => {
-      const next = applyReviewToDeckState(prev, cardId, rating, current);
-      reviewed = next.reviewed;
-      return next.deckState;
-    });
-    if (!reviewed) {
+    const next = applyReviewToDeckState(deckStateRef.current, cardId, rating, current);
+    if (!next.reviewed) {
       return false;
     }
+
+    setDeckState(next.deckState);
+    deckStateRef.current = next.deckState;
     setClockIso(current);
     setCanPersist(true);
     return true;
