@@ -5,6 +5,7 @@ import { Card, Rating } from './types';
 import { isDue, nowIso } from './utils/time';
 
 const CLOCK_REFRESH_MS = 15000;
+const MAX_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 
 function parseTimeOrMax(iso: string): number {
   const parsed = Date.parse(iso);
@@ -159,14 +160,21 @@ export function hasDueCard(cards: Card[], cardId: string, currentIso: string): b
 export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: string): string {
   const renderedMs = parseTimeOrNaN(renderedClockIso);
   const runtimeMs = parseTimeOrNaN(runtimeNowIso);
+  const wallClockMs = Date.now();
 
   if (Number.isFinite(renderedMs) && Number.isFinite(runtimeMs)) {
+    if (renderedMs - runtimeMs > MAX_CLOCK_SKEW_MS) {
+      return runtimeNowIso;
+    }
     return runtimeMs < renderedMs ? renderedClockIso : runtimeNowIso;
   }
   if (Number.isFinite(runtimeMs)) {
     return runtimeNowIso;
   }
   if (Number.isFinite(renderedMs)) {
+    if (renderedMs - wallClockMs > MAX_CLOCK_SKEW_MS) {
+      return nowIso();
+    }
     return renderedClockIso;
   }
   return nowIso();

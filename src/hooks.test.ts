@@ -336,4 +336,18 @@ describe('resolveReviewClock', () => {
     expect(resolveReviewClock('bad-time', '2026-02-23T12:00:00.000Z')).toBe('2026-02-23T12:00:00.000Z');
     expect(resolveReviewClock('2026-02-23T12:00:00.000Z', 'bad-time')).toBe('2026-02-23T12:00:00.000Z');
   });
+
+  it('prefers runtime clock when rendered clock is pathologically far ahead', () => {
+    expect(resolveReviewClock('2099-01-01T00:00:00.000Z', '2026-02-23T12:00:00.000Z')).toBe(
+      '2026-02-23T12:00:00.000Z',
+    );
+  });
+
+  it('falls back to wall clock when only rendered clock is valid but pathologically far ahead', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
+    const reviewedAt = resolveReviewClock('2099-01-01T00:00:00.000Z', 'bad-time');
+    nowSpy.mockRestore();
+
+    expect(Date.parse(reviewedAt)).toBe(Date.parse('2026-02-23T12:00:00.000Z'));
+  });
 });

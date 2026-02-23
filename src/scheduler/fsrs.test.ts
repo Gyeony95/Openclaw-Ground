@@ -577,6 +577,21 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('does not anchor createdAt to far-future dueAt when both createdAt and updatedAt are invalid', () => {
+    const base = createNewCard('phi-future-due-anchor', 'letter', NOW);
+    const corrupted = {
+      ...base,
+      createdAt: 'bad-created-at',
+      updatedAt: 'bad-updated-at',
+      dueAt: '2099-01-01T00:00:00.000Z',
+    };
+    const reviewed = reviewCard(corrupted, 3, 'bad-runtime');
+
+    expect(Date.parse(reviewed.card.createdAt)).toBeLessThan(Date.parse('2030-01-01T00:00:00.000Z'));
+    expect(reviewed.card.updatedAt).toBe(reviewed.card.createdAt);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('computes ordered interval previews per rating', () => {
     const card = createNewCard('chi', 'letter', NOW);
     const base = reviewCard(card, 4, NOW).card;

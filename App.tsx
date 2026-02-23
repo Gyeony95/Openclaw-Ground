@@ -175,6 +175,9 @@ export default function App() {
   }, [entryAnim]);
 
   function handleAddCard() {
+    if (loading) {
+      return;
+    }
     const trimmedWord = word.trim();
     const trimmedMeaning = meaning.trim();
     const trimmedNotes = notes.trim();
