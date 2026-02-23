@@ -445,7 +445,12 @@ export default function App() {
                     <Text style={styles.panelSubKpi}>{followUpQueueLabel}</Text>
                   </View>
                 </View>
-                {loading ? <Text style={styles.info}>Loading deck...</Text> : null}
+                {loading ? (
+                  <View style={styles.loadingRow}>
+                    <ActivityIndicator size="small" color={colors.subInk} />
+                    <Text style={styles.info}>Loading deck...</Text>
+                  </View>
+                ) : null}
                 {!loading && !dueCard ? (
                   <View style={styles.emptyQueue}>
                     <Text style={styles.info}>No cards due. Add new words below.</Text>
@@ -904,6 +909,11 @@ const styles = StyleSheet.create({
     color: colors.subInk,
     fontSize: 13,
     lineHeight: 19,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   emptyQueue: {
     gap: 6,

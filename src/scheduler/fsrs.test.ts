@@ -632,6 +632,26 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('repairs invalid review due timestamps to a conservative half-day review floor', () => {
+    const card = {
+      ...createNewCard('due-anchor-invalid-review', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: 'not-a-time',
+      stability: 120,
+      difficulty: 5,
+      reps: 20,
+      lapses: 2,
+    };
+
+    const reviewed = reviewCard(card, 3, NOW);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(0.5);
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(2);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('repairs corrupted learning due timestamps that are not after updatedAt', () => {
     const card = {
       ...createNewCard('due-anchor-learning-repair', 'letter', NOW),

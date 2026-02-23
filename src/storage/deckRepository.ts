@@ -57,6 +57,9 @@ function parseTimeOrMin(iso: string): number {
 }
 
 function scheduleFallbackForState(state: ReviewState): number {
+  if (state === 'review') {
+    return REVIEW_SCHEDULE_FLOOR_DAYS;
+  }
   if (state === 'relearning') {
     return RELEARNING_SCHEDULE_FALLBACK_DAYS;
   }
@@ -161,7 +164,7 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   const normalizedUpdatedAt = new Date(normalizedUpdatedMs).toISOString();
   let normalizedDueMs = Math.max(dueMs, normalizedUpdatedMs);
   let scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
-  if (scheduleDays <= 0 && raw.state !== 'review') {
+  if (scheduleDays <= 0) {
     normalizedDueMs = normalizedUpdatedMs + scheduleFallbackForState(raw.state) * DAY_MS;
     scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
   }

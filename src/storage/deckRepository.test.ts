@@ -179,7 +179,7 @@ describe('deck repository', () => {
     expect(deck.cards).toHaveLength(2);
     expect(deck.cards[0].id).toBe('ok');
     expect(deck.cards[1].id).toBe('missing-due');
-    expect(deck.cards[1].dueAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[1].dueAt).toBe('2026-02-22T12:00:00.000Z');
   });
 
   it('drops cards when all timestamps are invalid', async () => {
@@ -695,7 +695,7 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2026-02-22T00:10:00.000Z');
   });
 
-  it('caps pathologically-future review dueAt values to the max supported review schedule', async () => {
+  it('repairs pathologically-future review dueAt values to a conservative review interval', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
         cards: [
@@ -718,7 +718,7 @@ describe('deck repository', () => {
 
     expect(deck.cards).toHaveLength(1);
     expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
-    expect(scheduleDays).toBe(36500);
+    expect(scheduleDays).toBe(0.5);
   });
 
   it('sanitizes and deduplicates cards before persisting deck data', async () => {
@@ -841,7 +841,7 @@ describe('deck repository', () => {
     expect(savedDeck.cards[0].notes).toHaveLength(240);
   });
 
-  it('caps pathologically-future review dueAt values before persisting deck data', async () => {
+  it('repairs pathologically-future review dueAt values before persisting deck data', async () => {
     mockedStorage.setItem.mockResolvedValueOnce();
 
     await saveDeck({
@@ -870,6 +870,6 @@ describe('deck repository', () => {
     const savedCard = savedDeck.cards[0];
     const scheduleDays = (Date.parse(savedCard.dueAt) - Date.parse(savedCard.updatedAt)) / (24 * 60 * 60 * 1000);
 
-    expect(scheduleDays).toBe(36500);
+    expect(scheduleDays).toBe(120);
   });
 });

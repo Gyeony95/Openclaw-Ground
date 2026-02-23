@@ -175,6 +175,7 @@ function normalizeTimeline(
     dueDaysFromUpdated >
       Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, expectedReviewScheduleDays * 6, 30);
   const dueNeedsRepair =
+    !rawDueAt ||
     (normalizedState === 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs) ||
     (normalizedState !== 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs) ||
     dueBeyondStateWindow ||
