@@ -748,6 +748,19 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.lapses).toBe(Number.MAX_SAFE_INTEGER);
   });
 
+  it('saturates positive infinite counters instead of resetting review history', () => {
+    const base = createNewCard('theta-counter-inf', 'letter', NOW);
+    const corrupted = {
+      ...reviewCard(base, 4, NOW).card,
+      reps: Number.POSITIVE_INFINITY,
+      lapses: Number.POSITIVE_INFINITY,
+    };
+    const reviewed = reviewCard(corrupted, 1, '2026-02-24T12:00:00.000Z');
+
+    expect(reviewed.card.reps).toBe(Number.MAX_SAFE_INTEGER);
+    expect(reviewed.card.lapses).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
   it('does not double-count lapses while repeating relearning Again steps', () => {
     const card = createNewCard('lapse-step', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;

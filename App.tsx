@@ -407,7 +407,12 @@ export default function App() {
                     <Text style={styles.panelSubtitle}>Prioritized by due time and recency</Text>
                   </View>
                   <View style={styles.panelKpiWrap}>
-                    <Text style={[styles.panelKpi, { color: queueLabelTone }]}>{queueLabel}</Text>
+                    <Text
+                      style={[styles.panelKpi, { color: queueLabelTone }]}
+                      accessibilityLiveRegion="polite"
+                    >
+                      {queueLabel}
+                    </Text>
                     <Text style={styles.panelSubKpi}>{reviewQueueLabel}</Text>
                   </View>
                 </View>
@@ -514,7 +519,9 @@ export default function App() {
                         {isReviewBusy ? (
                           <View style={styles.reviewingHintRow}>
                             <ActivityIndicator size="small" color={colors.subInk} />
-                            <Text style={styles.reviewingHint}>Recording review...</Text>
+                            <Text style={styles.reviewingHint} accessibilityLiveRegion="polite">
+                              Recording review...
+                            </Text>
                           </View>
                         ) : null}
                       </View>

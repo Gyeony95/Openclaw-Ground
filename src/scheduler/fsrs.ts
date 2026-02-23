@@ -214,6 +214,9 @@ function normalizeState(input: ReviewState): ReviewState {
 }
 
 function normalizeCounter(value: number): number {
+  if (value === Number.POSITIVE_INFINITY) {
+    return COUNTER_MAX;
+  }
   if (!Number.isFinite(value)) {
     return 0;
   }
