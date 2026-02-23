@@ -585,6 +585,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.state).toBe('review');
   });
 
+  it('recovers corrupted review due timestamps that are not after updatedAt', () => {
+    const card = {
+      ...createNewCard('due-anchor-repair', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: NOW,
+      stability: 12,
+      difficulty: 5,
+      reps: 20,
+      lapses: 2,
+    };
+
+    const reviewed = reviewCard(card, 2, NOW);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThan(1);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('falls back to the current clock for invalid create timestamps', () => {
     const card = createNewCard('tau', 'letter', 'bad-timestamp');
 

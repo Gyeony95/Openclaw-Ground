@@ -88,11 +88,13 @@ function formatReviewQueueLabel(dueNow: number): string {
 }
 
 function queueTone({
-  label,
+  dueAt,
+  clockIso,
   loading,
   hasDueCard,
 }: {
-  label: string;
+  dueAt?: string;
+  clockIso: string;
   loading: boolean;
   hasDueCard: boolean;
 }): string {
@@ -102,10 +104,12 @@ function queueTone({
   if (!hasDueCard) {
     return colors.success;
   }
-  if (label === 'Due date unavailable') {
+  const dueMs = dueAt ? Date.parse(dueAt) : Number.NaN;
+  const nowMs = Date.parse(clockIso);
+  if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
     return colors.warn;
   }
-  if (label.startsWith('Overdue') || label === 'Due now') {
+  if (dueMs - nowMs <= 60 * 1000) {
     return colors.danger;
   }
   return colors.primary;
@@ -137,7 +141,12 @@ export default function App() {
   }, [stats]);
   const retentionBarWidth = `${retentionScore}%`;
   const queueLabel = loading ? 'Loading' : dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Queue clear';
-  const queueLabelTone = queueTone({ label: queueLabel, loading, hasDueCard: Boolean(dueCard) });
+  const queueLabelTone = queueTone({
+    dueAt: dueCard?.dueAt,
+    clockIso,
+    loading,
+    hasDueCard: Boolean(dueCard),
+  });
   const queueShareLabel = loading
     ? '--'
     : formatQueueShareLabel(stats.dueNow, stats.total);

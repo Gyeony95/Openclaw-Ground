@@ -156,11 +156,14 @@ function normalizeTimeline(
       ? normalizeScheduledDays(card.stability, 'review')
       : scheduleFallbackForState(normalizedState);
   const fallbackDueAt = addDaysIso(updatedAt, fallbackDueDays);
-  const rawDueAt = isValidIso(card.dueAt) ? card.dueAt : fallbackDueAt;
-  const dueAt = new Date(Math.max(Date.parse(rawDueAt), Date.parse(updatedAt))).toISOString();
+  const rawDueAt = isValidIso(card.dueAt) ? card.dueAt : undefined;
+  const rawDueMs = rawDueAt ? Date.parse(rawDueAt) : Number.NaN;
+  const updatedAtMs = Date.parse(updatedAt);
+  const dueTimelineAnchor =
+    normalizedState === 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs ? fallbackDueAt : rawDueAt;
+  const dueAt = new Date(Math.max(Date.parse(dueTimelineAnchor ?? fallbackDueAt), updatedAtMs)).toISOString();
   const resolvedCurrentIso = resolveReviewIso(updatedAt, requestedNowIso);
   const resolvedCurrentMs = Date.parse(resolvedCurrentIso);
-  const updatedAtMs = Date.parse(updatedAt);
   const wallClockMs = Date.parse(currentNowIso());
   const updatedAtLooksCorruptedFuture =
     Number.isFinite(updatedAtMs) &&
