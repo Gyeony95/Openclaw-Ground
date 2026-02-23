@@ -155,6 +155,16 @@ describe('applyDueReview', () => {
     expect(result.cards[0].lapses).toBe(1);
     expect(Date.parse(result.cards[0].dueAt)).toBeGreaterThan(Date.parse(result.cards[0].updatedAt));
   });
+
+  it('treats malformed ratings as Again for learning cards to avoid accidental promotion', () => {
+    const due = createNewCard('invalid-rating-learning', 'safe', NOW);
+    const result = applyDueReview([due], due.id, Number.NaN as Rating, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0].state).toBe('learning');
+    expect(result.cards[0].lapses).toBe(0);
+    expect(result.cards[0].reps).toBe(1);
+  });
 });
 
 describe('applyReviewToDeckState', () => {

@@ -99,10 +99,12 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
   return candidate;
 }
 
-function normalizeRating(input: Rating): Rating {
+function normalizeRating(input: Rating, currentState: ReviewState): Rating {
   if (!Number.isFinite(input)) {
-    // Runtime-corrupted ratings should degrade to a neutral review score.
-    return 3;
+    // Runtime-corrupted ratings should be safe by phase:
+    // - learning/relearning: avoid accidental promotion by treating as Again
+    // - review: avoid punitive lapses by treating as neutral Good
+    return currentState === 'review' ? 3 : 1;
   }
 
   const rounded = Math.round(input);
@@ -607,8 +609,8 @@ function normalizeNotesValue(notes?: string): string | undefined {
 }
 
 export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewResult {
-  const normalizedRating = normalizeRating(rating);
   const currentState = normalizeState(card.state);
+  const normalizedRating = normalizeRating(rating, currentState);
   const previousReps = normalizeCounter(card.reps);
   const previousLapses = normalizeCounter(card.lapses);
   const { createdAt, currentIso, updatedAt, dueAt } = normalizeTimeline(card, nowIso);

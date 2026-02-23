@@ -959,6 +959,18 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeLessThan(0.002);
   });
 
+  it('treats non-finite runtime ratings as Again while relearning', () => {
+    const base = createNewCard('eta-3-relearning', 'letter', NOW);
+    const graduated = reviewCard(base, 4, NOW).card;
+    const failed = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+
+    const reviewed = reviewCard(failed, Number.NaN as unknown as Rating, '2026-02-24T12:10:00.000Z');
+
+    expect(reviewed.card.state).toBe('relearning');
+    expect(reviewed.card.lapses).toBe(failed.lapses);
+    expect(reviewed.scheduledDays).toBeCloseTo(10 / 1440, 8);
+  });
+
   it('normalizes non-finite counters during review updates', () => {
     const base = createNewCard('theta-2', 'letter', NOW);
     const corrupted = {

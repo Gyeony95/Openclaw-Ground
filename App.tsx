@@ -426,7 +426,14 @@ export default function App() {
     }
     Keyboard.dismiss();
     reviewLockRef.current = true;
-    const reviewed = reviewDueCard(dueCard.id, rating);
+    let reviewed = false;
+    try {
+      reviewed = reviewDueCard(dueCard.id, rating);
+    } catch {
+      setPendingReviewCardId(null);
+      reviewLockRef.current = false;
+      return;
+    }
     if (reviewed) {
       setPendingReviewCardId(dueCard.id);
       return;
