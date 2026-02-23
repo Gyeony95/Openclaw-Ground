@@ -18,7 +18,7 @@ import {
 import { MetricCard } from './src/components/MetricCard';
 import { RatingRow } from './src/components/RatingRow';
 import { MEANING_MAX_LENGTH, NOTES_MAX_LENGTH, WORD_MAX_LENGTH } from './src/scheduler/constants';
-import { compareDueCards, countUpcomingDueCards, useDeck } from './src/hooks';
+import { compareDueCards, countOverdueCards, countUpcomingDueCards, useDeck } from './src/hooks';
 import { previewIntervals } from './src/scheduler/fsrs';
 import { colors, radii } from './src/theme';
 import { formatDueLabel } from './src/utils/due';
@@ -151,6 +151,9 @@ export default function App() {
   }, [cards, clockIso]);
   const dueWithinDay = useMemo(() => {
     return countUpcomingDueCards(cards, clockIso, 24);
+  }, [cards, clockIso]);
+  const overdueNow = useMemo(() => {
+    return countOverdueCards(cards, clockIso);
   }, [cards, clockIso]);
   const exactDueLabel = exactDateLabel(dueCard?.dueAt);
   const relativeDueLabel = dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Schedule unavailable';
@@ -318,6 +321,7 @@ export default function App() {
 
             <View style={styles.metrics}>
               <MetricCard label="Due now" value={stats.dueNow} accent={colors.primary} />
+              <MetricCard label="Overdue" value={overdueNow} accent={colors.danger} />
               <MetricCard label="Upcoming 24h" value={dueWithinDay} accent={colors.accent} />
               <MetricCard label="Learning" value={stats.learning} accent={colors.warn} />
               <MetricCard label="Review" value={stats.review} accent={colors.success} />

@@ -2,6 +2,7 @@ import {
   applyReviewToDeckState,
   applyDueReview,
   compareDueCards,
+  countOverdueCards,
   countUpcomingDueCards,
   hasDueCard,
   mergeDeckCards,
@@ -438,6 +439,21 @@ describe('countUpcomingDueCards', () => {
     const upcoming = { ...createNewCard('upcoming-window-3', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
 
     expect(countUpcomingDueCards([upcoming], NOW, Number.MAX_VALUE)).toBe(0);
+  });
+});
+
+describe('countOverdueCards', () => {
+  it('counts only cards that are meaningfully overdue', () => {
+    const overdue = { ...createNewCard('overdue-count', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };
+    const dueNow = { ...createNewCard('due-now-count', 'test', NOW), dueAt: '2026-02-23T12:00:30.000Z' };
+    const future = { ...createNewCard('future-count', 'test', NOW), dueAt: '2026-02-23T13:00:00.000Z' };
+
+    expect(countOverdueCards([overdue, dueNow, future], NOW)).toBe(1);
+  });
+
+  it('returns zero for invalid runtime clocks', () => {
+    const overdue = { ...createNewCard('overdue-invalid-clock', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };
+    expect(countOverdueCards([overdue], 'bad-clock')).toBe(0);
   });
 });
 

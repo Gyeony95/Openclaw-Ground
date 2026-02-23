@@ -77,6 +77,14 @@ describe('fsrs scheduler', () => {
     expect(review.scheduledDays).toBeLessThan(0.002);
   });
 
+  it('uses an intermediate hard step before graduating learning cards', () => {
+    const card = createNewCard('learning-hard-step', 'definition', NOW);
+    const hard = reviewCard(card, 2, NOW);
+
+    expect(hard.card.state).toBe('learning');
+    expect(hard.scheduledDays).toBeCloseTo(5 / 1440, 7);
+  });
+
   it('uses a short graduation interval when learning cards are first rated good', () => {
     const card = createNewCard('xi', 'letter', NOW);
     const reviewed = reviewCard(card, 3, NOW);
@@ -94,6 +102,16 @@ describe('fsrs scheduler', () => {
 
     expect(hard.card.state).toBe('relearning');
     expect(hard.scheduledDays).toBeLessThan(0.03);
+  });
+
+  it('keeps relearning hard interval in a short retry window', () => {
+    const card = createNewCard('relearning-hard-step', 'definition', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const failed = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+    const hard = reviewCard(failed, 2, '2026-02-24T12:10:00.000Z');
+
+    expect(hard.card.state).toBe('relearning');
+    expect(hard.scheduledDays).toBeCloseTo(15 / 1440, 7);
   });
 
   it('does not reset relearning graduates to initial stability', () => {

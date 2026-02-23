@@ -219,7 +219,7 @@ function learningIntervalDays(rating: Rating): number {
     case 1:
       return 1 * MINUTE_IN_DAYS;
     case 2:
-      return 10 * MINUTE_IN_DAYS;
+      return 5 * MINUTE_IN_DAYS;
     default:
       return 10 * MINUTE_IN_DAYS;
   }
@@ -230,7 +230,7 @@ function relearningIntervalDays(rating: Rating): number {
     case 1:
       return 10 * MINUTE_IN_DAYS;
     case 2:
-      return 30 * MINUTE_IN_DAYS;
+      return 15 * MINUTE_IN_DAYS;
     case 3:
       return 0.5;
     case 4:

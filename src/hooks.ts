@@ -6,6 +6,7 @@ import { isDue, nowIso } from './utils/time';
 
 const CLOCK_REFRESH_MS = 15000;
 const MAX_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
+const OVERDUE_GRACE_MS = 60 * 1000;
 
 function parseTimeOrMax(iso: string): number {
   const parsed = Date.parse(iso);
@@ -92,6 +93,19 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
   return cards.filter((card) => {
     const dueMs = Date.parse(card.dueAt);
     return Number.isFinite(dueMs) && dueMs > nowMs && dueMs <= cutoffMs;
+  }).length;
+}
+
+export function countOverdueCards(cards: Card[], currentIso: string): number {
+  const nowMs = Date.parse(currentIso);
+  if (!Number.isFinite(nowMs)) {
+    return 0;
+  }
+  const overdueCutoff = nowMs - OVERDUE_GRACE_MS;
+
+  return cards.filter((card) => {
+    const dueMs = Date.parse(card.dueAt);
+    return Number.isFinite(dueMs) && dueMs < overdueCutoff;
   }).length;
 }
 
@@ -231,6 +245,8 @@ export function useDeck() {
   const [canPersist, setCanPersist] = useState(false);
   const [clockIso, setClockIso] = useState(() => nowIso());
   const deckStateRef = useRef(deckState);
+  const persistVersionRef = useRef(0);
+  const persistInFlightRef = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
     deckStateRef.current = deckState;
@@ -270,8 +286,27 @@ export function useDeck() {
     if (loading || !canPersist) {
       return;
     }
-    saveDeck(deckState).catch(() => {
+    persistVersionRef.current += 1;
+    const writeVersion = persistVersionRef.current;
+    const persist = async () => {
+      await saveDeck(deckState);
+      if (persistVersionRef.current !== writeVersion) {
+        return;
+      }
+      persistInFlightRef.current = null;
+    };
+
+    const run = (persistInFlightRef.current ?? Promise.resolve())
+      .catch(() => {
+        // Continue queue processing even if a prior write failed.
+      })
+      .then(persist);
+
+    persistInFlightRef.current = run.catch(() => {
       // Persist errors are non-fatal for in-session usage.
+      if (persistVersionRef.current === writeVersion) {
+        persistInFlightRef.current = null;
+      }
     });
   }, [canPersist, deckState, loading]);
 
