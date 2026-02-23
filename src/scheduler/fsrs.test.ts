@@ -342,6 +342,20 @@ describe('fsrs scheduler', () => {
     expect(next.scheduledDays).toBeGreaterThanOrEqual(scheduled);
   });
 
+  it('treats exactly one-minute-early Good reviews as on-time for schedule floor', () => {
+    const card = createNewCard('nu-3b', 'letter', NOW);
+    const first = reviewCard(card, 4, NOW).card;
+    const second = reviewCard(first, 4, '2026-02-26T12:00:00.000Z').card;
+    const scheduled = Math.round(
+      (Date.parse(second.dueAt) - Date.parse(second.updatedAt)) / (24 * 60 * 60 * 1000),
+    );
+    const oneMinuteEarlyIso = new Date(Date.parse(second.dueAt) - 60 * 1000).toISOString();
+
+    const next = reviewCard(second, 3, oneMinuteEarlyIso);
+
+    expect(next.scheduledDays).toBeGreaterThanOrEqual(scheduled);
+  });
+
   it('keeps difficulty within bounds', () => {
     let card = createNewCard('gamma', 'third letter', NOW);
 

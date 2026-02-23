@@ -33,7 +33,11 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
           ]}
           accessibilityRole="button"
           accessibilityLabel={`Rate ${item.text}`}
-          accessibilityHint={`Schedules next review ${intervalLabels?.[item.rating] ?? item.fallbackHint}`}
+          accessibilityHint={
+            disabled
+              ? 'Wait for the current review to finish'
+              : `Schedules next review ${intervalLabels?.[item.rating] ?? item.fallbackHint}`
+          }
           accessibilityState={{ disabled }}
         >
           <Text style={[styles.buttonText, { color: item.tone }]}>{item.text}</Text>

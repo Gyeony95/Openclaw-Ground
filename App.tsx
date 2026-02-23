@@ -76,6 +76,17 @@ function trimmedLength(value: string, max: number): number {
   return value.trim().slice(0, max).length;
 }
 
+function formatQueueShareLabel(dueNow: number, total: number): string {
+  const dueLabel = dueNow === 1 ? 'due card' : 'due cards';
+  const totalLabel = total === 1 ? 'card' : 'cards';
+  return `${dueNow.toLocaleString()} ${dueLabel} / ${total.toLocaleString()} ${totalLabel}`;
+}
+
+function formatReviewQueueLabel(dueNow: number): string {
+  const dueLabel = dueNow === 1 ? 'due card' : 'due cards';
+  return `Card 1 of ${dueNow.toLocaleString()} ${dueLabel}`;
+}
+
 function queueTone({
   label,
   loading,
@@ -129,11 +140,11 @@ export default function App() {
   const queueLabelTone = queueTone({ label: queueLabel, loading, hasDueCard: Boolean(dueCard) });
   const queueShareLabel = loading
     ? '--'
-    : `${stats.dueNow.toLocaleString()} due / ${stats.total.toLocaleString()} total`;
+    : formatQueueShareLabel(stats.dueNow, stats.total);
   const reviewQueueLabel = loading
     ? '--'
     : dueCard
-      ? `Card 1 of ${stats.dueNow.toLocaleString()} due`
+      ? formatReviewQueueLabel(stats.dueNow)
       : queueShareLabel;
   const nextUpcomingCard = useMemo(() => {
     const nowMs = Date.parse(clockIso);

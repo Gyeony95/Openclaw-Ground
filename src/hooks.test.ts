@@ -478,6 +478,15 @@ describe('countOverdueCards', () => {
     expect(countOverdueCards([overdue, dueNow, future], NOW)).toBe(1);
   });
 
+  it('counts cards that are exactly at the overdue grace cutoff', () => {
+    const atGraceCutoff = {
+      ...createNewCard('overdue-grace-cutoff', 'test', NOW),
+      dueAt: '2026-02-23T11:59:00.000Z',
+    };
+
+    expect(countOverdueCards([atGraceCutoff], NOW)).toBe(1);
+  });
+
   it('returns zero for invalid runtime clocks', () => {
     const overdue = { ...createNewCard('overdue-invalid-clock', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };
     expect(countOverdueCards([overdue], 'bad-clock')).toBe(0);

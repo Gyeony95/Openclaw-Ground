@@ -111,7 +111,7 @@ export function countOverdueCards(cards: Card[], currentIso: string): number {
 
   return cards.filter((card) => {
     const dueMs = Date.parse(card.dueAt);
-    return Number.isFinite(dueMs) && dueMs < overdueCutoff;
+    return Number.isFinite(dueMs) && dueMs <= overdueCutoff;
   }).length;
 }
 
