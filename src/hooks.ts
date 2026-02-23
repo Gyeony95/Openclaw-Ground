@@ -174,8 +174,17 @@ export function applyDueReview(
   rating: Rating,
   currentIso: string,
 ): { cards: Card[]; reviewed: boolean; reviewedAt?: string } {
-  const targetIndex = cards.findIndex((card) => card.id === cardId && isDue(card.dueAt, currentIso));
-  if (targetIndex === -1) {
+  let targetIndex = -1;
+  for (let index = 0; index < cards.length; index += 1) {
+    const candidate = cards[index];
+    if (candidate.id !== cardId || !isDue(candidate.dueAt, currentIso)) {
+      continue;
+    }
+    if (targetIndex === -1 || compareDueCards(candidate, cards[targetIndex]) < 0) {
+      targetIndex = index;
+    }
+  }
+  if (targetIndex < 0) {
     return { cards, reviewed: false };
   }
 

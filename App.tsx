@@ -82,6 +82,10 @@ function formatMetricNumber(value: number, digits: number): string {
   return value.toFixed(digits);
 }
 
+function formatCountLabel(length: number, max: number): string {
+  return `${length.toLocaleString()}/${max.toLocaleString()}`;
+}
+
 function trimmedLength(value: string, max: number): number {
   return value.trim().slice(0, max).length;
 }
@@ -655,7 +659,7 @@ export default function App() {
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
                 />
                 <Text style={[styles.charCount, { color: wordCountTone }]}>
-                  {wordRemaining} left
+                  {formatCountLabel(wordLength, WORD_MAX_LENGTH)}
                 </Text>
                 <TextInput
                   ref={meaningInputRef}
@@ -679,7 +683,7 @@ export default function App() {
                   }}
                 />
                 <Text style={[styles.charCount, { color: meaningCountTone }]}>
-                  {meaningRemaining} left
+                  {formatCountLabel(meaningLength, MEANING_MAX_LENGTH)}
                 </Text>
                 <TextInput
                   ref={notesInputRef}
@@ -699,7 +703,7 @@ export default function App() {
                   onSubmitEditing={handleAddCard}
                 />
                 <Text style={[styles.charCount, { color: noteCountTone }]}>
-                  {notesRemaining} left
+                  {formatCountLabel(notesLength, NOTES_MAX_LENGTH)}
                 </Text>
 
                 <Pressable

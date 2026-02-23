@@ -56,9 +56,38 @@ describe('applyDueReview', () => {
     expect(result.cards[1]).toBe(secondDue);
   });
 
-  it('reviews only the first due card when duplicate IDs exist', () => {
-    const first = createNewCard('zeta', 'sixth', NOW);
-    const second = { ...createNewCard('eta', 'seventh', NOW), id: first.id };
+  it('reviews the earliest due card when duplicate IDs exist', () => {
+    const first = {
+      ...createNewCard('zeta', 'sixth', NOW),
+      dueAt: '2026-02-23T12:30:00.000Z',
+    };
+    const second = {
+      ...createNewCard('eta', 'seventh', NOW),
+      id: first.id,
+      dueAt: '2026-02-23T12:00:00.000Z',
+    };
+
+    const result = applyDueReview([first, second], first.id, 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).toBe(first);
+    expect(result.cards[0].reps).toBe(first.reps);
+    expect(result.cards[1]).not.toBe(second);
+    expect(result.cards[1].reps).toBe(second.reps + 1);
+  });
+
+  it('breaks due-time ties with older updatedAt when duplicate IDs exist', () => {
+    const first = {
+      ...createNewCard('zeta-tie', 'sixth', NOW),
+      dueAt: '2026-02-23T12:00:00.000Z',
+      updatedAt: '2026-02-23T11:00:00.000Z',
+    };
+    const second = {
+      ...createNewCard('eta-tie', 'seventh', NOW),
+      id: first.id,
+      dueAt: '2026-02-23T12:00:00.000Z',
+      updatedAt: '2026-02-23T11:10:00.000Z',
+    };
 
     const result = applyDueReview([first, second], first.id, 3, NOW);
 
@@ -66,7 +95,6 @@ describe('applyDueReview', () => {
     expect(result.cards[0]).not.toBe(first);
     expect(result.cards[0].reps).toBe(first.reps + 1);
     expect(result.cards[1]).toBe(second);
-    expect(result.cards[1].reps).toBe(second.reps);
   });
 
   it('does nothing when the target card ID does not exist', () => {

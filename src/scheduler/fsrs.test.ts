@@ -284,6 +284,19 @@ describe('fsrs scheduler', () => {
     expect(next.scheduledDays).toBeGreaterThanOrEqual(scheduled);
   });
 
+  it('does not inflate on-time hard review intervals beyond the current schedule', () => {
+    const card = createNewCard('nu-hard-ontime-cap', 'letter', NOW);
+    const first = reviewCard(card, 4, NOW).card;
+    const second = reviewCard(first, 4, '2026-02-26T12:00:00.000Z').card;
+    const scheduled = Math.round(
+      (Date.parse(second.dueAt) - Date.parse(second.updatedAt)) / (24 * 60 * 60 * 1000),
+    );
+    const next = reviewCard(second, 2, second.dueAt);
+
+    expect(next.card.state).toBe('review');
+    expect(next.scheduledDays).toBe(scheduled);
+  });
+
   it('allows early hard reviews to keep shorter intervals than the current schedule', () => {
     const card = createNewCard('nu-hard-early', 'letter', NOW);
     const first = reviewCard(card, 4, NOW).card;
