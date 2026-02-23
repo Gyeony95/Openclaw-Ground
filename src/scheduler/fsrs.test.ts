@@ -978,6 +978,26 @@ describe('fsrs scheduler', () => {
     expect(relearningRetry.difficulty).toBeCloseTo(failedReview.difficulty, 6);
   });
 
+  it('keeps difficulty stable on learning Hard retries', () => {
+    const card = createNewCard('learning-hard-difficulty', 'letter', NOW);
+    const firstHard = reviewCard(card, 2, NOW).card;
+    const secondHard = reviewCard(firstHard, 2, '2026-02-23T12:05:00.000Z').card;
+
+    expect(firstHard.state).toBe('learning');
+    expect(secondHard.state).toBe('learning');
+    expect(secondHard.difficulty).toBeCloseTo(card.difficulty, 6);
+  });
+
+  it('keeps difficulty stable on relearning Hard retries', () => {
+    const card = createNewCard('relearning-hard-difficulty', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const failedReview = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+    const relearningHard = reviewCard(failedReview, 2, '2026-02-24T12:10:00.000Z').card;
+
+    expect(relearningHard.state).toBe('relearning');
+    expect(relearningHard.difficulty).toBeCloseTo(failedReview.difficulty, 6);
+  });
+
   it('falls back to learning behavior when runtime state is corrupted', () => {
     const base = createNewCard('iota-2', 'letter', NOW);
     const corrupted = {

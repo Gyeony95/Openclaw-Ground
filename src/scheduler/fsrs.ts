@@ -416,8 +416,8 @@ function updateDifficulty(prevDifficulty: number, rating: Rating): number {
 }
 
 function nextDifficultyForPhase(prevDifficulty: number, currentState: ReviewState, rating: Rating): number {
-  // Non-review "Again" steps are short retries and should not harden long-term card difficulty.
-  if (currentState !== 'review' && rating === 1) {
+  // Non-review low ratings are short retries and should not harden long-term card difficulty.
+  if (currentState !== 'review' && rating <= 2) {
     return clampFinite(prevDifficulty, DIFFICULTY_MIN, DIFFICULTY_MAX, DIFFICULTY_MEAN_REVERSION);
   }
   return updateDifficulty(prevDifficulty, rating);
