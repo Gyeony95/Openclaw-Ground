@@ -355,7 +355,9 @@ export default function App() {
               <View style={styles.headerGlowA} />
               <View style={styles.headerGlowB} />
               <Text style={styles.eyebrow}>Word Memorizer</Text>
-              <Text style={styles.title}>Retention Dashboard</Text>
+              <Text style={styles.title} accessibilityRole="header">
+                Retention Dashboard
+              </Text>
               <Text style={styles.subtitle}>FSRS-inspired scheduler calibrated for consistent long-term recall.</Text>
               <View style={styles.heroTags}>
                 <Text style={[styles.heroTag, { color: queueLabelTone }]}>{queueLabel}</Text>
@@ -372,7 +374,13 @@ export default function App() {
                   <Text style={styles.scoreLabel}>Retention score</Text>
                   <Text style={styles.scoreValue}>{retentionScore}%</Text>
                 </View>
-                <View style={styles.scoreTrack}>
+                <View
+                  style={styles.scoreTrack}
+                  accessible
+                  accessibilityRole="progressbar"
+                  accessibilityLabel="Retention score"
+                  accessibilityValue={{ min: 0, max: 100, now: retentionScore }}
+                >
                   <View style={[styles.scoreFill, { width: retentionBarWidth }]} />
                 </View>
               </View>
@@ -408,7 +416,9 @@ export default function App() {
               <View style={[styles.panel, styles.reviewPanel, isWideLayout && styles.panelWide]}>
                 <View style={styles.panelHead}>
                   <View style={styles.panelTitleWrap}>
-                    <Text style={styles.panelTitle}>Review Queue</Text>
+                    <Text style={styles.panelTitle} accessibilityRole="header">
+                      Review Queue
+                    </Text>
                     <Text style={styles.panelSubtitle}>Prioritized by due time and recency</Text>
                   </View>
                   <View style={styles.panelKpiWrap}>
@@ -544,7 +554,9 @@ export default function App() {
               </View>
               <View style={[styles.panel, styles.addPanel, isWideLayout && styles.panelWide]}>
                 <View style={styles.panelTitleWrap}>
-                  <Text style={styles.panelTitle}>Add Vocabulary</Text>
+                  <Text style={styles.panelTitle} accessibilityRole="header">
+                    Add Vocabulary
+                  </Text>
                   <Text style={styles.panelSubtitle}>Keep entries precise and compact</Text>
                 </View>
                 <Text style={styles.info}>Capture one precise definition and optional context note.</Text>

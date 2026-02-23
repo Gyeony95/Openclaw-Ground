@@ -381,6 +381,50 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
   });
 
+  it('repairs learning cards with dueAt at or before updatedAt to a short fallback interval', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'learning-due-repair',
+            word: 'eta-learning',
+            meaning: 'letter',
+            dueAt: '2026-02-24T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-24T00:00:00.000Z',
+            state: 'learning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards[0].updatedAt).toBe('2026-02-24T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-24T00:01:00.000Z');
+  });
+
+  it('repairs relearning cards with dueAt before updatedAt to a short fallback interval', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'relearning-due-repair',
+            word: 'eta-relearning',
+            meaning: 'letter',
+            dueAt: '2026-02-23T23:59:59.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-24T00:00:00.000Z',
+            state: 'relearning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards[0].updatedAt).toBe('2026-02-24T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-24T00:10:00.000Z');
+  });
+
   it('keeps freshest card data when duplicate IDs are persisted', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

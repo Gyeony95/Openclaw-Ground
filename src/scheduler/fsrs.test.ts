@@ -632,6 +632,40 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('repairs corrupted learning due timestamps that are not after updatedAt', () => {
+    const card = {
+      ...createNewCard('due-anchor-learning-repair', 'letter', NOW),
+      state: 'learning' as const,
+      updatedAt: NOW,
+      dueAt: NOW,
+    };
+
+    const reviewed = reviewCard(card, 1, NOW);
+
+    expect(reviewed.card.state).toBe('learning');
+    expect(reviewed.scheduledDays).toBeCloseTo(1 / 1440, 8);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
+  it('repairs corrupted relearning due timestamps that are not after updatedAt', () => {
+    const card = {
+      ...createNewCard('due-anchor-relearning-repair', 'letter', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: NOW,
+      stability: 8,
+      difficulty: 5,
+      reps: 8,
+      lapses: 1,
+    };
+
+    const reviewed = reviewCard(card, 1, NOW);
+
+    expect(reviewed.card.state).toBe('relearning');
+    expect(reviewed.scheduledDays).toBeCloseTo(10 / 1440, 8);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('falls back to the current clock for invalid create timestamps', () => {
     const card = createNewCard('tau', 'letter', 'bad-timestamp');
 

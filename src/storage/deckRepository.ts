@@ -158,7 +158,11 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   const normalizedUpdatedMs = Math.max(updatedMs, createdMs);
   const normalizedUpdatedAt = new Date(normalizedUpdatedMs).toISOString();
   let normalizedDueMs = Math.max(dueMs, normalizedUpdatedMs);
-  const scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
+  let scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
+  if (scheduleDays <= 0 && raw.state !== 'review') {
+    normalizedDueMs = normalizedUpdatedMs + scheduleFallbackForState(raw.state) * DAY_MS;
+    scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
+  }
   if (scheduleDays > maxScheduleDaysForState(raw.state)) {
     if (raw.state === 'review') {
       normalizedDueMs = normalizedUpdatedMs + STABILITY_MAX * DAY_MS;
