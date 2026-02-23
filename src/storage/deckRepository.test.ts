@@ -54,6 +54,31 @@ describe('deck repository', () => {
     expect(deck.cards[0].difficulty).toBe(1);
   });
 
+  it('trims oversized persisted text fields to app limits', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'oversized',
+            word: ` ${'w'.repeat(120)} `,
+            meaning: ` ${'m'.repeat(220)} `,
+            notes: ` ${'n'.repeat(320)} `,
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'learning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].word).toHaveLength(80);
+    expect(deck.cards[0].meaning).toHaveLength(180);
+    expect(deck.cards[0].notes).toHaveLength(240);
+  });
+
   it('computes due and state counts', () => {
     const stats = computeDeckStats(
       [
@@ -463,5 +488,37 @@ describe('deck repository', () => {
     const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
     const savedDeck = JSON.parse(rawSavedDeck) as { lastReviewedAt?: string };
     expect(savedDeck.lastReviewedAt).toBe('2026-02-23T12:00:00.000Z');
+  });
+
+  it('trims oversized text fields before persisting deck data', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: 'oversized-save',
+          word: 'w'.repeat(140),
+          meaning: 'm'.repeat(260),
+          notes: 'n'.repeat(360),
+          dueAt: '2026-02-23T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'review',
+          reps: 0,
+          lapses: 0,
+          stability: 0.5,
+          difficulty: 5,
+        },
+      ],
+      lastReviewedAt: undefined,
+    });
+
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as {
+      cards: Array<{ word: string; meaning: string; notes?: string }>;
+    };
+    expect(savedDeck.cards[0].word).toHaveLength(80);
+    expect(savedDeck.cards[0].meaning).toHaveLength(180);
+    expect(savedDeck.cards[0].notes).toHaveLength(240);
   });
 });

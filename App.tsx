@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { MetricCard } from './src/components/MetricCard';
 import { RatingRow } from './src/components/RatingRow';
+import { MEANING_MAX_LENGTH, NOTES_MAX_LENGTH, WORD_MAX_LENGTH } from './src/scheduler/constants';
 import { countUpcomingDueCards, useDeck } from './src/hooks';
 import { previewIntervals } from './src/scheduler/fsrs';
 import { colors, radii } from './src/theme';
@@ -136,7 +137,7 @@ export default function App() {
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 
   const canAdd = useMemo(() => !loading && word.trim().length > 0 && meaning.trim().length > 0, [loading, word, meaning]);
-  const notesRemaining = Math.max(0, 240 - notes.length);
+  const notesRemaining = Math.max(0, NOTES_MAX_LENGTH - notes.length);
   const noteCountTone = notesRemaining === 0 ? colors.danger : notesRemaining <= 20 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
   const isReviewBusy = pendingReviewCardId !== null;
@@ -379,7 +380,7 @@ export default function App() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   returnKeyType="next"
-                  maxLength={80}
+                  maxLength={WORD_MAX_LENGTH}
                   selectionColor={colors.primary}
                   accessibilityLabel="Word input"
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
@@ -392,7 +393,7 @@ export default function App() {
                   style={styles.input}
                   placeholderTextColor={colors.subInk}
                   returnKeyType="next"
-                  maxLength={180}
+                  maxLength={MEANING_MAX_LENGTH}
                   selectionColor={colors.primary}
                   accessibilityLabel="Meaning input"
                   onSubmitEditing={() => {
@@ -411,7 +412,7 @@ export default function App() {
                   style={[styles.input, styles.notesInput]}
                   placeholderTextColor={colors.subInk}
                   multiline
-                  maxLength={240}
+                  maxLength={NOTES_MAX_LENGTH}
                   selectionColor={colors.primary}
                   accessibilityLabel="Notes input"
                   returnKeyType="done"

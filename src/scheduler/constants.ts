@@ -6,3 +6,7 @@ export const STABILITY_MIN = 0.1;
 export const STABILITY_MAX = 36500;
 
 export const MINUTE_IN_DAYS = 1 / 1440;
+
+export const WORD_MAX_LENGTH = 80;
+export const MEANING_MAX_LENGTH = 180;
+export const NOTES_MAX_LENGTH = 240;

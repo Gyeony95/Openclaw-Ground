@@ -4,19 +4,18 @@ import {
   DIFFICULTY_MAX,
   DIFFICULTY_MEAN_REVERSION,
   DIFFICULTY_MIN,
+  MEANING_MAX_LENGTH,
   MINUTE_IN_DAYS,
+  NOTES_MAX_LENGTH,
   STABILITY_MAX,
   STABILITY_MIN,
+  WORD_MAX_LENGTH,
 } from './constants';
 
 const FSRS_DECAY = -0.5;
 const FSRS_FACTOR = 19 / 81;
 const ON_TIME_TOLERANCE_DAYS = MINUTE_IN_DAYS;
 const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
-const MAX_WORD_LENGTH = 80;
-const MAX_MEANING_LENGTH = 180;
-const MAX_NOTES_LENGTH = 240;
-
 export interface ReviewResult {
   card: Card;
   scheduledDays: number;
@@ -452,9 +451,9 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
 
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
   const createdAt = isValidIso(nowIso) ? nowIso : currentNowIso();
-  const trimmedWord = word.trim().slice(0, MAX_WORD_LENGTH);
-  const trimmedMeaning = meaning.trim().slice(0, MAX_MEANING_LENGTH);
-  const trimmedNotes = notes?.trim().slice(0, MAX_NOTES_LENGTH);
+  const trimmedWord = word.trim().slice(0, WORD_MAX_LENGTH);
+  const trimmedMeaning = meaning.trim().slice(0, MEANING_MAX_LENGTH);
+  const trimmedNotes = notes?.trim().slice(0, NOTES_MAX_LENGTH);
   const createdAtMs = Date.parse(createdAt);
   cardIdSequence = (cardIdSequence + 1) % 1_000_000;
   const uniqueSuffix = `${cardIdSequence.toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
