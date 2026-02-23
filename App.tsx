@@ -102,6 +102,7 @@ export default function App() {
   const wordInputRef = useRef<TextInput>(null);
   const meaningInputRef = useRef<TextInput>(null);
   const notesInputRef = useRef<TextInput>(null);
+  const reviewLockRef = useRef(false);
 
   const dueCard = dueCards[0];
   const retentionScore = useMemo(() => {
@@ -157,6 +158,7 @@ export default function App() {
 
   useEffect(() => {
     if (pendingReviewCardId === null) {
+      reviewLockRef.current = false;
       return;
     }
     const timer = setTimeout(() => {
@@ -197,13 +199,16 @@ export default function App() {
   }
 
   function handleRate(rating: Rating) {
-    if (!dueCard || pendingReviewCardId !== null) {
+    if (!dueCard || pendingReviewCardId !== null || reviewLockRef.current) {
       return;
     }
+    reviewLockRef.current = true;
     const reviewed = reviewDueCard(dueCard.id, rating);
     if (reviewed) {
       setPendingReviewCardId(dueCard.id);
+      return;
     }
+    reviewLockRef.current = false;
   }
 
   return (

@@ -592,6 +592,22 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('sanitizes far-future createdAt values using the active timeline anchors', () => {
+    const base = createNewCard('phi-future-created', 'letter', NOW);
+    const corrupted = {
+      ...base,
+      createdAt: '2099-01-01T00:00:00.000Z',
+      updatedAt: '2026-02-24T12:00:00.000Z',
+      dueAt: '2026-02-25T12:00:00.000Z',
+      state: 'review' as const,
+    };
+    const reviewed = reviewCard(corrupted, 3, '2026-02-25T12:00:00.000Z');
+
+    expect(reviewed.card.createdAt).toBe('2026-02-24T12:00:00.000Z');
+    expect(reviewed.card.updatedAt).toBe('2026-02-25T12:00:00.000Z');
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('computes ordered interval previews per rating', () => {
     const card = createNewCard('chi', 'letter', NOW);
     const base = reviewCard(card, 4, NOW).card;

@@ -350,4 +350,12 @@ describe('resolveReviewClock', () => {
 
     expect(Date.parse(reviewedAt)).toBe(Date.parse('2026-02-23T12:00:00.000Z'));
   });
+
+  it('falls back to wall clock when both rendered and runtime clocks are invalid', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const reviewedAt = resolveReviewClock('bad-rendered-time', 'bad-runtime-time');
+    nowSpy.mockRestore();
+
+    expect(reviewedAt).toBe('2026-02-23T12:34:56.000Z');
+  });
 });

@@ -124,11 +124,21 @@ function normalizeTimeline(
     Number.isFinite(dueMs) && Number.isFinite(fallbackMs) && dueMs - fallbackMs <= MAX_MONOTONIC_CLOCK_SKEW_MS
       ? card.dueAt
       : undefined;
-  const createdAt = isValidIso(card.createdAt)
+  let createdAt = isValidIso(card.createdAt)
     ? card.createdAt
     : isValidIso(card.updatedAt)
       ? card.updatedAt
       : safeDueAsCreatedAt ?? fallback;
+  const requestedMs = isValidIso(requestedNowIso) ? Date.parse(requestedNowIso) : Number.NaN;
+  const updatedMsCandidate = isValidIso(card.updatedAt) ? Date.parse(card.updatedAt) : Number.NaN;
+  const anchorCandidates = [updatedMsCandidate, dueMs, requestedMs, fallbackMs].filter((value) =>
+    Number.isFinite(value),
+  );
+  const earliestAnchorMs = anchorCandidates.length > 0 ? Math.min(...anchorCandidates) : fallbackMs;
+  const createdMsCandidate = Date.parse(createdAt);
+  if (Number.isFinite(createdMsCandidate) && createdMsCandidate - earliestAnchorMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+    createdAt = new Date(earliestAnchorMs).toISOString();
+  }
   const rawUpdatedAt = isValidIso(card.updatedAt) ? card.updatedAt : createdAt;
   const createdMs = Date.parse(createdAt);
   const updatedMs = Date.parse(rawUpdatedAt);

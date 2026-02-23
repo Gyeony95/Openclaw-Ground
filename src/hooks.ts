@@ -161,6 +161,7 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
   const renderedMs = parseTimeOrNaN(renderedClockIso);
   const runtimeMs = parseTimeOrNaN(runtimeNowIso);
   const wallClockMs = Date.now();
+  const wallClockIso = new Date(wallClockMs).toISOString();
 
   if (Number.isFinite(renderedMs) && Number.isFinite(runtimeMs)) {
     if (renderedMs - runtimeMs > MAX_CLOCK_SKEW_MS) {
@@ -173,11 +174,11 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
   }
   if (Number.isFinite(renderedMs)) {
     if (renderedMs - wallClockMs > MAX_CLOCK_SKEW_MS) {
-      return nowIso();
+      return wallClockIso;
     }
     return renderedClockIso;
   }
-  return nowIso();
+  return wallClockIso;
 }
 
 export function useDeck() {
