@@ -125,6 +125,7 @@ export default function App() {
   const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
   const [isAddBusy, setIsAddBusy] = useState(false);
   const [entryAnim] = useState(() => new Animated.Value(0));
+  const scrollRef = useRef<ScrollView>(null);
   const wordInputRef = useRef<TextInput>(null);
   const meaningInputRef = useRef<TextInput>(null);
   const notesInputRef = useRef<TextInput>(null);
@@ -266,6 +267,13 @@ export default function App() {
     };
   }, []);
 
+  function focusAddForm() {
+    scrollRef.current?.scrollToEnd({ animated: true });
+    requestAnimationFrame(() => {
+      wordInputRef.current?.focus();
+    });
+  }
+
   function handleAddCard() {
     if (loading || addLockRef.current) {
       return;
@@ -293,9 +301,7 @@ export default function App() {
       setIsAddBusy(false);
       addUnlockTimerRef.current = null;
     }, 250);
-    requestAnimationFrame(() => {
-      wordInputRef.current?.focus();
-    });
+    focusAddForm();
   }
 
   function handleRate(rating: Rating) {
@@ -318,6 +324,7 @@ export default function App() {
       <View style={styles.backgroundOrbB} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.safe}>
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
@@ -418,7 +425,7 @@ export default function App() {
                     )}
                     <Pressable
                       style={({ pressed }) => [styles.emptyQueueAction, pressed && styles.ghostBtnPressed]}
-                      onPress={() => wordInputRef.current?.focus()}
+                      onPress={focusAddForm}
                       accessibilityRole="button"
                       accessibilityLabel="Start adding words"
                     >

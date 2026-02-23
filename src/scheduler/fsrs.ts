@@ -401,7 +401,8 @@ function rawReviewIntervalDays(
   const timingRatio = clamp(elapsed / scheduled, 0.5, 2.5);
   const timingScale = phase === 'review' ? clamp(0.75 + timingRatio * 0.25, 0.75, 1.35) : 1;
   const rawInterval = quantizeReviewIntervalDays(baseInterval * ratingScale * timingScale, scheduled);
-  const scheduleFloor = scheduled < 1 ? REVIEW_SCHEDULE_FLOOR_DAYS : Math.ceil(scheduled);
+  // Mild runtime drift (e.g. +minutes on a 1-day card) should not bump floor to the next full day.
+  const scheduleFloor = scheduled < 1 ? REVIEW_SCHEDULE_FLOOR_DAYS : Math.max(1, Math.round(scheduled));
   let floorFromSchedule = rating === 4 ? scheduleFloor : REVIEW_SCHEDULE_FLOOR_DAYS;
 
   // Hard recalls should not shrink the schedule when the card was reviewed on-time or later.

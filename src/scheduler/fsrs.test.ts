@@ -398,6 +398,24 @@ describe('fsrs scheduler', () => {
     expect(next.scheduledDays).toBeGreaterThanOrEqual(scheduled);
   });
 
+  it('does not inflate slightly-drifted one-day schedules to two days on on-time good reviews', () => {
+    const reviewCardWithDrift = {
+      ...createNewCard('nu-drift-good', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1 + 5 / 1440),
+      stability: 0.1,
+      difficulty: 8.8,
+      reps: 16,
+      lapses: 2,
+    };
+
+    const reviewed = reviewCard(reviewCardWithDrift, 3, reviewCardWithDrift.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBe(1);
+  });
+
   it('keeps difficulty within bounds', () => {
     let card = createNewCard('gamma', 'third letter', NOW);
 

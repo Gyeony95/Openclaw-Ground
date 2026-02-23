@@ -249,7 +249,14 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
 }
 
 export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: string): string {
-  return selectLatestReviewedAt(currentClockIso, reviewedAtIso) ?? currentClockIso;
+  const resolved = selectLatestReviewedAt(currentClockIso, reviewedAtIso);
+  if (resolved) {
+    return resolved;
+  }
+  if (isValidIso(currentClockIso)) {
+    return toCanonicalIso(currentClockIso);
+  }
+  return nowIso();
 }
 
 export function useDeck() {

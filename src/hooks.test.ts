@@ -624,4 +624,12 @@ describe('resolveNextUiClock', () => {
     );
     expect(resolveNextUiClock('2026-02-23T12:10:00.000Z', 'bad-time')).toBe('2026-02-23T12:10:00.000Z');
   });
+
+  it('falls back to wall clock when both current and reviewed clock values are invalid', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const resolved = resolveNextUiClock('bad-current-time', 'bad-reviewed-time');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:34:56.000Z');
+  });
 });
