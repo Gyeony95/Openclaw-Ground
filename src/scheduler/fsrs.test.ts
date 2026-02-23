@@ -652,6 +652,33 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('keeps dueAt finite when timeline anchor parsing unexpectedly fails', () => {
+    const card = {
+      ...createNewCard('due-anchor-parse-fallback', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: NOW,
+      stability: 8,
+      difficulty: 5,
+      reps: 10,
+      lapses: 1,
+    };
+    const repairAnchor = addDaysIso(NOW, 0.5);
+    const nativeParse = Date.parse.bind(Date);
+    const parseSpy = jest.spyOn(Date, 'parse').mockImplementation((value: string) => {
+      if (value === repairAnchor) {
+        return Number.NaN;
+      }
+      return nativeParse(value);
+    });
+
+    const reviewed = reviewCard(card, 3, NOW);
+    parseSpy.mockRestore();
+
+    expect(Number.isFinite(Date.parse(reviewed.card.dueAt))).toBe(true);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('repairs corrupted learning due timestamps that are not after updatedAt', () => {
     const card = {
       ...createNewCard('due-anchor-learning-repair', 'letter', NOW),

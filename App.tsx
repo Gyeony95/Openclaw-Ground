@@ -161,6 +161,11 @@ export default function App() {
     : dueCards[1]
       ? `Then ${formatDueLabel(dueCards[1].dueAt, clockIso)}`
       : 'No second card queued';
+  const queuePositionLabel = loading
+    ? '--'
+    : dueCard
+      ? `Card 1 of ${Math.max(1, stats.dueNow)}`
+      : 'Queue empty';
   const nextUpcomingCard = useMemo(() => {
     const nowMs = Date.parse(clockIso);
     if (!Number.isFinite(nowMs)) {
@@ -487,6 +492,7 @@ export default function App() {
                       <Text style={styles.reviewTimelineSubValue} numberOfLines={1}>
                         {relativeDueLabel}
                       </Text>
+                      <Text style={styles.reviewTimelineMeta}>{queuePositionLabel}</Text>
                     </View>
                     <View style={styles.reviewHeader}>
                       <Text style={styles.word} numberOfLines={2} ellipsizeMode="tail">
@@ -980,6 +986,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.7,
+  },
+  reviewTimelineMeta: {
+    color: colors.subInk,
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    fontVariant: ['tabular-nums'],
   },
   reviewHeader: {
     flexDirection: 'row',

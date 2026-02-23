@@ -181,7 +181,14 @@ function normalizeTimeline(
     dueBeyondStateWindow ||
     dueBeyondReviewStabilityWindow;
   const dueTimelineAnchor = dueNeedsRepair ? timelineRepairDueAt : rawDueAt ?? fallbackDueAt;
-  const dueAt = new Date(Math.max(Date.parse(dueTimelineAnchor ?? fallbackDueAt), updatedAtMs)).toISOString();
+  const dueAnchorMs = Date.parse(dueTimelineAnchor ?? fallbackDueAt);
+  const fallbackDueMs = Date.parse(fallbackDueAt);
+  const safeDueAnchorMs = Number.isFinite(dueAnchorMs)
+    ? dueAnchorMs
+    : Number.isFinite(fallbackDueMs)
+      ? fallbackDueMs
+      : updatedAtMs;
+  const dueAt = new Date(Math.max(safeDueAnchorMs, updatedAtMs)).toISOString();
   const resolvedCurrentIso = resolveReviewIso(updatedAt, requestedNowIso);
   const resolvedCurrentMs = Date.parse(resolvedCurrentIso);
   const wallClockMs = Date.parse(currentNowIso());
