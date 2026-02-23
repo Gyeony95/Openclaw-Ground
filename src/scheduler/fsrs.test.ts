@@ -274,6 +274,25 @@ describe('fsrs scheduler', () => {
     expect(onTime.scheduledDays).toBeGreaterThanOrEqual(0.5);
   });
 
+  it('keeps very-early good reviews on low-stability half-day schedules within sub-day cadence', () => {
+    const base = createNewCard('halfday-good-cadence', 'letter', NOW);
+    const subDayReview = {
+      ...base,
+      state: 'review' as const,
+      createdAt: NOW,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 0.5),
+      stability: 0.1,
+      difficulty: 5,
+      reps: 12,
+      lapses: 1,
+    };
+    const veryEarlyGood = reviewCard(subDayReview, 3, NOW);
+
+    expect(veryEarlyGood.card.state).toBe('review');
+    expect(veryEarlyGood.scheduledDays).toBe(0.5);
+  });
+
   it('does not let early hard reviews extend the current schedule', () => {
     let card = createNewCard('nu-hard-early-cap', 'letter', NOW);
     card = reviewCard(card, 4, NOW).card;
@@ -762,6 +781,26 @@ describe('fsrs scheduler', () => {
     expect(preview[1]).toBeLessThanOrEqual(preview[2]);
     expect(preview[2]).toBeLessThanOrEqual(preview[3]);
     expect(preview[3]).toBeLessThanOrEqual(preview[4]);
+  });
+
+  it('keeps half-day review preview intervals from inflating to one day', () => {
+    const base = createNewCard('chi-halfday-preview', 'letter', NOW);
+    const halfDayReviewCard = {
+      ...base,
+      state: 'review' as const,
+      createdAt: NOW,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 0.5),
+      stability: 0.1,
+      difficulty: 5,
+      reps: 8,
+      lapses: 0,
+    };
+    const preview = previewIntervals(halfDayReviewCard, NOW);
+
+    expect(preview[2]).toBe(0.5);
+    expect(preview[3]).toBe(0.5);
+    expect(preview[4]).toBeGreaterThanOrEqual(0.5);
   });
 
   it('computes finite preview intervals when runtime clock is invalid', () => {

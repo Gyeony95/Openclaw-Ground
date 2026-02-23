@@ -23,7 +23,7 @@ describe('formatDueLabel', () => {
 
   it('formats upcoming labels in hours or days', () => {
     expect(formatDueLabel('2026-02-23T16:30:00.000Z', NOW)).toBe('Due in 5h');
-    expect(formatDueLabel('2026-02-25T12:00:01.000Z', NOW)).toBe('Due in 3d');
+    expect(formatDueLabel('2026-02-25T12:00:01.000Z', NOW)).toBe('Due in 2d');
   });
 
   it('returns unavailable for invalid timestamps', () => {
@@ -33,5 +33,10 @@ describe('formatDueLabel', () => {
   it('floors overdue durations so labels do not overstate lateness', () => {
     expect(formatDueLabel('2026-02-23T10:59:59.000Z', NOW)).toBe('Overdue 1h');
     expect(formatDueLabel('2026-02-22T10:59:59.000Z', NOW)).toBe('Overdue 1d');
+  });
+
+  it('floors future day labels so near-boundary times do not overstate delay', () => {
+    expect(formatDueLabel('2026-02-24T12:00:01.000Z', NOW)).toBe('Due in 1d');
+    expect(formatDueLabel('2026-02-26T11:59:59.000Z', NOW)).toBe('Due in 2d');
   });
 });

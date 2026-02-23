@@ -35,5 +35,5 @@ export function formatDueLabel(dueAt: string, clockIso: string): string {
   if (deltaMs < DAY_MS) {
     return `Due in ${Math.ceil(deltaMs / HOUR_MS)}h`;
   }
-  return `Due in ${Math.ceil(deltaMs / DAY_MS)}d`;
+  return `Due in ${Math.max(1, Math.floor(deltaMs / DAY_MS))}d`;
 }

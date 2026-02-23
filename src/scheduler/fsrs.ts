@@ -400,8 +400,8 @@ function orderedReviewIntervals(
   const easy = rawReviewIntervalDays(nextStability, 4, elapsedDays, scheduledDays, phase);
   return {
     2: hard,
-    3: clamp(Math.max(good, hard), 1, STABILITY_MAX),
-    4: clamp(Math.max(easy, good, hard), 1, STABILITY_MAX),
+    3: clamp(Math.max(good, hard), REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX),
+    4: clamp(Math.max(easy, good, hard), REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX),
   };
 }
 
