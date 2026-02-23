@@ -43,15 +43,7 @@ function pickFreshestCard(existing: Card, loaded: Card): Card {
     return existing;
   }
 
-  const existingDue = parseTimeOrMin(existing.dueAt);
-  const loadedDue = parseTimeOrMin(loaded.dueAt);
-  if (loadedDue > existingDue) {
-    return loaded;
-  }
-  if (loadedDue < existingDue) {
-    return existing;
-  }
-
+  // When timestamps tie, prefer the card with more completed review activity.
   if (loaded.reps > existing.reps) {
     return loaded;
   }
@@ -63,6 +55,15 @@ function pickFreshestCard(existing: Card, loaded: Card): Card {
     return loaded;
   }
   if (loaded.lapses < existing.lapses) {
+    return existing;
+  }
+
+  const existingDue = parseTimeOrMin(existing.dueAt);
+  const loadedDue = parseTimeOrMin(loaded.dueAt);
+  if (loadedDue > existingDue) {
+    return loaded;
+  }
+  if (loadedDue < existingDue) {
     return existing;
   }
 

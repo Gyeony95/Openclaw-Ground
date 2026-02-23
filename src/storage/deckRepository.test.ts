@@ -394,6 +394,45 @@ describe('deck repository', () => {
     expect(deck.cards[0].reps).toBe(3);
   });
 
+  it('prefers higher reps over later dueAt when duplicate updatedAt values tie', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'dup-reps-priority',
+            word: 'alpha',
+            meaning: 'lower-reps',
+            dueAt: '2026-02-27T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-23T00:00:00.000Z',
+            state: 'review',
+            reps: 2,
+            lapses: 0,
+          },
+          {
+            id: 'dup-reps-priority',
+            word: 'beta',
+            meaning: 'higher-reps',
+            dueAt: '2026-02-24T00:00:00.000Z',
+            createdAt: '2026-02-21T00:00:00.000Z',
+            updatedAt: '2026-02-23T00:00:00.000Z',
+            state: 'review',
+            reps: 5,
+            lapses: 0,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].id).toBe('dup-reps-priority');
+    expect(deck.cards[0].meaning).toBe('higher-reps');
+    expect(deck.cards[0].reps).toBe(5);
+    expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
+  });
+
   it('keeps valid cards when malformed field types are present in the same payload', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

@@ -23,6 +23,8 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
           key={item.rating}
           onPress={() => onRate(item.rating)}
           disabled={disabled}
+          hitSlop={4}
+          android_ripple={{ color: `${item.tone}20` }}
           style={({ pressed }) => [
             styles.button,
             { borderColor: item.tone, backgroundColor: `${item.tone}16` },
@@ -54,7 +56,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 10,
     minWidth: 78,
-    minHeight: 64,
+    minHeight: 68,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',

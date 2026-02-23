@@ -337,6 +337,32 @@ describe('mergeDeckCards', () => {
     expect(merged[0].updatedAt).toBe('2026-02-23T10:00:00.000Z');
     expect(merged[0].reps).toBe(2);
   });
+
+  it('prefers higher reps over later dueAt when updatedAt ties', () => {
+    const local = {
+      ...createNewCard('tie-reps-local', 'local', NOW),
+      id: 'tie-reps',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      dueAt: '2026-02-27T10:00:00.000Z',
+      reps: 2,
+      lapses: 0,
+    };
+    const loaded = {
+      ...createNewCard('tie-reps-loaded', 'loaded', NOW),
+      id: 'tie-reps',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 4,
+      lapses: 0,
+    };
+
+    const merged = mergeDeckCards([local], [loaded]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].meaning).toBe('loaded');
+    expect(merged[0].reps).toBe(4);
+    expect(merged[0].dueAt).toBe('2026-02-24T10:00:00.000Z');
+  });
 });
 
 describe('hasDueCard', () => {

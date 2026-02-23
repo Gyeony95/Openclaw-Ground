@@ -58,15 +58,7 @@ function pickFreshestDuplicate(existing: Card, incoming: Card): Card {
     return existing;
   }
 
-  const existingDue = parseTimeOrMin(existing.dueAt);
-  const incomingDue = parseTimeOrMin(incoming.dueAt);
-  if (incomingDue > existingDue) {
-    return incoming;
-  }
-  if (incomingDue < existingDue) {
-    return existing;
-  }
-
+  // When timestamps tie, preserve the branch with more review history.
   if (incoming.reps > existing.reps) {
     return incoming;
   }
@@ -78,6 +70,15 @@ function pickFreshestDuplicate(existing: Card, incoming: Card): Card {
     return incoming;
   }
   if (incoming.lapses < existing.lapses) {
+    return existing;
+  }
+
+  const existingDue = parseTimeOrMin(existing.dueAt);
+  const incomingDue = parseTimeOrMin(incoming.dueAt);
+  if (incomingDue > existingDue) {
+    return incoming;
+  }
+  if (incomingDue < existingDue) {
     return existing;
   }
 
