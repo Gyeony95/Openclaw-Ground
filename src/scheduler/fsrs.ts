@@ -30,6 +30,7 @@ const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 const RELEARNING_SCHEDULE_FLOOR_DAYS = 10 * MINUTE_IN_DAYS;
 const LEARNING_MAX_SCHEDULE_DAYS = 1;
 const RELEARNING_MAX_SCHEDULE_DAYS = 2;
+const REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS = 7;
 const COUNTER_MAX = Number.MAX_SAFE_INTEGER;
 
 let cardIdSequence = 0;
@@ -174,13 +175,22 @@ function normalizeTimeline(
     Number.isFinite(dueDaysFromUpdated) &&
     dueDaysFromUpdated >
       Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, expectedReviewScheduleDays * 6, 30);
+  const useReviewStabilityFallbackForInvalidDue = shouldUseReviewStabilityFallbackForInvalidDue(
+    normalizedState,
+    rawDueAt,
+    expectedReviewScheduleDays,
+  );
   const dueNeedsRepair =
     !rawDueAt ||
     (normalizedState === 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs) ||
     (normalizedState !== 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs) ||
     dueBeyondStateWindow ||
     dueBeyondReviewStabilityWindow;
-  const dueTimelineAnchor = dueNeedsRepair ? timelineRepairDueAt : rawDueAt ?? fallbackDueAt;
+  const dueTimelineAnchor = dueNeedsRepair
+    ? useReviewStabilityFallbackForInvalidDue
+      ? fallbackDueAt
+      : timelineRepairDueAt
+    : rawDueAt ?? fallbackDueAt;
   const dueAnchorMs = Date.parse(dueTimelineAnchor ?? fallbackDueAt);
   const fallbackDueMs = Date.parse(fallbackDueAt);
   const safeDueAnchorMs = Number.isFinite(dueAnchorMs)
@@ -257,6 +267,16 @@ function maxScheduleDaysForState(state: ReviewState): number {
     return LEARNING_MAX_SCHEDULE_DAYS;
   }
   return STABILITY_MAX;
+}
+
+function shouldUseReviewStabilityFallbackForInvalidDue(state: ReviewState, dueAt?: string, stabilityDays?: number): boolean {
+  if (state !== 'review' || dueAt) {
+    return false;
+  }
+  if (!Number.isFinite(stabilityDays)) {
+    return false;
+  }
+  return stabilityDays <= REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS;
 }
 
 function normalizeScheduledDays(value: number, state: ReviewState): number {

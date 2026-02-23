@@ -1302,6 +1302,54 @@ describe('fsrs scheduler', () => {
     expect(invalidReview.scheduledDays).toBe(validReview.scheduledDays);
   });
 
+  it('uses stability-derived fallback for missing review dueAt when expected schedule is moderate', () => {
+    const updatedAt = NOW;
+    const valid = {
+      ...createNewCard('missing-due-recovery-valid', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt,
+      createdAt: NOW,
+      dueAt: addDaysIso(updatedAt, 4),
+      reps: 9,
+      lapses: 1,
+      stability: 4,
+      difficulty: 5.2,
+    };
+    const missingDue = {
+      ...valid,
+      id: 'missing-due-recovery',
+      dueAt: undefined as unknown as string,
+    };
+    const reviewAt = addDaysIso(updatedAt, 4);
+
+    const validReview = reviewCard(valid, 3, reviewAt);
+    const missingReview = reviewCard(missingDue, 3, reviewAt);
+
+    expect(missingReview.card.state).toBe('review');
+    expect(missingReview.card.updatedAt).toBe(validReview.card.updatedAt);
+    expect(missingReview.card.stability).toBeCloseTo(validReview.card.stability, 6);
+    expect(missingReview.scheduledDays).toBe(validReview.scheduledDays);
+  });
+
+  it('keeps invalid review dueAt conservative when inferred stability schedule is pathological', () => {
+    const corrupted = {
+      ...createNewCard('invalid-due-conservative', 'letter', NOW),
+      state: 'review' as const,
+      createdAt: NOW,
+      updatedAt: NOW,
+      dueAt: 'bad-time',
+      reps: 30,
+      lapses: 3,
+      stability: 120,
+      difficulty: 5,
+    };
+    const reviewed = reviewCard(corrupted, 3, NOW);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(0.5);
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(2);
+  });
+
   it('keeps overdue relearning graduation growth bounded', () => {
     const card = createNewCard('omega', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;

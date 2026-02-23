@@ -134,6 +134,7 @@ export default function App() {
   const [showMeaning, setShowMeaning] = useState(false);
   const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
   const [isAddBusy, setIsAddBusy] = useState(false);
+  const [addAttempted, setAddAttempted] = useState(false);
   const [entryAnim] = useState(() => new Animated.Value(0));
   const scrollRef = useRef<ScrollView>(null);
   const wordInputRef = useRef<TextInput>(null);
@@ -320,9 +321,17 @@ export default function App() {
     const trimmedWord = word.trim();
     const trimmedMeaning = meaning.trim();
     const trimmedNotes = notes.trim();
-    if (!trimmedWord || !trimmedMeaning) {
+    if (!trimmedWord) {
+      setAddAttempted(true);
+      wordInputRef.current?.focus();
       return;
     }
+    if (!trimmedMeaning) {
+      setAddAttempted(true);
+      meaningInputRef.current?.focus();
+      return;
+    }
+    setAddAttempted(false);
     addLockRef.current = true;
     setIsAddBusy(true);
     addCard(trimmedWord, trimmedMeaning, trimmedNotes || undefined);
@@ -605,7 +614,7 @@ export default function App() {
                   value={word}
                   onChangeText={setWord}
                   placeholder="Word"
-                  style={styles.input}
+                  style={[styles.input, addAttempted && missingWord && styles.inputError]}
                   placeholderTextColor={colors.subInk}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -625,7 +634,7 @@ export default function App() {
                   value={meaning}
                   onChangeText={setMeaning}
                   placeholder="Meaning"
-                  style={styles.input}
+                  style={[styles.input, addAttempted && missingMeaning && styles.inputError]}
                   placeholderTextColor={colors.subInk}
                   returnKeyType="next"
                   maxLength={MEANING_MAX_LENGTH}
@@ -1097,6 +1106,10 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 15,
     lineHeight: 21,
+  },
+  inputError: {
+    borderColor: colors.danger,
+    backgroundColor: '#fff5f6',
   },
   notesInput: {
     minHeight: 84,
