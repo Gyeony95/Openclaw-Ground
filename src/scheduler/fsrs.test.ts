@@ -1559,6 +1559,35 @@ describe('fsrs scheduler', () => {
     expect(malformedReview.scheduledDays).toBe(validReview.scheduledDays);
   });
 
+  it('repairs outlier review dueAt values using a conservative short anchor even for mature stability cards', () => {
+    const updatedAt = NOW;
+    const conservative = {
+      ...createNewCard('outlier-due-valid', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt,
+      createdAt: NOW,
+      dueAt: addDaysIso(updatedAt, 7),
+      reps: 40,
+      lapses: 4,
+      stability: 5000,
+      difficulty: 5,
+    };
+    const outlierDue = {
+      ...conservative,
+      id: 'outlier-due-invalid',
+      dueAt: addDaysIso(updatedAt, 32000),
+    };
+    const reviewAt = addDaysIso(updatedAt, 7);
+
+    const conservativeReview = reviewCard(conservative, 3, reviewAt);
+    const outlierReview = reviewCard(outlierDue, 3, reviewAt);
+
+    expect(outlierReview.card.state).toBe('review');
+    expect(outlierReview.card.updatedAt).toBe(conservativeReview.card.updatedAt);
+    expect(outlierReview.card.stability).toBeCloseTo(conservativeReview.card.stability, 6);
+    expect(outlierReview.scheduledDays).toBe(conservativeReview.scheduledDays);
+  });
+
   it('keeps invalid review dueAt conservative when inferred stability schedule is pathological', () => {
     const corrupted = {
       ...createNewCard('invalid-due-conservative', 'letter', NOW),

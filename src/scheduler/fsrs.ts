@@ -175,7 +175,7 @@ function normalizeTimeline(
   const repairedReviewScheduleDaysForOutlierDue = clamp(
     expectedReviewScheduleDays,
     REVIEW_SCHEDULE_FLOOR_DAYS,
-    STABILITY_MAX,
+    REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
   );
   const dueNotAfterUpdatedAt =
     Number.isFinite(rawDueMs) &&
