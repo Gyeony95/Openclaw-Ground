@@ -174,10 +174,13 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     } else {
       normalizedDueMs = normalizedUpdatedMs + scheduleFallbackForState(raw.state) * DAY_MS;
     }
+    scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
   }
   const reviewScheduleCapDays = Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, normalizedStability * 6, 30);
   if (raw.state === 'review' && scheduleDays > reviewScheduleCapDays) {
-    normalizedDueMs = normalizedUpdatedMs + normalizedStability * DAY_MS;
+    const repairedReviewDays = Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, normalizedStability);
+    normalizedDueMs = normalizedUpdatedMs + repairedReviewDays * DAY_MS;
+    scheduleDays = repairedReviewDays;
   }
   const normalizedDueAt = new Date(normalizedDueMs).toISOString();
 

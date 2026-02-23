@@ -43,14 +43,24 @@ function reviewedAtLabel(lastReviewedAt?: string): string {
   if (!lastReviewedAt || !Number.isFinite(Date.parse(lastReviewedAt))) {
     return 'No review history yet';
   }
-  return `Last review ${new Date(lastReviewedAt).toLocaleString()}`;
+  return `Last review ${new Date(lastReviewedAt).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`;
 }
 
 function exactDateLabel(iso?: string): string {
   if (!iso || !Number.isFinite(Date.parse(iso))) {
     return 'Schedule unavailable';
   }
-  return new Date(iso).toLocaleString();
+  return new Date(iso).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 function asOfLabel(iso: string): string {

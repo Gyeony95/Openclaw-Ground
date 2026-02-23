@@ -82,6 +82,34 @@ describe('deck repository', () => {
     expect(deck.cards[0].state).toBe('review');
   });
 
+  it('keeps repaired review schedules at or above the half-day floor for low-stability cards', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'review-floor-low-stability',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2028-04-01T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            stability: 0.1,
+            difficulty: 5,
+            reps: 12,
+            lapses: 1,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-22T12:00:00.000Z');
+    expect(deck.cards[0].state).toBe('review');
+  });
+
   it('trims oversized persisted text fields to app limits', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
@@ -781,6 +809,36 @@ describe('deck repository', () => {
     expect(savedDeck.cards[0].stability).toBe(0.5);
     expect(savedDeck.cards[0].difficulty).toBe(5);
     expect(savedDeck.lastReviewedAt).toBeUndefined();
+  });
+
+  it('normalizes persisted review cards to a half-day floor when low stability and dueAt are corrupted', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: 'review-floor-save',
+          word: 'theta',
+          meaning: 'letter',
+          dueAt: '2099-01-01T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'review',
+          reps: 4,
+          lapses: 1,
+          stability: 0.1,
+          difficulty: 5,
+        },
+      ],
+    });
+
+    expect(mockedStorage.setItem).toHaveBeenCalledTimes(1);
+    const [, serialized] = mockedStorage.setItem.mock.calls[0];
+    const persisted = JSON.parse(serialized) as { cards: Array<{ dueAt: string; updatedAt: string; state: string }> };
+    expect(persisted.cards).toHaveLength(1);
+    expect(persisted.cards[0].state).toBe('review');
+    expect(persisted.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(persisted.cards[0].dueAt).toBe('2026-02-22T12:00:00.000Z');
   });
 
   it('keeps only valid lastReviewedAt when persisting', async () => {
