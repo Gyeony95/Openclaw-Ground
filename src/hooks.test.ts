@@ -6,6 +6,7 @@ import {
   countUpcomingDueCards,
   hasDueCard,
   mergeDeckCards,
+  resolveNextUiClock,
   resolveReviewClock,
   selectLatestReviewedAt,
 } from './hooks';
@@ -603,5 +604,24 @@ describe('resolveReviewClock', () => {
     nowSpy.mockRestore();
 
     expect(reviewedAt).toBe('2026-02-23T12:34:56.000Z');
+  });
+});
+
+describe('resolveNextUiClock', () => {
+  it('keeps the current clock when reviewedAt is missing', () => {
+    expect(resolveNextUiClock('2026-02-23T12:00:00.000Z')).toBe('2026-02-23T12:00:00.000Z');
+  });
+
+  it('advances to reviewedAt when scheduler review time is newer', () => {
+    expect(resolveNextUiClock('2026-02-23T12:00:00.000Z', '2026-02-23T12:10:00.000Z')).toBe(
+      '2026-02-23T12:10:00.000Z',
+    );
+  });
+
+  it('keeps current clock when reviewedAt is older or invalid', () => {
+    expect(resolveNextUiClock('2026-02-23T12:10:00.000Z', '2026-02-23T12:00:00.000Z')).toBe(
+      '2026-02-23T12:10:00.000Z',
+    );
+    expect(resolveNextUiClock('2026-02-23T12:10:00.000Z', 'bad-time')).toBe('2026-02-23T12:10:00.000Z');
   });
 });

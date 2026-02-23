@@ -41,8 +41,12 @@ describe('formatDueLabel', () => {
     expect(formatDueLabel('2026-02-22T10:59:59.000Z', NOW)).toBe('Overdue 1d');
   });
 
-  it('floors future day labels so near-boundary times do not overstate delay', () => {
+  it('keeps near-boundary future day labels conservative', () => {
     expect(formatDueLabel('2026-02-24T12:00:01.000Z', NOW)).toBe('Due in 1d');
-    expect(formatDueLabel('2026-02-26T11:59:59.000Z', NOW)).toBe('Due in 2d');
+  });
+
+  it('rounds multi-day future labels for better readability', () => {
+    expect(formatDueLabel('2026-02-26T11:59:59.000Z', NOW)).toBe('Due in 3d');
+    expect(formatDueLabel('2026-02-25T00:00:00.000Z', NOW)).toBe('Due in 2d');
   });
 });

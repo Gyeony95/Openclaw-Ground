@@ -248,6 +248,10 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
   return wallClockIso;
 }
 
+export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: string): string {
+  return selectLatestReviewedAt(currentClockIso, reviewedAtIso) ?? currentClockIso;
+}
+
 export function useDeck() {
   const [deckState, setDeckState] = useState<{ cards: Card[]; lastReviewedAt?: string }>({ cards: [] });
   const [loading, setLoading] = useState(true);
@@ -359,7 +363,7 @@ export function useDeck() {
 
     setDeckState(next.deckState);
     deckStateRef.current = next.deckState;
-    setClockIso(current);
+    setClockIso(resolveNextUiClock(current, next.deckState.lastReviewedAt));
     setCanPersist(true);
     return true;
   }, [clockIso]);

@@ -481,14 +481,23 @@ function normalizeCardText(
 }
 
 function normalizeWordValue(word: string): string {
+  if (typeof word !== 'string') {
+    return '';
+  }
   return word.trim().slice(0, WORD_MAX_LENGTH);
 }
 
 function normalizeMeaningValue(meaning: string): string {
+  if (typeof meaning !== 'string') {
+    return '';
+  }
   return meaning.trim().slice(0, MEANING_MAX_LENGTH);
 }
 
 function normalizeNotesValue(notes?: string): string | undefined {
+  if (notes !== undefined && typeof notes !== 'string') {
+    return undefined;
+  }
   return notes?.trim().slice(0, NOTES_MAX_LENGTH);
 }
 

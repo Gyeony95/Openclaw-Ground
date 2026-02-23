@@ -79,6 +79,21 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.meaning).toBe('[invalid meaning]');
   });
 
+  it('falls back to placeholders when runtime card text fields are malformed', () => {
+    const malformed = {
+      ...createNewCard('phi-malformed', 'letter', NOW),
+      word: null as unknown as string,
+      meaning: 42 as unknown as string,
+      notes: { detail: 'bad' } as unknown as string,
+    };
+
+    const reviewed = reviewCard(malformed, 3, NOW);
+
+    expect(reviewed.card.word).toBe('[invalid word]');
+    expect(reviewed.card.meaning).toBe('[invalid meaning]');
+    expect(reviewed.card.notes).toBeUndefined();
+  });
+
   it('generates unique ids for rapid card creation at the same timestamp', () => {
     const first = createNewCard('alpha-id-1', 'first', NOW);
     const second = createNewCard('alpha-id-2', 'second', NOW);
