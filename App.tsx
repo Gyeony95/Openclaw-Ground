@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -378,6 +379,7 @@ export default function App() {
       return;
     }
     setAddAttempted(false);
+    Keyboard.dismiss();
     addLockRef.current = true;
     setIsAddBusy(true);
     const shouldReturnToWordInput = !dueCard;
@@ -411,6 +413,7 @@ export default function App() {
     if (!dueCard || pendingReviewCardId !== null || reviewLockRef.current) {
       return;
     }
+    Keyboard.dismiss();
     reviewLockRef.current = true;
     const reviewed = reviewDueCard(dueCard.id, rating);
     if (reviewed) {

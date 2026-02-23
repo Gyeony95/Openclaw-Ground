@@ -733,6 +733,31 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('treats far-future review due timestamps as outliers and repairs them toward stability windows', () => {
+    const reviewAt = addDaysIso(NOW, 4);
+    const baseline = {
+      ...createNewCard('review-due-baseline', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 5),
+      stability: 5,
+      difficulty: 5,
+      reps: 18,
+      lapses: 1,
+    };
+    const outlier = {
+      ...baseline,
+      dueAt: addDaysIso(NOW, STABILITY_MAX * 2),
+    };
+
+    const baselineReviewed = reviewCard(baseline, 3, reviewAt);
+    const outlierReviewed = reviewCard(outlier, 3, reviewAt);
+
+    expect(outlierReviewed.card.state).toBe('review');
+    expect(outlierReviewed.scheduledDays).toBeCloseTo(baselineReviewed.scheduledDays, 6);
+    expect(Date.parse(outlierReviewed.card.dueAt)).toBeGreaterThan(Date.parse(outlierReviewed.card.updatedAt));
+  });
+
   it('keeps dueAt finite when timeline anchor parsing unexpectedly fails', () => {
     const card = {
       ...createNewCard('due-anchor-parse-fallback', 'letter', NOW),

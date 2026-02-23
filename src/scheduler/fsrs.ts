@@ -166,11 +166,23 @@ function normalizeTimeline(
   const updatedAtMs = Date.parse(updatedAt);
   const dueDaysFromUpdated = Number.isFinite(rawDueMs) ? (rawDueMs - updatedAtMs) / DAY_MS : Number.NaN;
   const expectedReviewScheduleDays = normalizeScheduledDays(card.stability, 'review');
-  const repairedReviewScheduleDays = clamp(
+  const repairedReviewScheduleDaysForInvalidDue = clamp(
     expectedReviewScheduleDays,
     REVIEW_SCHEDULE_FLOOR_DAYS,
     REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
   );
+  const repairedReviewScheduleDaysForOutlierDue = clamp(
+    expectedReviewScheduleDays,
+    REVIEW_SCHEDULE_FLOOR_DAYS,
+    STABILITY_MAX,
+  );
+  const dueNotAfterUpdatedAt =
+    Number.isFinite(rawDueMs) &&
+    rawDueMs <= updatedAtMs;
+  const dueBeyondReviewMaxWindow =
+    normalizedState === 'review' &&
+    Number.isFinite(dueDaysFromUpdated) &&
+    dueDaysFromUpdated > STABILITY_MAX;
   const dueBeyondStateWindow =
     normalizedState !== 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
@@ -185,16 +197,22 @@ function normalizeTimeline(
     rawDueAtIsValid,
     expectedReviewScheduleDays,
   );
+  const useReviewStabilityFallbackForOutlierDue =
+    normalizedState === 'review' &&
+    Number.isFinite(expectedReviewScheduleDays) &&
+    (dueBeyondReviewMaxWindow || dueBeyondReviewStabilityWindow);
   const dueNeedsRepair =
     !rawDueAt ||
-    (normalizedState === 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs) ||
-    (normalizedState !== 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs) ||
+    dueNotAfterUpdatedAt ||
     dueBeyondStateWindow ||
+    dueBeyondReviewMaxWindow ||
     dueBeyondReviewStabilityWindow;
   const dueTimelineAnchor = dueNeedsRepair
     ? useReviewStabilityFallbackForInvalidDue
-      ? addDaysIso(updatedAt, repairedReviewScheduleDays)
-      : timelineRepairDueAt
+      ? addDaysIso(updatedAt, repairedReviewScheduleDaysForInvalidDue)
+      : useReviewStabilityFallbackForOutlierDue
+        ? addDaysIso(updatedAt, repairedReviewScheduleDaysForOutlierDue)
+        : timelineRepairDueAt
     : rawDueAt ?? fallbackDueAt;
   const dueAnchorMs = Date.parse(dueTimelineAnchor ?? fallbackDueAt);
   const fallbackDueMs = Date.parse(fallbackDueAt);
