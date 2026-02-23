@@ -86,6 +86,21 @@ describe('applyDueReview', () => {
     expect(result.cards).toBe(cards);
     expect(result.cards[0]).toBe(due);
   });
+
+  it('returns reviewedAt from scheduler when card timeline is ahead of runtime clock', () => {
+    const due = {
+      ...createNewCard('clock-skewed', 'test', NOW),
+      updatedAt: '2026-02-23T12:10:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+      state: 'review' as const,
+    };
+
+    const result = applyDueReview([due], due.id, 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.reviewedAt).toBe('2026-02-23T12:10:00.000Z');
+    expect(result.cards[0].updatedAt).toBe('2026-02-23T12:10:00.000Z');
+  });
 });
 
 describe('compareDueCards', () => {

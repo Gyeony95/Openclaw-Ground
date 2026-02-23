@@ -483,7 +483,8 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
 }
 
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
-  const createdAt = isValidIso(nowIso) ? nowIso : currentNowIso();
+  const createdAtInput = isValidIso(nowIso) ? nowIso : currentNowIso();
+  const createdAt = new Date(Date.parse(createdAtInput)).toISOString();
   const trimmedWord = word.trim().slice(0, WORD_MAX_LENGTH);
   const trimmedMeaning = meaning.trim().slice(0, MEANING_MAX_LENGTH);
   const trimmedNotes = notes?.trim().slice(0, NOTES_MAX_LENGTH);

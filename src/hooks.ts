@@ -142,15 +142,21 @@ export function selectLatestReviewedAt(current?: string, incoming?: string): str
   return parseTimeOrMin(incomingValid) > parseTimeOrMin(currentValid) ? incomingValid : currentValid;
 }
 
-export function applyDueReview(cards: Card[], cardId: string, rating: Rating, currentIso: string): { cards: Card[]; reviewed: boolean } {
+export function applyDueReview(
+  cards: Card[],
+  cardId: string,
+  rating: Rating,
+  currentIso: string,
+): { cards: Card[]; reviewed: boolean; reviewedAt?: string } {
   const targetIndex = cards.findIndex((card) => card.id === cardId && isDue(card.dueAt, currentIso));
   if (targetIndex === -1) {
     return { cards, reviewed: false };
   }
 
+  const reviewed = reviewCard(cards[targetIndex], rating, currentIso).card;
   const nextCards = [...cards];
-  nextCards[targetIndex] = reviewCard(cards[targetIndex], rating, currentIso).card;
-  return { cards: nextCards, reviewed: true };
+  nextCards[targetIndex] = reviewed;
+  return { cards: nextCards, reviewed: true, reviewedAt: reviewed.updatedAt };
 }
 
 export function hasDueCard(cards: Card[], cardId: string, currentIso: string): boolean {
@@ -273,7 +279,7 @@ export function useDeck() {
       }
       return {
         cards: next.cards,
-        lastReviewedAt: current,
+        lastReviewedAt: next.reviewedAt ?? current,
       };
     });
     setClockIso(current);

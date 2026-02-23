@@ -300,6 +300,28 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2026-02-20T00:00:00.000Z');
   });
 
+  it('normalizes createdAt into canonical ISO format while loading', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'canonical-created-at',
+            word: 'eta-canonical',
+            meaning: 'letter',
+            dueAt: '2026-02-21T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00Z',
+            updatedAt: '2026-02-21T00:00:00.000Z',
+            state: 'review',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].createdAt).toBe('2026-02-20T00:00:00.000Z');
+  });
+
   it('normalizes dueAt to never precede updatedAt', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

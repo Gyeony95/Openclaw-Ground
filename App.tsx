@@ -358,7 +358,9 @@ export default function App() {
                       <View style={styles.metaRow}>
                         <Text style={styles.metaText}>Difficulty {formatMetricNumber(dueCard.difficulty, 1)}</Text>
                         <Text style={styles.metaText}>Stability {formatMetricNumber(dueCard.stability, 2)}d</Text>
-                        <Text style={styles.metaText}>{formatDueLabel(dueCard.dueAt, clockIso)}</Text>
+                        <Text style={styles.metaText}>
+                          Reps {dueCard.reps} · Lapses {dueCard.lapses}
+                        </Text>
                       </View>
                     ) : null}
 

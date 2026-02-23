@@ -418,6 +418,14 @@ describe('fsrs scheduler', () => {
     expect(card.dueAt).toBe(card.createdAt);
   });
 
+  it('normalizes valid create timestamps into canonical ISO format', () => {
+    const card = createNewCard('tau-canonical', 'letter', '2026-02-23T12:00:00Z');
+
+    expect(card.createdAt).toBe('2026-02-23T12:00:00.000Z');
+    expect(card.updatedAt).toBe(card.createdAt);
+    expect(card.dueAt).toBe(card.createdAt);
+  });
+
   it('clamps invalid stability and difficulty inputs before review math', () => {
     const base = createNewCard('rho', 'letter', NOW);
     const card = { ...base, state: 'review' as const, stability: 999999, difficulty: -20 };

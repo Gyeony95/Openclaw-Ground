@@ -109,9 +109,10 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     return null;
   }
 
+  const normalizedCreatedAt = new Date(Date.parse(createdAt)).toISOString();
   const updatedAt = isValidIso(raw.updatedAt) ? raw.updatedAt : createdAt;
   const dueAt = isValidIso(raw.dueAt) ? raw.dueAt : updatedAt;
-  const createdMs = Date.parse(createdAt);
+  const createdMs = Date.parse(normalizedCreatedAt);
   const updatedMs = Date.parse(updatedAt);
   const dueMs = Date.parse(dueAt);
   const normalizedUpdatedMs = Math.max(updatedMs, createdMs);
@@ -124,7 +125,7 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     meaning: meaningValue,
     notes: notesValue || undefined,
     dueAt: normalizedDueAt,
-    createdAt,
+    createdAt: normalizedCreatedAt,
     updatedAt: normalizedUpdatedAt,
     state: raw.state,
     reps: asNonNegativeInt(raw.reps, 0),
