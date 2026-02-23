@@ -1,4 +1,5 @@
 import {
+  applyReviewToDeckState,
   applyDueReview,
   compareDueCards,
   countUpcomingDueCards,
@@ -100,6 +101,50 @@ describe('applyDueReview', () => {
     expect(result.reviewed).toBe(true);
     expect(result.reviewedAt).toBe('2026-02-23T12:10:00.000Z');
     expect(result.cards[0].updatedAt).toBe('2026-02-23T12:10:00.000Z');
+  });
+});
+
+describe('applyReviewToDeckState', () => {
+  it('updates cards and lastReviewedAt when the target due card is reviewed', () => {
+    const due = createNewCard('state-review', 'apply', NOW);
+    const future = { ...createNewCard('state-future', 'keep', NOW), dueAt: '2026-02-24T12:00:00.000Z' };
+
+    const result = applyReviewToDeckState(
+      { cards: [due, future], lastReviewedAt: '2026-02-23T11:59:59.000Z' },
+      due.id,
+      3,
+      NOW,
+    );
+
+    expect(result.reviewed).toBe(true);
+    expect(result.deckState.cards[0].reps).toBe(due.reps + 1);
+    expect(result.deckState.cards[1]).toBe(future);
+    expect(result.deckState.lastReviewedAt).toBe(result.deckState.cards[0].updatedAt);
+  });
+
+  it('returns the original state object when no due review was applied', () => {
+    const notDue = { ...createNewCard('state-not-due', 'skip', NOW), dueAt: '2026-02-24T12:00:00.000Z' };
+    const state = { cards: [notDue], lastReviewedAt: '2026-02-23T12:00:00.000Z' };
+
+    const result = applyReviewToDeckState(state, notDue.id, 4, NOW);
+
+    expect(result.reviewed).toBe(false);
+    expect(result.deckState).toBe(state);
+  });
+
+  it('uses scheduler reviewedAt when card timeline is ahead of the provided clock', () => {
+    const skewedDue = {
+      ...createNewCard('state-clock', 'fallback', NOW),
+      updatedAt: '2026-02-23T12:10:00.000Z',
+      dueAt: NOW,
+      state: 'review' as const,
+    };
+    const reviewClock = '2026-02-23T12:00:00.000Z';
+
+    const result = applyReviewToDeckState({ cards: [skewedDue] }, skewedDue.id, 3, reviewClock);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.deckState.lastReviewedAt).toBe('2026-02-23T12:10:00.000Z');
   });
 });
 

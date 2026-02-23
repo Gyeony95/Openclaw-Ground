@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   Easing,
   KeyboardAvoidingView,
@@ -331,7 +332,7 @@ export default function App() {
                 {loading ? <Text style={styles.info}>Loading deck...</Text> : null}
                 {!loading && !dueCard ? <Text style={styles.info}>No cards due. Add new words below.</Text> : null}
                 {!loading && dueCard ? (
-                  <View style={styles.reviewCard}>
+                  <View style={[styles.reviewCard, isReviewBusy && styles.reviewCardBusy]}>
                     <View style={styles.reviewTimeline}>
                       <Text style={styles.reviewTimelineLabel}>Scheduled for</Text>
                       <Text style={styles.reviewTimelineValue} numberOfLines={1}>
@@ -402,7 +403,12 @@ export default function App() {
                         >
                           <Text style={styles.ghostBtnText}>Hide answer</Text>
                         </Pressable>
-                        {isReviewBusy ? <Text style={styles.reviewingHint}>Recording review...</Text> : null}
+                        {isReviewBusy ? (
+                          <View style={styles.reviewingHintRow}>
+                            <ActivityIndicator size="small" color={colors.subInk} />
+                            <Text style={styles.reviewingHint}>Recording review...</Text>
+                          </View>
+                        ) : null}
                       </View>
                     )}
                   </View>
@@ -751,6 +757,9 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
     gap: 14,
   },
+  reviewCardBusy: {
+    opacity: 0.82,
+  },
   reviewTimeline: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -918,5 +927,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.25,
     textAlign: 'center',
+  },
+  reviewingHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
 });

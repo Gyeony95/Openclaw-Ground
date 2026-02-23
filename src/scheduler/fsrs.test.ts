@@ -774,6 +774,26 @@ describe('fsrs scheduler', () => {
     expect(corruptedReview.card.stability).toBeCloseTo(normalizedReview.card.stability, 6);
   });
 
+  it('treats corrupted review schedules like the one-day review floor', () => {
+    const card = createNewCard('psi-review-floor', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const reviewAt = addDaysIso(graduated.updatedAt, 0.5);
+    const normalized = {
+      ...graduated,
+      dueAt: addDaysIso(graduated.updatedAt, 1),
+    };
+    const corrupted = {
+      ...graduated,
+      dueAt: graduated.updatedAt,
+    };
+
+    const normalizedReview = reviewCard(normalized, 3, reviewAt);
+    const corruptedReview = reviewCard(corrupted, 3, reviewAt);
+
+    expect(corruptedReview.scheduledDays).toBe(normalizedReview.scheduledDays);
+    expect(corruptedReview.card.stability).toBeCloseTo(normalizedReview.card.stability, 6);
+  });
+
   it('keeps review interval finite when runtime schedule values are non-finite', () => {
     const base = createNewCard('upsilon-2', 'letter', NOW);
     const corrupted = {

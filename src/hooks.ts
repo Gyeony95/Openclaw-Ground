@@ -163,6 +163,25 @@ export function applyDueReview(
   return { cards: nextCards, reviewed: true, reviewedAt: reviewed.updatedAt };
 }
 
+export function applyReviewToDeckState(
+  deckState: { cards: Card[]; lastReviewedAt?: string },
+  cardId: string,
+  rating: Rating,
+  currentIso: string,
+): { deckState: { cards: Card[]; lastReviewedAt?: string }; reviewed: boolean } {
+  const next = applyDueReview(deckState.cards, cardId, rating, currentIso);
+  if (!next.reviewed) {
+    return { deckState, reviewed: false };
+  }
+  return {
+    reviewed: true,
+    deckState: {
+      cards: next.cards,
+      lastReviewedAt: next.reviewedAt ?? currentIso,
+    },
+  };
+}
+
 export function hasDueCard(cards: Card[], cardId: string, currentIso: string): boolean {
   return cards.some((card) => card.id === cardId && isDue(card.dueAt, currentIso));
 }
@@ -274,24 +293,20 @@ export function useDeck() {
 
   const reviewDueCard = useCallback((cardId: string, rating: Rating): boolean => {
     const current = resolveReviewClock(clockIso, nowIso());
-    if (!hasDueCard(deckState.cards, cardId, current)) {
-      return false;
-    }
+    let reviewed = false;
 
     setDeckState((prev) => {
-      const next = applyDueReview(prev.cards, cardId, rating, current);
-      if (!next.reviewed) {
-        return prev;
-      }
-      return {
-        cards: next.cards,
-        lastReviewedAt: next.reviewedAt ?? current,
-      };
+      const next = applyReviewToDeckState(prev, cardId, rating, current);
+      reviewed = next.reviewed;
+      return next.deckState;
     });
+    if (!reviewed) {
+      return false;
+    }
     setClockIso(current);
     setCanPersist(true);
     return true;
-  }, [clockIso, deckState.cards]);
+  }, [clockIso]);
 
   const stats = useMemo(() => computeDeckStats(deckState.cards, clockIso), [deckState.cards, clockIso]);
 

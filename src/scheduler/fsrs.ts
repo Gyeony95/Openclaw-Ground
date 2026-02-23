@@ -25,7 +25,7 @@ export type RatingIntervalPreview = Record<Rating, number>;
 
 type SchedulerPhase = 'learning' | 'review' | 'relearning';
 type ReviewIntervalsByRating = Record<2 | 3 | 4, number>;
-const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
+const REVIEW_SCHEDULE_FLOOR_DAYS = 1;
 
 let cardIdSequence = 0;
 
