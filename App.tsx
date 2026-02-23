@@ -525,7 +525,7 @@ export default function App() {
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
                 />
                 <Text style={[styles.charCount, { color: wordCountTone }]}>
-                  {wordLength}/{WORD_MAX_LENGTH}
+                  {wordRemaining} left
                 </Text>
                 <TextInput
                   ref={meaningInputRef}
@@ -548,7 +548,7 @@ export default function App() {
                   }}
                 />
                 <Text style={[styles.charCount, { color: meaningCountTone }]}>
-                  {meaningLength}/{MEANING_MAX_LENGTH}
+                  {meaningRemaining} left
                 </Text>
                 <TextInput
                   ref={notesInputRef}
@@ -567,7 +567,7 @@ export default function App() {
                   onSubmitEditing={handleAddCard}
                 />
                 <Text style={[styles.charCount, { color: noteCountTone }]}>
-                  {notesLength}/{NOTES_MAX_LENGTH}
+                  {notesRemaining} left
                 </Text>
 
                 <Pressable

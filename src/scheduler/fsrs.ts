@@ -307,12 +307,17 @@ function intervalFromStability(stability: number, desiredRetention: number): num
 }
 
 function quantizeReviewIntervalDays(intervalDays: number, scheduledDays: number): number {
-  const minReviewInterval = scheduledDays < 1 ? REVIEW_SCHEDULE_FLOOR_DAYS : 1;
-  if (scheduledDays < 1) {
-    const halfDayQuantized = Math.round(intervalDays * 2) / 2;
+  const safeScheduledDays = Number.isFinite(scheduledDays)
+    ? clamp(scheduledDays, MINUTE_IN_DAYS, STABILITY_MAX)
+    : REVIEW_SCHEDULE_FLOOR_DAYS;
+  const minReviewInterval = safeScheduledDays < 1 ? REVIEW_SCHEDULE_FLOOR_DAYS : 1;
+  const safeIntervalDays = Number.isFinite(intervalDays) ? intervalDays : safeScheduledDays;
+
+  if (safeScheduledDays < 1) {
+    const halfDayQuantized = Math.round(safeIntervalDays * 2) / 2;
     return clamp(halfDayQuantized, minReviewInterval, STABILITY_MAX);
   }
-  return clamp(Math.round(intervalDays), minReviewInterval, STABILITY_MAX);
+  return clamp(Math.round(safeIntervalDays), minReviewInterval, STABILITY_MAX);
 }
 
 function updateDifficulty(prevDifficulty: number, rating: Rating): number {

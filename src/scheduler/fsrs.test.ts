@@ -623,6 +623,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.stability).toBeLessThanOrEqual(STABILITY_MAX);
   });
 
+  it('preserves on-time review schedule when interval math becomes non-finite', () => {
+    const powSpy = jest.spyOn(Math, 'pow').mockReturnValue(Number.NaN);
+    const mature = {
+      ...createNewCard('rho-nan-interval', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 12),
+      stability: 32,
+      difficulty: 5.5,
+      reps: 35,
+      lapses: 2,
+    };
+    const reviewed = reviewCard(mature, 3, mature.dueAt);
+    powSpy.mockRestore();
+
+    expect(Number.isFinite(reviewed.scheduledDays)).toBe(true);
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(12);
+  });
+
   it('treats invalid runtime rating values as nearest supported rating', () => {
     const base = createNewCard('eta', 'letter', NOW);
     const reviewed = reviewCard(base, 9 as unknown as Rating, NOW);
