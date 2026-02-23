@@ -56,7 +56,12 @@ function asOfLabel(iso: string): string {
   if (!Number.isFinite(Date.parse(iso))) {
     return 'Clock unavailable';
   }
-  return `As of ${new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+  return `As of ${new Date(iso).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`;
 }
 
 function formatMetricNumber(value: number, digits: number): string {
@@ -331,7 +336,9 @@ export default function App() {
                       </Text>
                     </View>
                     <View style={styles.reviewHeader}>
-                      <Text style={styles.word}>{dueCard.word}</Text>
+                      <Text style={styles.word} numberOfLines={2} ellipsizeMode="tail">
+                        {dueCard.word}
+                      </Text>
                       <Text
                         style={[
                           styles.stateBadge,
@@ -383,6 +390,7 @@ export default function App() {
                           disabled={isReviewBusy}
                           accessibilityRole="button"
                           accessibilityLabel="Hide answer"
+                          accessibilityState={{ disabled: isReviewBusy }}
                         >
                           <Text style={styles.ghostBtnText}>Hide answer</Text>
                         </Pressable>
@@ -602,8 +610,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 11,
     fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.55,
+    letterSpacing: 0.25,
     flexShrink: 0,
   },
   scoreRow: {

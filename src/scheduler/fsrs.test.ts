@@ -495,6 +495,16 @@ describe('fsrs scheduler', () => {
     expect(failedRelearning.lapses).toBe(1);
   });
 
+  it('keeps difficulty stable on relearning Again retries', () => {
+    const card = createNewCard('relearn-difficulty', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const failedReview = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+    const relearningRetry = reviewCard(failedReview, 1, '2026-02-24T12:10:00.000Z').card;
+
+    expect(relearningRetry.state).toBe('relearning');
+    expect(relearningRetry.difficulty).toBeCloseTo(failedReview.difficulty, 6);
+  });
+
   it('falls back to learning behavior when runtime state is corrupted', () => {
     const base = createNewCard('iota-2', 'letter', NOW);
     const corrupted = {

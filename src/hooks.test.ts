@@ -359,6 +359,14 @@ describe('resolveReviewClock', () => {
     expect(resolved).toBe('2026-02-23T12:34:56.000Z');
   });
 
+  it('still prefers wall-safe time when rendered clock is far ahead of an already-pathological runtime clock', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const resolved = resolveReviewClock('2099-01-03T00:00:00.000Z', '2099-01-01T01:00:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:34:56.000Z');
+  });
+
   it('falls back to wall clock when only rendered clock is valid but pathologically far ahead', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
     const reviewedAt = resolveReviewClock('2099-01-01T00:00:00.000Z', 'bad-time');

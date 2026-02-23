@@ -272,8 +272,8 @@ function updateDifficulty(prevDifficulty: number, rating: Rating): number {
 }
 
 function nextDifficultyForPhase(prevDifficulty: number, currentState: ReviewState, rating: Rating): number {
-  // Learning misses are short-step retries and should not permanently harden card difficulty.
-  if (currentState === 'learning' && rating <= 2) {
+  // Non-review "Again" steps are short retries and should not harden long-term card difficulty.
+  if (currentState !== 'review' && rating === 1) {
     return clampFinite(prevDifficulty, DIFFICULTY_MIN, DIFFICULTY_MAX, DIFFICULTY_MEAN_REVERSION);
   }
   return updateDifficulty(prevDifficulty, rating);
