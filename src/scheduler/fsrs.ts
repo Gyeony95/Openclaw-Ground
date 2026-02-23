@@ -188,7 +188,7 @@ function scheduleFallbackForState(state: ReviewState): number {
 
 function normalizeScheduledDays(value: number, state: ReviewState): number {
   if (Number.isFinite(value) && value > 0) {
-    const normalized = Math.max(value, MINUTE_IN_DAYS);
+    const normalized = clamp(value, MINUTE_IN_DAYS, STABILITY_MAX);
     if (state === 'review') {
       return Math.max(normalized, REVIEW_SCHEDULE_FLOOR_DAYS);
     }

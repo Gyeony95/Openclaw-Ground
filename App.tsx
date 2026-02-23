@@ -176,8 +176,8 @@ export default function App() {
 
   const trimmedWordLength = trimmedLength(word, WORD_MAX_LENGTH);
   const trimmedMeaningLength = trimmedLength(meaning, MEANING_MAX_LENGTH);
-  const wordLength = typedLength(word, WORD_MAX_LENGTH);
-  const meaningLength = typedLength(meaning, MEANING_MAX_LENGTH);
+  const wordLength = trimmedWordLength;
+  const meaningLength = trimmedMeaningLength;
   const notesLength = typedLength(notes, NOTES_MAX_LENGTH);
   const canAdd = useMemo(
     () => !loading && trimmedWordLength > 0 && trimmedMeaningLength > 0,

@@ -1,6 +1,7 @@
 import { createNewCard, previewIntervals, reviewCard } from './fsrs';
 import { Rating } from '../types';
 import { addDaysIso } from '../utils/time';
+import { STABILITY_MAX } from './constants';
 
 const NOW = '2026-02-23T12:00:00.000Z';
 
@@ -890,6 +891,26 @@ describe('fsrs scheduler', () => {
 
     expect(hardOverdue.scheduledDays).toBeLessThanOrEqual(Math.ceil(scheduledDays * 1.2));
     expect(goodOverdue.scheduledDays).toBeGreaterThanOrEqual(hardOverdue.scheduledDays);
+  });
+
+  it('caps pathological far-future review schedules before stability math', () => {
+    const card = createNewCard('schedule-cap', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const cappedSchedule = {
+      ...graduated,
+      dueAt: addDaysIso(graduated.updatedAt, STABILITY_MAX),
+    };
+    const farFutureSchedule = {
+      ...graduated,
+      dueAt: addDaysIso(graduated.updatedAt, STABILITY_MAX * 3),
+    };
+    const reviewAt = addDaysIso(graduated.updatedAt, 7);
+
+    const capped = reviewCard(cappedSchedule, 3, reviewAt);
+    const farFuture = reviewCard(farFutureSchedule, 3, reviewAt);
+
+    expect(farFuture.card.stability).toBeCloseTo(capped.card.stability, 6);
+    expect(farFuture.scheduledDays).toBe(capped.scheduledDays);
   });
 
   it('does not move updatedAt before createdAt when recovering corrupted future timestamps', () => {
