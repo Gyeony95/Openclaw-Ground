@@ -513,6 +513,14 @@ describe('resolveReviewClock', () => {
     );
   });
 
+  it('keeps rendered clock when runtime clock has a large backward skew but rendered time is wall-safe', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:30:00.000Z'));
+    const resolved = resolveReviewClock('2026-02-23T12:00:00.000Z', '2026-02-22T00:00:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:00:00.000Z');
+  });
+
   it('keeps rendered clock when runtime clock is pathologically far ahead', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
     const resolved = resolveReviewClock('2026-02-23T12:00:00.000Z', '2099-01-01T00:00:00.000Z');

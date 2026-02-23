@@ -27,6 +27,7 @@ type SchedulerPhase = 'learning' | 'review' | 'relearning';
 type ReviewIntervalsByRating = Record<2 | 3 | 4, number>;
 const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 const RELEARNING_SCHEDULE_FLOOR_DAYS = 10 * MINUTE_IN_DAYS;
+const COUNTER_MAX = Number.MAX_SAFE_INTEGER;
 
 let cardIdSequence = 0;
 
@@ -172,7 +173,7 @@ function normalizeCounter(value: number): number {
   if (!Number.isFinite(value)) {
     return 0;
   }
-  return Math.max(0, Math.floor(value));
+  return clamp(Math.floor(value), 0, COUNTER_MAX);
 }
 
 function scheduleFallbackForState(state: ReviewState): number {
@@ -466,8 +467,8 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
       state,
       difficulty: nextDifficulty,
       stability: nextStability,
-      reps: previousReps + 1,
-      lapses: previousLapses + lapseIncrement,
+      reps: Math.min(COUNTER_MAX, previousReps + 1),
+      lapses: Math.min(COUNTER_MAX, previousLapses + lapseIncrement),
       updatedAt: currentIso,
       dueAt: nextDueAt,
     },

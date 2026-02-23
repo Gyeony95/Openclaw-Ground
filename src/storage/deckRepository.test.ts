@@ -246,6 +246,31 @@ describe('deck repository', () => {
     expect(deck.cards[0].difficulty).toBe(5);
   });
 
+  it('caps extremely large counters to Number.MAX_SAFE_INTEGER', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'huge-counter',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            reps: Number.MAX_VALUE,
+            lapses: Number.MAX_SAFE_INTEGER + 1000,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].reps).toBe(Number.MAX_SAFE_INTEGER);
+    expect(deck.cards[0].lapses).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
   it('sanitizes invalid lastReviewedAt and sorts by createdAt', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

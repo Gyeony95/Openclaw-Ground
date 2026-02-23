@@ -11,8 +11,14 @@ describe('formatIntervalLabel', () => {
     expect(formatIntervalLabel(3)).toBe('3d');
   });
 
-  it('formats long intervals in months', () => {
+  it('formats week-scale intervals', () => {
+    expect(formatIntervalLabel(8)).toBe('1w');
+    expect(formatIntervalLabel(20)).toBe('3w');
+  });
+
+  it('formats long intervals in months without overstating', () => {
     expect(formatIntervalLabel(61)).toBe('2mo');
+    expect(formatIntervalLabel(89)).toBe('2mo');
   });
 
   it('guards invalid values', () => {

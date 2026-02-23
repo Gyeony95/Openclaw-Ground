@@ -220,6 +220,9 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
       return canonicalRenderedIso ?? wallClockIso;
     }
     if (renderedMs - runtimeMs > MAX_CLOCK_SKEW_MS) {
+      if (!renderedTooFarAheadOfWall) {
+        return canonicalRenderedIso ?? wallClockIso;
+      }
       return canonicalRuntimeIso ?? wallClockIso;
     }
     return runtimeMs < renderedMs ? canonicalRenderedIso ?? wallClockIso : canonicalRuntimeIso ?? wallClockIso;

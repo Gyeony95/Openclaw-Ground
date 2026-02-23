@@ -13,6 +13,7 @@ import { isDue, nowIso } from '../utils/time';
 
 const KEY = 'word_memorizer.deck.v1';
 const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
+const COUNTER_MAX = Number.MAX_SAFE_INTEGER;
 
 const VALID_STATES: ReviewState[] = ['learning', 'review', 'relearning'];
 function clamp(value: number, min: number, max: number): number {
@@ -28,7 +29,7 @@ function asNonNegativeInt(value: unknown, fallback: number): number {
   if (numeric === null) {
     return fallback;
   }
-  return Math.max(0, Math.floor(numeric));
+  return clamp(Math.floor(numeric), 0, COUNTER_MAX);
 }
 
 function isValidState(state: unknown): state is ReviewState {

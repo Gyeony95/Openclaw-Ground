@@ -511,6 +511,19 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.lapses).toBe(1);
   });
 
+  it('saturates extremely large counters at Number.MAX_SAFE_INTEGER', () => {
+    const base = createNewCard('theta-counter-cap', 'letter', NOW);
+    const corrupted = {
+      ...reviewCard(base, 4, NOW).card,
+      reps: Number.MAX_SAFE_INTEGER,
+      lapses: Number.MAX_SAFE_INTEGER,
+    };
+    const reviewed = reviewCard(corrupted, 1, '2026-02-24T12:00:00.000Z');
+
+    expect(reviewed.card.reps).toBe(Number.MAX_SAFE_INTEGER);
+    expect(reviewed.card.lapses).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
   it('does not double-count lapses while repeating relearning Again steps', () => {
     const card = createNewCard('lapse-step', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;
