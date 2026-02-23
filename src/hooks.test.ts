@@ -195,6 +195,56 @@ describe('mergeDeckCards', () => {
 
     expect(merged[0].meaning).toBe('local');
   });
+
+  it('deduplicates duplicate IDs that already exist in memory', () => {
+    const older = {
+      ...createNewCard('dup-memory-older', 'older', NOW),
+      id: 'dup-memory',
+      updatedAt: '2026-02-23T09:00:00.000Z',
+      dueAt: '2026-02-24T09:00:00.000Z',
+      reps: 1,
+    };
+    const newer = {
+      ...createNewCard('dup-memory-newer', 'newer', NOW),
+      id: 'dup-memory',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 2,
+    };
+
+    const merged = mergeDeckCards([older, newer], []);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].id).toBe('dup-memory');
+    expect(merged[0].meaning).toBe('newer');
+    expect(merged[0].updatedAt).toBe('2026-02-23T10:00:00.000Z');
+    expect(merged[0].reps).toBe(2);
+  });
+
+  it('deduplicates duplicate IDs coming from loaded cards', () => {
+    const loadedOlder = {
+      ...createNewCard('dup-loaded-older', 'older', NOW),
+      id: 'dup-loaded',
+      updatedAt: '2026-02-23T09:00:00.000Z',
+      dueAt: '2026-02-24T09:00:00.000Z',
+      reps: 1,
+    };
+    const loadedNewer = {
+      ...createNewCard('dup-loaded-newer', 'newer', NOW),
+      id: 'dup-loaded',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 2,
+    };
+
+    const merged = mergeDeckCards([], [loadedOlder, loadedNewer]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].id).toBe('dup-loaded');
+    expect(merged[0].meaning).toBe('newer');
+    expect(merged[0].updatedAt).toBe('2026-02-23T10:00:00.000Z');
+    expect(merged[0].reps).toBe(2);
+  });
 });
 
 describe('hasDueCard', () => {

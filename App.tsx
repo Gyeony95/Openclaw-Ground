@@ -98,6 +98,7 @@ export default function App() {
   const [showMeaning, setShowMeaning] = useState(false);
   const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
   const [entryAnim] = useState(() => new Animated.Value(0));
+  const wordInputRef = useRef<TextInput>(null);
   const meaningInputRef = useRef<TextInput>(null);
   const notesInputRef = useRef<TextInput>(null);
 
@@ -173,10 +174,14 @@ export default function App() {
   }, [entryAnim]);
 
   function handleAddCard() {
-    if (!canAdd) {
+    const trimmedWord = word.trim();
+    const trimmedMeaning = meaning.trim();
+    const trimmedNotes = notes.trim();
+    if (!trimmedWord || !trimmedMeaning) {
       return;
     }
-    addCard(word, meaning, notes);
+    addCard(trimmedWord, trimmedMeaning, trimmedNotes || undefined);
+    wordInputRef.current?.blur();
     meaningInputRef.current?.blur();
     notesInputRef.current?.blur();
     setWord('');
@@ -361,6 +366,7 @@ export default function App() {
                 </View>
                 <Text style={styles.info}>Capture one precise definition and optional context note.</Text>
                 <TextInput
+                  ref={wordInputRef}
                   value={word}
                   onChangeText={setWord}
                   placeholder="Word"

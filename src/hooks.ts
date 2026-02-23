@@ -105,27 +105,34 @@ export function compareDueCards(a: Card, b: Card): number {
 }
 
 export function mergeDeckCards(existingCards: Card[], loadedCards: Card[]): Card[] {
-  if (existingCards.length === 0) {
-    return loadedCards;
-  }
-  if (loadedCards.length === 0) {
-    return existingCards;
+  if (existingCards.length === 0 && loadedCards.length === 0) {
+    return [];
   }
 
-  const loadedById = new Map(loadedCards.map((card) => [card.id, card] as const));
-  const merged = existingCards.map((existing) => {
-    const loaded = loadedById.get(existing.id);
-    if (!loaded) {
-      return existing;
+  const mergedById = new Map<string, Card>();
+  const order: string[] = [];
+
+  for (const existing of existingCards) {
+    const current = mergedById.get(existing.id);
+    if (!current) {
+      mergedById.set(existing.id, existing);
+      order.push(existing.id);
+      continue;
     }
-    loadedById.delete(existing.id);
-    return pickFreshestCard(existing, loaded);
-  });
-
-  for (const loaded of loadedById.values()) {
-    merged.push(loaded);
+    mergedById.set(existing.id, pickFreshestCard(current, existing));
   }
-  return merged;
+
+  for (const loaded of loadedCards) {
+    const current = mergedById.get(loaded.id);
+    if (!current) {
+      mergedById.set(loaded.id, loaded);
+      order.push(loaded.id);
+      continue;
+    }
+    mergedById.set(loaded.id, pickFreshestCard(current, loaded));
+  }
+
+  return order.map((id) => mergedById.get(id)).filter((card): card is Card => card !== undefined);
 }
 
 export function selectLatestReviewedAt(current?: string, incoming?: string): string | undefined {
