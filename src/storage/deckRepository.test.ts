@@ -575,6 +575,54 @@ describe('deck repository', () => {
     expect(deck.cards).toHaveLength(0);
   });
 
+  it('repairs pathologically-future learning dueAt values to a short learning interval', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'learning-future-due',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2099-01-01T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'learning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-22T00:01:00.000Z');
+  });
+
+  it('repairs pathologically-future relearning dueAt values to a short relearning interval', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'relearning-future-due',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: '2099-01-01T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'relearning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-22T00:10:00.000Z');
+  });
+
   it('sanitizes and deduplicates cards before persisting deck data', async () => {
     mockedStorage.setItem.mockResolvedValueOnce();
 

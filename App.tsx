@@ -225,6 +225,7 @@ export default function App() {
   const isWideLayout = width >= 980;
   const isReviewBusy = pendingReviewCardId !== null;
   const isFormEditable = !loading && !isAddBusy;
+  const shouldAutoFocusAddInput = !loading && !dueCard;
 
   useEffect(() => {
     setShowMeaning(false);
@@ -301,7 +302,9 @@ export default function App() {
       setIsAddBusy(false);
       addUnlockTimerRef.current = null;
     }, 250);
-    focusAddForm();
+    if (!dueCard) {
+      focusAddForm();
+    }
   }
 
   function handleRate(rating: Rating) {
@@ -434,7 +437,11 @@ export default function App() {
                   </View>
                 ) : null}
                 {!loading && dueCard ? (
-                  <View style={[styles.reviewCard, isReviewBusy && styles.reviewCardBusy]}>
+                  <View
+                    style={[styles.reviewCard, isReviewBusy && styles.reviewCardBusy]}
+                    accessible
+                    accessibilityLabel={`Review card ${dueCard.word}. ${dueCardStateConfig?.label ?? 'Learning'}. ${relativeDueLabel}.`}
+                  >
                     <View style={styles.reviewTimeline}>
                       <Text style={styles.reviewTimelineLabel}>Scheduled for</Text>
                       <Text style={styles.reviewTimelineValue} numberOfLines={1}>
@@ -535,7 +542,7 @@ export default function App() {
                   returnKeyType="next"
                   maxLength={WORD_MAX_LENGTH}
                   selectionColor={colors.primary}
-                  autoFocus
+                  autoFocus={shouldAutoFocusAddInput}
                   editable={isFormEditable}
                   accessibilityLabel="Word input"
                   onSubmitEditing={() => meaningInputRef.current?.focus()}

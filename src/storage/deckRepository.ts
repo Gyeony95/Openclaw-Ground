@@ -14,6 +14,12 @@ import { isDue, nowIso } from '../utils/time';
 const KEY = 'word_memorizer.deck.v1';
 const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const COUNTER_MAX = Number.MAX_SAFE_INTEGER;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MINUTE_IN_DAYS = 1 / 1440;
+const LEARNING_SCHEDULE_FALLBACK_DAYS = MINUTE_IN_DAYS;
+const RELEARNING_SCHEDULE_FALLBACK_DAYS = 10 * MINUTE_IN_DAYS;
+const LEARNING_MAX_SCHEDULE_DAYS = 1;
+const RELEARNING_MAX_SCHEDULE_DAYS = 2;
 
 const VALID_STATES: ReviewState[] = ['learning', 'review', 'relearning'];
 function clamp(value: number, min: number, max: number): number {
@@ -47,6 +53,20 @@ function toCanonicalIso(iso: string): string {
 function parseTimeOrMin(iso: string): number {
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
+}
+
+function scheduleFallbackForState(state: ReviewState): number {
+  if (state === 'relearning') {
+    return RELEARNING_SCHEDULE_FALLBACK_DAYS;
+  }
+  return LEARNING_SCHEDULE_FALLBACK_DAYS;
+}
+
+function maxScheduleDaysForState(state: ReviewState): number {
+  if (state === 'relearning') {
+    return RELEARNING_MAX_SCHEDULE_DAYS;
+  }
+  return LEARNING_MAX_SCHEDULE_DAYS;
 }
 
 function pickFreshestDuplicate(existing: Card, incoming: Card): Card {
@@ -134,7 +154,14 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   const dueMs = Date.parse(dueAt);
   const normalizedUpdatedMs = Math.max(updatedMs, createdMs);
   const normalizedUpdatedAt = new Date(normalizedUpdatedMs).toISOString();
-  const normalizedDueAt = new Date(Math.max(dueMs, normalizedUpdatedMs)).toISOString();
+  let normalizedDueMs = Math.max(dueMs, normalizedUpdatedMs);
+  if (raw.state !== 'review') {
+    const scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
+    if (scheduleDays > maxScheduleDaysForState(raw.state)) {
+      normalizedDueMs = normalizedUpdatedMs + scheduleFallbackForState(raw.state) * DAY_MS;
+    }
+  }
+  const normalizedDueAt = new Date(normalizedDueMs).toISOString();
 
   return {
     id,

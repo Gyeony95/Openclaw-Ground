@@ -1087,6 +1087,27 @@ describe('fsrs scheduler', () => {
     expect(minuteScaleReview.card.stability).toBeCloseTo(normalizedReview.card.stability, 6);
   });
 
+  it('treats pathologically-future relearning schedules like the 10-minute relearning floor', () => {
+    const card = createNewCard('psi-relearning-future-floor', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const failed = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+    const reviewAt = '2026-02-27T12:00:00.000Z';
+    const normalized = {
+      ...failed,
+      dueAt: addDaysIso(failed.updatedAt, 10 / 1440),
+    };
+    const farFuture = {
+      ...failed,
+      dueAt: '2099-01-01T00:00:00.000Z',
+    };
+
+    const normalizedReview = reviewCard(normalized, 3, reviewAt);
+    const farFutureReview = reviewCard(farFuture, 3, reviewAt);
+
+    expect(farFutureReview.scheduledDays).toBe(normalizedReview.scheduledDays);
+    expect(farFutureReview.card.stability).toBeCloseTo(normalizedReview.card.stability, 6);
+  });
+
   it('treats corrupted review schedules like the one-day review floor', () => {
     const card = createNewCard('psi-review-floor', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;

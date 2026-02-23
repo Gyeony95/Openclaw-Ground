@@ -16,6 +16,7 @@ const FSRS_DECAY = -0.5;
 const FSRS_FACTOR = 19 / 81;
 const ON_TIME_TOLERANCE_DAYS = MINUTE_IN_DAYS;
 const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 export interface ReviewResult {
   card: Card;
   scheduledDays: number;
@@ -27,6 +28,8 @@ type SchedulerPhase = 'learning' | 'review' | 'relearning';
 type ReviewIntervalsByRating = Record<2 | 3 | 4, number>;
 const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 const RELEARNING_SCHEDULE_FLOOR_DAYS = 10 * MINUTE_IN_DAYS;
+const LEARNING_MAX_SCHEDULE_DAYS = 1;
+const RELEARNING_MAX_SCHEDULE_DAYS = 2;
 const COUNTER_MAX = Number.MAX_SAFE_INTEGER;
 
 let cardIdSequence = 0;
@@ -159,8 +162,15 @@ function normalizeTimeline(
   const rawDueAt = isValidIso(card.dueAt) ? card.dueAt : undefined;
   const rawDueMs = rawDueAt ? Date.parse(rawDueAt) : Number.NaN;
   const updatedAtMs = Date.parse(updatedAt);
+  const dueDaysFromUpdated = Number.isFinite(rawDueMs) ? (rawDueMs - updatedAtMs) / DAY_MS : Number.NaN;
+  const dueBeyondStateWindow =
+    normalizedState !== 'review' &&
+    Number.isFinite(dueDaysFromUpdated) &&
+    dueDaysFromUpdated > maxScheduleDaysForState(normalizedState);
   const dueTimelineAnchor =
-    normalizedState === 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs ? fallbackDueAt : rawDueAt;
+    (normalizedState === 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs) || dueBeyondStateWindow
+      ? fallbackDueAt
+      : rawDueAt;
   const dueAt = new Date(Math.max(Date.parse(dueTimelineAnchor ?? fallbackDueAt), updatedAtMs)).toISOString();
   const resolvedCurrentIso = resolveReviewIso(updatedAt, requestedNowIso);
   const resolvedCurrentMs = Date.parse(resolvedCurrentIso);
@@ -217,6 +227,16 @@ function scheduleFallbackForState(state: ReviewState): number {
     return RELEARNING_SCHEDULE_FLOOR_DAYS;
   }
   return MINUTE_IN_DAYS;
+}
+
+function maxScheduleDaysForState(state: ReviewState): number {
+  if (state === 'relearning') {
+    return RELEARNING_MAX_SCHEDULE_DAYS;
+  }
+  if (state === 'learning') {
+    return LEARNING_MAX_SCHEDULE_DAYS;
+  }
+  return STABILITY_MAX;
 }
 
 function normalizeScheduledDays(value: number, state: ReviewState): number {
