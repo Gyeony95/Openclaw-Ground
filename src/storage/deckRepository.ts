@@ -20,6 +20,7 @@ const LEARNING_SCHEDULE_FALLBACK_DAYS = MINUTE_IN_DAYS;
 const RELEARNING_SCHEDULE_FALLBACK_DAYS = 10 * MINUTE_IN_DAYS;
 const LEARNING_MAX_SCHEDULE_DAYS = 1;
 const RELEARNING_MAX_SCHEDULE_DAYS = 2;
+const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 
 const VALID_STATES: ReviewState[] = ['learning', 'review', 'relearning'];
 function clamp(value: number, min: number, max: number): number {
@@ -152,6 +153,7 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   const normalizedCreatedAt = toCanonicalIso(createdAt);
   const updatedAt = isValidIso(raw.updatedAt) ? raw.updatedAt : createdAt;
   const dueAt = isValidIso(raw.dueAt) ? raw.dueAt : updatedAt;
+  const normalizedStability = clamp(asFiniteNumber(raw.stability) ?? 0.5, STABILITY_MIN, STABILITY_MAX);
   const createdMs = Date.parse(normalizedCreatedAt);
   const updatedMs = Date.parse(updatedAt);
   const dueMs = Date.parse(dueAt);
@@ -170,6 +172,10 @@ function normalizeCard(raw: Partial<Card>): Card | null {
       normalizedDueMs = normalizedUpdatedMs + scheduleFallbackForState(raw.state) * DAY_MS;
     }
   }
+  const reviewScheduleCapDays = Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, normalizedStability * 6, 30);
+  if (raw.state === 'review' && scheduleDays > reviewScheduleCapDays) {
+    normalizedDueMs = normalizedUpdatedMs + normalizedStability * DAY_MS;
+  }
   const normalizedDueAt = new Date(normalizedDueMs).toISOString();
 
   return {
@@ -183,7 +189,7 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     state: raw.state,
     reps: asNonNegativeInt(raw.reps, 0),
     lapses: asNonNegativeInt(raw.lapses, 0),
-    stability: clamp(asFiniteNumber(raw.stability) ?? 0.5, STABILITY_MIN, STABILITY_MAX),
+    stability: normalizedStability,
     difficulty: clamp(asFiniteNumber(raw.difficulty) ?? 5, DIFFICULTY_MIN, DIFFICULTY_MAX),
   };
 }

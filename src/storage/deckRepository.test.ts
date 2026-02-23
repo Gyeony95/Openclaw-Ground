@@ -54,6 +54,34 @@ describe('deck repository', () => {
     expect(deck.cards[0].difficulty).toBe(1);
   });
 
+  it('repairs persisted far-future review due dates using card stability', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'review-future',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2028-04-01T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            stability: 1.5,
+            difficulty: 5,
+            reps: 12,
+            lapses: 1,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].dueAt).toBe('2026-02-23T12:00:00.000Z');
+    expect(deck.cards[0].stability).toBe(1.5);
+    expect(deck.cards[0].state).toBe('review');
+  });
+
   it('trims oversized persisted text fields to app limits', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

@@ -1185,6 +1185,31 @@ describe('fsrs scheduler', () => {
     expect(corruptedReview.card.stability).toBeCloseTo(normalizedReview.card.stability, 6);
   });
 
+  it('repairs far-future review schedules that are inconsistent with card stability', () => {
+    const baseline = {
+      ...createNewCard('psi-review-future-cap', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 2),
+      stability: 2,
+      difficulty: 5.3,
+      reps: 22,
+      lapses: 2,
+    };
+    const corrupted = {
+      ...baseline,
+      dueAt: addDaysIso(NOW, 400),
+    };
+    const reviewAt = addDaysIso(NOW, 1);
+
+    const baselineReview = reviewCard(baseline, 3, reviewAt);
+    const corruptedReview = reviewCard(corrupted, 3, reviewAt);
+
+    expect(corruptedReview.scheduledDays).toBe(baselineReview.scheduledDays);
+    expect(corruptedReview.card.stability).toBeCloseTo(baselineReview.card.stability, 6);
+    expect(corruptedReview.card.state).toBe('review');
+  });
+
   it('keeps review interval finite when runtime schedule values are non-finite', () => {
     const base = createNewCard('upsilon-2', 'letter', NOW);
     const corrupted = {

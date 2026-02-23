@@ -164,14 +164,21 @@ function normalizeTimeline(
   const rawDueMs = rawDueAt ? Date.parse(rawDueAt) : Number.NaN;
   const updatedAtMs = Date.parse(updatedAt);
   const dueDaysFromUpdated = Number.isFinite(rawDueMs) ? (rawDueMs - updatedAtMs) / DAY_MS : Number.NaN;
+  const expectedReviewScheduleDays = normalizeScheduledDays(card.stability, 'review');
   const dueBeyondStateWindow =
     normalizedState !== 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
     dueDaysFromUpdated > maxScheduleDaysForState(normalizedState);
+  const dueBeyondReviewStabilityWindow =
+    normalizedState === 'review' &&
+    Number.isFinite(dueDaysFromUpdated) &&
+    dueDaysFromUpdated >
+      Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, expectedReviewScheduleDays * 6, 30);
   const dueNeedsRepair =
     (normalizedState === 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs) ||
     (normalizedState !== 'review' && Number.isFinite(rawDueMs) && rawDueMs <= updatedAtMs) ||
-    dueBeyondStateWindow;
+    dueBeyondStateWindow ||
+    dueBeyondReviewStabilityWindow;
   const dueTimelineAnchor = dueNeedsRepair ? timelineRepairDueAt : rawDueAt ?? fallbackDueAt;
   const dueAt = new Date(Math.max(Date.parse(dueTimelineAnchor ?? fallbackDueAt), updatedAtMs)).toISOString();
   const resolvedCurrentIso = resolveReviewIso(updatedAt, requestedNowIso);

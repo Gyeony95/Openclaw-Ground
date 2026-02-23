@@ -156,6 +156,11 @@ export default function App() {
     : dueCard
       ? formatReviewQueueLabel(stats.dueNow)
       : queueShareLabel;
+  const followUpQueueLabel = loading
+    ? '--'
+    : dueCards[1]
+      ? `Then ${formatDueLabel(dueCards[1].dueAt, clockIso)}`
+      : 'No second card queued';
   const nextUpcomingCard = useMemo(() => {
     const nowMs = Date.parse(clockIso);
     if (!Number.isFinite(nowMs)) {
@@ -437,6 +442,7 @@ export default function App() {
                     >
                       {overdueQueueLabel}
                     </Text>
+                    <Text style={styles.panelSubKpi}>{followUpQueueLabel}</Text>
                   </View>
                 </View>
                 {loading ? <Text style={styles.info}>Loading deck...</Text> : null}
