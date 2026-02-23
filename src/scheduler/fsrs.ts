@@ -295,6 +295,11 @@ function rawReviewIntervalDays(
   const rawInterval = clamp(Math.round(baseInterval * ratingScale * timingScale), 1, STABILITY_MAX);
   let floorFromSchedule = rating === 4 ? Math.ceil(scheduled) : 1;
 
+  // Hard recalls should not shrink the schedule when the card was reviewed on-time or later.
+  if (phase === 'review' && rating === 2 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {
+    floorFromSchedule = Math.max(floorFromSchedule, Math.ceil(scheduled));
+  }
+
   // Keep "Good" on-time reviews from shrinking the schedule due to rounding/noise.
   if (phase === 'review' && rating === 3 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {
     floorFromSchedule = Math.max(floorFromSchedule, Math.ceil(scheduled));

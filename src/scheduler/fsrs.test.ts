@@ -163,6 +163,44 @@ describe('fsrs scheduler', () => {
     expect(next.scheduledDays).toBeGreaterThanOrEqual(scheduled);
   });
 
+  it('keeps hard review intervals at least as long as the current schedule when on time', () => {
+    const card = createNewCard('nu-hard-floor', 'letter', NOW);
+    const first = reviewCard(card, 4, NOW).card;
+    const second = reviewCard(first, 4, '2026-02-26T12:00:00.000Z').card;
+    const scheduled = Math.round(
+      (Date.parse(second.dueAt) - Date.parse(second.updatedAt)) / (24 * 60 * 60 * 1000),
+    );
+    const next = reviewCard(second, 2, second.dueAt);
+
+    expect(next.scheduledDays).toBeGreaterThanOrEqual(scheduled);
+  });
+
+  it('allows early hard reviews to keep shorter intervals than the current schedule', () => {
+    const card = createNewCard('nu-hard-early', 'letter', NOW);
+    const first = reviewCard(card, 4, NOW).card;
+    const second = reviewCard(first, 4, '2026-02-26T12:00:00.000Z').card;
+    const scheduled = Math.round(
+      (Date.parse(second.dueAt) - Date.parse(second.updatedAt)) / (24 * 60 * 60 * 1000),
+    );
+    const earlyIso = new Date(Date.parse(second.updatedAt) + 12 * 60 * 60 * 1000).toISOString();
+    const earlyHard = reviewCard(second, 2, earlyIso);
+
+    expect(earlyHard.scheduledDays).toBeLessThanOrEqual(scheduled);
+  });
+
+  it('keeps overdue hard review intervals at least as long as the current schedule', () => {
+    const card = createNewCard('nu-hard-overdue', 'letter', NOW);
+    const first = reviewCard(card, 4, NOW).card;
+    const second = reviewCard(first, 4, '2026-02-26T12:00:00.000Z').card;
+    const scheduled = Math.round(
+      (Date.parse(second.dueAt) - Date.parse(second.updatedAt)) / (24 * 60 * 60 * 1000),
+    );
+    const overdueIso = addDaysIso(second.dueAt, scheduled);
+    const overdueHard = reviewCard(second, 2, overdueIso);
+
+    expect(overdueHard.scheduledDays).toBeGreaterThanOrEqual(scheduled);
+  });
+
   it('treats near-due Good reviews as on-time for schedule floor', () => {
     const card = createNewCard('nu-3', 'letter', NOW);
     const first = reviewCard(card, 4, NOW).card;
