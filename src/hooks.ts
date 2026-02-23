@@ -242,27 +242,24 @@ export function useDeck() {
 
   const reviewDueCard = useCallback((cardId: string, rating: Rating): boolean => {
     const current = resolveReviewClock(clockIso, nowIso());
-    let reviewed = false;
+    if (!hasDueCard(deckState.cards, cardId, current)) {
+      return false;
+    }
 
     setDeckState((prev) => {
       const next = applyDueReview(prev.cards, cardId, rating, current);
       if (!next.reviewed) {
         return prev;
       }
-      reviewed = true;
       return {
         cards: next.cards,
         lastReviewedAt: current,
       };
     });
-
-    if (!reviewed) {
-      return false;
-    }
     setClockIso(current);
     setCanPersist(true);
     return true;
-  }, [clockIso]);
+  }, [clockIso, deckState.cards]);
 
   const stats = useMemo(() => computeDeckStats(deckState.cards, clockIso), [deckState.cards, clockIso]);
 

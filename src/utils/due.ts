@@ -16,17 +16,18 @@ export function formatDueLabel(dueAt: string, clockIso: string): string {
   }
 
   const deltaMs = dueMs - nowMs;
+  const overdueMs = Math.abs(deltaMs);
   if (Math.abs(deltaMs) <= NOW_THRESHOLD_MS) {
     return 'Due now';
   }
-  if (deltaMs < 0 && Math.abs(deltaMs) < HOUR_MS) {
-    return `Overdue ${Math.ceil(Math.abs(deltaMs) / MINUTE_MS)}m`;
+  if (deltaMs < 0 && overdueMs < HOUR_MS) {
+    return `Overdue ${Math.max(1, Math.floor(overdueMs / MINUTE_MS))}m`;
   }
-  if (deltaMs < 0 && Math.abs(deltaMs) < DAY_MS) {
-    return `Overdue ${Math.ceil(Math.abs(deltaMs) / HOUR_MS)}h`;
+  if (deltaMs < 0 && overdueMs < DAY_MS) {
+    return `Overdue ${Math.max(1, Math.floor(overdueMs / HOUR_MS))}h`;
   }
   if (deltaMs <= -DAY_MS) {
-    return `Overdue ${Math.ceil(Math.abs(deltaMs) / DAY_MS)}d`;
+    return `Overdue ${Math.max(1, Math.floor(overdueMs / DAY_MS))}d`;
   }
   if (deltaMs < HOUR_MS) {
     return `Due in ${Math.ceil(deltaMs / MINUTE_MS)}m`;

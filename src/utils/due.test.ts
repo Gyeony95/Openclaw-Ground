@@ -18,7 +18,7 @@ describe('formatDueLabel', () => {
   });
 
   it('formats long overdue labels in days', () => {
-    expect(formatDueLabel('2026-02-20T11:59:59.000Z', NOW)).toBe('Overdue 4d');
+    expect(formatDueLabel('2026-02-20T11:59:59.000Z', NOW)).toBe('Overdue 3d');
   });
 
   it('formats upcoming labels in hours or days', () => {
@@ -28,5 +28,10 @@ describe('formatDueLabel', () => {
 
   it('returns unavailable for invalid timestamps', () => {
     expect(formatDueLabel('bad', NOW)).toBe('Due date unavailable');
+  });
+
+  it('floors overdue durations so labels do not overstate lateness', () => {
+    expect(formatDueLabel('2026-02-23T10:59:59.000Z', NOW)).toBe('Overdue 1h');
+    expect(formatDueLabel('2026-02-22T10:59:59.000Z', NOW)).toBe('Overdue 1d');
   });
 });

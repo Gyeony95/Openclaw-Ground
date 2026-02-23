@@ -135,9 +135,9 @@ export default function App() {
   );
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 
-  const canAdd = useMemo(() => word.trim().length > 0 && meaning.trim().length > 0, [word, meaning]);
+  const canAdd = useMemo(() => !loading && word.trim().length > 0 && meaning.trim().length > 0, [loading, word, meaning]);
   const notesRemaining = Math.max(0, 240 - notes.length);
-  const noteCountTone = notesRemaining <= 20 ? colors.warn : colors.subInk;
+  const noteCountTone = notesRemaining === 0 ? colors.danger : notesRemaining <= 20 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
   const isReviewBusy = pendingReviewCardId !== null;
 
@@ -380,6 +380,7 @@ export default function App() {
                   autoCorrect={false}
                   returnKeyType="next"
                   maxLength={80}
+                  selectionColor={colors.primary}
                   accessibilityLabel="Word input"
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
                 />
@@ -392,6 +393,7 @@ export default function App() {
                   placeholderTextColor={colors.subInk}
                   returnKeyType="next"
                   maxLength={180}
+                  selectionColor={colors.primary}
                   accessibilityLabel="Meaning input"
                   onSubmitEditing={() => {
                     if (notes.trim().length === 0) {
@@ -410,6 +412,7 @@ export default function App() {
                   placeholderTextColor={colors.subInk}
                   multiline
                   maxLength={240}
+                  selectionColor={colors.primary}
                   accessibilityLabel="Notes input"
                   returnKeyType="done"
                   blurOnSubmit

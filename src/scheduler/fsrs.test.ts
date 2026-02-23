@@ -15,6 +15,14 @@ describe('fsrs scheduler', () => {
     expect(card.reps).toBe(0);
   });
 
+  it('enforces scheduler-side field length limits when creating cards', () => {
+    const card = createNewCard('a'.repeat(120), 'b'.repeat(220), NOW, 'c'.repeat(320));
+
+    expect(card.word).toHaveLength(80);
+    expect(card.meaning).toHaveLength(180);
+    expect(card.notes).toHaveLength(240);
+  });
+
   it('generates unique ids for rapid card creation at the same timestamp', () => {
     const first = createNewCard('alpha-id-1', 'first', NOW);
     const second = createNewCard('alpha-id-2', 'second', NOW);
