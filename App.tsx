@@ -246,7 +246,13 @@ export default function App() {
           : missingWord
             ? 'Word is required'
             : 'Meaning is required';
-  const addHintTone = canAdd ? colors.success : colors.subInk;
+  const addHintTone = loading
+    ? colors.subInk
+    : canAdd
+      ? colors.success
+      : addAttempted
+        ? colors.danger
+        : colors.subInk;
   const wordRemaining = Math.max(0, WORD_MAX_LENGTH - wordLength);
   const meaningRemaining = Math.max(0, MEANING_MAX_LENGTH - meaningLength);
   const notesRemaining = Math.max(0, NOTES_MAX_LENGTH - notesLength);
@@ -317,6 +323,15 @@ export default function App() {
     }
     previousHadDueCardRef.current = hasDueCardInQueue;
   }, [dueCard, loading]);
+
+  useEffect(() => {
+    if (!addAttempted) {
+      return;
+    }
+    if (!missingWord && !missingMeaning) {
+      setAddAttempted(false);
+    }
+  }, [addAttempted, missingMeaning, missingWord]);
 
   function handleAddCard() {
     if (loading || addLockRef.current) {

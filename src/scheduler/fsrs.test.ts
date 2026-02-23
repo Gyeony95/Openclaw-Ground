@@ -426,6 +426,46 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBe(1);
   });
 
+  it('keeps near-one-day schedule drift from dropping to half-day on on-time good reviews', () => {
+    const nearDayScheduleDays = 1 - 30 / (24 * 60 * 60);
+    const dueAt = addDaysIso(NOW, nearDayScheduleDays);
+    const card = {
+      ...createNewCard('nu-near-day-good', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt,
+      stability: 0.4,
+      difficulty: 8.8,
+      reps: 16,
+      lapses: 2,
+    };
+
+    const reviewed = reviewCard(card, 3, dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
+  it('keeps near-one-day schedule drift from dropping to half-day on on-time hard reviews', () => {
+    const nearDayScheduleDays = 1 - 30 / (24 * 60 * 60);
+    const dueAt = addDaysIso(NOW, nearDayScheduleDays);
+    const card = {
+      ...createNewCard('nu-near-day-hard', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt,
+      stability: 0.4,
+      difficulty: 8.8,
+      reps: 16,
+      lapses: 2,
+    };
+
+    const reviewed = reviewCard(card, 2, dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
   it('keeps difficulty within bounds', () => {
     let card = createNewCard('gamma', 'third letter', NOW);
 
