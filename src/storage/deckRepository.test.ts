@@ -278,6 +278,18 @@ describe('deck repository', () => {
     expect(deck.cards.map((card) => card.id)).toEqual(['1', '2']);
   });
 
+  it('normalizes valid lastReviewedAt into canonical ISO format while loading', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [],
+        lastReviewedAt: '2026-02-23T12:00:00Z',
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.lastReviewedAt).toBe('2026-02-23T12:00:00.000Z');
+  });
+
   it('normalizes timestamp ordering to keep updated/due at or after createdAt', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
@@ -437,6 +449,30 @@ describe('deck repository', () => {
     expect(deck.cards[0].notes).toBeUndefined();
   });
 
+  it('drops cards that only provide a pathologically-future dueAt anchor', async () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'future-due-only',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: '2099-01-01T00:00:00.000Z',
+            createdAt: 'bad-created-at',
+            updatedAt: 'bad-updated-at',
+            state: 'review',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    nowSpy.mockRestore();
+
+    expect(deck.cards).toHaveLength(0);
+  });
+
   it('sanitizes and deduplicates cards before persisting deck data', async () => {
     mockedStorage.setItem.mockResolvedValueOnce();
 
@@ -505,6 +541,19 @@ describe('deck repository', () => {
     await saveDeck({
       cards: [],
       lastReviewedAt: '2026-02-23T12:00:00.000Z',
+    });
+
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as { lastReviewedAt?: string };
+    expect(savedDeck.lastReviewedAt).toBe('2026-02-23T12:00:00.000Z');
+  });
+
+  it('normalizes lastReviewedAt into canonical ISO format when persisting', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [],
+      lastReviewedAt: '2026-02-23T12:00:00Z',
     });
 
     const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];

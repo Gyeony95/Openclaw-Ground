@@ -332,6 +332,13 @@ describe('selectLatestReviewedAt', () => {
     expect(selectLatestReviewedAt('bad-time', '2026-02-23T12:00:00.000Z')).toBe('2026-02-23T12:00:00.000Z');
     expect(selectLatestReviewedAt('bad-time', 'also-bad')).toBeUndefined();
   });
+
+  it('returns canonical ISO timestamps for valid values', () => {
+    expect(selectLatestReviewedAt('2026-02-23T12:00:00Z', undefined)).toBe('2026-02-23T12:00:00.000Z');
+    expect(selectLatestReviewedAt('2026-02-23T11:00:00Z', '2026-02-23T12:00:00Z')).toBe(
+      '2026-02-23T12:00:00.000Z',
+    );
+  });
 });
 
 describe('resolveReviewClock', () => {
@@ -339,6 +346,10 @@ describe('resolveReviewClock', () => {
     expect(resolveReviewClock('2026-02-23T12:00:00.000Z', '2026-02-23T12:00:10.000Z')).toBe(
       '2026-02-23T12:00:10.000Z',
     );
+  });
+
+  it('returns canonical timestamps when inputs are valid but non-canonical', () => {
+    expect(resolveReviewClock('2026-02-23T12:00:00Z', '2026-02-23T12:00:10Z')).toBe('2026-02-23T12:00:10.000Z');
   });
 
   it('keeps rendered clock when runtime clock moves backward', () => {

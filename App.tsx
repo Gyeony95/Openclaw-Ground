@@ -430,7 +430,7 @@ export default function App() {
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
                 />
                 <Text style={[styles.charCount, { color: wordCountTone }]}>
-                  {wordRemaining} chars left
+                  {wordLength}/{WORD_MAX_LENGTH}
                 </Text>
                 <TextInput
                   ref={meaningInputRef}
@@ -452,7 +452,7 @@ export default function App() {
                   }}
                 />
                 <Text style={[styles.charCount, { color: meaningCountTone }]}>
-                  {meaningRemaining} chars left
+                  {meaningLength}/{MEANING_MAX_LENGTH}
                 </Text>
                 <TextInput
                   ref={notesInputRef}
@@ -469,7 +469,9 @@ export default function App() {
                   blurOnSubmit
                   onSubmitEditing={handleAddCard}
                 />
-                <Text style={[styles.charCount, { color: noteCountTone }]}>{notesRemaining} chars left</Text>
+                <Text style={[styles.charCount, { color: noteCountTone }]}>
+                  {notesLength}/{NOTES_MAX_LENGTH}
+                </Text>
 
                 <Pressable
                   style={({ pressed }) => [

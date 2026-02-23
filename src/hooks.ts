@@ -29,6 +29,10 @@ function isValidIso(value?: string): value is string {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
 }
 
+function toCanonicalIso(value: string): string {
+  return new Date(Date.parse(value)).toISOString();
+}
+
 function pickFreshestCard(existing: Card, loaded: Card): Card {
   const existingUpdated = parseTimeOrMin(existing.updatedAt);
   const loadedUpdated = parseTimeOrMin(loaded.updatedAt);
@@ -137,8 +141,8 @@ export function mergeDeckCards(existingCards: Card[], loadedCards: Card[]): Card
 }
 
 export function selectLatestReviewedAt(current?: string, incoming?: string): string | undefined {
-  const currentValid = isValidIso(current) ? current : undefined;
-  const incomingValid = isValidIso(incoming) ? incoming : undefined;
+  const currentValid = isValidIso(current) ? toCanonicalIso(current) : undefined;
+  const incomingValid = isValidIso(incoming) ? toCanonicalIso(incoming) : undefined;
   return parseTimeOrMin(incomingValid) > parseTimeOrMin(currentValid) ? incomingValid : currentValid;
 }
 
@@ -168,6 +172,8 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
   const runtimeMs = parseTimeOrNaN(runtimeNowIso);
   const wallClockMs = Date.now();
   const wallClockIso = new Date(wallClockMs).toISOString();
+  const canonicalRenderedIso = Number.isFinite(renderedMs) ? new Date(renderedMs).toISOString() : undefined;
+  const canonicalRuntimeIso = Number.isFinite(runtimeMs) ? new Date(runtimeMs).toISOString() : undefined;
   const runtimeTooFarAheadOfWall = Number.isFinite(runtimeMs) && runtimeMs - wallClockMs > MAX_CLOCK_SKEW_MS;
   const renderedTooFarAheadOfWall = Number.isFinite(renderedMs) && renderedMs - wallClockMs > MAX_CLOCK_SKEW_MS;
 
@@ -176,24 +182,24 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
       if (renderedTooFarAheadOfWall) {
         return wallClockIso;
       }
-      return renderedClockIso;
+      return canonicalRenderedIso ?? wallClockIso;
     }
     if (renderedMs - runtimeMs > MAX_CLOCK_SKEW_MS) {
-      return runtimeNowIso;
+      return canonicalRuntimeIso ?? wallClockIso;
     }
-    return runtimeMs < renderedMs ? renderedClockIso : runtimeNowIso;
+    return runtimeMs < renderedMs ? canonicalRenderedIso ?? wallClockIso : canonicalRuntimeIso ?? wallClockIso;
   }
   if (Number.isFinite(runtimeMs)) {
     if (runtimeTooFarAheadOfWall) {
       return wallClockIso;
     }
-    return runtimeNowIso;
+    return canonicalRuntimeIso ?? wallClockIso;
   }
   if (Number.isFinite(renderedMs)) {
     if (renderedTooFarAheadOfWall) {
       return wallClockIso;
     }
-    return renderedClockIso;
+    return canonicalRenderedIso ?? wallClockIso;
   }
   return wallClockIso;
 }

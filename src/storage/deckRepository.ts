@@ -12,6 +12,7 @@ import { Card, Deck, DeckStats, ReviewState } from '../types';
 import { isDue, nowIso } from '../utils/time';
 
 const KEY = 'word_memorizer.deck.v1';
+const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 
 const VALID_STATES: ReviewState[] = ['learning', 'review', 'relearning'];
 function clamp(value: number, min: number, max: number): number {
@@ -36,6 +37,10 @@ function isValidState(state: unknown): state is ReviewState {
 
 function isValidIso(value: unknown): value is string {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
+}
+
+function toCanonicalIso(iso: string): string {
+  return new Date(Date.parse(iso)).toISOString();
 }
 
 function parseTimeOrMin(iso: string): number {
@@ -98,18 +103,27 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     return null;
   }
 
+  const wallClockIso = nowIso();
+  const wallClockMs = Date.parse(wallClockIso);
+  const dueCandidate = isValidIso(raw.dueAt) ? raw.dueAt : null;
+  const dueCandidateMs = dueCandidate ? Date.parse(dueCandidate) : Number.NaN;
+  const safeDueAsAnchor =
+    dueCandidate &&
+    Number.isFinite(dueCandidateMs) &&
+    Number.isFinite(wallClockMs) &&
+    dueCandidateMs - wallClockMs <= MAX_MONOTONIC_CLOCK_SKEW_MS
+      ? dueCandidate
+      : null;
   const createdAt = isValidIso(raw.createdAt)
     ? raw.createdAt
     : isValidIso(raw.updatedAt)
       ? raw.updatedAt
-      : isValidIso(raw.dueAt)
-        ? raw.dueAt
-        : null;
+      : safeDueAsAnchor;
   if (!createdAt) {
     return null;
   }
 
-  const normalizedCreatedAt = new Date(Date.parse(createdAt)).toISOString();
+  const normalizedCreatedAt = toCanonicalIso(createdAt);
   const updatedAt = isValidIso(raw.updatedAt) ? raw.updatedAt : createdAt;
   const dueAt = isValidIso(raw.dueAt) ? raw.dueAt : updatedAt;
   const createdMs = Date.parse(normalizedCreatedAt);
@@ -161,7 +175,7 @@ export async function loadDeck(): Promise<Deck> {
 
     return {
       cards: uniqueCards,
-      lastReviewedAt: isValidIso(parsed.lastReviewedAt) ? parsed.lastReviewedAt : undefined,
+      lastReviewedAt: isValidIso(parsed.lastReviewedAt) ? toCanonicalIso(parsed.lastReviewedAt) : undefined,
     };
   } catch {
     return { cards: [] };
@@ -185,7 +199,7 @@ export async function saveDeck(deck: Deck): Promise<void> {
   const cards = [...dedupedById.values()].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
   const safeDeck: Deck = {
     cards,
-    lastReviewedAt: isValidIso(deck.lastReviewedAt) ? deck.lastReviewedAt : undefined,
+    lastReviewedAt: isValidIso(deck.lastReviewedAt) ? toCanonicalIso(deck.lastReviewedAt) : undefined,
   };
   await AsyncStorage.setItem(KEY, JSON.stringify(safeDeck));
 }
