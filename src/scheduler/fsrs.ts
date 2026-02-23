@@ -147,6 +147,9 @@ function normalizeTimeline(
   const updatedMs = Date.parse(rawUpdatedAt);
   const fallbackUpdatedMs = Date.parse(createdAt);
   const updatedAt = new Date(Number.isFinite(updatedMs) ? updatedMs : fallbackUpdatedMs).toISOString();
+  if (Date.parse(createdAt) > Date.parse(updatedAt)) {
+    createdAt = updatedAt;
+  }
   const normalizedState = normalizeState(card.state);
   const fallbackDueDays =
     normalizedState === 'review'

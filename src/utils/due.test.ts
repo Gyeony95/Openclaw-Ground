@@ -26,6 +26,11 @@ describe('formatDueLabel', () => {
     expect(formatDueLabel('2026-02-25T12:00:01.000Z', NOW)).toBe('Due in 2d');
   });
 
+  it('does not overstate near-boundary minute and hour future labels', () => {
+    expect(formatDueLabel('2026-02-23T12:01:01.000Z', NOW)).toBe('Due in 1m');
+    expect(formatDueLabel('2026-02-23T13:00:01.000Z', NOW)).toBe('Due in 1h');
+  });
+
   it('returns unavailable for invalid timestamps', () => {
     expect(formatDueLabel('bad', NOW)).toBe('Due date unavailable');
     expect(formatDueLabel('2026-02-23T12:00:00.000Z', 'bad')).toBe('Due date unavailable');

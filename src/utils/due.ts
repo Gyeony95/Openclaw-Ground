@@ -30,10 +30,10 @@ export function formatDueLabel(dueAt: string, clockIso: string): string {
     return `Overdue ${Math.max(1, Math.floor(overdueMs / DAY_MS))}d`;
   }
   if (deltaMs < HOUR_MS) {
-    return `Due in ${Math.ceil(deltaMs / MINUTE_MS)}m`;
+    return `Due in ${Math.max(1, Math.round(deltaMs / MINUTE_MS))}m`;
   }
   if (deltaMs < DAY_MS) {
-    return `Due in ${Math.ceil(deltaMs / HOUR_MS)}h`;
+    return `Due in ${Math.max(1, Math.round(deltaMs / HOUR_MS))}h`;
   }
   return `Due in ${Math.max(1, Math.floor(deltaMs / DAY_MS))}d`;
 }

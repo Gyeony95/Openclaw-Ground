@@ -825,6 +825,21 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.createdAt).toBe('2026-02-23T12:00:00.000Z');
   });
 
+  it('keeps createdAt at or before updatedAt when createdAt drifts slightly into the future', () => {
+    const base = createNewCard('phi-created-future-clamp', 'letter', NOW);
+    const corrupted = {
+      ...base,
+      createdAt: '2026-02-23T13:00:00.000Z',
+      updatedAt: NOW,
+      dueAt: NOW,
+      state: 'review' as const,
+    };
+    const reviewed = reviewCard(corrupted, 3, NOW);
+
+    expect(Date.parse(reviewed.card.createdAt)).toBeLessThanOrEqual(Date.parse(reviewed.card.updatedAt));
+    expect(reviewed.card.createdAt).toBe(reviewed.card.updatedAt);
+  });
+
   it('repairs invalid createdAt using the active review timeline', () => {
     const base = createNewCard('created-at-fix', 'letter', NOW);
     const corrupted = {
