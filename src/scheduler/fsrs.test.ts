@@ -421,6 +421,26 @@ describe('fsrs scheduler', () => {
     expect(good.scheduledDays).toBeLessThanOrEqual(easy.scheduledDays);
   });
 
+  it('keeps overdue review intervals strictly increasing from Hard to Good to Easy on mature cards', () => {
+    const mature = {
+      ...createNewCard('omicron-overdue-mature', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10),
+      stability: 45,
+      difficulty: 6,
+      reps: 40,
+      lapses: 2,
+    };
+    const overdueIso = addDaysIso(mature.dueAt, 20);
+    const hard = reviewCard(mature, 2, overdueIso);
+    const good = reviewCard(mature, 3, overdueIso);
+    const easy = reviewCard(mature, 4, overdueIso);
+
+    expect(hard.scheduledDays).toBeLessThan(good.scheduledDays);
+    expect(good.scheduledDays).toBeLessThan(easy.scheduledDays);
+  });
+
   it('keeps review intervals ordered by rating on very early reviews', () => {
     const card = createNewCard('omicron-early', 'letter', NOW);
     const base = reviewCard(card, 4, NOW).card;

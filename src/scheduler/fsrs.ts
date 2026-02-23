@@ -419,14 +419,19 @@ function rawReviewIntervalDays(
 }
 
 function orderedReviewIntervals(
-  nextStability: number,
+  prevStability: number,
+  prevDifficulty: number,
   elapsedDays: number,
   scheduledDays: number,
   phase: SchedulerPhase,
 ): ReviewIntervalsByRating {
-  const hard = rawReviewIntervalDays(nextStability, 2, elapsedDays, scheduledDays, phase);
-  const good = rawReviewIntervalDays(nextStability, 3, elapsedDays, scheduledDays, phase);
-  const easy = rawReviewIntervalDays(nextStability, 4, elapsedDays, scheduledDays, phase);
+  const hardStability = updateStability(prevStability, prevDifficulty, 2, elapsedDays, phase, scheduledDays);
+  const goodStability = updateStability(prevStability, prevDifficulty, 3, elapsedDays, phase, scheduledDays);
+  const easyStability = updateStability(prevStability, prevDifficulty, 4, elapsedDays, phase, scheduledDays);
+
+  const hard = rawReviewIntervalDays(hardStability, 2, elapsedDays, scheduledDays, phase);
+  const good = rawReviewIntervalDays(goodStability, 3, elapsedDays, scheduledDays, phase);
+  const easy = rawReviewIntervalDays(easyStability, 4, elapsedDays, scheduledDays, phase);
   return {
     2: hard,
     3: clamp(Math.max(good, hard), REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX),
@@ -511,7 +516,13 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   } else if (phase !== 'review') {
     nextScheduledDays = graduationIntervalDays(normalizedRating);
   } else {
-    const intervals = orderedReviewIntervals(nextStability, elapsedDays, previousScheduledDays, phase);
+    const intervals = orderedReviewIntervals(
+      card.stability,
+      card.difficulty,
+      elapsedDays,
+      previousScheduledDays,
+      phase,
+    );
     nextScheduledDays = intervals[toReviewRating(normalizedRating)];
   }
 

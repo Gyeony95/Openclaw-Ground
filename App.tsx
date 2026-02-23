@@ -474,6 +474,7 @@ export default function App() {
                       </Pressable>
                     ) : (
                       <View style={styles.answerActions}>
+                        <Text style={styles.answerActionsLabel}>Rate recall quality</Text>
                         <RatingRow onRate={handleRate} intervalLabels={ratingIntervalLabels} disabled={isReviewBusy} />
                         <Pressable
                           style={({ pressed }) => [
@@ -948,6 +949,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.subInk,
     lineHeight: 20,
+  },
+  answerActionsLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    color: colors.subInk,
   },
   metaRow: {
     flexDirection: 'row',
