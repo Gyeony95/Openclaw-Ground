@@ -552,6 +552,7 @@ describe('fsrs scheduler', () => {
     const inflatedEarly = reviewCard(inflatedSchedule, 3, graduated.dueAt);
 
     expect(validOnTime.card.stability).toBeGreaterThan(inflatedEarly.card.stability);
+    expect(validOnTime.card.stability - inflatedEarly.card.stability).toBeGreaterThan(1e-4);
     expect(validOnTime.scheduledDays).toBeGreaterThanOrEqual(inflatedEarly.scheduledDays);
   });
 

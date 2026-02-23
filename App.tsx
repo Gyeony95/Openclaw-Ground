@@ -18,7 +18,7 @@ import {
 import { MetricCard } from './src/components/MetricCard';
 import { RatingRow } from './src/components/RatingRow';
 import { MEANING_MAX_LENGTH, NOTES_MAX_LENGTH, WORD_MAX_LENGTH } from './src/scheduler/constants';
-import { countUpcomingDueCards, useDeck } from './src/hooks';
+import { compareDueCards, countUpcomingDueCards, useDeck } from './src/hooks';
 import { previewIntervals } from './src/scheduler/fsrs';
 import { colors, radii } from './src/theme';
 import { formatDueLabel } from './src/utils/due';
@@ -131,6 +131,18 @@ export default function App() {
   const queueShareLabel = loading
     ? '--'
     : `${stats.dueNow.toLocaleString()} due / ${stats.total.toLocaleString()} total`;
+  const nextUpcomingCard = useMemo(() => {
+    const nowMs = Date.parse(clockIso);
+    if (!Number.isFinite(nowMs)) {
+      return undefined;
+    }
+    return cards
+      .filter((card) => {
+        const dueMs = Date.parse(card.dueAt);
+        return Number.isFinite(dueMs) && dueMs > nowMs;
+      })
+      .sort(compareDueCards)[0];
+  }, [cards, clockIso]);
   const dueWithinDay = useMemo(() => {
     return countUpcomingDueCards(cards, clockIso, 24);
   }, [cards, clockIso]);
@@ -332,7 +344,19 @@ export default function App() {
                   </View>
                 </View>
                 {loading ? <Text style={styles.info}>Loading deck...</Text> : null}
-                {!loading && !dueCard ? <Text style={styles.info}>No cards due. Add new words below.</Text> : null}
+                {!loading && !dueCard ? (
+                  <View style={styles.emptyQueue}>
+                    <Text style={styles.info}>No cards due. Add new words below.</Text>
+                    {nextUpcomingCard ? (
+                      <Text style={styles.emptyQueueMeta}>
+                        Next card {formatDueLabel(nextUpcomingCard.dueAt, clockIso)} at{' '}
+                        {exactDateLabel(nextUpcomingCard.dueAt)}
+                      </Text>
+                    ) : (
+                      <Text style={styles.emptyQueueMeta}>No upcoming cards scheduled yet.</Text>
+                    )}
+                  </View>
+                ) : null}
                 {!loading && dueCard ? (
                   <View style={[styles.reviewCard, isReviewBusy && styles.reviewCardBusy]}>
                     <View style={styles.reviewTimeline}>
@@ -750,6 +774,15 @@ const styles = StyleSheet.create({
     color: colors.subInk,
     fontSize: 13,
     lineHeight: 19,
+  },
+  emptyQueue: {
+    gap: 6,
+  },
+  emptyQueueMeta: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 18,
   },
   reviewCard: {
     borderRadius: radii.md,
