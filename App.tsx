@@ -97,8 +97,8 @@ function formatReviewQueueLabel(dueNow: number): string {
   return `${dueNow.toLocaleString()} ${dueLabel} in queue`;
 }
 
-function formatQueueCountLabel(count: number): string {
-  return `${count.toLocaleString()} ${count === 1 ? 'card' : 'cards'}`;
+function formatQueuePositionLabel(position: number, total: number): string {
+  return `Card ${position.toLocaleString()} of ${total.toLocaleString()}`;
 }
 
 function queueTone({
@@ -180,7 +180,7 @@ export default function App() {
   const queuePositionLabel = loading
     ? '--'
     : dueCard
-      ? `Card 1 of ${formatQueueCountLabel(Math.max(1, stats.dueNow))}`
+      ? formatQueuePositionLabel(1, Math.max(1, stats.dueNow))
       : 'Queue empty';
   const nextUpcomingCard = useMemo(() => {
     const nowMs = Date.parse(clockIso);

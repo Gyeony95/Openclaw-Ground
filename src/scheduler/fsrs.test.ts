@@ -563,6 +563,34 @@ describe('fsrs scheduler', () => {
     expect(skewed.card.state).toBe('review');
   });
 
+  it('does not rewrite createdAt on large backward clock jumps for healthy timelines', () => {
+    const card = createNewCard('sigma-created-stable', 'letter', NOW);
+    const graduated = reviewCard(card, 4, '2026-02-24T12:00:00.000Z').card;
+    const skewed = reviewCard(graduated, 3, '2026-02-22T00:00:00.000Z');
+
+    expect(skewed.card.createdAt).toBe(graduated.createdAt);
+    expect(skewed.card.updatedAt).toBe(graduated.updatedAt);
+  });
+
+  it('keeps createdAt stable when clock jumps backward before the card timeline', () => {
+    const card = {
+      ...createNewCard('sigma-created-stable-2', 'letter', NOW),
+      state: 'review' as const,
+      createdAt: '2026-02-15T12:00:00.000Z',
+      updatedAt: '2026-02-24T12:00:00.000Z',
+      dueAt: '2026-02-25T12:00:00.000Z',
+      stability: 4,
+      difficulty: 5,
+      reps: 8,
+      lapses: 1,
+    };
+
+    const skewed = reviewCard(card, 3, '2026-02-10T12:00:00.000Z');
+
+    expect(skewed.card.createdAt).toBe('2026-02-15T12:00:00.000Z');
+    expect(skewed.card.updatedAt).toBe('2026-02-24T12:00:00.000Z');
+  });
+
   it('ignores pathological future runtime clocks when timeline is healthy', () => {
     const card = createNewCard('sigma-future-now', 'letter', NOW);
     const graduated = reviewCard(card, 4, '2026-02-24T12:00:00.000Z').card;

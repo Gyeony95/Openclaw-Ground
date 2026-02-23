@@ -135,9 +135,8 @@ function normalizeTimeline(
     : isValidIso(card.updatedAt)
       ? card.updatedAt
       : safeDueAsCreatedAt ?? fallback;
-  const requestedMs = isValidIso(requestedNowIso) ? Date.parse(requestedNowIso) : Number.NaN;
   const updatedMsCandidate = isValidIso(card.updatedAt) ? Date.parse(card.updatedAt) : Number.NaN;
-  const anchorCandidates = [updatedMsCandidate, dueMs, requestedMs, fallbackMs].filter((value) =>
+  const anchorCandidates = [updatedMsCandidate, dueMs, fallbackMs].filter((value) =>
     Number.isFinite(value),
   );
   const earliestAnchorMs = anchorCandidates.length > 0 ? Math.min(...anchorCandidates) : fallbackMs;
