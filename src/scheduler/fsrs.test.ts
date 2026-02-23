@@ -476,6 +476,22 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.state).toBe('review');
   });
 
+  it('does not pin review time to slightly-future createdAt when updatedAt is current', () => {
+    const card = {
+      ...createNewCard('created-at-skew', 'letter', NOW),
+      createdAt: '2026-02-23T18:00:00.000Z',
+      updatedAt: NOW,
+      dueAt: NOW,
+      state: 'review' as const,
+    };
+
+    const reviewed = reviewCard(card, 3, NOW);
+
+    expect(reviewed.card.updatedAt).toBe(NOW);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    expect(reviewed.card.state).toBe('review');
+  });
+
   it('falls back to the current clock for invalid create timestamps', () => {
     const card = createNewCard('tau', 'letter', 'bad-timestamp');
 

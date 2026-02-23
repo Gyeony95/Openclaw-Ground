@@ -112,6 +112,7 @@ export default function App() {
   const [notes, setNotes] = useState('');
   const [showMeaning, setShowMeaning] = useState(false);
   const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
+  const [isAddBusy, setIsAddBusy] = useState(false);
   const [entryAnim] = useState(() => new Animated.Value(0));
   const wordInputRef = useRef<TextInput>(null);
   const meaningInputRef = useRef<TextInput>(null);
@@ -181,11 +182,13 @@ export default function App() {
   const meaningLength = typedLength(meaning, MEANING_MAX_LENGTH);
   const notesLength = typedLength(notes, NOTES_MAX_LENGTH);
   const canAdd = useMemo(
-    () => !loading && trimmedWordLength > 0 && trimmedMeaningLength > 0,
-    [loading, trimmedWordLength, trimmedMeaningLength],
+    () => !loading && !isAddBusy && trimmedWordLength > 0 && trimmedMeaningLength > 0,
+    [isAddBusy, loading, trimmedWordLength, trimmedMeaningLength],
   );
   const addFormHint = loading
     ? 'Loading deck...'
+    : isAddBusy
+      ? 'Adding card...'
     : canAdd
       ? 'Ready to add'
       : 'Word and meaning are required';
@@ -250,6 +253,7 @@ export default function App() {
       return;
     }
     addLockRef.current = true;
+    setIsAddBusy(true);
     addCard(trimmedWord, trimmedMeaning, trimmedNotes || undefined);
     wordInputRef.current?.blur();
     meaningInputRef.current?.blur();
@@ -262,6 +266,7 @@ export default function App() {
     }
     addUnlockTimerRef.current = setTimeout(() => {
       addLockRef.current = false;
+      setIsAddBusy(false);
       addUnlockTimerRef.current = null;
     }, 250);
     requestAnimationFrame(() => {
@@ -558,7 +563,7 @@ export default function App() {
                   accessibilityLabel="Add card"
                   accessibilityState={{ disabled: !canAdd }}
                 >
-                  <Text style={styles.primaryBtnText}>Add card</Text>
+                  <Text style={styles.primaryBtnText}>{isAddBusy ? 'Adding...' : 'Add card'}</Text>
                 </Pressable>
                 <Text style={styles.addHint}>{addFormHint}</Text>
               </View>
