@@ -775,6 +775,28 @@ describe('fsrs scheduler', () => {
     expect(corruptedReview.card.stability).toBeCloseTo(normalizedReview.card.stability, 6);
   });
 
+  it('treats sub-10-minute relearning schedules like the 10-minute relearning floor', () => {
+    const card = createNewCard('psi-relearning-minute-floor', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const failed = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+    const baseTime = Date.parse(failed.updatedAt);
+    const reviewAt = new Date(baseTime + 5 * 60 * 1000).toISOString();
+    const normalized = {
+      ...failed,
+      dueAt: new Date(baseTime + 10 * 60 * 1000).toISOString(),
+    };
+    const minuteScale = {
+      ...failed,
+      dueAt: new Date(baseTime + 1 * 60 * 1000).toISOString(),
+    };
+
+    const normalizedReview = reviewCard(normalized, 3, reviewAt);
+    const minuteScaleReview = reviewCard(minuteScale, 3, reviewAt);
+
+    expect(minuteScaleReview.scheduledDays).toBe(normalizedReview.scheduledDays);
+    expect(minuteScaleReview.card.stability).toBeCloseTo(normalizedReview.card.stability, 6);
+  });
+
   it('treats corrupted review schedules like the one-day review floor', () => {
     const card = createNewCard('psi-review-floor', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;

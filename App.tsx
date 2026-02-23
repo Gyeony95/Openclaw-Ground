@@ -117,6 +117,7 @@ export default function App() {
   const meaningInputRef = useRef<TextInput>(null);
   const notesInputRef = useRef<TextInput>(null);
   const reviewLockRef = useRef(false);
+  const addLockRef = useRef(false);
 
   const dueCard = dueCards[0];
   const retentionScore = useMemo(() => {
@@ -222,7 +223,7 @@ export default function App() {
   }, [entryAnim]);
 
   function handleAddCard() {
-    if (loading) {
+    if (loading || addLockRef.current) {
       return;
     }
     const trimmedWord = word.trim();
@@ -231,6 +232,7 @@ export default function App() {
     if (!trimmedWord || !trimmedMeaning) {
       return;
     }
+    addLockRef.current = true;
     addCard(trimmedWord, trimmedMeaning, trimmedNotes || undefined);
     wordInputRef.current?.blur();
     meaningInputRef.current?.blur();
@@ -238,6 +240,9 @@ export default function App() {
     setWord('');
     setMeaning('');
     setNotes('');
+    setTimeout(() => {
+      addLockRef.current = false;
+    }, 250);
     requestAnimationFrame(() => {
       wordInputRef.current?.focus();
     });

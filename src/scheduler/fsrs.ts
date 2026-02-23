@@ -26,6 +26,7 @@ export type RatingIntervalPreview = Record<Rating, number>;
 type SchedulerPhase = 'learning' | 'review' | 'relearning';
 type ReviewIntervalsByRating = Record<2 | 3 | 4, number>;
 const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
+const RELEARNING_SCHEDULE_FLOOR_DAYS = 10 * MINUTE_IN_DAYS;
 
 let cardIdSequence = 0;
 
@@ -179,7 +180,7 @@ function scheduleFallbackForState(state: ReviewState): number {
     return REVIEW_SCHEDULE_FLOOR_DAYS;
   }
   if (state === 'relearning') {
-    return 10 * MINUTE_IN_DAYS;
+    return RELEARNING_SCHEDULE_FLOOR_DAYS;
   }
   return MINUTE_IN_DAYS;
 }
@@ -189,6 +190,9 @@ function normalizeScheduledDays(value: number, state: ReviewState): number {
     const normalized = Math.max(value, MINUTE_IN_DAYS);
     if (state === 'review') {
       return Math.max(normalized, REVIEW_SCHEDULE_FLOOR_DAYS);
+    }
+    if (state === 'relearning') {
+      return Math.max(normalized, RELEARNING_SCHEDULE_FLOOR_DAYS);
     }
     return normalized;
   }
