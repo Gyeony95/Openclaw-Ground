@@ -160,7 +160,6 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   const normalizedCreatedAt = toCanonicalIso(createdAt);
   const updatedAt = isValidIso(raw.updatedAt) ? raw.updatedAt : createdAt;
   const dueIsValid = isValidIso(raw.dueAt);
-  const dueIsMissing = raw.dueAt === undefined || raw.dueAt === null;
   const dueAt = dueIsValid ? raw.dueAt : updatedAt;
   const normalizedStability = clamp(asFiniteNumber(raw.stability) ?? 0.5, STABILITY_MIN, STABILITY_MAX);
   const createdMs = Date.parse(normalizedCreatedAt);
@@ -173,13 +172,12 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   if (scheduleDays <= 0) {
     const shouldUseReviewStabilityFallback =
       raw.state === 'review' &&
-      !dueIsValid &&
-      (dueIsMissing || normalizedStability <= REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS);
+      !dueIsValid;
     const fallbackDays = shouldUseReviewStabilityFallback
       ? clamp(
           normalizedStability,
           REVIEW_SCHEDULE_FLOOR_DAYS,
-          dueIsMissing ? REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS : STABILITY_MAX,
+          REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
         )
       : scheduleFallbackForState(raw.state);
     normalizedDueMs = normalizedUpdatedMs + fallbackDays * DAY_MS;

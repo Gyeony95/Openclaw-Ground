@@ -182,7 +182,6 @@ function normalizeTimeline(
       Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, expectedReviewScheduleDays * 6, 30);
   const useReviewStabilityFallbackForInvalidDue = shouldUseReviewStabilityFallbackForInvalidDue(
     normalizedState,
-    card.dueAt,
     rawDueAtIsValid,
     expectedReviewScheduleDays,
   );
@@ -277,20 +276,13 @@ function maxScheduleDaysForState(state: ReviewState): number {
 
 function shouldUseReviewStabilityFallbackForInvalidDue(
   state: ReviewState,
-  dueAt: unknown,
   dueAtIsValid: boolean,
   stabilityDays?: number,
 ): boolean {
   if (state !== 'review' || dueAtIsValid) {
     return false;
   }
-  if (!Number.isFinite(stabilityDays)) {
-    return false;
-  }
-  if (typeof dueAt !== 'string') {
-    return true;
-  }
-  return stabilityDays <= REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS;
+  return Number.isFinite(stabilityDays);
 }
 
 function normalizeScheduledDays(value: number, state: ReviewState): number {

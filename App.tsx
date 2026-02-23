@@ -133,6 +133,28 @@ function queueTone({
   return colors.primary;
 }
 
+function dueUrgency(dueAt: string | undefined, clockIso: string): { label: string; tone: string } {
+  if (!dueAt) {
+    return { label: 'Schedule pending', tone: colors.subInk };
+  }
+  const dueMs = Date.parse(dueAt);
+  const nowMs = Date.parse(clockIso);
+  if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
+    return { label: 'Schedule pending', tone: colors.subInk };
+  }
+  const deltaMs = dueMs - nowMs;
+  if (deltaMs <= 60 * 1000 && deltaMs >= -60 * 1000) {
+    return { label: 'Due now', tone: colors.primary };
+  }
+  if (deltaMs < -60 * 1000) {
+    return { label: 'Overdue', tone: colors.danger };
+  }
+  if (deltaMs <= 60 * 60 * 1000) {
+    return { label: 'Due soon', tone: colors.warn };
+  }
+  return { label: 'On track', tone: colors.success };
+}
+
 export default function App() {
   const { loading, cards, dueCards, stats, addCard, reviewDueCard, clockIso, lastReviewedAt } = useDeck();
   const { width } = useWindowDimensions();
@@ -213,6 +235,7 @@ export default function App() {
   const relativeDueLabel = dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Schedule unavailable';
   const asOf = asOfLabel(clockIso);
   const dueCardStateConfig = dueCard ? stateConfig(dueCard.state) : null;
+  const dueCardUrgency = dueUrgency(dueCard?.dueAt, clockIso);
   const ratingIntervals = useMemo(() => (dueCard ? previewIntervals(dueCard, clockIso) : null), [dueCard, clockIso]);
   const ratingIntervalLabels = useMemo(
     () =>
@@ -561,17 +584,30 @@ export default function App() {
                       <Text style={styles.word} numberOfLines={2} ellipsizeMode="tail">
                         {dueCard.word}
                       </Text>
-                      <Text
-                        style={[
-                          styles.stateBadge,
-                          {
-                            color: dueCardStateConfig?.tone ?? colors.subInk,
-                            borderColor: dueCardStateConfig?.tone ?? colors.border,
-                          },
-                        ]}
-                      >
-                        {dueCardStateConfig?.label}
-                      </Text>
+                      <View style={styles.reviewBadgeColumn}>
+                        <Text
+                          style={[
+                            styles.stateBadge,
+                            {
+                              color: dueCardStateConfig?.tone ?? colors.subInk,
+                              borderColor: dueCardStateConfig?.tone ?? colors.border,
+                            },
+                          ]}
+                        >
+                          {dueCardStateConfig?.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.urgencyBadge,
+                            {
+                              color: dueCardUrgency.tone,
+                              borderColor: dueCardUrgency.tone,
+                            },
+                          ]}
+                        >
+                          {dueCardUrgency.label}
+                        </Text>
+                      </View>
                     </View>
                     {!showMeaning ? <Text style={styles.revealHint}>Reveal to check meaning and notes.</Text> : null}
                     {showMeaning ? <Text style={styles.meaning}>{dueCard.meaning}</Text> : null}
@@ -1069,6 +1105,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 8,
   },
+  reviewBadgeColumn: {
+    alignItems: 'flex-end',
+    gap: 6,
+    flexShrink: 0,
+  },
   word: {
     fontSize: 34,
     fontWeight: '800',
@@ -1087,6 +1128,17 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     backgroundColor: colors.surface,
     flexShrink: 0,
+  },
+  urgencyBadge: {
+    fontSize: 9,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    borderWidth: 1,
+    borderRadius: radii.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: colors.surface,
   },
   meaning: {
     fontSize: 20,
