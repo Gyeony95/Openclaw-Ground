@@ -227,6 +227,19 @@ describe('countUpcomingDueCards', () => {
     const card = createNewCard('invalid-clock-upcoming', 'test', NOW);
     expect(countUpcomingDueCards([card], 'bad-clock')).toBe(0);
   });
+
+  it('returns zero when the requested upcoming window is non-positive', () => {
+    const upcoming = { ...createNewCard('upcoming-window', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
+
+    expect(countUpcomingDueCards([upcoming], NOW, 0)).toBe(0);
+    expect(countUpcomingDueCards([upcoming], NOW, -5)).toBe(0);
+  });
+
+  it('returns zero when the requested upcoming window is non-finite', () => {
+    const upcoming = { ...createNewCard('upcoming-window-2', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
+
+    expect(countUpcomingDueCards([upcoming], NOW, Number.NaN)).toBe(0);
+  });
 });
 
 describe('selectLatestReviewedAt', () => {

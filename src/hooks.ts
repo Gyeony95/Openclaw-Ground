@@ -69,7 +69,13 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
   if (!Number.isFinite(nowMs)) {
     return 0;
   }
-  const safeHours = Number.isFinite(hours) && hours > 0 ? hours : 24;
+  if (!Number.isFinite(hours)) {
+    return 0;
+  }
+  if (hours <= 0) {
+    return 0;
+  }
+  const safeHours = hours;
   const windowMs = safeHours * 60 * 60 * 1000;
   const cutoffMs = nowMs + windowMs;
 

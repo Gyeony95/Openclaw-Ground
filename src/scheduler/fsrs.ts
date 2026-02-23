@@ -387,11 +387,17 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
 }
 
 export function previewIntervals(card: Card, nowIso: string): RatingIntervalPreview {
+  const stableNowIso = isValidIso(nowIso)
+    ? nowIso
+    : isValidIso(card.updatedAt)
+      ? card.updatedAt
+      : currentNowIso();
+
   return {
-    1: reviewCard(card, 1, nowIso).scheduledDays,
-    2: reviewCard(card, 2, nowIso).scheduledDays,
-    3: reviewCard(card, 3, nowIso).scheduledDays,
-    4: reviewCard(card, 4, nowIso).scheduledDays,
+    1: reviewCard(card, 1, stableNowIso).scheduledDays,
+    2: reviewCard(card, 2, stableNowIso).scheduledDays,
+    3: reviewCard(card, 3, stableNowIso).scheduledDays,
+    4: reviewCard(card, 4, stableNowIso).scheduledDays,
   };
 }
 

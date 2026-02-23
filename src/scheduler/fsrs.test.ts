@@ -487,6 +487,23 @@ describe('fsrs scheduler', () => {
     expect(preview[3]).toBeLessThanOrEqual(preview[4]);
   });
 
+  it('computes finite preview intervals when runtime clock is invalid', () => {
+    const card = createNewCard('chi-invalid-preview', 'letter', NOW);
+    const base = {
+      ...reviewCard(card, 4, NOW).card,
+      updatedAt: 'not-a-time',
+    };
+    const preview = previewIntervals(base, 'bad-clock');
+
+    expect(Number.isFinite(preview[1])).toBe(true);
+    expect(Number.isFinite(preview[2])).toBe(true);
+    expect(Number.isFinite(preview[3])).toBe(true);
+    expect(Number.isFinite(preview[4])).toBe(true);
+    expect(preview[1]).toBeLessThanOrEqual(preview[2]);
+    expect(preview[2]).toBeLessThanOrEqual(preview[3]);
+    expect(preview[3]).toBeLessThanOrEqual(preview[4]);
+  });
+
   it('treats corrupted relearning schedules like the 10-minute relearning floor', () => {
     const card = createNewCard('psi', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;

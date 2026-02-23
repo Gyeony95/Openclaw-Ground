@@ -304,6 +304,7 @@ export default function App() {
                         {dueCardStateConfig?.label}
                       </Text>
                     </View>
+                    {!showMeaning ? <Text style={styles.revealHint}>Reveal to check meaning and notes.</Text> : null}
                     {showMeaning ? <Text style={styles.meaning}>{dueCard.meaning}</Text> : null}
                     {dueCard.notes && showMeaning ? <Text style={styles.notes}>{dueCard.notes}</Text> : null}
                     {showMeaning ? (
@@ -738,6 +739,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.ink,
     lineHeight: 29,
+  },
+  revealHint: {
+    fontSize: 13,
+    color: colors.subInk,
+    lineHeight: 19,
   },
   notes: {
     fontSize: 14,
