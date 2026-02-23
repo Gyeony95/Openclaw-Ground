@@ -937,6 +937,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
+  it('uses the scheduled interval as fallback context when review stability is corrupted', () => {
+    const mature = {
+      ...createNewCard('rho-stability-fallback', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 20),
+      stability: Number.NaN,
+      difficulty: 5,
+      reps: 35,
+      lapses: 2,
+    };
+    const earlyIso = addDaysIso(NOW, 4);
+    const reviewed = reviewCard(mature, 3, earlyIso);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(10);
+  });
+
   it('keeps stability finite when numeric operations return non-finite values', () => {
     const powSpy = jest.spyOn(Math, 'pow').mockReturnValue(Number.NaN);
     const base = reviewCard(createNewCard('rho-nan-math', 'letter', NOW), 4, NOW).card;

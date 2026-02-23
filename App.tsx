@@ -665,7 +665,7 @@ export default function App() {
                         disabled={isReviewBusy}
                         accessibilityRole="button"
                         accessibilityLabel="Reveal answer"
-                        accessibilityState={{ disabled: isReviewBusy }}
+                        accessibilityState={{ disabled: isReviewBusy, busy: isReviewBusy }}
                       >
                         <Text style={styles.primaryBtnText}>Reveal answer</Text>
                       </Pressable>
@@ -683,7 +683,7 @@ export default function App() {
                           disabled={isReviewBusy}
                           accessibilityRole="button"
                           accessibilityLabel="Hide answer"
-                          accessibilityState={{ disabled: isReviewBusy }}
+                          accessibilityState={{ disabled: isReviewBusy, busy: isReviewBusy }}
                         >
                           <Text style={styles.ghostBtnText}>Hide answer</Text>
                         </Pressable>
@@ -784,7 +784,7 @@ export default function App() {
                   disabled={!canAdd}
                   accessibilityRole="button"
                   accessibilityLabel="Add card"
-                  accessibilityState={{ disabled: !canAdd }}
+                  accessibilityState={{ disabled: !canAdd, busy: isAddBusy }}
                 >
                   <View style={styles.primaryBtnContent}>
                     {isAddBusy ? <ActivityIndicator size="small" color="#fff" /> : null}

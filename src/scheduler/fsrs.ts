@@ -439,7 +439,11 @@ function updateStability(
   phase: SchedulerPhase,
   scheduledDays: number,
 ): number {
-  const previous = clampFinite(prevStability, STABILITY_MIN, STABILITY_MAX, 0.5);
+  const stabilityFallback =
+    phase === 'review' || phase === 'relearning'
+      ? clampFinite(scheduledDays, STABILITY_MIN, STABILITY_MAX, 0.5)
+      : 0.5;
+  const previous = clampFinite(prevStability, STABILITY_MIN, STABILITY_MAX, stabilityFallback);
   const difficulty = clampFinite(prevDifficulty, DIFFICULTY_MIN, DIFFICULTY_MAX, DIFFICULTY_MEAN_REVERSION);
 
   if (phase === 'learning') {
