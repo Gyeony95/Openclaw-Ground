@@ -18,32 +18,31 @@ const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: 
 export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRowProps) {
   return (
     <View style={styles.row}>
-      {labels.map((item) => (
-        <Pressable
-          key={item.rating}
-          onPress={() => onRate(item.rating)}
-          disabled={disabled}
-          hitSlop={4}
-          android_ripple={{ color: `${item.tone}20` }}
-          style={({ pressed }) => [
-            styles.button,
-            { borderColor: item.tone, backgroundColor: `${item.tone}16` },
-            pressed && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
-            disabled && styles.buttonDisabled,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={`Rate ${item.text}`}
-          accessibilityHint={
-            disabled
-              ? 'Wait for the current review to finish'
-              : `Schedules next review ${intervalLabels?.[item.rating] ?? item.fallbackHint}`
-          }
-          accessibilityState={{ disabled }}
-        >
-          <Text style={[styles.buttonText, { color: item.tone }]}>{item.text}</Text>
-          <Text style={styles.hint}>{intervalLabels?.[item.rating] ?? item.fallbackHint}</Text>
-        </Pressable>
-      ))}
+      {labels.map((item) => {
+        const interval = intervalLabels?.[item.rating] ?? item.fallbackHint;
+        return (
+          <Pressable
+            key={item.rating}
+            onPress={() => onRate(item.rating)}
+            disabled={disabled}
+            hitSlop={4}
+            android_ripple={{ color: `${item.tone}20` }}
+            style={({ pressed }) => [
+              styles.button,
+              { borderColor: item.tone, backgroundColor: `${item.tone}16` },
+              pressed && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
+              disabled && styles.buttonDisabled,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={`Rate ${item.text}. Next ${interval}.`}
+            accessibilityHint={disabled ? 'Wait for the current review to finish' : `Schedules next review ${interval}`}
+            accessibilityState={{ disabled }}
+          >
+            <Text style={[styles.buttonText, { color: item.tone }]}>{item.text}</Text>
+            <Text style={[styles.hint, { color: disabled ? colors.subInk : item.tone }]}>{interval}</Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -71,7 +70,7 @@ const styles = StyleSheet.create({
     opacity: 0.95,
   },
   buttonDisabled: {
-    opacity: 0.55,
+    opacity: 0.6,
   },
   buttonText: {
     fontSize: 11.5,
@@ -81,9 +80,8 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 10.5,
-    color: colors.subInk,
     letterSpacing: 0.35,
-    fontWeight: '600',
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
 });

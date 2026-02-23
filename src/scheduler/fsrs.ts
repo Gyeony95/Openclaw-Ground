@@ -492,11 +492,14 @@ function rawReviewIntervalDays(
   const elapsed = Number.isFinite(elapsedDays) ? Math.max(0, elapsedDays) : 0;
   const scheduled = Number.isFinite(scheduledDays) ? Math.max(scheduledDays, MINUTE_IN_DAYS) : 1;
   const scheduleIsDayLike = scheduled + ON_TIME_TOLERANCE_DAYS >= 1;
+  const quantizedScheduled = quantizeReviewIntervalDays(scheduled, scheduled);
   const timingRatio = clamp(elapsed / scheduled, 0.5, 2.5);
   const timingScale = phase === 'review' ? clamp(0.75 + timingRatio * 0.25, 0.75, 1.35) : 1;
   const rawInterval = quantizeReviewIntervalDays(baseInterval * ratingScale * timingScale, scheduled);
   // Mild runtime drift (e.g. +minutes on a 1-day card) should not bump floor to the next full day.
-  const scheduleFloor = scheduleIsDayLike ? Math.max(1, Math.round(scheduled)) : REVIEW_SCHEDULE_FLOOR_DAYS;
+  const scheduleFloor = scheduleIsDayLike
+    ? Math.max(1, Math.round(scheduled))
+    : Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, quantizedScheduled);
   let floorFromSchedule = rating === 4 ? scheduleFloor : REVIEW_SCHEDULE_FLOOR_DAYS;
 
   // Hard recalls should not shrink the schedule when the card was reviewed on-time or later.
@@ -522,7 +525,9 @@ function rawReviewIntervalDays(
     const earlyCap = scheduleIsDayLike ? Math.max(1, Math.floor(scheduled)) : REVIEW_SCHEDULE_FLOOR_DAYS;
     const overdueSubDayCap = elapsed + ON_TIME_TOLERANCE_DAYS >= 1 || scheduleIsDayLike ? 1 : REVIEW_SCHEDULE_FLOOR_DAYS;
     // Keep sub-day review cards on sub-day cadence for "Hard" unless they are already a day late.
-    const onTimeOrLateCap = scheduleIsDayLike ? Math.max(1, Math.ceil(scheduled * 1.2)) : overdueSubDayCap;
+    const onTimeOrLateCap = scheduleIsDayLike
+      ? Math.max(1, Math.ceil(scheduled * 1.2))
+      : Math.max(overdueSubDayCap, quantizedScheduled);
     const hardCap = reviewedEarly ? earlyCap : reviewedOnTime ? scheduleFloor : onTimeOrLateCap;
     return quantizeReviewIntervalDays(Math.min(flooredInterval, hardCap), scheduled);
   }

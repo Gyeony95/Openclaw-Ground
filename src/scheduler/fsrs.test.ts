@@ -357,6 +357,42 @@ describe('fsrs scheduler', () => {
     expect(onTimeHard.scheduledDays).toBe(0.5);
   });
 
+  it('keeps on-time good reviews from shrinking irregular sub-day schedules', () => {
+    const card = {
+      ...createNewCard('subday-good-floor', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 0.75),
+      stability: 0.8,
+      difficulty: 6,
+      reps: 11,
+      lapses: 1,
+    };
+
+    const onTimeGood = reviewCard(card, 3, card.dueAt);
+
+    expect(onTimeGood.card.state).toBe('review');
+    expect(onTimeGood.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
+  it('keeps on-time hard reviews from shrinking irregular sub-day schedules', () => {
+    const card = {
+      ...createNewCard('subday-hard-floor', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 0.75),
+      stability: 0.8,
+      difficulty: 6,
+      reps: 11,
+      lapses: 1,
+    };
+
+    const onTimeHard = reviewCard(card, 2, card.dueAt);
+
+    expect(onTimeHard.card.state).toBe('review');
+    expect(onTimeHard.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
   it('promotes overdue hard reviews on half-day schedules to at least one day', () => {
     const card = createNewCard('halfday-hard-overdue-floor', 'letter', NOW);
     const graduated = reviewCard(card, 3, NOW).card;
