@@ -236,6 +236,19 @@ describe('fsrs scheduler', () => {
     expect(earlyHard.scheduledDays).toBeLessThanOrEqual(scheduled);
   });
 
+  it('does not let early hard reviews extend the current schedule', () => {
+    let card = createNewCard('nu-hard-early-cap', 'letter', NOW);
+    card = reviewCard(card, 4, NOW).card;
+    card = reviewCard(card, 4, '2026-03-02T12:00:00.000Z').card;
+    card = reviewCard(card, 4, card.dueAt).card;
+
+    const scheduled = Math.round((Date.parse(card.dueAt) - Date.parse(card.updatedAt)) / (24 * 60 * 60 * 1000));
+    const earlyIso = addDaysIso(card.updatedAt, Math.max(1, scheduled * 0.2));
+    const earlyHard = reviewCard(card, 2, earlyIso);
+
+    expect(earlyHard.scheduledDays).toBeLessThanOrEqual(scheduled);
+  });
+
   it('keeps overdue hard review intervals at least as long as the current schedule', () => {
     const card = createNewCard('nu-hard-overdue', 'letter', NOW);
     const first = reviewCard(card, 4, NOW).card;
@@ -572,6 +585,21 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.updatedAt).toBe('2026-02-25T12:00:00.000Z');
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThanOrEqual(Date.parse(reviewed.card.updatedAt));
+  });
+
+  it('normalizes createdAt to canonical ISO format during review timeline repair', () => {
+    const base = createNewCard('phi-canonical-created', 'letter', NOW);
+    const corrupted = {
+      ...base,
+      createdAt: '2026-02-23T12:00:00Z',
+      updatedAt: '2026-02-24T12:00:00.000Z',
+      dueAt: '2026-02-25T12:00:00.000Z',
+      state: 'review' as const,
+    };
+
+    const reviewed = reviewCard(corrupted, 3, '2026-02-25T12:00:00.000Z');
+
+    expect(reviewed.card.createdAt).toBe('2026-02-23T12:00:00.000Z');
   });
 
   it('repairs invalid createdAt using the active review timeline', () => {

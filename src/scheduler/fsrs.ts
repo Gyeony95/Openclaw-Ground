@@ -139,6 +139,8 @@ function normalizeTimeline(
   if (Number.isFinite(createdMsCandidate) && createdMsCandidate - earliestAnchorMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
     createdAt = new Date(earliestAnchorMs).toISOString();
   }
+  const normalizedCreatedMs = Date.parse(createdAt);
+  createdAt = new Date(Number.isFinite(normalizedCreatedMs) ? normalizedCreatedMs : fallbackMs).toISOString();
   const rawUpdatedAt = isValidIso(card.updatedAt) ? card.updatedAt : createdAt;
   const createdMs = Date.parse(createdAt);
   const updatedMs = Date.parse(rawUpdatedAt);
@@ -356,7 +358,8 @@ function rawReviewIntervalDays(
 
   // Keep "Hard" reviews conservative even when cards are heavily overdue.
   if (phase === 'review' && rating === 2) {
-    const hardCap = Math.max(1, Math.ceil(scheduled * 1.2));
+    const reviewedEarly = elapsed + ON_TIME_TOLERANCE_DAYS < scheduled;
+    const hardCap = reviewedEarly ? Math.max(1, Math.floor(scheduled)) : Math.max(1, Math.ceil(scheduled * 1.2));
     return clamp(Math.min(flooredInterval, hardCap), 1, STABILITY_MAX);
   }
 
