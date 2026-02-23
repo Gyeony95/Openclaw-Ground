@@ -447,17 +447,29 @@ function ensureOrderedPreview(intervals: RatingIntervalPreview): RatingIntervalP
 function normalizeCardText(
   card: Pick<Card, 'word' | 'meaning' | 'notes'>,
 ): Pick<Card, 'word' | 'meaning' | 'notes'> {
-  const normalizedWord = card.word.trim().slice(0, WORD_MAX_LENGTH);
-  const normalizedMeaning = card.meaning.trim().slice(0, MEANING_MAX_LENGTH);
+  const normalizedWord = normalizeWordValue(card.word);
+  const normalizedMeaning = normalizeMeaningValue(card.meaning);
   const word = normalizedWord.length > 0 ? normalizedWord : '[invalid word]';
   const meaning = normalizedMeaning.length > 0 ? normalizedMeaning : '[invalid meaning]';
-  const trimmedNotes = card.notes?.trim().slice(0, NOTES_MAX_LENGTH);
+  const trimmedNotes = normalizeNotesValue(card.notes);
 
   return {
     word,
     meaning,
     notes: trimmedNotes || undefined,
   };
+}
+
+function normalizeWordValue(word: string): string {
+  return word.trim().slice(0, WORD_MAX_LENGTH);
+}
+
+function normalizeMeaningValue(meaning: string): string {
+  return meaning.trim().slice(0, MEANING_MAX_LENGTH);
+}
+
+function normalizeNotesValue(notes?: string): string | undefined {
+  return notes?.trim().slice(0, NOTES_MAX_LENGTH);
 }
 
 export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewResult {
@@ -532,17 +544,17 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
   const createdAtInput = isValidIso(nowIso) ? nowIso : currentNowIso();
   const createdAt = new Date(Date.parse(createdAtInput)).toISOString();
-  const trimmedWord = word.trim().slice(0, WORD_MAX_LENGTH);
-  const trimmedMeaning = meaning.trim().slice(0, MEANING_MAX_LENGTH);
-  const trimmedNotes = notes?.trim().slice(0, NOTES_MAX_LENGTH);
+  const trimmedWord = normalizeWordValue(word);
+  const trimmedMeaning = normalizeMeaningValue(meaning);
+  const trimmedNotes = normalizeNotesValue(notes);
   const createdAtMs = Date.parse(createdAt);
   cardIdSequence = (cardIdSequence + 1) % 1_000_000;
   const uniqueSuffix = `${cardIdSequence.toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
   return {
     id: `${Number.isFinite(createdAtMs) ? createdAtMs : Date.now()}-${uniqueSuffix}`,
-    word: trimmedWord,
-    meaning: trimmedMeaning,
+    word: trimmedWord.length > 0 ? trimmedWord : '[invalid word]',
+    meaning: trimmedMeaning.length > 0 ? trimmedMeaning : '[invalid meaning]',
     notes: trimmedNotes || undefined,
     createdAt,
     updatedAt: createdAt,

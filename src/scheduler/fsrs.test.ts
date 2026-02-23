@@ -16,12 +16,26 @@ describe('fsrs scheduler', () => {
     expect(card.reps).toBe(0);
   });
 
+  it('repairs whitespace-only word and meaning values when creating cards', () => {
+    const card = createNewCard('   ', '   ', NOW, '  note ');
+
+    expect(card.word).toBe('[invalid word]');
+    expect(card.meaning).toBe('[invalid meaning]');
+    expect(card.notes).toBe('note');
+  });
+
   it('enforces scheduler-side field length limits when creating cards', () => {
     const card = createNewCard('a'.repeat(120), 'b'.repeat(220), NOW, 'c'.repeat(320));
 
     expect(card.word).toHaveLength(80);
     expect(card.meaning).toHaveLength(180);
     expect(card.notes).toHaveLength(240);
+  });
+
+  it('drops whitespace-only notes while creating cards', () => {
+    const card = createNewCard('alpha', 'letter', NOW, '   ');
+
+    expect(card.notes).toBeUndefined();
   });
 
   it('normalizes oversized card text fields while reviewing existing cards', () => {

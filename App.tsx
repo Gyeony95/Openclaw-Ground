@@ -84,7 +84,7 @@ function formatQueueShareLabel(dueNow: number, total: number): string {
 
 function formatReviewQueueLabel(dueNow: number): string {
   const dueLabel = dueNow === 1 ? 'due card' : 'due cards';
-  return `Card 1 of ${dueNow.toLocaleString()} ${dueLabel}`;
+  return `${dueNow.toLocaleString()} ${dueLabel} in queue`;
 }
 
 function queueTone({
