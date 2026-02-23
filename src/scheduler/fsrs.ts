@@ -54,7 +54,16 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
   // Keep review time monotonic to avoid negative elapsed intervals on clock drift.
   if (candidateMs < fallbackMs) {
     const skewMs = fallbackMs - candidateMs;
-    return skewMs <= MAX_MONOTONIC_CLOCK_SKEW_MS ? fallback : candidate;
+    if (skewMs <= MAX_MONOTONIC_CLOCK_SKEW_MS) {
+      return fallback;
+    }
+
+    // Only roll backward when the card timestamp itself looks corrupted far into the future.
+    const wallClockMs = Date.parse(currentNowIso());
+    if (Number.isFinite(wallClockMs) && fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+      return candidate;
+    }
+    return fallback;
   }
   return candidate;
 }

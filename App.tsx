@@ -153,6 +153,16 @@ export default function App() {
   }, [dueCard, pendingReviewCardId]);
 
   useEffect(() => {
+    if (pendingReviewCardId === null) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      setPendingReviewCardId(null);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [pendingReviewCardId]);
+
+  useEffect(() => {
     Animated.timing(entryAnim, {
       toValue: 1,
       duration: 420,
