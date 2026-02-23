@@ -332,4 +332,59 @@ describe('deck repository', () => {
     expect(deck.cards[0].updatedAt).toBe('2026-02-23T00:00:00.000Z');
     expect(deck.cards[0].reps).toBe(3);
   });
+
+  it('keeps valid cards when malformed field types are present in the same payload', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'valid',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'learning',
+          },
+          {
+            id: 'bad-word-type',
+            word: { nested: true },
+            meaning: 'broken',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].id).toBe('valid');
+  });
+
+  it('drops non-string notes safely instead of failing deck load', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'valid-notes',
+            word: 'beta',
+            meaning: 'second',
+            notes: 1234,
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].id).toBe('valid-notes');
+    expect(deck.cards[0].notes).toBeUndefined();
+  });
 });

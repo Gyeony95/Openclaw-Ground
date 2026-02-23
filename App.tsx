@@ -379,7 +379,13 @@ export default function App() {
                   returnKeyType="next"
                   maxLength={180}
                   accessibilityLabel="Meaning input"
-                  onSubmitEditing={() => notesInputRef.current?.focus()}
+                  onSubmitEditing={() => {
+                    if (notes.trim().length > 0) {
+                      notesInputRef.current?.focus();
+                      return;
+                    }
+                    handleAddCard();
+                  }}
                 />
                 <TextInput
                   ref={notesInputRef}

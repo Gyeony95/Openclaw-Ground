@@ -78,20 +78,18 @@ function pickFreshestDuplicate(existing: Card, incoming: Card): Card {
 
 function normalizeCard(raw: Partial<Card>): Card | null {
   const id = typeof raw.id === 'string' ? raw.id.trim() : '';
+  const wordValue = typeof raw.word === 'string' ? raw.word.trim() : '';
+  const meaningValue = typeof raw.meaning === 'string' ? raw.meaning.trim() : '';
+  const notesValue = typeof raw.notes === 'string' ? raw.notes.trim() : '';
   if (
     !id ||
-    !raw.word ||
-    !raw.meaning ||
+    !wordValue ||
+    !meaningValue ||
     !isValidState(raw.state)
   ) {
     return null;
   }
 
-  const word = raw.word.trim();
-  const meaning = raw.meaning.trim();
-  if (!word || !meaning) {
-    return null;
-  }
   const createdAt = isValidIso(raw.createdAt)
     ? raw.createdAt
     : isValidIso(raw.updatedAt)
@@ -114,9 +112,9 @@ function normalizeCard(raw: Partial<Card>): Card | null {
 
   return {
     id,
-    word,
-    meaning,
-    notes: raw.notes?.trim() || undefined,
+    word: wordValue,
+    meaning: meaningValue,
+    notes: notesValue || undefined,
     dueAt: normalizedDueAt,
     createdAt,
     updatedAt: normalizedUpdatedAt,
