@@ -283,12 +283,12 @@ function normalizeScheduledDays(value: number, state: ReviewState): number {
   if (Number.isFinite(value) && value > 0) {
     const normalized = clamp(value, MINUTE_IN_DAYS, STABILITY_MAX);
     if (state === 'review') {
-      return Math.max(normalized, REVIEW_SCHEDULE_FLOOR_DAYS);
+      return clamp(normalized, REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX);
     }
     if (state === 'relearning') {
-      return Math.max(normalized, RELEARNING_SCHEDULE_FLOOR_DAYS);
+      return clamp(normalized, RELEARNING_SCHEDULE_FLOOR_DAYS, RELEARNING_MAX_SCHEDULE_DAYS);
     }
-    return normalized;
+    return clamp(normalized, MINUTE_IN_DAYS, LEARNING_MAX_SCHEDULE_DAYS);
   }
   return scheduleFallbackForState(state);
 }

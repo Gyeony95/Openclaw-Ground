@@ -28,6 +28,7 @@ describe('formatDueLabel', () => {
 
   it('does not overstate near-boundary minute and hour future labels', () => {
     expect(formatDueLabel('2026-02-23T12:01:01.000Z', NOW)).toBe('Due in 1m');
+    expect(formatDueLabel('2026-02-23T12:59:59.000Z', NOW)).toBe('Due in 59m');
     expect(formatDueLabel('2026-02-23T13:00:01.000Z', NOW)).toBe('Due in 1h');
   });
 
