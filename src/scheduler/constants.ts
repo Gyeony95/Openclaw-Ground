@@ -1,0 +1,8 @@
+export const DIFFICULTY_MIN = 1;
+export const DIFFICULTY_MAX = 10;
+export const DIFFICULTY_MEAN_REVERSION = 5;
+
+export const STABILITY_MIN = 0.1;
+export const STABILITY_MAX = 36500;
+
+export const MINUTE_IN_DAYS = 1 / 1440;
