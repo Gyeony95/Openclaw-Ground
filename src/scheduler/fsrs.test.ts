@@ -2954,4 +2954,48 @@ describe('fsrs scheduler', () => {
     expect(preview[3]).toBeGreaterThanOrEqual(preview[2]);
     expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
   });
+
+  it('anchors review stability to repaired schedule context when dueAt is invalid', () => {
+    const repairedBaseline = {
+      ...createNewCard('repaired-baseline', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: 'not-a-time',
+      stability: 2,
+      difficulty: 5,
+      reps: 20,
+    };
+    const extremeStability = {
+      ...repairedBaseline,
+      id: 'repaired-extreme',
+      stability: STABILITY_MAX,
+    };
+    const reviewAt = addDaysIso(NOW, 1);
+
+    const baseline = reviewCard(repairedBaseline, 3, reviewAt);
+    const repaired = reviewCard(extremeStability, 3, reviewAt);
+
+    expect(repaired.card.state).toBe('review');
+    expect(repaired.scheduledDays).toBe(baseline.scheduledDays);
+    expect(repaired.card.stability).toBeCloseTo(baseline.card.stability, 6);
+  });
+
+  it('keeps repaired invalid due timelines on bounded intervals for hard reviews', () => {
+    const corrupted = {
+      ...createNewCard('repaired-invalid-due-hard', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: 'not-a-time',
+      stability: STABILITY_MAX,
+      difficulty: 7,
+      reps: 30,
+    };
+
+    const reviewed = reviewCard(corrupted, 2, addDaysIso(NOW, 1));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(0.5);
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(8);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
 });

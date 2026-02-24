@@ -10,10 +10,10 @@ interface RatingRowProps {
 }
 
 const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: string }> = [
-  { rating: 1, text: 'Again', fallbackHint: 'Soon', tone: colors.danger },
-  { rating: 2, text: 'Hard', fallbackHint: 'Short', tone: colors.warn },
-  { rating: 3, text: 'Good', fallbackHint: 'Planned', tone: colors.primary },
-  { rating: 4, text: 'Easy', fallbackHint: 'Longer', tone: colors.success },
+  { rating: 1, text: 'Again', fallbackHint: 'In minutes', tone: colors.danger },
+  { rating: 2, text: 'Hard', fallbackHint: 'Keep short', tone: colors.warn },
+  { rating: 3, text: 'Good', fallbackHint: 'On schedule', tone: colors.primary },
+  { rating: 4, text: 'Easy', fallbackHint: 'Stretch out', tone: colors.success },
 ];
 
 function resolveIntervalLabel(
@@ -42,7 +42,9 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
       {busy ? (
         <View style={styles.busyRow} accessibilityRole="alert" accessibilityLabel="Saving review">
           <ActivityIndicator size="small" color={colors.subInk} />
-          <Text style={styles.busyLabel}>Saving review...</Text>
+          <Text style={styles.busyLabel} accessibilityLiveRegion="polite">
+            Saving review...
+          </Text>
         </View>
       ) : null}
       <View style={styles.row}>
@@ -80,6 +82,9 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
             >
               <Text style={[styles.buttonText, { color: isDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
                 {item.text}
+              </Text>
+              <Text style={[styles.hintLabel, { color: isDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
+                Next
               </Text>
               <Text
                 style={[styles.hint, styles.hintCentered, { color: isDisabled ? colors.subInk : item.tone }]}
@@ -123,7 +128,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 10,
     minWidth: 78,
-    minHeight: 88,
+    minHeight: 94,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
@@ -157,6 +162,12 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '800',
     letterSpacing: 0.72,
+    textTransform: 'uppercase',
+  },
+  hintLabel: {
+    fontSize: 10,
+    letterSpacing: 0.6,
+    fontWeight: '700',
     textTransform: 'uppercase',
   },
   hint: {

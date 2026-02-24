@@ -205,6 +205,7 @@ function normalizeTimeline(
   currentIso: string;
   updatedAt: string;
   dueAt: string;
+  dueNeedsRepair: boolean;
 } {
   const fallbackMs = safeNowMs();
   const fallback = toSafeIso(fallbackMs);
@@ -354,7 +355,7 @@ function normalizeTimeline(
       ? toSafeIso(resolvedCurrentMs)
       : toSafeIso(monotonicMs);
 
-  return { createdAt, currentIso, updatedAt, dueAt };
+  return { createdAt, currentIso, updatedAt, dueAt, dueNeedsRepair };
 }
 
 function toReviewRating(rating: Rating): 2 | 3 | 4 {
@@ -807,7 +808,7 @@ function normalizeSchedulingCard(
   card: Card,
   requestedNowIso: string,
 ): { card: Card; currentIso: string } {
-  const { createdAt, currentIso, updatedAt, dueAt } = normalizeTimeline(card, requestedNowIso);
+  const { createdAt, currentIso, updatedAt, dueAt, dueNeedsRepair } = normalizeTimeline(card, requestedNowIso);
   const normalizedText = normalizeCardText(card);
   const normalizedState = normalizeState(card.state);
   const normalizedScheduledDays = normalizeScheduledDays(daysBetween(updatedAt, dueAt), normalizedState);
@@ -819,8 +820,12 @@ function normalizeSchedulingCard(
   );
   const normalizedStabilityFallback =
     normalizedState === 'learning' ? 0.5 : normalizedScheduledDays;
+  // If due anchors were repaired, prefer schedule-derived stability to avoid
+  // amplifying corrupted historical stability into runaway intervals.
+  const stabilityInput =
+    dueNeedsRepair && normalizedState !== 'learning' ? normalizedScheduledDays : card.stability;
   const normalizedStability = clampFinite(
-    card.stability,
+    stabilityInput,
     STABILITY_MIN,
     STABILITY_MAX,
     normalizedStabilityFallback,
