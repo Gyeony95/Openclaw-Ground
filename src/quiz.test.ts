@@ -345,10 +345,16 @@ describe('quiz distractors', () => {
     expect(resolveMultipleChoiceRating('4' as unknown as Rating, true)).toBe(4);
   });
 
-  it('normalizes non-decimal string ratings for correct selections to neutral Good', () => {
+  it('normalizes malformed string ratings for correct selections to neutral Good', () => {
     expect(resolveMultipleChoiceRating('0x4' as unknown as Rating, true)).toBe(3);
-    expect(resolveMultipleChoiceRating('4e0' as unknown as Rating, true)).toBe(3);
     expect(resolveMultipleChoiceRating('Infinity' as unknown as Rating, true)).toBe(3);
+  });
+
+  it('accepts scientific-notation string ratings for correct selections', () => {
+    expect(resolveMultipleChoiceRating('1e0' as unknown as Rating, true)).toBe(1);
+    expect(resolveMultipleChoiceRating('2e0' as unknown as Rating, true)).toBe(2);
+    expect(resolveMultipleChoiceRating('3e0' as unknown as Rating, true)).toBe(3);
+    expect(resolveMultipleChoiceRating('4e0' as unknown as Rating, true)).toBe(4);
   });
 
   it('normalizes malformed correct-selection ratings to neutral Good', () => {

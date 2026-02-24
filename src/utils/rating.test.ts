@@ -5,11 +5,12 @@ describe('parseRuntimeRatingValue', () => {
     expect(parseRuntimeRatingValue(3)).toBe(3);
     expect(parseRuntimeRatingValue('4')).toBe(4);
     expect(parseRuntimeRatingValue(' 2.0 ')).toBe(2);
+    expect(parseRuntimeRatingValue('4e0')).toBe(4);
+    expect(parseRuntimeRatingValue('.5')).toBe(0.5);
   });
 
-  it('rejects non-decimal or malformed values', () => {
+  it('rejects malformed values', () => {
     expect(parseRuntimeRatingValue('0x4')).toBeNaN();
-    expect(parseRuntimeRatingValue('4e0')).toBeNaN();
     expect(parseRuntimeRatingValue('Infinity')).toBeNaN();
     expect(parseRuntimeRatingValue('')).toBeNaN();
     expect(parseRuntimeRatingValue('abc')).toBeNaN();

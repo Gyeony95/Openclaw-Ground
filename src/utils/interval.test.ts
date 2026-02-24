@@ -2,6 +2,7 @@ import { formatIntervalLabel } from './interval';
 
 describe('formatIntervalLabel', () => {
   it('formats minute-scale intervals', () => {
+    expect(formatIntervalLabel(0.5 / 1440)).toBe('1m');
     expect(formatIntervalLabel(1 / 1440)).toBe('1m');
     expect(formatIntervalLabel(10 / 1440)).toBe('10m');
   });

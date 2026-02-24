@@ -7,7 +7,7 @@ export function parseRuntimeRatingValue(input: unknown): number {
   }
 
   const trimmed = input.trim();
-  if (!/^[+-]?\d+(?:\.\d+)?$/.test(trimmed)) {
+  if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(trimmed)) {
     return Number.NaN;
   }
 

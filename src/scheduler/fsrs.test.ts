@@ -2858,19 +2858,28 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeLessThanOrEqual(neutral.scheduledDays);
   });
 
-  it('treats non-decimal string ratings as safe fallbacks', () => {
+  it('treats malformed string ratings as safe fallbacks', () => {
     const learning = createNewCard('eta-string-non-decimal-learning', 'letter', NOW);
     const learningReviewed = reviewCard(learning, '0x4' as unknown as Rating, NOW);
 
     expect(learningReviewed.card.state).toBe('learning');
     expect(learningReviewed.scheduledDays).toBeLessThan(0.002);
+  });
 
-    const reviewBase = reviewCard(createNewCard('eta-string-non-decimal-review', 'letter', NOW), 4, NOW).card;
-    const reviewReviewed = reviewCard(reviewBase, '4e0' as unknown as Rating, reviewBase.dueAt);
-    const neutral = reviewCard(reviewBase, 3, reviewBase.dueAt);
+  it('coerces scientific-notation string ratings and schedules identically to numeric ratings', () => {
+    const learningBase = createNewCard('eta-string-scientific-learning', 'letter', NOW);
+    const scientificLearning = reviewCard(learningBase, '4e0' as unknown as Rating, NOW);
+    const numericLearning = reviewCard(learningBase, 4, NOW);
 
-    expect(reviewReviewed.card.state).toBe('review');
-    expect(reviewReviewed.scheduledDays).toBe(neutral.scheduledDays);
+    expect(scientificLearning.card.state).toBe('review');
+    expect(scientificLearning.scheduledDays).toBe(numericLearning.scheduledDays);
+
+    const reviewBase = reviewCard(createNewCard('eta-string-scientific-review', 'letter', NOW), 4, NOW).card;
+    const scientificReview = reviewCard(reviewBase, '2e0' as unknown as Rating, reviewBase.dueAt);
+    const numericReview = reviewCard(reviewBase, 2, reviewBase.dueAt);
+
+    expect(scientificReview.card.state).toBe('review');
+    expect(scientificReview.scheduledDays).toBe(numericReview.scheduledDays);
   });
 
   it('treats non-finite runtime ratings as Again to avoid accidental promotion', () => {
