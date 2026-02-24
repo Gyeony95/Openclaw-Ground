@@ -3063,6 +3063,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeLessThanOrEqual(1.2);
   });
 
+  it('keeps slightly-late one-day hard reviews from inflating to two days', () => {
+    const updatedAt = '2026-02-23T12:00:00.000Z';
+    const card = {
+      ...reviewCard(createNewCard('slightly-late-daylike-hard', 'definition', NOW), 4, NOW).card,
+      state: 'review' as const,
+      updatedAt,
+      dueAt: addDaysIso(updatedAt, 1),
+      stability: 1,
+      difficulty: 5,
+      reps: 10,
+    };
+    const reviewAt = '2026-02-24T12:30:00.000Z';
+
+    const reviewed = reviewCard(card, 2, reviewAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(1);
+  });
+
   it('normalizes malformed scheduling fields before applying review math', () => {
     const malformed = {
       ...createNewCard('normalize-baseline', 'definition', NOW),
