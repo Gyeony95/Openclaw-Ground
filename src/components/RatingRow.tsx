@@ -66,7 +66,9 @@ export function RatingRow({
           const contentTone = isRatingLocked ? item.tone : ratingDisabled ? colors.subInk : item.tone;
           const accessibilityLabel = isRatingLocked
             ? `Rate ${item.text}. Locked.`
-            : `Rate ${item.text}. Next interval ${interval}.`;
+            : ratingDisabled
+              ? `Rate ${item.text}. Unavailable.`
+              : `Rate ${item.text}. Next interval ${interval}.`;
           return (
             <Pressable
               key={item.rating}

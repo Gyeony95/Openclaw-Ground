@@ -128,6 +128,11 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
   }
 
   if (requestedValid && candidateMs - fallbackMs > MAX_CREATE_TIME_OFFSET_MS) {
+    if (!Number.isFinite(wallClockMs)) {
+      // Without a reliable wall clock, trust explicit caller timestamps so stale
+      // imported timelines can still advance during review.
+      return toCanonicalIso(candidate, fallback);
+    }
     if (Number.isFinite(wallClockMs)) {
       const fallbackIsPathologicallyStale = wallClockMs - fallbackMs > MAX_CREATE_TIME_OFFSET_MS;
       const candidateIsWallSafe = Math.abs(candidateMs - wallClockMs) <= MAX_CREATE_TIME_OFFSET_MS;
