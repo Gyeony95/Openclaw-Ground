@@ -181,10 +181,13 @@ export function applyDueReview(
   rating: Rating,
   currentIso: string,
 ): { cards: Card[]; reviewed: boolean; reviewedAt?: string } {
+  const effectiveCurrentIso = Number.isFinite(Date.parse(currentIso))
+    ? currentIso
+    : resolveReviewClock(currentIso, nowIso());
   let targetIndex = -1;
   for (let index = 0; index < cards.length; index += 1) {
     const candidate = cards[index];
-    if (candidate.id !== cardId || !isDue(candidate.dueAt, currentIso)) {
+    if (candidate.id !== cardId || !isDue(candidate.dueAt, effectiveCurrentIso)) {
       continue;
     }
     if (targetIndex === -1 || compareDueCards(candidate, cards[targetIndex]) < 0) {
@@ -195,7 +198,7 @@ export function applyDueReview(
     return { cards, reviewed: false };
   }
 
-  const reviewed = reviewCard(cards[targetIndex], rating, currentIso).card;
+  const reviewed = reviewCard(cards[targetIndex], rating, effectiveCurrentIso).card;
   const nextCards = [...cards];
   nextCards[targetIndex] = reviewed;
   return { cards: nextCards, reviewed: true, reviewedAt: reviewed.updatedAt };

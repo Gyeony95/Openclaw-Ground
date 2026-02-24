@@ -109,15 +109,40 @@ describe('applyDueReview', () => {
     expect(result.cards).toBe(cards);
   });
 
-  it('does nothing when review clock is invalid', () => {
-    const due = createNewCard('iota', 'ninth', NOW);
-    const cards = [due];
+  it('falls back to runtime clock when review clock is invalid', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(NOW));
+    try {
+      const due = createNewCard('iota', 'ninth', NOW);
+      const cards = [due];
 
-    const result = applyDueReview(cards, due.id, 3, 'bad-clock');
+      const result = applyDueReview(cards, due.id, 3, 'bad-clock');
 
-    expect(result.reviewed).toBe(false);
-    expect(result.cards).toBe(cards);
-    expect(result.cards[0]).toBe(due);
+      expect(result.reviewed).toBe(true);
+      expect(result.cards[0]).not.toBe(due);
+      expect(result.cards[0].reps).toBe(due.reps + 1);
+      expect(result.reviewedAt).toBe('2026-02-23T12:00:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('keeps non-due cards unchanged when review clock is invalid', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(NOW));
+    try {
+      const future = {
+        ...createNewCard('iota-future', 'ninth', NOW),
+        dueAt: addDaysIso(NOW, 1),
+      };
+
+      const result = applyDueReview([future], future.id, 3, 'bad-clock');
+
+      expect(result.reviewed).toBe(false);
+      expect(result.cards[0]).toBe(future);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('returns reviewedAt from scheduler when card timeline is ahead of runtime clock', () => {

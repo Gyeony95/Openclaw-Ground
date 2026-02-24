@@ -263,8 +263,8 @@ export default function App() {
 
   const trimmedWordLength = trimmedLength(word, WORD_MAX_LENGTH);
   const trimmedMeaningLength = trimmedLength(meaning, MEANING_MAX_LENGTH);
-  const wordLength = cappedLength(word, WORD_MAX_LENGTH);
-  const meaningLength = cappedLength(meaning, MEANING_MAX_LENGTH);
+  const wordLength = trimmedWordLength;
+  const meaningLength = trimmedMeaningLength;
   const notesLength = cappedLength(notes, NOTES_MAX_LENGTH);
   const missingWord = trimmedWordLength === 0;
   const missingMeaning = trimmedMeaningLength === 0;
