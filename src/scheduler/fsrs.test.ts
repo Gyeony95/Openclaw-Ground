@@ -248,6 +248,38 @@ describe('fsrs scheduler', () => {
     expect(stringReviewed.card.dueAt).toBe(numericReviewed.card.dueAt);
   });
 
+  it('coerces scientific-notation scheduler fields without changing FSRS scheduling outputs', () => {
+    const reviewedAt = addDaysIso(NOW, 4);
+    const numericCard = {
+      ...createNewCard('scientific-review', 'control', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 4),
+      reps: 5,
+      lapses: 1,
+      stability: 4,
+      difficulty: 7.5,
+    };
+    const scientificCard = {
+      ...numericCard,
+      reps: '5e0',
+      lapses: '1e0',
+      stability: '4e0',
+      difficulty: '7.5e0',
+    } as unknown as Card;
+
+    const numericReviewed = reviewCard(numericCard, 3, reviewedAt);
+    const scientificReviewed = reviewCard(scientificCard, 3, reviewedAt);
+
+    expect(scientificReviewed.card.state).toBe(numericReviewed.card.state);
+    expect(scientificReviewed.card.reps).toBe(numericReviewed.card.reps);
+    expect(scientificReviewed.card.lapses).toBe(numericReviewed.card.lapses);
+    expect(scientificReviewed.card.difficulty).toBeCloseTo(numericReviewed.card.difficulty, 8);
+    expect(scientificReviewed.card.stability).toBeCloseTo(numericReviewed.card.stability, 8);
+    expect(scientificReviewed.scheduledDays).toBeCloseTo(numericReviewed.scheduledDays, 8);
+    expect(scientificReviewed.card.dueAt).toBe(numericReviewed.card.dueAt);
+  });
+
   it('returns conservative learning preview intervals when runtime card data is corrupted', () => {
     const corrupted = createNewCard('preview-corrupted-learning', 'safe', NOW);
     Object.defineProperty(corrupted, 'difficulty', {

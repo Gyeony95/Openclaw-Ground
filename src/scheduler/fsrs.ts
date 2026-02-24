@@ -121,7 +121,7 @@ function parseRuntimeFiniteNumber(value: unknown): number | null {
     return null;
   }
   const trimmed = value.trim();
-  if (!/^[+-]?\d+(?:\.\d+)?$/.test(trimmed)) {
+  if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(trimmed)) {
     return null;
   }
   const parsed = Number(trimmed);

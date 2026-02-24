@@ -1656,6 +1656,19 @@ describe('hasScheduleRepairNeed', () => {
 
     expect(hasScheduleRepairNeed(stringRepsLearningDueNow)).toBe(false);
   });
+
+  it('accepts scientific-notation numeric strings for runtime schedule fields', () => {
+    const scientificReview = {
+      ...createNewCard('repair-review-scientific-fields', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-06-03T12:00:00.000Z',
+      stability: '1.2e1' as unknown as number,
+      reps: '1e1' as unknown as number,
+    };
+
+    expect(hasScheduleRepairNeed(scientificReview)).toBe(false);
+  });
 });
 
 describe('countScheduleRepairCards', () => {

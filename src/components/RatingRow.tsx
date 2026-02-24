@@ -123,7 +123,12 @@ export function RatingRow({
           );
         })}
       </View>
-      {hasLockedRatings && lockedHint ? (
+      {busy ? (
+        <Text style={styles.lockedHint} accessibilityLiveRegion="polite">
+          Recording review...
+        </Text>
+      ) : null}
+      {hasLockedRatings && lockedHint && !busy ? (
         <Text style={styles.lockedHint} accessibilityLiveRegion="polite">
           {lockedHint}
         </Text>
