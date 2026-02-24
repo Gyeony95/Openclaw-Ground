@@ -395,6 +395,7 @@ export default function App() {
   const isWideLayout = width >= 980;
   const isCompactLayout = width < 380;
   const isReviewBusy = pendingReviewCardId !== null;
+  const quizOptionsLocked = isReviewBusy || hasQuizSelection;
   const isFormEditable = !loading && !isAddBusy;
   const flashcardVisibility = useMemo(
     () => getFlashcardVisibility(flashcardSide, Boolean(dueCard?.notes?.trim())),
@@ -613,7 +614,7 @@ export default function App() {
   }
 
   function handleSelectQuizOption(optionId: string) {
-    if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice') {
+    if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice' || hasQuizSelection) {
       return;
     }
     setSelectedQuizOptionId(optionId);
@@ -1028,20 +1029,21 @@ export default function App() {
                                 <Pressable
                                   key={option.id}
                                   onPress={() => handleSelectQuizOption(option.id)}
-                                  disabled={isReviewBusy}
+                                  disabled={quizOptionsLocked}
                                   style={({ pressed }) => [
                                     styles.quizOptionBtn,
                                     isSelected && styles.quizOptionBtnSelected,
                                     showCorrect && styles.quizOptionBtnCorrect,
                                     showIncorrect && styles.quizOptionBtnIncorrect,
-                                    pressed && !isReviewBusy && styles.ghostBtnPressed,
+                                    quizOptionsLocked && styles.quizOptionBtnLocked,
+                                    pressed && !quizOptionsLocked && styles.ghostBtnPressed,
                                   ]}
                                   accessibilityRole="radio"
                                   accessibilityLabel={option.text}
                                   accessibilityState={{
                                     selected: isSelected,
                                     checked: isSelected,
-                                    disabled: isReviewBusy,
+                                    disabled: quizOptionsLocked,
                                   }}
                                 >
                                   <Text
@@ -1063,8 +1065,8 @@ export default function App() {
                         {hasQuizSelection && correctQuizOption ? (
                           <Text style={[styles.quizFeedback, { color: quizSelectionIsCorrect ? colors.success : colors.danger }]}>
                             {quizSelectionIsCorrect
-                              ? 'Correct. Rate how easy this felt.'
-                              : `Incorrect. Correct answer: ${correctQuizOption.text}`}
+                              ? 'Correct. Selection locked. Rate how easy this felt.'
+                              : `Incorrect. Selection locked. Correct answer: ${correctQuizOption.text}`}
                           </Text>
                         ) : (
                           <Text style={styles.revealHint}>Select one option to unlock FSRS rating buttons.</Text>
@@ -1760,6 +1762,9 @@ const styles = StyleSheet.create({
   quizOptionBtnIncorrect: {
     borderColor: colors.danger,
     backgroundColor: '#fff5f6',
+  },
+  quizOptionBtnLocked: {
+    opacity: 0.94,
   },
   quizOptionText: {
     color: colors.ink,

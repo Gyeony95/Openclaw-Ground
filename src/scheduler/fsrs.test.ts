@@ -2064,6 +2064,32 @@ describe('fsrs scheduler', () => {
     expect(relearningHard.difficulty).toBeCloseTo(failedReview.difficulty, 6);
   });
 
+  it('keeps stability flat across repeated relearning Hard retries', () => {
+    const card = createNewCard('relearning-hard-stability-flat', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const failedReview = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+    const firstHard = reviewCard(failedReview, 2, '2026-02-24T12:10:00.000Z').card;
+    const secondHard = reviewCard(firstHard, 2, '2026-02-24T12:25:00.000Z').card;
+
+    expect(firstHard.state).toBe('relearning');
+    expect(secondHard.state).toBe('relearning');
+    expect(secondHard.stability).toBeCloseTo(firstHard.stability, 6);
+  });
+
+  it('does not inflate relearning graduation intervals after repeated Hard retries', () => {
+    const card = createNewCard('relearning-hard-graduation-control', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const failedReview = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+    const hardOnce = reviewCard(failedReview, 2, '2026-02-24T12:10:00.000Z').card;
+    const hardTwice = reviewCard(hardOnce, 2, '2026-02-24T12:25:00.000Z').card;
+    const graduateAfterOneHard = reviewCard(hardOnce, 3, '2026-02-24T12:40:00.000Z');
+    const graduateAfterTwoHards = reviewCard(hardTwice, 3, '2026-02-24T12:40:00.000Z');
+
+    expect(graduateAfterOneHard.card.state).toBe('review');
+    expect(graduateAfterTwoHards.card.state).toBe('review');
+    expect(graduateAfterTwoHards.scheduledDays).toBeLessThanOrEqual(graduateAfterOneHard.scheduledDays);
+  });
+
   it('falls back to learning behavior when runtime state is corrupted', () => {
     const base = createNewCard('iota-2', 'letter', NOW);
     const corrupted = {

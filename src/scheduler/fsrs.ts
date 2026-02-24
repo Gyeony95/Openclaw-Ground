@@ -610,6 +610,11 @@ function updateStability(
   }
 
   if (rating === 2) {
+    if (phase === 'relearning') {
+      // Relearning "Hard" means the card still needs short-step recovery.
+      // Keep stability flat to avoid inflating graduation intervals through repeated retries.
+      return clampFinite(previous, STABILITY_MIN, STABILITY_MAX, previous);
+    }
     const hardGain = 1 + 0.12 * (1 - r) * difficultyFactor * timingRatio;
     return clampFinite(Math.max(previous + 0.05, previous * hardGain), STABILITY_MIN, STABILITY_MAX, previous);
   }
