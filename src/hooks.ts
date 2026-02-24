@@ -395,17 +395,9 @@ function resolveActionClock(currentIso: string, runtimeNowIso: string): string {
   }
 
   if (Number.isFinite(runtimeMs)) {
-    const runtimeAheadMs = runtimeMs - currentMs;
-    if (runtimeAheadMs > MAX_UI_FUTURE_SKEW_MS) {
-      // If the rendered clock trails materially, use runtime so reviews are not rejected as stale.
-      return canonicalRuntimeIso ?? canonicalCurrentIso;
-    }
-    if (runtimeAheadMs < 0) {
-      // Never allow action clocks to move ahead of runtime time; this prevents early reviews.
-      return canonicalRuntimeIso ?? canonicalCurrentIso;
-    }
-    // Keep near-boundary review actions deterministic while rendered and runtime clocks are close.
-    return canonicalCurrentIso;
+    // Keep submission eligibility aligned with queue visibility to avoid showing cards
+    // as due while rejecting the same review action in the same render frame.
+    return canonicalRuntimeIso ?? canonicalCurrentIso;
   }
 
   return canonicalCurrentIso;

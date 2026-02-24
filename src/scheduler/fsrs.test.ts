@@ -580,6 +580,56 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back to wall-safe preview clock when caller preview clock is pathologically far future', () => {
+    jest.useFakeTimers();
+    try {
+      const wallSafeNow = '2026-02-25T12:00:00.000Z';
+      jest.setSystemTime(new Date(wallSafeNow));
+      const reviewCardBase = {
+        ...createNewCard('preview-future-clock-fallback', 'safe', NOW),
+        state: 'review' as const,
+        updatedAt: NOW,
+        dueAt: addDaysIso(NOW, 4),
+        reps: 8,
+        lapses: 1,
+        stability: 4,
+        difficulty: 5.2,
+      };
+
+      const expected = previewIntervals(reviewCardBase, wallSafeNow);
+      const futureSkewed = previewIntervals(reviewCardBase, '2099-01-01T00:00:00.000Z');
+
+      expect(futureSkewed).toEqual(expected);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('falls back to wall-safe preview clock when caller preview clock is pathologically stale', () => {
+    jest.useFakeTimers();
+    try {
+      const wallSafeNow = '2026-02-25T12:00:00.000Z';
+      jest.setSystemTime(new Date(wallSafeNow));
+      const reviewCardBase = {
+        ...createNewCard('preview-stale-clock-fallback', 'safe', NOW),
+        state: 'review' as const,
+        updatedAt: NOW,
+        dueAt: addDaysIso(NOW, 3),
+        reps: 6,
+        lapses: 1,
+        stability: 3,
+        difficulty: 5.5,
+      };
+
+      const expected = previewIntervals(reviewCardBase, wallSafeNow);
+      const staleSkewed = previewIntervals(reviewCardBase, '1980-01-01T00:00:00.000Z');
+
+      expect(staleSkewed).toEqual(expected);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('infers review fallback intervals when state access is corrupted during preview recovery', () => {
     const corruptedPreviewState = {
       ...createNewCard('preview-corrupted-state-fallback', 'safe', NOW),

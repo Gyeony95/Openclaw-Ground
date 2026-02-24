@@ -288,9 +288,26 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
 }
 
 function resolvePreviewIso(requestedNowIso: string): string {
-  const wallClockIso = toSafeIso(safeNowMs());
+  const wallClockMs = safeNowMs();
+  const wallClockIso = toSafeIso(wallClockMs);
   const normalizedRequestedNowIso = normalizeIsoInput(requestedNowIso);
   if (!normalizedRequestedNowIso || !isValidIso(normalizedRequestedNowIso)) {
+    return wallClockIso;
+  }
+  const candidateMs = Date.parse(normalizedRequestedNowIso);
+  if (!Number.isFinite(candidateMs)) {
+    return wallClockIso;
+  }
+  if (
+    Number.isFinite(wallClockMs) &&
+    candidateMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS
+  ) {
+    return wallClockIso;
+  }
+  if (
+    Number.isFinite(wallClockMs) &&
+    wallClockMs - candidateMs > MAX_CREATE_TIME_OFFSET_MS
+  ) {
     return wallClockIso;
   }
   return toCanonicalIso(normalizedRequestedNowIso, wallClockIso);

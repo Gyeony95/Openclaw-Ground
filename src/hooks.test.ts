@@ -351,7 +351,7 @@ describe('applyDueReview', () => {
     expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:00.000Z');
   });
 
-  it('keeps valid provided review clocks deterministic instead of advancing to runtime', () => {
+  it('uses runtime review clock when rendered clock trails so visible due cards remain reviewable', () => {
     const nearBoundary = {
       ...createNewCard('deterministic-valid-review-clock', 'safe', NOW),
       dueAt: '2026-02-23T12:00:20.000Z',
@@ -365,8 +365,10 @@ describe('applyDueReview', () => {
       '2026-02-23T12:00:30.000Z',
     );
 
-    expect(result.reviewed).toBe(false);
-    expect(result.cards[0]).toBe(nearBoundary);
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).not.toBe(nearBoundary);
+    expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:30.000Z');
+    expect(result.reviewedAt).toBe('2026-02-23T12:00:30.000Z');
   });
 
   it('uses runtime clock when rendered review clock is stale beyond tolerance', () => {
@@ -391,7 +393,7 @@ describe('applyDueReview', () => {
     expect(result.reviewedAt).toBe('2026-02-23T12:02:30.000Z');
   });
 
-  it('keeps rendered review clock when runtime is ahead exactly at tolerance boundary', () => {
+  it('uses runtime review clock at tolerance boundary so due queue and submissions stay aligned', () => {
     const toleranceBoundary = {
       ...createNewCard('review-clock-tolerance-boundary', 'safe', NOW),
       dueAt: '2026-02-23T12:00:50.000Z',
@@ -407,8 +409,29 @@ describe('applyDueReview', () => {
       '2026-02-23T12:01:00.000Z',
     );
 
-    expect(result.reviewed).toBe(false);
-    expect(result.cards[0]).toBe(toleranceBoundary);
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).not.toBe(toleranceBoundary);
+    expect(result.cards[0].updatedAt).toBe('2026-02-23T12:01:00.000Z');
+    expect(result.reviewedAt).toBe('2026-02-23T12:01:00.000Z');
+  });
+
+  it('reviews cards that are surfaced by collectDueCards with the same clocks', () => {
+    const nearFuture = {
+      ...createNewCard('queue-action-clock-consistency', 'safe', NOW),
+      dueAt: '2026-02-23T12:00:20.000Z',
+    };
+    const renderedClock = '2026-02-23T12:00:00.000Z';
+    const runtimeClock = '2026-02-23T12:00:21.000Z';
+    const dueCards = collectDueCards([nearFuture], renderedClock, runtimeClock);
+
+    expect(dueCards).toHaveLength(1);
+
+    const result = applyDueReview([nearFuture], nearFuture.id, 3, renderedClock, runtimeClock);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).not.toBe(nearFuture);
+    expect(result.cards[0].updatedAt).toBe(runtimeClock);
+    expect(result.reviewedAt).toBe(runtimeClock);
   });
 
   it('does not review early when rendered clock is ahead of runtime', () => {
@@ -1428,14 +1451,14 @@ describe('hasDueCard', () => {
     }
   });
 
-  it('keeps valid provided clocks deterministic for due checks instead of advancing to runtime', () => {
+  it('uses runtime clock for due checks when rendered clock trails behind runtime', () => {
     const nearBoundary = {
       ...createNewCard('deterministic-valid-due-clock', 'safe', NOW),
       dueAt: '2026-02-23T12:00:20.000Z',
     };
 
     expect(hasDueCard([nearBoundary], nearBoundary.id, '2026-02-23T12:00:00.000Z', '2026-02-23T12:00:30.000Z')).toBe(
-      false,
+      true,
     );
   });
 
