@@ -475,6 +475,42 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(3);
   });
 
+  it('keeps plausible long review schedules instead of over-repairing from stale low stability', () => {
+    const imported = {
+      ...createNewCard('stability-window-preserve', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 45),
+      stability: 0.5,
+      difficulty: 6,
+      reps: 14,
+      lapses: 1,
+    };
+
+    const reviewed = reviewCard(imported, 3, addDaysIso(NOW, 1));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(20);
+  });
+
+  it('still repairs pathologically long review schedules that far exceed stability expectations', () => {
+    const pathological = {
+      ...createNewCard('stability-window-repair', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 220),
+      stability: 0.5,
+      difficulty: 6,
+      reps: 14,
+      lapses: 1,
+    };
+
+    const reviewed = reviewCard(pathological, 3, addDaysIso(NOW, 1));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeLessThan(30);
+  });
+
   it('uses an intermediate hard step before graduating learning cards', () => {
     const card = createNewCard('learning-hard-step', 'definition', NOW);
     const hard = reviewCard(card, 2, NOW);

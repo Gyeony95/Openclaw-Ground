@@ -291,7 +291,7 @@ export default function App() {
     [ratingIntervals],
   );
   const quickRatingPreviewLabel = ratingIntervalLabels
-    ? `Hard ${ratingIntervalLabels[2]} · Good ${ratingIntervalLabels[3]} · Easy ${ratingIntervalLabels[4]}`
+    ? `Again ${ratingIntervalLabels[1]} · Hard ${ratingIntervalLabels[2]} · Good ${ratingIntervalLabels[3]} · Easy ${ratingIntervalLabels[4]}`
     : null;
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 

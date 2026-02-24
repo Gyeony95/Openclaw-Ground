@@ -253,11 +253,15 @@ function normalizeTimeline(
     !dueNotAfterUpdatedAt &&
     Number.isFinite(dueDaysFromUpdated) &&
     dueDaysFromUpdated <= maxStateScheduleDays * NON_REVIEW_OUTLIER_MULTIPLIER;
+  const reviewStabilityOutlierWindowDays = Math.max(
+    REVIEW_SCHEDULE_FLOOR_DAYS,
+    expectedReviewScheduleDays * 12,
+    120,
+  );
   const dueBeyondReviewStabilityWindow =
     normalizedState === 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
-    dueDaysFromUpdated >
-      Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, expectedReviewScheduleDays * 6, 30);
+    dueDaysFromUpdated > reviewStabilityOutlierWindowDays;
   const useReviewStabilityFallbackForDueRepair = shouldUseReviewStabilityFallbackForDueRepair(
     normalizedState,
     rawDueAtIsValid,
