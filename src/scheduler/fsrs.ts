@@ -62,8 +62,8 @@ function safeReadString(read: () => unknown, fallback: string): string {
 
 function safeReadNumber(read: () => unknown, fallback: number): number {
   try {
-    const value = read();
-    return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+    const value = parseRuntimeFiniteNumber(read());
+    return value !== null ? value : fallback;
   } catch {
     return fallback;
   }
@@ -110,6 +110,21 @@ function normalizeIsoInput(value: unknown): string | undefined {
   }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function parseRuntimeFiniteNumber(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!/^[+-]?\d+(?:\.\d+)?$/.test(trimmed)) {
+    return null;
+  }
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): string {
@@ -479,7 +494,12 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
   }
 
   const scheduledDays = normalizeElapsedDays(daysBetween(card.updatedAt, card.dueAt));
-  const normalizedStability = clampFinite(card.stability, STABILITY_MIN, STABILITY_MAX, STABILITY_MIN);
+  const normalizedStability = clampFinite(
+    parseRuntimeFiniteNumber(card.stability) ?? card.stability,
+    STABILITY_MIN,
+    STABILITY_MAX,
+    STABILITY_MIN,
+  );
   const reps = normalizeCounter(card.reps);
   const lapses = normalizeCounter(card.lapses);
 
@@ -507,14 +527,15 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
   return 'learning';
 }
 
-function normalizeCounter(value: number): number {
+function normalizeCounter(value: unknown): number {
   if (value === Number.POSITIVE_INFINITY) {
     return COUNTER_MAX;
   }
-  if (!Number.isFinite(value)) {
+  const parsed = parseRuntimeFiniteNumber(value);
+  if (!Number.isFinite(parsed)) {
     return 0;
   }
-  return clamp(Math.floor(value), 0, COUNTER_MAX);
+  return clamp(Math.floor(parsed), 0, COUNTER_MAX);
 }
 
 function scheduleFallbackForState(state: ReviewState): number {
@@ -1027,18 +1048,20 @@ function normalizeSchedulingCard(
     dueAt,
   });
   const normalizedScheduledDays = normalizeScheduledDays(daysBetween(updatedAt, dueAt), normalizedState);
+  const parsedDifficulty = parseRuntimeFiniteNumber(card.difficulty);
   const normalizedDifficulty = clampFinite(
-    card.difficulty,
+    parsedDifficulty ?? card.difficulty,
     DIFFICULTY_MIN,
     DIFFICULTY_MAX,
     DIFFICULTY_MEAN_REVERSION,
   );
+  const parsedStability = parseRuntimeFiniteNumber(card.stability);
   const normalizedStabilityFallback =
     normalizedState === 'learning' ? 0.5 : normalizedScheduledDays;
   // If due anchors were repaired, prefer schedule-derived stability to avoid
   // amplifying corrupted historical stability into runaway intervals.
   const stabilityInput =
-    dueNeedsRepair && normalizedState !== 'learning' ? normalizedScheduledDays : card.stability;
+    dueNeedsRepair && normalizedState !== 'learning' ? normalizedScheduledDays : parsedStability ?? card.stability;
   const normalizedStabilityBase = clampFinite(
     stabilityInput,
     STABILITY_MIN,

@@ -1,5 +1,5 @@
 import { createNewCard, previewIntervals, reviewCard } from './fsrs';
-import { Rating } from '../types';
+import { Card, Rating } from '../types';
 import { addDaysIso } from '../utils/time';
 import { STABILITY_MAX } from './constants';
 
@@ -194,6 +194,58 @@ describe('fsrs scheduler', () => {
     expect(card.createdAt).toBe(NOW);
     expect(card.updatedAt).toBe(NOW);
     expect(card.dueAt).toBe(NOW);
+  });
+
+  it('coerces numeric-string scheduler fields when inferring collapsed review timelines', () => {
+    const runtimeCard = {
+      ...createNewCard('string-backed-review', 'state inference', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: '2',
+      lapses: '3',
+      stability: '2.4',
+      difficulty: '6.2',
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 1, NOW).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.reps).toBe(3);
+    expect(reviewed.lapses).toBe(4);
+    expect(reviewed.dueAt).toBe(addDaysIso(NOW, 10 / 1440));
+  });
+
+  it('coerces numeric-string review fields without changing FSRS scheduling outputs', () => {
+    const reviewedAt = addDaysIso(NOW, 4);
+    const numericCard = {
+      ...createNewCard('numeric-review', 'control', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 4),
+      reps: 5,
+      lapses: 1,
+      stability: 4,
+      difficulty: 7.5,
+    };
+    const stringBackedCard = {
+      ...numericCard,
+      reps: '5',
+      lapses: '1',
+      stability: '4',
+      difficulty: '7.5',
+    } as unknown as Card;
+
+    const numericReviewed = reviewCard(numericCard, 3, reviewedAt);
+    const stringReviewed = reviewCard(stringBackedCard, 3, reviewedAt);
+
+    expect(stringReviewed.card.state).toBe(numericReviewed.card.state);
+    expect(stringReviewed.card.reps).toBe(numericReviewed.card.reps);
+    expect(stringReviewed.card.lapses).toBe(numericReviewed.card.lapses);
+    expect(stringReviewed.card.difficulty).toBeCloseTo(numericReviewed.card.difficulty, 8);
+    expect(stringReviewed.card.stability).toBeCloseTo(numericReviewed.card.stability, 8);
+    expect(stringReviewed.scheduledDays).toBeCloseTo(numericReviewed.scheduledDays, 8);
+    expect(stringReviewed.card.dueAt).toBe(numericReviewed.card.dueAt);
   });
 
   it('returns conservative learning preview intervals when runtime card data is corrupted', () => {

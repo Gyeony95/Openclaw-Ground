@@ -384,7 +384,9 @@ export default function App() {
     };
   }, [forceAgainForQuizSelection, ratingIntervalLabels]);
   const quickRatingPreviewLabel = visibleRatingIntervalLabels
-    ? `Again ${visibleRatingIntervalLabels[1]} · Hard ${visibleRatingIntervalLabels[2]} · Good ${visibleRatingIntervalLabels[3]} · Easy ${visibleRatingIntervalLabels[4]}`
+    ? forceAgainForQuizSelection
+      ? `Again ${visibleRatingIntervalLabels[1]} · Hard/Good/Easy locked after incorrect choice`
+      : `Again ${visibleRatingIntervalLabels[1]} · Hard ${visibleRatingIntervalLabels[2]} · Good ${visibleRatingIntervalLabels[3]} · Easy ${visibleRatingIntervalLabels[4]}`
     : null;
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 
