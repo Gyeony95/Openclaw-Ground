@@ -488,12 +488,12 @@ export default function App() {
   }, [dueCardRevealKey]);
 
   useEffect(() => {
-    if (studyMode === 'multiple-choice' && !canUseMultipleChoice) {
+    if (studyMode === 'multiple-choice' && dueCard && !canUseMultipleChoice) {
       setStudyMode('flashcard');
       setSelectedQuizOptionId(null);
       setFlashcardSide('front');
     }
-  }, [canUseMultipleChoice, studyMode]);
+  }, [canUseMultipleChoice, dueCard, studyMode]);
 
   useEffect(() => {
     if (!selectedQuizOptionId) {

@@ -1374,7 +1374,11 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
   const scheduleAnchorUpdatedAt = timelineRolledBack ? currentIso : updatedAt;
   const rollbackScheduleFromStability = rollbackScheduleFallbackForState(currentState, baseCard.stability);
   const rollbackScheduleFromDueAnchor = normalizeScheduledDays(daysBetween(updatedAt, dueAt), currentState);
-  const rollbackScheduleDays = Math.min(rollbackScheduleFromStability, rollbackScheduleFromDueAnchor);
+  const rollbackScheduleDays =
+    currentState === 'review'
+      // Preserve mature review cadence when recovering from future-skewed timelines.
+      ? rollbackScheduleFromStability
+      : Math.min(rollbackScheduleFromStability, rollbackScheduleFromDueAnchor);
   const scheduleAnchorDueAt = timelineRolledBack
     ? addDaysIso(currentIso, rollbackScheduleDays)
     : dueAt;
