@@ -298,6 +298,7 @@ function normalizeTimeline(
     inferStateFromCard({
       state: 'learning',
       reps: card.reps,
+      lapses: card.lapses,
       stability: card.stability,
       updatedAt,
       dueAt: rawDueAt ?? addDaysIso(updatedAt, MINUTE_IN_DAYS),
@@ -453,7 +454,7 @@ function parseState(input: unknown): ReviewState | undefined {
   return undefined;
 }
 
-function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'stability' | 'updatedAt' | 'dueAt'>): ReviewState {
+function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stability' | 'updatedAt' | 'dueAt'>): ReviewState {
   const parsedState = parseState(card.state);
   if (parsedState) {
     return parsedState;
@@ -461,9 +462,18 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'stability' | 'u
 
   const scheduledDays = normalizeElapsedDays(daysBetween(card.updatedAt, card.dueAt));
   const normalizedStability = clampFinite(card.stability, STABILITY_MIN, STABILITY_MAX, STABILITY_MIN);
+  const reps = normalizeCounter(card.reps);
+  const lapses = normalizeCounter(card.lapses);
 
   // Prefer schedule-based inference so short-step cards are not accidentally
   // promoted by stale/corrupted stability values.
+  if (
+    scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS &&
+    scheduledDays <= RELEARNING_MAX_SCHEDULE_DAYS &&
+    lapses > 0
+  ) {
+    return 'relearning';
+  }
   if (scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
     return 'review';
   }
@@ -475,7 +485,6 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'stability' | 'u
     return 'learning';
   }
 
-  const reps = normalizeCounter(card.reps);
   // When schedule anchors collapse to zero (e.g. dueAt==updatedAt), fall back to
   // stability only for cards that have review history, so brand-new cards do not
   // get promoted to review due to default stability seeds.
@@ -981,6 +990,7 @@ function normalizeSchedulingCard(
   const normalizedState = inferStateFromCard({
     state: card.state,
     reps: card.reps,
+    lapses: card.lapses,
     stability: card.stability,
     updatedAt,
     dueAt,

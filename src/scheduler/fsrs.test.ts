@@ -435,6 +435,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeCloseTo(15 / 1440, 10);
   });
 
+  it('infers relearning phase for malformed states on day-like retry schedules when lapse history exists', () => {
+    const relearningWithMalformedState = {
+      ...createNewCard('malformed-state-relearning-day-like', 'state fallback', NOW),
+      state: 'unknown_state' as unknown as 'learning',
+      reps: 20,
+      lapses: 3,
+      stability: 9,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1),
+    };
+
+    const reviewed = reviewCard(relearningWithMalformedState, 2, relearningWithMalformedState.dueAt);
+
+    expect(reviewed.card.state).toBe('relearning');
+    expect(reviewed.card.lapses).toBe(relearningWithMalformedState.lapses);
+    expect(reviewed.scheduledDays).toBeCloseTo(15 / 1440, 10);
+  });
+
   it('keeps malformed-state short-step cards in learning instead of forcing review lapses from stale stability', () => {
     const shortStepMalformedState = {
       ...createNewCard('malformed-state-short-step-learning', 'state fallback', NOW),
