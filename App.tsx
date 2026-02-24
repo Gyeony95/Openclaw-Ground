@@ -84,7 +84,9 @@ function formatMetricNumber(value: number, digits: number): string {
 }
 
 function formatCountLabel(length: number, max: number): string {
-  return `${length.toLocaleString()}/${max.toLocaleString()}`;
+  const remaining = Math.max(0, max - length);
+  const suffix = remaining === 1 ? 'char left' : 'chars left';
+  return `${remaining.toLocaleString()} ${suffix}`;
 }
 
 function trimmedLength(value: string, max: number): number {

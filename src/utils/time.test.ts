@@ -22,6 +22,22 @@ describe('time utils', () => {
     expect(addDaysIso('2026-02-23T00:00:00.000Z', Number.NaN)).toBe('2026-02-23T00:00:00.000Z');
   });
 
+  it('falls back to epoch-safe date math when base timestamp is invalid and runtime clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const shifted = addDaysIso('bad-iso', 1);
+    nowSpy.mockRestore();
+
+    expect(shifted).toBe('1970-01-02T00:00:00.000Z');
+  });
+
+  it('falls back to epoch-safe date math when runtime clock is non-finite and day offset is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const shifted = addDaysIso('bad-iso', Number.POSITIVE_INFINITY);
+    nowSpy.mockRestore();
+
+    expect(shifted).toBe('1970-01-01T00:00:00.000Z');
+  });
+
   it('returns canonical runtime timestamps from nowIso', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-24T08:15:30.000Z'));
     const current = nowIso();
