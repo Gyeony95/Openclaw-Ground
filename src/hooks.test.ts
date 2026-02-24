@@ -127,6 +127,46 @@ describe('applyDueReview', () => {
     }
   });
 
+  it('uses runtime wall-safe clock when provided review clock is pathologically far future', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(NOW));
+    try {
+      const due = createNewCard('future-clock-review', 'safe', NOW);
+      const cards = [due];
+
+      const result = applyDueReview(cards, due.id, 3, '2099-01-01T00:00:00.000Z');
+
+      expect(result.reviewed).toBe(true);
+      expect(result.cards[0]).not.toBe(due);
+      expect(result.cards[0].reps).toBe(due.reps + 1);
+      expect(result.reviewedAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('keeps rendered clock when runtime would move review time pathologically backward', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:30:00.000Z'));
+    try {
+      const due = {
+        ...createNewCard('backward-clock-review', 'safe', NOW),
+        updatedAt: '2026-02-23T12:00:00.000Z',
+        dueAt: '2026-02-23T12:00:00.000Z',
+        state: 'review' as const,
+      };
+
+      const result = applyDueReview([due], due.id, 3, '2026-02-22T00:00:00.000Z');
+
+      expect(result.reviewed).toBe(true);
+      expect(result.reviewedAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('keeps non-due cards unchanged when review clock is invalid', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(NOW));
@@ -778,6 +818,14 @@ describe('resolveReviewClock', () => {
 
     expect(reviewedAt).toBe('2026-02-23T12:34:56.000Z');
   });
+
+  it('falls back to epoch when wall clock is non-finite and both inputs are invalid', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const reviewedAt = resolveReviewClock('bad-rendered-time', 'bad-runtime-time');
+    nowSpy.mockRestore();
+
+    expect(reviewedAt).toBe('1970-01-01T00:00:00.000Z');
+  });
 });
 
 describe('resolveNextUiClock', () => {
@@ -836,5 +884,13 @@ describe('resolveNextUiClock', () => {
     nowSpy.mockRestore();
 
     expect(resolved).toBe('2026-02-23T12:10:00.000Z');
+  });
+
+  it('falls back to epoch when wall clock is non-finite and inputs are invalid', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const resolved = resolveNextUiClock('bad-current-time', 'bad-reviewed-time');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('1970-01-01T00:00:00.000Z');
   });
 });

@@ -7,6 +7,7 @@ import { isDue, nowIso } from './utils/time';
 const CLOCK_REFRESH_MS = 15000;
 const MAX_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const OVERDUE_GRACE_MS = 60 * 1000;
+const FALLBACK_NOW_MS = Date.parse('1970-01-01T00:00:00.000Z');
 
 function parseTimeOrMax(iso: string): number {
   const parsed = Date.parse(iso);
@@ -16,6 +17,11 @@ function parseTimeOrMax(iso: string): number {
 function parseTimeOrNaN(iso: string): number {
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
+function safeNowMs(): number {
+  const runtimeNow = Date.now();
+  return Number.isFinite(runtimeNow) ? runtimeNow : FALLBACK_NOW_MS;
 }
 
 function parseDueAtOrNaN(dueAt: unknown): number {
@@ -181,9 +187,7 @@ export function applyDueReview(
   rating: Rating,
   currentIso: string,
 ): { cards: Card[]; reviewed: boolean; reviewedAt?: string } {
-  const effectiveCurrentIso = Number.isFinite(Date.parse(currentIso))
-    ? currentIso
-    : resolveReviewClock(currentIso, nowIso());
+  const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
   let targetIndex = -1;
   for (let index = 0; index < cards.length; index += 1) {
     const candidate = cards[index];
@@ -230,7 +234,7 @@ export function hasDueCard(cards: Card[], cardId: string, currentIso: string): b
 export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: string): string {
   const renderedMs = parseTimeOrNaN(renderedClockIso);
   const runtimeMs = parseTimeOrNaN(runtimeNowIso);
-  const wallClockMs = Date.now();
+  const wallClockMs = safeNowMs();
   const wallClockIso = new Date(wallClockMs).toISOString();
   const canonicalRenderedIso = Number.isFinite(renderedMs) ? new Date(renderedMs).toISOString() : undefined;
   const canonicalRuntimeIso = Number.isFinite(runtimeMs) ? new Date(runtimeMs).toISOString() : undefined;
@@ -273,7 +277,7 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
 }
 
 export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: string): string {
-  const wallClockMs = Date.now();
+  const wallClockMs = safeNowMs();
   const wallClockIso = new Date(wallClockMs).toISOString();
   const normalizeWallSafeIso = (candidate?: string): string | undefined => {
     if (!isValidIso(candidate)) {
