@@ -1,5 +1,6 @@
 import { Card, Rating, ReviewState } from '../types';
 import { addDaysIso, daysBetween, nowIso as currentNowIso } from '../utils/time';
+import { normalizeBoundedText, normalizeOptionalBoundedText } from '../utils/text';
 import {
   DIFFICULTY_MAX,
   DIFFICULTY_MEAN_REVERSION,
@@ -716,24 +717,15 @@ function normalizeCardText(
 }
 
 function normalizeWordValue(word: string): string {
-  if (typeof word !== 'string') {
-    return '';
-  }
-  return word.trim().replace(/\s+/g, ' ').slice(0, WORD_MAX_LENGTH);
+  return normalizeBoundedText(word, WORD_MAX_LENGTH);
 }
 
 function normalizeMeaningValue(meaning: string): string {
-  if (typeof meaning !== 'string') {
-    return '';
-  }
-  return meaning.trim().replace(/\s+/g, ' ').slice(0, MEANING_MAX_LENGTH);
+  return normalizeBoundedText(meaning, MEANING_MAX_LENGTH);
 }
 
 function normalizeNotesValue(notes?: string): string | undefined {
-  if (notes !== undefined && typeof notes !== 'string') {
-    return undefined;
-  }
-  return notes?.trim().replace(/\s+/g, ' ').slice(0, NOTES_MAX_LENGTH);
+  return normalizeOptionalBoundedText(notes, NOTES_MAX_LENGTH);
 }
 
 function normalizeSchedulingCard(

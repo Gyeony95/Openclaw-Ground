@@ -24,6 +24,7 @@ import { previewIntervals } from './src/scheduler/fsrs';
 import { colors, radii } from './src/theme';
 import { formatDueLabel } from './src/utils/due';
 import { formatIntervalLabel } from './src/utils/interval';
+import { normalizeBoundedText } from './src/utils/text';
 import { Rating, ReviewState } from './src/types';
 
 function clampPercent(value: number): number {
@@ -90,7 +91,7 @@ function formatCountLabel(length: number, max: number): string {
 }
 
 function trimmedLength(value: string, max: number): number {
-  return value.trim().slice(0, max).length;
+  return normalizeBoundedText(value, max).length;
 }
 
 function formatQueueShareLabel(dueNow: number, total: number): string {
