@@ -408,6 +408,7 @@ export default function App() {
     () => !loading && !isAddBusy && trimmedWordLength > 0 && trimmedMeaningLength > 0,
     [isAddBusy, loading, trimmedWordLength, trimmedMeaningLength],
   );
+  const addButtonLabel = isAddBusy ? 'Adding...' : showAddSuccess ? 'Added' : 'Add card';
   const addFormHint = loading
     ? 'Loading deck...'
     : isAddBusy
@@ -1313,7 +1314,7 @@ export default function App() {
                 >
                   <View style={styles.primaryBtnContent}>
                     {isAddBusy ? <ActivityIndicator size="small" color="#fff" /> : null}
-                    <Text style={styles.primaryBtnText}>{isAddBusy ? 'Adding...' : 'Add card'}</Text>
+                    <Text style={styles.primaryBtnText}>{addButtonLabel}</Text>
                   </View>
                 </Pressable>
                 <Text style={[styles.addHint, { color: addHintTone }]} accessibilityLiveRegion="polite">

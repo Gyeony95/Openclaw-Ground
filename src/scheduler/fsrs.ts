@@ -918,11 +918,11 @@ function rawReviewIntervalDays(
     const earlyCap = scheduleIsDayLike ? Math.max(1, Math.floor(scheduled)) : REVIEW_SCHEDULE_FLOOR_DAYS;
     const overdueSubDayCap = elapsed + ON_TIME_TOLERANCE_DAYS >= 1 || scheduleIsDayLike ? 1 : REVIEW_SCHEDULE_FLOOR_DAYS;
     const onTimeHardCap = scheduleIsDayLike
-      ? Math.max(1, Math.floor(scheduled))
+      ? scheduleFloor
       : Math.max(overdueSubDayCap, quantizedScheduled);
     // Keep sub-day review cards on sub-day cadence for "Hard" unless they are already a day late.
     const onTimeOrLateCap = scheduleIsDayLike
-      ? Math.max(1, Math.floor(scheduled * 1.2))
+      ? Math.max(scheduleFloor, Math.floor(scheduled * 1.2))
       : Math.max(overdueSubDayCap, quantizedScheduled);
     const hardCap = reviewedEarly ? earlyCap : reviewedOnTime || reviewedSlightlyLate ? onTimeHardCap : onTimeOrLateCap;
     return quantizeReviewIntervalDays(Math.min(flooredInterval, hardCap), scheduled);

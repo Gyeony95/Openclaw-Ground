@@ -1691,6 +1691,25 @@ describe('fsrs scheduler', () => {
     expect(next.scheduledDays).toBe(1);
   });
 
+  it('keeps slightly-late fractional day-like hard reviews from shrinking below schedule floor', () => {
+    const card = {
+      ...createNewCard('nu-hard-fractional-slightly-late-floor', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1.6),
+      stability: 2.4,
+      difficulty: 5.8,
+      reps: 10,
+      lapses: 1,
+    };
+    const slightLateIso = addDaysIso(card.dueAt, 10 / 1440);
+
+    const next = reviewCard(card, 2, slightLateIso);
+
+    expect(next.card.state).toBe('review');
+    expect(next.scheduledDays).toBeGreaterThanOrEqual(2);
+  });
+
   it('allows early hard reviews to keep shorter intervals than the current schedule', () => {
     const card = createNewCard('nu-hard-early', 'letter', NOW);
     const first = reviewCard(card, 4, NOW).card;
@@ -1778,7 +1797,7 @@ describe('fsrs scheduler', () => {
     expect(onTimeHard.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
-  it('does not increase on-time hard intervals for imported fractional day-like schedules', () => {
+  it('does not shrink on-time hard intervals for imported fractional day-like schedules', () => {
     const imported = {
       ...createNewCard('daylike-hard-no-roundup', 'letter', NOW),
       state: 'review' as const,
@@ -1793,7 +1812,7 @@ describe('fsrs scheduler', () => {
     const onTimeHard = reviewCard(imported, 2, imported.dueAt);
 
     expect(onTimeHard.card.state).toBe('review');
-    expect(onTimeHard.scheduledDays).toBeLessThanOrEqual(1);
+    expect(onTimeHard.scheduledDays).toBeGreaterThanOrEqual(2);
   });
 
   it('promotes overdue hard reviews on half-day schedules to at least one day', () => {
