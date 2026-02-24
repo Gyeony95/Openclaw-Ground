@@ -1315,6 +1315,16 @@ describe('fsrs scheduler', () => {
     expect(earlyHard.scheduledDays).toBe(0.5);
   });
 
+  it('promotes day-late good reviews on half-day schedules to at least one day', () => {
+    const card = createNewCard('halfday-good-day-late', 'letter', NOW);
+    const graduated = reviewCard(card, 3, NOW).card;
+    const lateIso = '2026-02-24T12:00:00.000Z';
+    const lateGood = reviewCard(graduated, 3, lateIso);
+
+    expect(lateGood.card.state).toBe('review');
+    expect(lateGood.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
   it('keeps on-time good reviews on half-day schedules at least half-day', () => {
     const card = createNewCard('halfday-good-ontime', 'letter', NOW);
     const graduated = reviewCard(card, 3, NOW).card;

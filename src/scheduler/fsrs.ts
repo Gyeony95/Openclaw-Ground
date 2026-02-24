@@ -741,6 +741,10 @@ function rawReviewIntervalDays(
     // When a sub-day review is already at least a day late, avoid pinning "Hard" to endless 12-hour loops.
     floorFromSchedule = Math.max(floorFromSchedule, 1);
   }
+  if (phase === 'review' && rating === 3 && !scheduleIsDayLike && elapsed + ON_TIME_TOLERANCE_DAYS >= 1) {
+    // Once a sub-day review card is a day late, "Good" should graduate to at least a day cadence.
+    floorFromSchedule = Math.max(floorFromSchedule, 1);
+  }
 
   // Keep "Good" on-time reviews from shrinking the schedule due to rounding/noise.
   if (phase === 'review' && rating === 3 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {

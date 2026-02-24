@@ -304,6 +304,7 @@ export default function App() {
   const quizSeed = dueCard ? `${dueCard.id}:${dueCard.updatedAt}` : 'none';
   const quizOptions = useMemo(() => (dueCard ? composeQuizOptions(dueCard, cards, quizSeed, 3) : []), [cards, dueCard, quizSeed]);
   const correctQuizOption = useMemo(() => quizOptions.find((option) => option.isCorrect), [quizOptions]);
+  const correctQuizOptionText = correctQuizOption?.text ?? '[answer unavailable]';
   const canUseMultipleChoice = quizOptions.length === 4;
   const missingQuizOptions = Math.max(0, 4 - quizOptions.length);
   const multipleChoiceRequirementLabel =
@@ -886,6 +887,7 @@ export default function App() {
                       {dueNeedsRepair ? (
                         <Text style={styles.reviewTimelineRepair}>Malformed schedule will be repaired on review.</Text>
                       ) : null}
+                      <Text style={styles.reviewTimelineMeta}>{reviewedAtLabel(dueCard.updatedAt)}</Text>
                       <Text style={styles.reviewTimelineMeta}>{queuePositionLabel}</Text>
                       <Text style={styles.reviewTimelineMeta}>{remainingQueueLabel}</Text>
                     </View>
@@ -1100,7 +1102,7 @@ export default function App() {
                           <Text style={[styles.quizFeedback, { color: quizSelectionIsCorrect ? colors.success : colors.danger }]}>
                             {quizSelectionIsCorrect
                               ? 'Correct. Selection locked. Rate how easy this felt.'
-                              : `Incorrect. Selection locked. Correct answer: ${correctQuizOption.text}. This review will be recorded as Again.`}
+                              : `Incorrect. Selection locked. Correct answer: ${correctQuizOptionText}. This review will be recorded as Again.`}
                           </Text>
                         ) : !canUseMultipleChoice ? null : (
                           <Text style={styles.revealHint}>Select one option to unlock FSRS rating buttons.</Text>
