@@ -975,7 +975,7 @@ function rawReviewIntervalDays(
 
   // Hard recalls should not shrink the schedule when the card was reviewed on-time or later.
   if (phase === 'review' && rating === 2 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {
-    const hardOnTimeFloor = scheduleIsDayLike ? Math.max(1, Math.floor(scheduled)) : scheduleFloor;
+    const hardOnTimeFloor = scheduleIsDayLike ? scheduleFloor : REVIEW_SCHEDULE_FLOOR_DAYS;
     floorFromSchedule = Math.max(floorFromSchedule, hardOnTimeFloor);
   }
   if (phase === 'review' && rating === 2 && !scheduleIsDayLike && elapsed + ON_TIME_TOLERANCE_DAYS >= 1) {

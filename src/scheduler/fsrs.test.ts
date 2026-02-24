@@ -4369,4 +4369,41 @@ describe('fsrs scheduler', () => {
     expect(reviewed.state).toBe('review');
     expect(reviewed.stability).toBeLessThanOrEqual(120);
   });
+
+  it('keeps on-time hard reviews from shrinking day-like schedules due to floor drift', () => {
+    const onePointEightDaySchedule = {
+      ...createNewCard('review-hard-floor', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -1.8),
+      dueAt: NOW,
+      reps: 12,
+      lapses: 1,
+      stability: 1.8,
+      difficulty: 6,
+    };
+
+    const reviewed = reviewCard(onePointEightDaySchedule, 2, NOW);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(2);
+  });
+
+  it('keeps hard interval previews aligned with day-like review floors', () => {
+    const onePointEightDaySchedule = {
+      ...createNewCard('review-hard-preview-floor', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -1.8),
+      dueAt: NOW,
+      reps: 12,
+      lapses: 1,
+      stability: 1.8,
+      difficulty: 6,
+    };
+
+    const preview = previewIntervals(onePointEightDaySchedule, NOW);
+
+    expect(preview[2]).toBeGreaterThanOrEqual(2);
+    expect(preview[3]).toBeGreaterThanOrEqual(preview[2]);
+    expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
+  });
 });
