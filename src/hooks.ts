@@ -314,7 +314,8 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
 
   return cards.filter((card) => {
     const dueMs = parseDueAtOrNaN(card.dueAt);
-    return Number.isFinite(dueMs) && dueMs >= nowMs && dueMs <= cutoffMs;
+    // "Upcoming" should represent future workload, excluding cards already due now.
+    return Number.isFinite(dueMs) && dueMs > nowMs && dueMs <= cutoffMs;
   }).length;
 }
 

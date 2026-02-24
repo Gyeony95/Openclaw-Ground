@@ -233,7 +233,7 @@ export default function App() {
   }, [cards, clockIso]);
   const queueProgressMeta = loading
     ? '--'
-    : `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due within 24h`;
+    : `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due in next 24h`;
   const queueProgressTone = loading
     ? colors.primary
     : queueProgressPercent >= 80
@@ -737,7 +737,7 @@ export default function App() {
                 <MetricCard label="Overdue" value={loading ? Number.NaN : overdueNow} accent={colors.danger} />
               </View>
               <View style={isCompactLayout ? styles.metricCardCompact : null}>
-                <MetricCard label="Upcoming 24h" value={loading ? Number.NaN : dueWithinDay} accent={colors.accent} />
+                <MetricCard label="Due next 24h" value={loading ? Number.NaN : dueWithinDay} accent={colors.accent} />
               </View>
               <View style={isCompactLayout ? styles.metricCardCompact : null}>
                 <MetricCard label="Learning" value={loading ? Number.NaN : stats.learning} accent={colors.warn} />

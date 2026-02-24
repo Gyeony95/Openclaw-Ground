@@ -1,5 +1,5 @@
 import { Card, Rating, ReviewState } from '../types';
-import { addDaysIso, daysBetween, isIsoDateTime, nowIso as currentNowIso } from '../utils/time';
+import { addDaysIso, daysBetween, isIsoDateTime } from '../utils/time';
 import { normalizeBoundedText, normalizeOptionalBoundedText } from '../utils/text';
 import { parseRuntimeRatingValue } from '../utils/rating';
 import {
@@ -95,13 +95,13 @@ function normalizeIsoInput(value: unknown): string | undefined {
 }
 
 function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): string {
-  const normalizedCardUpdatedAt = normalizeIsoInput(cardUpdatedAt);
-  const fallbackRaw = normalizedCardUpdatedAt && isValidIso(normalizedCardUpdatedAt) ? normalizedCardUpdatedAt : currentNowIso();
-  const fallback = toCanonicalIso(fallbackRaw, currentNowIso());
-  const normalizedRequestedNowIso = normalizeIsoInput(requestedNowIso);
-  const requestedValid = Boolean(normalizedRequestedNowIso && isValidIso(normalizedRequestedNowIso));
   const wallClockMs = safeNowMs();
   const wallClockIso = toSafeIso(wallClockMs);
+  const normalizedCardUpdatedAt = normalizeIsoInput(cardUpdatedAt);
+  const fallbackRaw = normalizedCardUpdatedAt && isValidIso(normalizedCardUpdatedAt) ? normalizedCardUpdatedAt : wallClockIso;
+  const fallback = toCanonicalIso(fallbackRaw, wallClockIso);
+  const normalizedRequestedNowIso = normalizeIsoInput(requestedNowIso);
+  const requestedValid = Boolean(normalizedRequestedNowIso && isValidIso(normalizedRequestedNowIso));
   const fallbackMs = Date.parse(fallback);
   if (
     !requestedValid &&
