@@ -86,7 +86,7 @@ export function RatingRow({
                   : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
                 isRatingLocked ? styles.buttonLocked : null,
                 pressed && !ratingDisabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
-                ratingDisabled && styles.buttonDisabled,
+                ratingDisabled && !isRatingLocked && styles.buttonDisabled,
               ]}
               accessibilityRole="button"
               accessibilityLabel={accessibilityLabel}

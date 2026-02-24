@@ -27,11 +27,8 @@ export function queueTone({
   if (loading) {
     return colors.subInk;
   }
-  if (hasPendingRepairs) {
-    return colors.warn;
-  }
   if (!hasDueCard) {
-    return colors.success;
+    return hasPendingRepairs ? colors.warn : colors.success;
   }
   if (needsRepair) {
     return colors.warn;

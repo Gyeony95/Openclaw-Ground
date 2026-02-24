@@ -1113,6 +1113,31 @@ function previewMinimumIntervalByRating(state: ReviewState): RatingIntervalPrevi
   };
 }
 
+function previewMaximumIntervalByRating(state: ReviewState): RatingIntervalPreview {
+  if (state === 'review') {
+    return {
+      1: RELEARNING_SCHEDULE_FLOOR_DAYS,
+      2: STABILITY_MAX,
+      3: STABILITY_MAX,
+      4: STABILITY_MAX,
+    };
+  }
+  if (state === 'relearning') {
+    return {
+      1: RELEARNING_SCHEDULE_FLOOR_DAYS,
+      2: 15 * MINUTE_IN_DAYS,
+      3: REVIEW_SCHEDULE_FLOOR_DAYS,
+      4: 1,
+    };
+  }
+  return {
+    1: MINUTE_IN_DAYS,
+    2: 5 * MINUTE_IN_DAYS,
+    3: REVIEW_SCHEDULE_FLOOR_DAYS,
+    4: 1,
+  };
+}
+
 function normalizeCardText(
   card: Pick<Card, 'word' | 'meaning' | 'notes'>,
 ): Pick<Card, 'word' | 'meaning' | 'notes'> {
@@ -1347,11 +1372,12 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
     const previewCard = normalized.card;
     const previewIso = normalized.currentIso;
     const previewFloor = previewMinimumIntervalByRating(previewCard.state);
-    const ensureFiniteFloor = (candidate: number, floor: number): number => {
+    const previewCeiling = previewMaximumIntervalByRating(previewCard.state);
+    const ensureFiniteWithinBounds = (candidate: number, floor: number, ceiling: number): number => {
       if (!Number.isFinite(candidate)) {
         return floor;
       }
-      return Math.max(floor, candidate);
+      return clamp(candidate, floor, ceiling);
     };
     const previewForRating = (rating: Rating): number => {
       try {
@@ -1361,10 +1387,10 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
       }
     };
     const preview = {
-      1: ensureFiniteFloor(previewForRating(1), previewFloor[1]),
-      2: ensureFiniteFloor(previewForRating(2), previewFloor[2]),
-      3: ensureFiniteFloor(previewForRating(3), previewFloor[3]),
-      4: ensureFiniteFloor(previewForRating(4), previewFloor[4]),
+      1: ensureFiniteWithinBounds(previewForRating(1), previewFloor[1], previewCeiling[1]),
+      2: ensureFiniteWithinBounds(previewForRating(2), previewFloor[2], previewCeiling[2]),
+      3: ensureFiniteWithinBounds(previewForRating(3), previewFloor[3], previewCeiling[3]),
+      4: ensureFiniteWithinBounds(previewForRating(4), previewFloor[4], previewCeiling[4]),
     };
     return ensureOrderedPreview(preview);
   } catch {

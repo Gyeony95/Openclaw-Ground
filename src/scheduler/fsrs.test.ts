@@ -4297,4 +4297,30 @@ describe('fsrs scheduler', () => {
     expect(updatedReads).toBe(1);
     expect(dueReads).toBe(1);
   });
+
+  it('keeps learning and relearning preview intervals within phase-safe ceilings', () => {
+    const learning = createNewCard('preview-learning-cap', 'definition', NOW);
+    const relearning = {
+      ...createNewCard('preview-relearning-cap', 'definition', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10 / 1440),
+      reps: 5,
+      lapses: 1,
+      stability: 0.2,
+    };
+
+    const learningPreview = previewIntervals(learning, NOW);
+    const relearningPreview = previewIntervals(relearning, NOW);
+
+    expect(learningPreview[1]).toBeLessThanOrEqual(1 / 1440);
+    expect(learningPreview[2]).toBeLessThanOrEqual(5 / 1440);
+    expect(learningPreview[3]).toBeLessThanOrEqual(0.5);
+    expect(learningPreview[4]).toBeLessThanOrEqual(1);
+
+    expect(relearningPreview[1]).toBeLessThanOrEqual(10 / 1440);
+    expect(relearningPreview[2]).toBeLessThanOrEqual(15 / 1440);
+    expect(relearningPreview[3]).toBeLessThanOrEqual(0.5);
+    expect(relearningPreview[4]).toBeLessThanOrEqual(1);
+  });
 });

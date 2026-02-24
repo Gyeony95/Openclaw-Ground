@@ -5,6 +5,19 @@ const NOW = '2026-02-24T12:00:00.000Z';
 
 describe('scheduleStatus', () => {
   describe('queueTone', () => {
+    it('does not hide overdue due-card urgency when unrelated repairs are pending', () => {
+      const tone = queueTone({
+        dueAt: '2026-02-24T11:58:30.000Z',
+        clockIso: NOW,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+        hasPendingRepairs: true,
+      });
+
+      expect(tone).toBe(colors.danger);
+    });
+
     it('shows warning tone for repair-needed due cards even if dueAt is in the future', () => {
       const tone = queueTone({
         dueAt: '2026-02-24T14:00:00.000Z',
