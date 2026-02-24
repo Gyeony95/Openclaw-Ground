@@ -543,6 +543,40 @@ function normalizeScheduledDays(value: number, state: ReviewState): number {
   return scheduleFallbackForState(state);
 }
 
+function stabilityCeilingForState(state: ReviewState, scheduledDays: number): number {
+  const scheduleAnchor = clampFinite(
+    scheduledDays,
+    STABILITY_MIN,
+    STABILITY_MAX,
+    scheduleFallbackForState(state),
+  );
+
+  if (state === 'review') {
+    return clamp(
+      Math.max(
+        REVIEW_STABILITY_OUTLIER_FLOOR_DAYS,
+        scheduleAnchor * REVIEW_STABILITY_OUTLIER_MULTIPLIER,
+      ),
+      STABILITY_MIN,
+      STABILITY_MAX,
+    );
+  }
+
+  if (state === 'relearning') {
+    return clamp(
+      Math.max(RELEARNING_MAX_SCHEDULE_DAYS, scheduleAnchor * NON_REVIEW_OUTLIER_MULTIPLIER),
+      STABILITY_MIN,
+      STABILITY_MAX,
+    );
+  }
+
+  return clamp(
+    Math.max(LEARNING_MAX_SCHEDULE_DAYS, scheduleAnchor * NON_REVIEW_OUTLIER_MULTIPLIER),
+    STABILITY_MIN,
+    STABILITY_MAX,
+  );
+}
+
 function normalizeElapsedDays(value: number): number {
   if (!Number.isFinite(value)) {
     return 0;
@@ -947,8 +981,17 @@ function normalizeSchedulingCard(
   // amplifying corrupted historical stability into runaway intervals.
   const stabilityInput =
     dueNeedsRepair && normalizedState !== 'learning' ? normalizedScheduledDays : card.stability;
-  const normalizedStability = clampFinite(
+  const normalizedStabilityBase = clampFinite(
     stabilityInput,
+    STABILITY_MIN,
+    STABILITY_MAX,
+    normalizedStabilityFallback,
+  );
+  const normalizedStability = clampFinite(
+    Math.min(
+      normalizedStabilityBase,
+      stabilityCeilingForState(normalizedState, normalizedScheduledDays),
+    ),
     STABILITY_MIN,
     STABILITY_MAX,
     normalizedStabilityFallback,

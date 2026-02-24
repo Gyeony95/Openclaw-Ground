@@ -1019,6 +1019,45 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeLessThan(30);
   });
 
+  it('caps inflated review stability against short review schedules to avoid runaway intervals', () => {
+    const corrupted = {
+      ...createNewCard('stability-ceiling-review', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1),
+      stability: STABILITY_MAX,
+      difficulty: 5,
+      reps: 30,
+      lapses: 1,
+    };
+
+    const reviewed = reviewCard(corrupted, 3, corrupted.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(180);
+    expect(reviewed.card.stability).toBeLessThanOrEqual(180);
+  });
+
+  it('keeps relearning stability bounded to short retry windows when persisted stability is corrupted', () => {
+    const corrupted = {
+      ...createNewCard('stability-ceiling-relearning', 'definition', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 15 / 1440),
+      stability: STABILITY_MAX,
+      difficulty: 6,
+      reps: 22,
+      lapses: 4,
+    };
+
+    const reviewed = reviewCard(corrupted, 2, corrupted.dueAt);
+
+    expect(reviewed.card.state).toBe('relearning');
+    expect(reviewed.scheduledDays).toBeCloseTo(15 / 1440, 8);
+    expect(reviewed.card.stability).toBeLessThanOrEqual(12);
+  });
+
   it('uses an intermediate hard step before graduating learning cards', () => {
     const card = createNewCard('learning-hard-step', 'definition', NOW);
     const hard = reviewCard(card, 2, NOW);

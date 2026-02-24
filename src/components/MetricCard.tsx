@@ -11,7 +11,8 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const { width } = useWindowDimensions();
   const isNarrow = width < 360;
   const hasValue = Number.isFinite(value);
-  const displayValue = hasValue ? value.toLocaleString() : 'Loading...';
+  const normalizedValue = hasValue ? Math.max(0, Math.round(value)) : null;
+  const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : 'Loading...';
   const accessibilityValue = hasValue ? displayValue : 'loading';
   const statusLabel = hasValue ? 'Live' : 'Syncing';
 
@@ -37,6 +38,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.68}
+        maxFontSizeMultiplier={1.3}
       >
         {displayValue}
       </Text>

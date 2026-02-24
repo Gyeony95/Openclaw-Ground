@@ -64,7 +64,9 @@ export function RatingRow({
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
           const contentTone = isRatingLocked ? item.tone : ratingDisabled ? colors.subInk : item.tone;
-          const accessibilityIntervalLabel = isRatingLocked ? 'Locked' : interval;
+          const accessibilityLabel = isRatingLocked
+            ? `Rate ${item.text}. Locked.`
+            : `Rate ${item.text}. Next interval ${interval}.`;
           return (
             <Pressable
               key={item.rating}
@@ -91,7 +93,7 @@ export function RatingRow({
                 ratingDisabled && styles.buttonDisabled,
               ]}
               accessibilityRole="button"
-              accessibilityLabel={`Rate ${item.text}. Next interval ${accessibilityIntervalLabel}.`}
+              accessibilityLabel={accessibilityLabel}
               accessibilityHint={
                 busy
                   ? 'Saving current review, rating buttons are temporarily disabled'
