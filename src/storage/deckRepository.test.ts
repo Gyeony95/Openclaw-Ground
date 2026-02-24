@@ -139,6 +139,35 @@ describe('deck repository', () => {
     expect(deck.cards[0].state).toBe('review');
   });
 
+  it('keeps plausible long review schedules that remain within the stability outlier window', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'review-plausible-long-window',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-06-12T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            stability: 12,
+            difficulty: 5,
+            reps: 18,
+            lapses: 2,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].dueAt).toBe('2026-06-12T00:00:00.000Z');
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[0].stability).toBe(12);
+    expect(deck.cards[0].state).toBe('review');
+  });
+
   it('trims oversized persisted text fields to app limits', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

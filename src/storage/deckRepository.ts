@@ -24,6 +24,8 @@ const LEARNING_MAX_SCHEDULE_DAYS = 1;
 const RELEARNING_MAX_SCHEDULE_DAYS = 2;
 const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 const REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS = 7;
+const REVIEW_STABILITY_OUTLIER_MULTIPLIER = 12;
+const REVIEW_STABILITY_OUTLIER_FLOOR_DAYS = 120;
 const NON_REVIEW_OUTLIER_MULTIPLIER = 6;
 
 const VALID_STATES: ReviewState[] = ['learning', 'review', 'relearning'];
@@ -259,7 +261,12 @@ function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode
     }
     scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
   }
-  const reviewScheduleCapDays = Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, normalizedStability * 6, 30);
+  // Keep review outlier repairs conservative so plausible long intervals are preserved.
+  const reviewScheduleCapDays = Math.max(
+    REVIEW_SCHEDULE_FLOOR_DAYS,
+    normalizedStability * REVIEW_STABILITY_OUTLIER_MULTIPLIER,
+    REVIEW_STABILITY_OUTLIER_FLOOR_DAYS,
+  );
   if (state === 'review' && scheduleDays > reviewScheduleCapDays) {
     const repairedReviewDays = clamp(
       normalizedStability,
