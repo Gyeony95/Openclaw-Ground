@@ -144,6 +144,18 @@ function parseRuntimeFiniteNumber(value: unknown): number | null {
 }
 
 function normalizeNonNegativeCounter(value: unknown): number | null {
+  if (value === Number.POSITIVE_INFINITY) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed === 'infinity' || trimmed === '+infinity') {
+      return Number.MAX_SAFE_INTEGER;
+    }
+    if (trimmed === '-infinity') {
+      return null;
+    }
+  }
   const parsed = parseRuntimeFiniteNumber(value);
   if (parsed === null || !Number.isInteger(parsed)) {
     return null;

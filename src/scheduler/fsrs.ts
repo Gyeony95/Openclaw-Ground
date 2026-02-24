@@ -588,6 +588,15 @@ function normalizeCounter(value: unknown): number {
   if (value === Number.POSITIVE_INFINITY) {
     return COUNTER_MAX;
   }
+  if (typeof value === 'string') {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed === 'infinity' || trimmed === '+infinity') {
+      return COUNTER_MAX;
+    }
+    if (trimmed === '-infinity') {
+      return 0;
+    }
+  }
   const parsed = parseRuntimeFiniteNumber(value);
   if (!Number.isFinite(parsed)) {
     return 0;

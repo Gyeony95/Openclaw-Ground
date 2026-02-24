@@ -1865,6 +1865,19 @@ describe('hasScheduleRepairNeed', () => {
 
     expect(hasScheduleRepairNeed(scientificReview)).toBe(false);
   });
+
+  it('treats Infinity-like reps strings as valid non-negative counters', () => {
+    const infiniteRepsReview = {
+      ...createNewCard('repair-review-infinity-reps', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T12:00:00.000Z',
+      reps: 'Infinity' as unknown as number,
+      stability: 2,
+    };
+
+    expect(hasScheduleRepairNeed(infiniteRepsReview)).toBe(false);
+  });
 });
 
 describe('countScheduleRepairCards', () => {

@@ -4058,6 +4058,25 @@ describe('fsrs scheduler', () => {
     expect(easy.scheduledDays).toBeGreaterThanOrEqual(good.scheduledDays);
   });
 
+  it('treats Infinity-like string counters as existing review history during state inference', () => {
+    const malformedStateCard = {
+      ...createNewCard('infinite-string-reps', 'definition', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: 'Infinity',
+      lapses: '0',
+      stability: 2,
+      difficulty: 5,
+    } as unknown as Card;
+
+    const reviewed = reviewCard(malformedStateCard, 1, NOW).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.lapses).toBe(1);
+    expect(reviewed.dueAt).toBe(addDaysIso(NOW, 10 / 1440));
+  });
+
   it('snapshots runtime timeline accessors once during review scheduling', () => {
     const runtimeCard = {
       ...createNewCard('runtime-snapshot-review', 'definition', NOW),

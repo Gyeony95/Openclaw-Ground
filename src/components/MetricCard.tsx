@@ -26,6 +26,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
       accessibilityHint={hasValue ? 'Metric is up to date.' : 'Metric is still loading.'}
     >
       <View style={[styles.topBorder, { backgroundColor: accent }]} />
+      <View style={[styles.accentWash, { backgroundColor: `${accent}12` }]} />
       <View style={styles.head}>
         <View style={[styles.dot, { backgroundColor: accent }]} />
         <Text style={styles.label} numberOfLines={2} ellipsizeMode="tail">
@@ -77,6 +78,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 3,
+  },
+  accentWash: {
+    position: 'absolute',
+    top: 8,
+    right: -24,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
   },
   head: {
     flexDirection: 'row',
