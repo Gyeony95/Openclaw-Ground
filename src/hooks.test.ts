@@ -11,6 +11,7 @@ import {
   hasDueCard,
   mergeDeckCards,
   resolveDeckClockTick,
+  resolveAddCardClock,
   resolveNextUiClock,
   resolveReviewClock,
   selectLatestReviewedAt,
@@ -1716,6 +1717,32 @@ describe('resolveNextUiClock', () => {
     nowSpy.mockRestore();
 
     expect(resolved).toBe('2026-02-23T12:15:00.000Z');
+  });
+});
+
+describe('resolveAddCardClock', () => {
+  it('keeps near-future rendered clocks that are within the UI skew tolerance', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
+    const resolved = resolveAddCardClock('2026-02-23T12:00:30.000Z', '2026-02-23T12:00:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:00:30.000Z');
+  });
+
+  it('falls back to runtime now when rendered clock is materially future-skewed', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
+    const resolved = resolveAddCardClock('2026-02-23T12:20:00.000Z', '2026-02-23T12:00:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:00:00.000Z');
+  });
+
+  it('falls back to wall clock when both add-card clock candidates are invalid', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const resolved = resolveAddCardClock('bad-current-time', 'bad-runtime-time');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:34:56.000Z');
   });
 });
 

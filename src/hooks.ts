@@ -532,6 +532,10 @@ export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: stri
   return wallClockIso;
 }
 
+export function resolveAddCardClock(renderedClockIso: string, runtimeNowIso: string): string {
+  return resolveNextUiClock(renderedClockIso, runtimeNowIso);
+}
+
 export function resolveDeckClockTick(previousClockIso: string, runtimeNowIso: string): string {
   return resolveNextUiClock(previousClockIso, runtimeNowIso);
 }
@@ -644,7 +648,7 @@ export function useDeck() {
     if (!normalizedWord || !normalizedMeaning) {
       return;
     }
-    const current = resolveReviewClock(clockIso, nowIso());
+    const current = resolveAddCardClock(clockIso, nowIso());
     const created = createNewCard(normalizedWord, normalizedMeaning, current, normalizedNotes || undefined);
     setClockIso(current);
     setCanPersist(true);

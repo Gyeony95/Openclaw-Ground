@@ -1091,11 +1091,7 @@ export default function App() {
                               ? 'Correct. Selection locked. Rate how easy this felt.'
                               : `Incorrect. Selection locked. Correct answer: ${correctQuizOption.text}. This review will be recorded as Again.`}
                           </Text>
-                        ) : !canUseMultipleChoice ? (
-                          <Text style={styles.revealHint}>
-                            {multipleChoiceRequirementLabel ?? 'Need at least four distinct card meanings.'}
-                          </Text>
-                        ) : (
+                        ) : !canUseMultipleChoice ? null : (
                           <Text style={styles.revealHint}>Select one option to unlock FSRS rating buttons.</Text>
                         )}
                       </View>
