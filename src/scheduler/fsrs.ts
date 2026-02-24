@@ -677,14 +677,14 @@ function normalizeWordValue(word: string): string {
   if (typeof word !== 'string') {
     return '';
   }
-  return word.trim().slice(0, WORD_MAX_LENGTH);
+  return word.trim().replace(/\s+/g, ' ').slice(0, WORD_MAX_LENGTH);
 }
 
 function normalizeMeaningValue(meaning: string): string {
   if (typeof meaning !== 'string') {
     return '';
   }
-  return meaning.trim().slice(0, MEANING_MAX_LENGTH);
+  return meaning.trim().replace(/\s+/g, ' ').slice(0, MEANING_MAX_LENGTH);
 }
 
 function normalizeNotesValue(notes?: string): string | undefined {

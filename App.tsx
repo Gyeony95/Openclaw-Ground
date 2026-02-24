@@ -648,11 +648,17 @@ export default function App() {
                       <Text style={styles.emptyQueueMeta}>No upcoming cards scheduled yet.</Text>
                     )}
                     <Pressable
-                      style={({ pressed }) => [styles.emptyQueueAction, pressed && styles.ghostBtnPressed]}
+                      style={({ pressed }) => [
+                        styles.emptyQueueAction,
+                        !isFormEditable && styles.emptyQueueActionDisabled,
+                        pressed && isFormEditable && styles.ghostBtnPressed,
+                      ]}
                       onPress={focusAddForm}
+                      disabled={!isFormEditable}
                       accessibilityRole="button"
                       accessibilityLabel="Start adding words"
                       accessibilityHint="Scrolls to the add form and focuses the word input"
+                      accessibilityState={{ disabled: !isFormEditable }}
                     >
                       <Text style={styles.emptyQueueActionText}>Start adding words</Text>
                     </Pressable>
@@ -1190,6 +1196,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     backgroundColor: colors.surface,
+  },
+  emptyQueueActionDisabled: {
+    opacity: 0.55,
   },
   emptyQueueActionText: {
     fontSize: 12,

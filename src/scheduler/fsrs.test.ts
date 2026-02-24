@@ -142,6 +142,26 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.meaning.startsWith(' ')).toBe(false);
   });
 
+  it('collapses internal whitespace in word and meaning when creating cards', () => {
+    const card = createNewCard('  new   york  ', '  very   large   city  ', NOW);
+
+    expect(card.word).toBe('new york');
+    expect(card.meaning).toBe('very large city');
+  });
+
+  it('collapses internal whitespace in word and meaning during review normalization', () => {
+    const card = {
+      ...createNewCard('phi-spacing', 'letter', NOW),
+      word: '  spaced    word  ',
+      meaning: '  many    spaces   here ',
+    };
+
+    const reviewed = reviewCard(card, 3, NOW);
+
+    expect(reviewed.card.word).toBe('spaced word');
+    expect(reviewed.card.meaning).toBe('many spaces here');
+  });
+
   it('drops whitespace-only notes while reviewing existing cards', () => {
     const card = {
       ...createNewCard('phi-notes', 'letter', NOW),
