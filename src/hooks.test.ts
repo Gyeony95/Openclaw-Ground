@@ -1294,10 +1294,17 @@ describe('countUpcomingDueCards', () => {
     expect(countUpcomingDueCards([upcoming], NOW, -5)).toBe(0);
   });
 
-  it('returns zero when the requested upcoming window is non-finite', () => {
+  it('returns zero when the requested upcoming window is non-finite NaN', () => {
     const upcoming = { ...createNewCard('upcoming-window-2', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
 
     expect(countUpcomingDueCards([upcoming], NOW, Number.NaN)).toBe(0);
+  });
+
+  it('treats infinite upcoming windows as capped windows instead of dropping matches', () => {
+    const upcoming = { ...createNewCard('upcoming-window-infinity', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
+
+    expect(countUpcomingDueCards([upcoming], NOW, Number.POSITIVE_INFINITY)).toBe(1);
+    expect(countUpcomingDueCards([upcoming], NOW, Number.NEGATIVE_INFINITY)).toBe(0);
   });
 
   it('caps pathologically large upcoming windows instead of dropping all matches', () => {

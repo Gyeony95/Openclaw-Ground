@@ -196,6 +196,47 @@ describe('fsrs scheduler', () => {
     expect(card.dueAt).toBe(NOW);
   });
 
+  it('returns conservative learning preview intervals when runtime card data is corrupted', () => {
+    const corrupted = createNewCard('preview-corrupted-learning', 'safe', NOW);
+    Object.defineProperty(corrupted, 'difficulty', {
+      get() {
+        throw new Error('bad runtime difficulty');
+      },
+    });
+
+    const intervals = previewIntervals(corrupted, NOW);
+
+    expect(intervals).toEqual({
+      1: 1 / 1440,
+      2: 5 / 1440,
+      3: 0.5,
+      4: 1,
+    });
+  });
+
+  it('preserves review-phase floor intervals when preview falls back for corrupted runtime card data', () => {
+    const corruptedReview = {
+      ...createNewCard('preview-corrupted-review', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 7),
+    };
+    Object.defineProperty(corruptedReview, 'difficulty', {
+      get() {
+        throw new Error('bad runtime difficulty');
+      },
+    });
+
+    const intervals = previewIntervals(corruptedReview, NOW);
+
+    expect(intervals).toEqual({
+      1: 10 / 1440,
+      2: 0.5,
+      3: 0.5,
+      4: 0.5,
+    });
+  });
+
   it('falls back to runtime wall clock when creation timestamp is pathologically far past', () => {
     jest.useFakeTimers();
     try {

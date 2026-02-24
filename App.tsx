@@ -398,6 +398,10 @@ export default function App() {
   const notesLength = normalizedNotes.length;
   const missingWord = trimmedWordLength === 0;
   const missingMeaning = trimmedMeaningLength === 0;
+  const canAttemptAdd = useMemo(
+    () => !loading && !isAddBusy,
+    [isAddBusy, loading],
+  );
   const canAdd = useMemo(
     () => !loading && !isAddBusy && trimmedWordLength > 0 && trimmedMeaningLength > 0,
     [isAddBusy, loading, trimmedWordLength, trimmedMeaningLength],
@@ -1289,14 +1293,15 @@ export default function App() {
                   style={({ pressed }) => [
                     styles.primaryBtn,
                     pressed && styles.primaryBtnPressed,
-                    !canAdd && styles.primaryBtnDisabled,
+                    !canAttemptAdd && styles.primaryBtnDisabled,
+                    !canAdd && canAttemptAdd && styles.primaryBtnInactive,
                   ]}
                   onPress={handleAddCard}
-                  disabled={!canAdd}
+                  disabled={!canAttemptAdd}
                   accessibilityRole="button"
                   accessibilityLabel="Add card"
                   accessibilityHint={canAdd ? 'Adds this word to your study deck' : addFormHint}
-                  accessibilityState={{ disabled: !canAdd, busy: isAddBusy }}
+                  accessibilityState={{ disabled: !canAttemptAdd, busy: isAddBusy }}
                 >
                   <View style={styles.primaryBtnContent}>
                     {isAddBusy ? <ActivityIndicator size="small" color="#fff" /> : null}
@@ -1986,6 +1991,9 @@ const styles = StyleSheet.create({
     opacity: 0.55,
     shadowOpacity: 0,
     elevation: 0,
+  },
+  primaryBtnInactive: {
+    opacity: 0.85,
   },
   primaryBtnText: {
     color: '#fff',

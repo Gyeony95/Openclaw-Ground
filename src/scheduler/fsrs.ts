@@ -1166,24 +1166,36 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
 }
 
 export function previewIntervals(card: Card, nowIso: string): RatingIntervalPreview {
-  const normalized = normalizeSchedulingCard(card, nowIso);
-  const previewCard = normalized.card;
-  const previewIso = normalized.currentIso;
-  const previewFloor = previewMinimumIntervalByRating(previewCard.state);
-  const ensureFiniteFloor = (candidate: number, floor: number): number => {
-    if (!Number.isFinite(candidate)) {
-      return floor;
+  const fallbackState = (() => {
+    try {
+      return normalizeState(card.state);
+    } catch {
+      return 'learning' as const;
     }
-    return Math.max(floor, candidate);
-  };
-  const preview = {
-    1: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 1).scheduledDays, previewFloor[1]),
-    2: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 2).scheduledDays, previewFloor[2]),
-    3: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 3).scheduledDays, previewFloor[3]),
-    4: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 4).scheduledDays, previewFloor[4]),
-  };
-
-  return ensureOrderedPreview(preview);
+  })();
+  const fallbackPreview = ensureOrderedPreview(previewMinimumIntervalByRating(fallbackState));
+  try {
+    const normalized = normalizeSchedulingCard(card, nowIso);
+    const previewCard = normalized.card;
+    const previewIso = normalized.currentIso;
+    const previewFloor = previewMinimumIntervalByRating(previewCard.state);
+    const ensureFiniteFloor = (candidate: number, floor: number): number => {
+      if (!Number.isFinite(candidate)) {
+        return floor;
+      }
+      return Math.max(floor, candidate);
+    };
+    const preview = {
+      1: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 1).scheduledDays, previewFloor[1]),
+      2: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 2).scheduledDays, previewFloor[2]),
+      3: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 3).scheduledDays, previewFloor[3]),
+      4: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 4).scheduledDays, previewFloor[4]),
+    };
+    return ensureOrderedPreview(preview);
+  } catch {
+    // Keep interval previews available for UI/analytics when runtime card accessors are corrupted.
+    return fallbackPreview;
+  }
 }
 
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {

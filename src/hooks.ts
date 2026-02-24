@@ -315,6 +315,9 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
   if (!Number.isFinite(nowMs)) {
     return 0;
   }
+  if (hours === Number.POSITIVE_INFINITY) {
+    hours = MAX_UPCOMING_HOURS;
+  }
   if (!Number.isFinite(hours)) {
     return 0;
   }
