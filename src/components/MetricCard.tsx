@@ -14,7 +14,8 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const normalizedValue = hasValue ? Math.max(0, Math.round(value)) : null;
   const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : '--';
   const accessibilityValue = hasValue ? displayValue : 'loading';
-  const statusLabel = hasValue ? 'Live' : 'Syncing';
+  const statusLabel = hasValue ? 'Live' : 'Loading';
+  const statusTone = hasValue ? colors.subInk : colors.warn;
 
   return (
     <View
@@ -22,6 +23,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
       accessible
       accessibilityRole="text"
       accessibilityLabel={`${label}: ${accessibilityValue}`}
+      accessibilityHint={hasValue ? 'Metric is up to date.' : 'Metric is still loading.'}
     >
       <View style={[styles.topBorder, { backgroundColor: accent }]} />
       <View style={styles.head}>
@@ -30,7 +32,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
           {label}
         </Text>
         <View style={[styles.badge, !hasValue && styles.badgeMuted]}>
-          <Text style={styles.badgeText}>{statusLabel}</Text>
+          <Text style={[styles.badgeText, { color: statusTone }]}>{statusLabel}</Text>
         </View>
       </View>
       <Text

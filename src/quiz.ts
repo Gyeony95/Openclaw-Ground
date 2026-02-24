@@ -253,13 +253,22 @@ interface RankedCandidate {
   score: number;
 }
 
-function scoreDistractor(target: Card, candidate: Card): number {
-  const meaningOverlap = normalizedTokenOverlap(target.meaning, candidate.meaning);
-  const wordOverlap = normalizedTokenOverlap(target.word, candidate.word);
-  const meaningLexical = lexicalSimilarity(target.meaning, candidate.meaning);
-  const wordLexical = lexicalSimilarity(target.word, candidate.word);
-  const lengthScore = closishLengthScore(target.meaning, candidate.meaning);
-  const samePos = inferPartOfSpeech(target.meaning) === inferPartOfSpeech(candidate.meaning);
+function readCardText(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function scoreDistractor(
+  targetWord: string,
+  targetMeaning: string,
+  candidateWord: string,
+  candidateMeaning: string,
+): number {
+  const meaningOverlap = normalizedTokenOverlap(targetMeaning, candidateMeaning);
+  const wordOverlap = normalizedTokenOverlap(targetWord, candidateWord);
+  const meaningLexical = lexicalSimilarity(targetMeaning, candidateMeaning);
+  const wordLexical = lexicalSimilarity(targetWord, candidateWord);
+  const lengthScore = closishLengthScore(targetMeaning, candidateMeaning);
+  const samePos = inferPartOfSpeech(targetMeaning) === inferPartOfSpeech(candidateMeaning);
 
   let score =
     meaningOverlap * 0.45 +
@@ -272,8 +281,8 @@ function scoreDistractor(target: Card, candidate: Card): number {
     score += 0.12;
   }
 
-  const targetTokenLength = tokenize(target.meaning).length;
-  const candidateTokenLength = tokenize(candidate.meaning).length;
+  const targetTokenLength = tokenize(targetMeaning).length;
+  const candidateTokenLength = tokenize(candidateMeaning).length;
   if (Math.abs(targetTokenLength - candidateTokenLength) <= 1) {
     score += 0.08;
   }
@@ -282,23 +291,33 @@ function scoreDistractor(target: Card, candidate: Card): number {
 }
 
 export function generateDistractors(target: Card, deckCards: Card[], distractorCount = 3): Card[] {
-  const targetMeaning = normalizeText(target.meaning);
+  const targetMeaningRaw = readCardText(target?.meaning);
+  const targetWordRaw = readCardText(target?.word);
+  const targetMeaning = normalizeText(targetMeaningRaw);
   const ranked: RankedCandidate[] = [];
   const seenNormalizedMeanings = new Set<string>();
   const selected: Card[] = [];
 
   for (const card of deckCards) {
+    if (!card || typeof card !== 'object') {
+      continue;
+    }
+    const candidateMeaningRaw = readCardText(card.meaning);
     const sameCardIdentity =
       card === target ||
       (card.id === target.id && card.word === target.word && card.meaning === target.meaning);
     if (sameCardIdentity) {
       continue;
     }
-    const candidateMeaning = normalizeText(card.meaning);
+    const candidateMeaning = normalizeText(candidateMeaningRaw);
     if (!candidateMeaning || candidateMeaning === targetMeaning) {
       continue;
     }
-    ranked.push({ card, score: scoreDistractor(target, card) });
+    const candidateWordRaw = readCardText(card.word);
+    ranked.push({
+      card,
+      score: scoreDistractor(targetWordRaw, targetMeaningRaw, candidateWordRaw, candidateMeaningRaw),
+    });
   }
 
   ranked.sort((left, right) => {
@@ -325,10 +344,13 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
   // even when similarity ranking cannot produce enough distinct distractors.
   if (selected.length < distractorCount) {
     for (const card of deckCards) {
+      if (!card || typeof card !== 'object') {
+        continue;
+      }
       if (card.id === target.id) {
         continue;
       }
-      const normalized = normalizeText(card.meaning);
+      const normalized = normalizeText(readCardText(card.meaning));
       if (!normalized || normalized === targetMeaning || seenNormalizedMeanings.has(normalized)) {
         continue;
       }

@@ -985,6 +985,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeCloseTo(1 / 1440, 7);
   });
 
+  it('saturates corrupted reps and lapses counters at safe integer bounds during review', () => {
+    const saturated = {
+      ...createNewCard('counter-saturation', 'safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 1),
+      updatedAt: NOW,
+      reps: Number.POSITIVE_INFINITY,
+      lapses: Number.POSITIVE_INFINITY,
+      stability: 3,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(saturated, 1, addDaysIso(NOW, 1));
+
+    expect(reviewed.card.reps).toBe(Number.MAX_SAFE_INTEGER);
+    expect(reviewed.card.lapses).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
   it('normalizes whitespace-padded review state strings at runtime', () => {
     const reviewCardBase = {
       ...createNewCard('runtime-state-review', 'letter', NOW),

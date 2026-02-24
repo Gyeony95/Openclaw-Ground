@@ -1067,10 +1067,10 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
 }
 
 function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating): ReviewResult {
-  const currentState = baseCard.state;
+  const currentState = normalizeState(baseCard.state);
   const normalizedRating = normalizeRating(rating, currentState);
-  const previousReps = baseCard.reps;
-  const previousLapses = baseCard.lapses;
+  const previousReps = normalizeCounter(baseCard.reps);
+  const previousLapses = normalizeCounter(baseCard.lapses);
   const updatedAt = baseCard.updatedAt;
   const dueAt = baseCard.dueAt;
   const createdAt = baseCard.createdAt;

@@ -216,6 +216,25 @@ describe('quiz distractors', () => {
     expect(options.every((option) => option.text.trim().length > 0)).toBe(true);
   });
 
+  it('skips malformed runtime deck entries when generating distractors and options', () => {
+    const malformedDeck = [
+      createCard('target-safe', 'anchor', 'to fix firmly in place'),
+      createCard('c2', 'pin', 'to fasten with a pin'),
+      createCard('c3', 'clip', 'to hold together'),
+      createCard('c4', 'bind', 'to tie tightly'),
+      null,
+      { ...createCard('bad-meaning', 'corrupt', 'placeholder'), meaning: { bad: true } as unknown as string },
+      { ...createCard('bad-word', 'corrupt', 'to attach lightly'), word: 42 as unknown as string },
+    ] as unknown as Card[];
+
+    expect(() => generateDistractors(malformedDeck[0], malformedDeck, 3)).not.toThrow();
+    expect(() => composeQuizOptions(malformedDeck[0], malformedDeck, 'malformed-runtime-seed')).not.toThrow();
+
+    const options = composeQuizOptions(malformedDeck[0], malformedDeck, 'malformed-runtime-seed');
+    expect(options).toHaveLength(4);
+    expect(options.every((option) => option.text !== '[invalid meaning]')).toBe(true);
+  });
+
   it('forces incorrect multiple-choice selections to Again for FSRS consistency', () => {
     expect(resolveMultipleChoiceRating(4, false)).toBe(1);
     expect(resolveMultipleChoiceRating(3, false)).toBe(1);
