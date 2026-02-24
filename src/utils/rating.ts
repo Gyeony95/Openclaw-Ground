@@ -1,3 +1,5 @@
+export const RATING_INTEGER_TOLERANCE = 1e-4;
+
 export function parseRuntimeRatingValue(input: unknown): number {
   if (typeof input === 'number') {
     return Number.isFinite(input) ? input : Number.NaN;

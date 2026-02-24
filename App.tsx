@@ -668,14 +668,22 @@ export default function App() {
       reviewed = reviewDueCard(dueCard.id, resolvedRating);
     } catch {
       setPendingReviewCardKey(null);
+      setSelectedQuizOptionId(null);
+      setFlashcardSide('front');
+      quizSelectionLockRef.current = false;
       reviewLockRef.current = false;
       setReviewActionError('Unable to record this review right now.');
       return;
     }
     if (reviewed) {
+      setSelectedQuizOptionId(null);
+      setFlashcardSide('front');
+      quizSelectionLockRef.current = false;
       setPendingReviewCardKey(dueCardRevealKey);
       return;
     }
+    setSelectedQuizOptionId(null);
+    quizSelectionLockRef.current = false;
     setReviewActionError('This card is no longer due. Queue refreshed.');
     reviewLockRef.current = false;
   }

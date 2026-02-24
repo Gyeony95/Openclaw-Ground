@@ -1,7 +1,7 @@
 import { Card, Rating, ReviewState } from '../types';
 import { addDaysIso, daysBetween, isIsoDateTime } from '../utils/time';
 import { normalizeBoundedText, normalizeOptionalBoundedText } from '../utils/text';
-import { parseRuntimeRatingValue } from '../utils/rating';
+import { parseRuntimeRatingValue, RATING_INTEGER_TOLERANCE } from '../utils/rating';
 import {
   DIFFICULTY_MAX,
   DIFFICULTY_MEAN_REVERSION,
@@ -325,7 +325,6 @@ function resolvePreviewIso(requestedNowIso: string): string {
 function normalizeRating(input: Rating, currentState: ReviewState): Rating {
   // Runtime ratings can arrive with small floating-point drift
   // (e.g. from serialized UI state). Treat near-integers as integers.
-  const integerTolerance = 1e-4;
   const parsedInput = parseRuntimeRatingValue(input);
 
   if (!Number.isFinite(parsedInput)) {
@@ -336,7 +335,7 @@ function normalizeRating(input: Rating, currentState: ReviewState): Rating {
   }
 
   const rounded = Math.round(parsedInput);
-  const isIntegerLike = Math.abs(parsedInput - rounded) <= integerTolerance;
+  const isIntegerLike = Math.abs(parsedInput - rounded) <= RATING_INTEGER_TOLERANCE;
   // Runtime-corrupted fractional ratings should use the same safe fallback as other invalid values.
   if (!isIntegerLike) {
     return currentState === 'review' ? 3 : 1;

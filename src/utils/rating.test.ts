@@ -1,6 +1,10 @@
-import { parseRuntimeRatingValue } from './rating';
+import { parseRuntimeRatingValue, RATING_INTEGER_TOLERANCE } from './rating';
 
 describe('parseRuntimeRatingValue', () => {
+  it('exports a stable integer tolerance shared by scheduler and quiz flows', () => {
+    expect(RATING_INTEGER_TOLERANCE).toBe(1e-4);
+  });
+
   it('accepts numbers and decimal numeric strings', () => {
     expect(parseRuntimeRatingValue(3)).toBe(3);
     expect(parseRuntimeRatingValue('4')).toBe(4);

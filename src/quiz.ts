@@ -1,5 +1,5 @@
 import { Card, Rating } from './types';
-import { parseRuntimeRatingValue } from './utils/rating';
+import { parseRuntimeRatingValue, RATING_INTEGER_TOLERANCE } from './utils/rating';
 import { normalizeBoundedText } from './utils/text';
 import { MEANING_MAX_LENGTH } from './scheduler/constants';
 
@@ -11,10 +11,6 @@ export interface QuizOption {
 }
 
 const INVALID_MEANING_PLACEHOLDER = '[invalid meaning]';
-// Keep quiz-mode rating normalization aligned with scheduler-side tolerance so
-// tiny runtime float drift does not alter the resulting FSRS update path.
-const RATING_INTEGER_TOLERANCE = 1e-4;
-
 export type StudyMode = 'flashcard' | 'multiple-choice';
 
 function fallbackRatingForState(state?: Card['state']): Rating {

@@ -3306,6 +3306,23 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeLessThan(0.002);
   });
 
+  it('treats out-of-range runtime rating values as Again during relearning', () => {
+    const relearning = {
+      ...createNewCard('eta-relearning-invalid-rating', 'letter', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: 8,
+      lapses: 2,
+      stability: 0.6,
+      difficulty: 6,
+    };
+    const reviewed = reviewCard(relearning, 9 as unknown as Rating, NOW);
+
+    expect(reviewed.card.state).toBe('relearning');
+    expect(reviewed.scheduledDays).toBeCloseTo(10 / 1440, 8);
+  });
+
   it('treats runtime fractional rating values as Again during learning', () => {
     const base = createNewCard('eta-2', 'letter', NOW);
     const fractionalHard = reviewCard(base, 1.6 as unknown as Rating, NOW);
@@ -3315,6 +3332,23 @@ describe('fsrs scheduler', () => {
     expect(fractionalHard.scheduledDays).toBeLessThan(0.002);
     expect(fractionalGood.card.state).toBe('learning');
     expect(fractionalGood.scheduledDays).toBeLessThan(0.002);
+  });
+
+  it('treats runtime fractional rating values as Again during relearning', () => {
+    const relearning = {
+      ...createNewCard('eta-relearning-fractional-rating', 'letter', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: 5,
+      lapses: 1,
+      stability: 0.7,
+      difficulty: 5.5,
+    };
+    const fractionalReviewed = reviewCard(relearning, 2.6 as unknown as Rating, NOW);
+
+    expect(fractionalReviewed.card.state).toBe('relearning');
+    expect(fractionalReviewed.scheduledDays).toBeCloseTo(10 / 1440, 8);
   });
 
   it('accepts near-integer runtime ratings during learning when values include tiny float drift', () => {
