@@ -23,17 +23,19 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
       accessible
       accessibilityRole="text"
       accessibilityLabel={`${label}: ${accessibilityValue}`}
-      accessibilityHint={hasValue ? 'Metric is up to date.' : 'Metric is still loading.'}
+      accessibilityHint={hasValue ? 'Metric is up to date.' : 'Metric is loading and will update shortly.'}
     >
       <View style={[styles.topBorder, { backgroundColor: accent }]} />
       <View style={[styles.accentWash, { backgroundColor: `${accent}12` }]} />
       <View style={styles.head}>
         <View style={[styles.dot, { backgroundColor: accent }]} />
-        <Text style={styles.label} numberOfLines={2} ellipsizeMode="tail">
+        <Text style={styles.label} numberOfLines={2} ellipsizeMode="tail" maxFontSizeMultiplier={1.3}>
           {label}
         </Text>
         <View style={[styles.badge, !hasValue && styles.badgeMuted]}>
-          <Text style={[styles.badgeText, { color: statusTone }]}>{statusLabel}</Text>
+          <Text style={[styles.badgeText, { color: statusTone }]} maxFontSizeMultiplier={1.3}>
+            {statusLabel}
+          </Text>
         </View>
       </View>
       <Text

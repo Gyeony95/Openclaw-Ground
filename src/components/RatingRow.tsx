@@ -57,7 +57,8 @@ export function RatingRow({
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
-          const contentTone = isRatingLocked ? item.tone : ratingDisabled ? colors.subInk : item.tone;
+          const contentTone = ratingDisabled ? colors.subInk : item.tone;
+          const lockTone = isRatingLocked ? item.tone : contentTone;
           const accessibilityLabel = isRatingLocked
             ? `Rate ${item.text}. Locked. ${lockReasonHint}`
             : ratingDisabled
@@ -104,9 +105,9 @@ export function RatingRow({
               <Text style={[styles.buttonText, { color: contentTone }]} numberOfLines={1}>
                 {item.text}
               </Text>
-              {isRatingLocked ? <Text style={[styles.lockedLabel, { color: item.tone }]}>Locked</Text> : null}
+              {isRatingLocked ? <Text style={[styles.lockedLabel, { color: lockTone }]}>Locked</Text> : null}
               <View style={styles.intervalMeta}>
-                <Text style={[styles.hintLabel, { color: contentTone }]} numberOfLines={1}>
+                <Text style={[styles.hintLabel, { color: contentTone }]} numberOfLines={1} maxFontSizeMultiplier={1.3}>
                   Next
                 </Text>
                 <Text
@@ -114,6 +115,7 @@ export function RatingRow({
                   numberOfLines={intervalLineCount}
                   adjustsFontSizeToFit
                   minimumFontScale={0.8}
+                  maxFontSizeMultiplier={1.3}
                 >
                   {interval}
                 </Text>

@@ -2954,6 +2954,15 @@ describe('fsrs scheduler', () => {
     expect(fractionalGood.scheduledDays).toBeLessThan(0.002);
   });
 
+  it('accepts near-integer runtime ratings during learning when values include tiny float drift', () => {
+    const base = createNewCard('eta-near-int-learning', 'letter', NOW);
+    const nearEasy = reviewCard(base, (4 - 4e-7) as unknown as Rating, NOW);
+    const exactEasy = reviewCard(base, 4, NOW);
+
+    expect(nearEasy.card.state).toBe(exactEasy.card.state);
+    expect(nearEasy.scheduledDays).toBe(exactEasy.scheduledDays);
+  });
+
   it('coerces numeric-string runtime ratings during learning', () => {
     const base = createNewCard('eta-string-learning', 'letter', NOW);
     const easy = reviewCard(base, '4' as unknown as Rating, NOW);
@@ -2970,6 +2979,16 @@ describe('fsrs scheduler', () => {
 
     expect(reviewed.card.state).toBe('review');
     expect(reviewed.scheduledDays).toBeLessThanOrEqual(neutral.scheduledDays);
+  });
+
+  it('accepts near-integer runtime ratings during review when values include tiny float drift', () => {
+    const base = createNewCard('eta-near-int-review', 'letter', NOW);
+    const graduated = reviewCard(base, 4, NOW).card;
+    const nearHard = reviewCard(graduated, (2 + 3e-7) as unknown as Rating, graduated.dueAt);
+    const exactHard = reviewCard(graduated, 2, graduated.dueAt);
+
+    expect(nearHard.card.state).toBe(exactHard.card.state);
+    expect(nearHard.scheduledDays).toBe(exactHard.scheduledDays);
   });
 
   it('treats malformed string ratings as safe fallbacks', () => {

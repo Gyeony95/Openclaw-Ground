@@ -288,7 +288,9 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
 }
 
 function normalizeRating(input: Rating, currentState: ReviewState): Rating {
-  const integerTolerance = 1e-9;
+  // Runtime ratings can arrive with small floating-point drift
+  // (e.g. from serialized UI state). Treat near-integers as integers.
+  const integerTolerance = 1e-6;
   const parsedInput = parseRuntimeRatingValue(input);
 
   if (!Number.isFinite(parsedInput)) {
