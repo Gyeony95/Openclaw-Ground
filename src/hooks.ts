@@ -283,14 +283,11 @@ export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: stri
     return toCanonicalIso(candidate);
   };
 
-  const resolved = selectLatestReviewedAt(currentClockIso, reviewedAtIso);
-  const wallSafeResolved = normalizeWallSafeIso(resolved);
-  if (wallSafeResolved) {
-    return wallSafeResolved;
-  }
   const wallSafeCurrent = normalizeWallSafeIso(currentClockIso);
-  if (wallSafeCurrent) {
-    return wallSafeCurrent;
+  const wallSafeReviewed = normalizeWallSafeIso(reviewedAtIso);
+  const resolved = selectLatestReviewedAt(wallSafeCurrent, wallSafeReviewed);
+  if (resolved) {
+    return resolved;
   }
   return wallClockIso;
 }

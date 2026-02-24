@@ -33,8 +33,10 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
             style={({ pressed }) => [
               styles.button,
               isCompact ? styles.buttonCompact : null,
-              { borderColor: item.tone, backgroundColor: `${item.tone}16` },
-              pressed && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
+              disabled
+                ? styles.buttonDisabledSurface
+                : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
+              pressed && !disabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
               disabled && styles.buttonDisabled,
             ]}
             accessibilityRole="button"
@@ -42,7 +44,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
             accessibilityHint={disabled ? 'Wait for the current review to finish' : `Schedules next review ${interval}`}
             accessibilityState={{ disabled }}
           >
-            <Text style={[styles.buttonText, { color: item.tone }]}>{item.text}</Text>
+            <Text style={[styles.buttonText, { color: disabled ? colors.subInk : item.tone }]}>{item.text}</Text>
             <Text style={[styles.hint, { color: disabled ? colors.subInk : item.tone }]}>{interval}</Text>
           </Pressable>
         );
@@ -78,6 +80,10 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  buttonDisabledSurface: {
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
   },
   buttonText: {
     fontSize: 11.5,
