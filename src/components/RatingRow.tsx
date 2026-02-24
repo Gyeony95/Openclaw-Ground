@@ -105,7 +105,7 @@ export function RatingRow({
                 {item.text}
               </Text>
               {isRatingLocked ? <Text style={[styles.lockedLabel, { color: item.tone }]}>Locked</Text> : null}
-              {isRatingLocked ? null : (
+              {isRatingLocked ? <View style={styles.intervalMetaPlaceholder} /> : (
                 <View style={styles.intervalMeta}>
                   <Text style={[styles.hintLabel, { color: contentTone }]} numberOfLines={1}>
                     Next
@@ -150,6 +150,9 @@ const styles = StyleSheet.create({
   intervalMeta: {
     alignItems: 'center',
     gap: 2,
+  },
+  intervalMetaPlaceholder: {
+    minHeight: 30,
   },
   button: {
     borderWidth: 1,

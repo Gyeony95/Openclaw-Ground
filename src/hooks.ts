@@ -474,7 +474,8 @@ export function compareDueCards(a: Card, b: Card): number {
 }
 
 export function collectDueCards(cards: Card[], currentIso: string, runtimeNowIso: string): Card[] {
-  const effectiveCurrentIso = resolveReviewClock(currentIso, runtimeNowIso);
+  // Keep queue eligibility aligned with the same anti-early-review guard used by review submissions.
+  const effectiveCurrentIso = resolveActionClock(currentIso, runtimeNowIso);
   return cards
     .filter((card): card is Card => isRuntimeCard(card) && isReviewReadyCard(card, effectiveCurrentIso))
     .sort(compareDueCards);
@@ -801,9 +802,10 @@ export function useDeck() {
   const effectiveClockIso = useMemo(() => resolveReviewClock(clockIso, nowIso()), [clockIso]);
 
   const dueCards = useMemo(() => {
-    // Keep due queue selection aligned with the same wall-safe clock exposed to the UI and stats.
-    return collectDueCards(deckState.cards, effectiveClockIso, effectiveClockIso);
-  }, [deckState.cards, effectiveClockIso]);
+    const runtimeNow = nowIso();
+    // Use the rendered UI clock plus runtime clock so queue visibility never runs ahead of submit eligibility.
+    return collectDueCards(deckState.cards, clockIso, runtimeNow);
+  }, [clockIso, deckState.cards]);
 
   const addCard = useCallback((word: string, meaning: string, notes?: string) => {
     const normalizedWord = normalizeBoundedText(word, WORD_MAX_LENGTH);

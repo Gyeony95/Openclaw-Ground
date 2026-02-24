@@ -891,6 +891,21 @@ describe('collectDueCards', () => {
     expect(dueCards).toHaveLength(0);
   });
 
+  it('does not surface cards early when rendered clock is only slightly ahead of runtime', () => {
+    const dueSoon = {
+      ...createNewCard('queue-slight-future-render', 'clock', NOW),
+      dueAt: '2026-02-23T12:00:30.000Z',
+    };
+
+    const dueCards = collectDueCards(
+      [dueSoon],
+      '2026-02-23T12:00:30.000Z',
+      '2026-02-23T12:00:00.000Z',
+    );
+
+    expect(dueCards).toHaveLength(0);
+  });
+
   it('collects due cards even when malformed ids are present', () => {
     const malformedIdDue = {
       ...createNewCard('malformed-id-due', 'repair', NOW),
