@@ -47,6 +47,20 @@ describe('fsrs scheduler', () => {
     expect(card.dueAt).toBe(historicalNow);
   });
 
+  it('falls back to runtime wall clock when creation timestamp input is invalid', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const card = createNewCard('invalid-now', 'timestamp', 'not-a-date');
+
+      expect(card.createdAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.dueAt).toBe('2026-02-23T14:30:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('normalizes oversized card text fields while reviewing existing cards', () => {
     const card = {
       ...createNewCard('phi-text', 'letter', NOW),
