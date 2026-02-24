@@ -42,9 +42,10 @@ export function RatingRow({
   lockedHint,
 }: RatingRowProps) {
   const { width } = useWindowDimensions();
-  const isCompact = width < 320;
+  // Keep tap targets readable on smaller phones by stacking sooner.
+  const isCompact = width < 340;
   const isNarrow = width < 380;
-  const isWide = width >= 520;
+  const isWide = width >= 560;
   const intervalLineCount = isCompact ? 1 : 2;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(

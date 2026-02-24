@@ -1875,6 +1875,32 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(broken)).toBe(true);
   });
 
+  it('does not flag fresh learning cards when dueAt trails updatedAt by sub-second jitter', () => {
+    const jitteredLearningDueNow = {
+      ...createNewCard('repair-learning-jitter-due-now', 'test', NOW),
+      state: 'learning' as const,
+      updatedAt: '2026-02-23T12:00:00.500Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+      reps: 0,
+      lapses: 0,
+    };
+
+    expect(hasScheduleRepairNeed(jitteredLearningDueNow)).toBe(false);
+  });
+
+  it('still flags reviewed learning cards when dueAt trails updatedAt by sub-second jitter', () => {
+    const jitteredReviewedLearningDueNow = {
+      ...createNewCard('repair-learning-jitter-reviewed', 'test', NOW),
+      state: 'learning' as const,
+      updatedAt: '2026-02-23T12:00:00.500Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+      reps: 2,
+      lapses: 0,
+    };
+
+    expect(hasScheduleRepairNeed(jitteredReviewedLearningDueNow)).toBe(true);
+  });
+
   it('does not flag learning cards due exactly at updatedAt', () => {
     const learningDueNow = {
       ...createNewCard('repair-learning-due-now', 'test', NOW),

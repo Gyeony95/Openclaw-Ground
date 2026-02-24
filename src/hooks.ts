@@ -19,6 +19,7 @@ const CLOCK_REFRESH_MS = 15000;
 const MAX_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const MAX_UI_FUTURE_SKEW_MS = 60 * 1000;
 const OVERDUE_GRACE_MS = 60 * 1000;
+const TIMELINE_JITTER_TOLERANCE_MS = 1000;
 const FALLBACK_NOW_MS = Date.parse('1970-01-01T00:00:00.000Z');
 const MIN_DATE_MS = -8640000000000000;
 const MAX_DATE_MS = 8640000000000000;
@@ -292,11 +293,15 @@ export function hasScheduleRepairNeed(
       return true;
     }
   }
-  if (dueMs < updatedMs) {
+  const dueBeforeUpdatedByMs = updatedMs - dueMs;
+  const dueWithinTimelineJitterTolerance =
+    dueMs < updatedMs && dueBeforeUpdatedByMs <= TIMELINE_JITTER_TOLERANCE_MS;
+  const normalizedDueMs = dueWithinTimelineJitterTolerance ? updatedMs : dueMs;
+  if (normalizedDueMs < updatedMs) {
     return true;
   }
-  if (dueMs > updatedMs) {
-    const scheduleMs = dueMs - updatedMs;
+  if (normalizedDueMs > updatedMs) {
+    const scheduleMs = normalizedDueMs - updatedMs;
     if (scheduleMs < minScheduleMsForState(state)) {
       return true;
     }
