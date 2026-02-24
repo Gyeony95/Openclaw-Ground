@@ -2323,12 +2323,12 @@ describe('resolveNextUiClock', () => {
 });
 
 describe('resolveAddCardClock', () => {
-  it('keeps near-future rendered clocks that are within the UI skew tolerance', () => {
+  it('uses runtime now when rendered clock is slightly future-skewed so new cards are immediately due', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
     const resolved = resolveAddCardClock('2026-02-23T12:00:30.000Z', '2026-02-23T12:00:00.000Z');
     nowSpy.mockRestore();
 
-    expect(resolved).toBe('2026-02-23T12:00:30.000Z');
+    expect(resolved).toBe('2026-02-23T12:00:00.000Z');
   });
 
   it('falls back to runtime now when rendered clock is materially future-skewed', () => {

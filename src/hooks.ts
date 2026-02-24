@@ -764,7 +764,16 @@ export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: stri
 }
 
 export function resolveAddCardClock(renderedClockIso: string, runtimeNowIso: string): string {
-  return resolveNextUiClock(renderedClockIso, runtimeNowIso);
+  const resolved = resolveNextUiClock(renderedClockIso, runtimeNowIso);
+  const resolvedMs = parseTimeOrNaN(resolved);
+  const runtimeMs = parseTimeOrNaN(runtimeNowIso);
+
+  if (Number.isFinite(resolvedMs) && Number.isFinite(runtimeMs) && resolvedMs > runtimeMs) {
+    // Added cards should not be anchored in the future; keep creation immediately due.
+    return toCanonicalIso(runtimeNowIso);
+  }
+
+  return resolved;
 }
 
 export function resolveDeckClockTick(previousClockIso: string, runtimeNowIso: string): string {
