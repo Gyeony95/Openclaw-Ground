@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createNewCard, reviewCard } from './scheduler/fsrs';
-import { STABILITY_MAX, STABILITY_MIN } from './scheduler/constants';
+import { MEANING_MAX_LENGTH, NOTES_MAX_LENGTH, STABILITY_MAX, STABILITY_MIN, WORD_MAX_LENGTH } from './scheduler/constants';
 import { computeDeckStats, loadDeck, saveDeck } from './storage/deckRepository';
 import { Card, Rating } from './types';
 import { isDue, nowIso } from './utils/time';
+import { normalizeBoundedText } from './utils/text';
 
 const CLOCK_REFRESH_MS = 15000;
 const MAX_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
@@ -550,13 +551,14 @@ export function useDeck() {
   }, [deckState.cards, effectiveClockIso]);
 
   const addCard = useCallback((word: string, meaning: string, notes?: string) => {
-    const trimmedWord = word.trim();
-    const trimmedMeaning = meaning.trim();
-    if (!trimmedWord || !trimmedMeaning) {
+    const normalizedWord = normalizeBoundedText(word, WORD_MAX_LENGTH);
+    const normalizedMeaning = normalizeBoundedText(meaning, MEANING_MAX_LENGTH);
+    const normalizedNotes = normalizeBoundedText(notes, NOTES_MAX_LENGTH);
+    if (!normalizedWord || !normalizedMeaning) {
       return;
     }
     const current = resolveReviewClock(clockIso, nowIso());
-    const created = createNewCard(trimmedWord, trimmedMeaning, current, notes);
+    const created = createNewCard(normalizedWord, normalizedMeaning, current, normalizedNotes || undefined);
     setClockIso(current);
     setCanPersist(true);
     setDeckState((prev) => {

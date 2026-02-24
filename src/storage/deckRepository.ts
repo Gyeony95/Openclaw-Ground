@@ -70,6 +70,16 @@ function normalizeState(state: unknown): ReviewState {
     if (normalized === 'relearn' || normalized === 're-learn') {
       return 'relearning';
     }
+    const folded = normalized.replace(/[\s_-]+/g, '');
+    if (folded === 'review') {
+      return 'review';
+    }
+    if (folded === 'learning' || folded === 'learn') {
+      return 'learning';
+    }
+    if (folded === 'relearning' || folded === 'relearn') {
+      return 'relearning';
+    }
     if (isValidState(normalized)) {
       return normalized;
     }

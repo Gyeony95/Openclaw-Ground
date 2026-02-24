@@ -261,6 +261,38 @@ describe('deck repository', () => {
     expect(deck.cards[0].state).toBe('relearning');
   });
 
+  it('normalizes folded persisted state aliases with separators', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'state-alias-re-learning',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: ' re_learning ',
+          },
+          {
+            id: 'state-alias-learn',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: ' learn ',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(2);
+    expect(deck.cards[0].state).toBe('relearning');
+    expect(deck.cards[1].state).toBe('learning');
+  });
+
   it('computes due and state counts', () => {
     const stats = computeDeckStats(
       [

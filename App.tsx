@@ -347,6 +347,9 @@ export default function App() {
 
   const trimmedWordLength = trimmedLength(word, WORD_MAX_LENGTH);
   const trimmedMeaningLength = trimmedLength(meaning, MEANING_MAX_LENGTH);
+  const normalizedWord = normalizeBoundedText(word, WORD_MAX_LENGTH);
+  const normalizedMeaning = normalizeBoundedText(meaning, MEANING_MAX_LENGTH);
+  const normalizedNotes = normalizeBoundedText(notes, NOTES_MAX_LENGTH);
   const wordLength = trimmedWordLength;
   const meaningLength = trimmedMeaningLength;
   const notesLength = trimmedLength(notes, NOTES_MAX_LENGTH);
@@ -501,19 +504,16 @@ export default function App() {
   }, [dueCard, isFormEditable, loading]);
 
   function handleAddCard() {
-    if (loading || addLockRef.current) {
+    if (loading || addLockRef.current || isAddBusy) {
       return;
     }
     setAddActionError(null);
-    const trimmedWord = word.trim();
-    const trimmedMeaning = meaning.trim();
-    const trimmedNotes = notes.trim();
-    if (!trimmedWord) {
+    if (!normalizedWord) {
       setAddAttempted(true);
       wordInputRef.current?.focus();
       return;
     }
-    if (!trimmedMeaning) {
+    if (!normalizedMeaning) {
       setAddAttempted(true);
       meaningInputRef.current?.focus();
       return;
@@ -524,7 +524,7 @@ export default function App() {
     setIsAddBusy(true);
     const shouldReturnToWordInput = !dueCard;
     try {
-      addCard(trimmedWord, trimmedMeaning, trimmedNotes || undefined);
+      addCard(normalizedWord, normalizedMeaning, normalizedNotes || undefined);
     } catch {
       addLockRef.current = false;
       setIsAddBusy(false);
