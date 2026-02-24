@@ -193,6 +193,42 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('keeps review scheduling functional when non-critical text accessors throw', () => {
+    const runtimeCard = {
+      ...createNewCard('text-accessor-throw', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1),
+      reps: 4,
+      lapses: 1,
+      stability: 1.5,
+      difficulty: 5,
+    };
+    Object.defineProperty(runtimeCard, 'word', {
+      get() {
+        throw new Error('bad runtime word');
+      },
+    });
+    Object.defineProperty(runtimeCard, 'meaning', {
+      get() {
+        throw new Error('bad runtime meaning');
+      },
+    });
+    Object.defineProperty(runtimeCard, 'notes', {
+      get() {
+        throw new Error('bad runtime notes');
+      },
+    });
+
+    const reviewed = reviewCard(runtimeCard, 3, addDaysIso(NOW, 1)).card;
+
+    expect(reviewed.state).toBe('review');
+    expect(reviewed.reps).toBe(5);
+    expect(reviewed.word).toBe('[invalid word]');
+    expect(reviewed.meaning).toBe('[invalid meaning]');
+    expect(reviewed.notes).toBeUndefined();
+  });
+
   it('avoids NaN segments in generated card IDs when runtime clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const card = createNewCard('nan-clock-id', 'safe', NOW);

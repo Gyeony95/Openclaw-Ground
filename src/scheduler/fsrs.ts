@@ -1212,15 +1212,18 @@ function normalizeCardText(
 }
 
 function snapshotSchedulingCard(card: Card): Card {
+  const fallbackIso = toSafeIso(safeNowMs());
+  const fallbackUpdatedAt = safeReadString(() => card.updatedAt, fallbackIso);
+  const fallbackDueAt = safeReadString(() => card.dueAt, fallbackUpdatedAt);
   // Snapshot runtime-backed properties once so normalization and scheduling stay deterministic.
   return {
-    id: card.id,
-    word: card.word,
-    meaning: card.meaning,
-    notes: card.notes,
-    createdAt: card.createdAt,
-    updatedAt: card.updatedAt,
-    dueAt: card.dueAt,
+    id: safeReadString(() => card.id, ''),
+    word: safeReadString(() => card.word, ''),
+    meaning: safeReadString(() => card.meaning, ''),
+    notes: safeReadString(() => card.notes, ''),
+    createdAt: safeReadString(() => card.createdAt, fallbackUpdatedAt),
+    updatedAt: fallbackUpdatedAt,
+    dueAt: fallbackDueAt,
     state: card.state,
     reps: card.reps,
     lapses: card.lapses,

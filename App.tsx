@@ -1268,7 +1268,7 @@ export default function App() {
                       </View>
                     ) : null}
                     {reviewActionError ? (
-                      <Text style={styles.actionError} accessibilityLiveRegion="polite">
+                      <Text style={styles.actionError} accessibilityRole="alert" accessibilityLiveRegion="polite">
                         {reviewActionError}
                       </Text>
                     ) : null}
@@ -1387,7 +1387,7 @@ export default function App() {
                   {addFormHint}
                 </Text>
                 {addActionError ? (
-                  <Text style={styles.actionError} accessibilityLiveRegion="polite">
+                  <Text style={styles.actionError} accessibilityRole="alert" accessibilityLiveRegion="polite">
                     {addActionError}
                   </Text>
                 ) : null}
