@@ -314,7 +314,7 @@ function normalizeTimeline(
   const normalizedState =
     parseState(card.state) ??
     inferStateFromCard({
-      state: 'learning',
+      state: card.state,
       reps: card.reps,
       lapses: card.lapses,
       stability: card.stability,

@@ -267,6 +267,25 @@ describe('fsrs scheduler', () => {
     });
   });
 
+  it('infers review preview floors from day-like schedules when runtime state is malformed', () => {
+    const malformedState = {
+      ...createNewCard('preview-malformed-state-review-floor', 'safe', NOW),
+      state: 'unknown_state' as unknown as 'learning',
+      reps: 11,
+      lapses: 2,
+      stability: 12,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 12),
+    };
+
+    const intervals = previewIntervals(malformedState, NOW);
+
+    expect(intervals[1]).toBeGreaterThanOrEqual(10 / 1440);
+    expect(intervals[2]).toBeGreaterThanOrEqual(0.5);
+    expect(intervals[3]).toBeGreaterThanOrEqual(intervals[2]);
+    expect(intervals[4]).toBeGreaterThanOrEqual(intervals[3]);
+  });
+
   it('falls back to runtime wall clock when creation timestamp is pathologically far past', () => {
     jest.useFakeTimers();
     try {

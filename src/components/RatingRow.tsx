@@ -47,7 +47,7 @@ export function RatingRow({
   const intervalLineCount = isCompact ? 1 : 2;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(() => new Set(disabledRatings), [disabledRatings]);
-  const hasLockedRatings = disabledRatings.length > 0;
+  const hasLockedRatings = !isDisabled && disabledRatings.length > 0;
 
   return (
     <View style={styles.container}>
