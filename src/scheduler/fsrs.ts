@@ -15,6 +15,7 @@ import {
 const FSRS_DECAY = -0.5;
 const FSRS_FACTOR = 19 / 81;
 const ON_TIME_TOLERANCE_DAYS = MINUTE_IN_DAYS;
+const HARD_RATING_LATE_TOLERANCE_DAYS = 15 * MINUTE_IN_DAYS;
 const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_CREATE_TIME_OFFSET_MS = 20 * 365 * DAY_MS;
@@ -630,13 +631,14 @@ function rawReviewIntervalDays(
   if (phase === 'review' && rating === 2) {
     const reviewedEarly = elapsed + ON_TIME_TOLERANCE_DAYS < scheduled;
     const reviewedOnTime = !reviewedEarly && elapsed <= scheduled + ON_TIME_TOLERANCE_DAYS;
+    const reviewedSlightlyLate = !reviewedEarly && elapsed <= scheduled + HARD_RATING_LATE_TOLERANCE_DAYS;
     const earlyCap = scheduleIsDayLike ? Math.max(1, Math.floor(scheduled)) : REVIEW_SCHEDULE_FLOOR_DAYS;
     const overdueSubDayCap = elapsed + ON_TIME_TOLERANCE_DAYS >= 1 || scheduleIsDayLike ? 1 : REVIEW_SCHEDULE_FLOOR_DAYS;
     // Keep sub-day review cards on sub-day cadence for "Hard" unless they are already a day late.
     const onTimeOrLateCap = scheduleIsDayLike
       ? Math.max(1, Math.ceil(scheduled * 1.2))
       : Math.max(overdueSubDayCap, quantizedScheduled);
-    const hardCap = reviewedEarly ? earlyCap : reviewedOnTime ? scheduleFloor : onTimeOrLateCap;
+    const hardCap = reviewedEarly ? earlyCap : reviewedOnTime || reviewedSlightlyLate ? scheduleFloor : onTimeOrLateCap;
     return quantizeReviewIntervalDays(Math.min(flooredInterval, hardCap), scheduled);
   }
 

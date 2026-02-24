@@ -706,6 +706,24 @@ describe('fsrs scheduler', () => {
     expect(next.scheduledDays).toBe(scheduled);
   });
 
+  it('keeps hard reviews within the current schedule when only slightly late', () => {
+    const card = {
+      ...createNewCard('nu-hard-slightly-late-cap', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1),
+      stability: 20,
+      difficulty: 3,
+      reps: 20,
+      lapses: 1,
+    };
+    const slightLateIso = '2026-02-24T12:05:00.000Z';
+    const next = reviewCard(card, 2, slightLateIso);
+
+    expect(next.card.state).toBe('review');
+    expect(next.scheduledDays).toBe(1);
+  });
+
   it('allows early hard reviews to keep shorter intervals than the current schedule', () => {
     const card = createNewCard('nu-hard-early', 'letter', NOW);
     const first = reviewCard(card, 4, NOW).card;

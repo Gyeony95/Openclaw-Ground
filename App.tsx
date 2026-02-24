@@ -225,6 +225,13 @@ export default function App() {
     : formatQueueShareLabel(stats.dueNow, stats.total);
   const queueProgressPercent = loading || stats.total === 0 ? 0 : clampPercent((stats.dueNow / stats.total) * 100);
   const queueProgressWidth = `${queueProgressPercent}%`;
+  const queueProgressTone = loading
+    ? colors.primary
+    : queueProgressPercent >= 80
+      ? colors.danger
+      : queueProgressPercent >= 50
+        ? colors.warn
+        : colors.success;
   const reviewQueueLabel = loading
     ? '--'
     : dueCard
@@ -676,7 +683,7 @@ export default function App() {
                       accessibilityLabel="Queue load"
                       accessibilityValue={{ min: 0, max: 100, now: queueProgressPercent }}
                     >
-                      <View style={[styles.queueProgressFill, { width: queueProgressWidth }]} />
+                      <View style={[styles.queueProgressFill, { width: queueProgressWidth, backgroundColor: queueProgressTone }]} />
                     </View>
                   </View>
                 ) : null}
