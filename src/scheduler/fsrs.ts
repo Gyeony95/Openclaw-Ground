@@ -634,7 +634,14 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
     if (parsedState === 'relearning') {
       // Relearning should remain short-step retry cadence; day-like windows indicate
       // the card already returned to review scheduling and should be normalized.
-      return scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS ? 'review' : parsedState;
+      if (scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+        return 'review';
+      }
+      if (scheduledDays > 0) {
+        return hasReviewHistory ? parsedState : 'learning';
+      }
+      // Explicit relearning without any review history is likely imported phase drift.
+      return hasReviewHistory ? parsedState : 'learning';
     }
     // Recover corrupted persisted "learning" states for cards that clearly
     // have review history and schedule anchors from later phases.

@@ -431,7 +431,15 @@ export default function App() {
     () => !loading && !isAddBusy && !isAddLocked && trimmedWordLength > 0 && trimmedMeaningLength > 0,
     [isAddBusy, isAddLocked, loading, trimmedWordLength, trimmedMeaningLength],
   );
-  const addButtonLabel = isAddBusy ? 'Adding...' : showAddSuccess ? 'Added' : canAdd ? 'Add card' : 'Fill required fields';
+  const addButtonLabel = loading
+    ? 'Loading...'
+    : isAddBusy
+      ? 'Adding...'
+      : showAddSuccess
+        ? 'Added'
+        : canAdd
+          ? 'Add card'
+          : 'Fill required fields';
   const addFormHint = loading
     ? 'Loading deck...'
     : isAddBusy

@@ -548,6 +548,26 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
   });
 
+  it('recovers explicit relearning cards without review history into learning short-step cadence', () => {
+    const runtimeCard = {
+      ...createNewCard('relearning-no-history-recover', 'state inference', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10 / 1440),
+      reps: 0,
+      lapses: 0,
+      stability: 0.2,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 2, addDaysIso(NOW, 10 / 1440)).card;
+
+    expect(reviewed.state).toBe('learning');
+    expect(reviewed.reps).toBe(1);
+    expect(reviewed.lapses).toBe(0);
+    expect(reviewed.dueAt).toBe(addDaysIso(reviewed.updatedAt, 5 / 1440));
+  });
+
   it('normalizes persisted review cards with short-step schedules and no history back to learning', () => {
     const runtimeCard = {
       ...createNewCard('review-short-step-no-history', 'state inference', NOW),
@@ -940,6 +960,28 @@ describe('fsrs scheduler', () => {
       2: 0.5,
       3: 0.5,
       4: 0.5,
+    });
+  });
+
+  it('uses learning preview floors for explicit relearning cards without review history', () => {
+    const relearningNoHistory = {
+      ...createNewCard('preview-relearning-no-history', 'safe', NOW),
+      state: 'relearning' as const,
+      reps: 0,
+      lapses: 0,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10 / 1440),
+      stability: 0.2,
+      difficulty: 5,
+    };
+
+    const intervals = previewIntervals(relearningNoHistory, NOW);
+
+    expect(intervals).toEqual({
+      1: 1 / 1440,
+      2: 5 / 1440,
+      3: 0.5,
+      4: 1,
     });
   });
 
