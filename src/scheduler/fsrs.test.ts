@@ -219,6 +219,19 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('normalizes folded relearning state aliases before applying ratings', () => {
+    const foldedRelearning = {
+      ...createNewCard('folded-relearning', 'state alias', NOW),
+      state: 're-learning' as unknown as 'relearning',
+      dueAt: NOW,
+      updatedAt: NOW,
+    };
+
+    const reviewed = reviewCard(foldedRelearning, 1, NOW);
+
+    expect(reviewed.card.state).toBe('relearning');
+  });
+
   it('normalizes createdAt to never exceed updatedAt when recovering from future-corrupted timelines', () => {
     jest.useFakeTimers();
     try {

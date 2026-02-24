@@ -1,5 +1,5 @@
 import { Card } from './types';
-import { composeQuizOptions, generateDistractors, normalizedTokenOverlap } from './quiz';
+import { composeQuizOptions, generateDistractors, inferPartOfSpeech, normalizedTokenOverlap } from './quiz';
 
 const NOW = '2026-02-24T12:00:00.000Z';
 
@@ -34,6 +34,10 @@ describe('quiz distractors', () => {
   it('computes normalized token overlap', () => {
     expect(normalizedTokenOverlap('write a word incorrectly', 'write text incorrectly')).toBeGreaterThan(0.3);
     expect(normalizedTokenOverlap('write a word incorrectly', 'small bird in cities')).toBe(0);
+  });
+
+  it('detects adjective meanings by suffix for distractor scoring', () => {
+    expect(inferPartOfSpeech('dangerous and risky')).toBe('adjective');
   });
 
   it('picks three wrong distractors biased toward lexical or semantic similarity', () => {

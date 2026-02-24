@@ -113,7 +113,7 @@ function lexicalSimilarity(left: string, right: string): number {
   return 1 - levenshteinDistance(a, b) / maxLen;
 }
 
-function inferPartOfSpeech(meaning: string): PosTag {
+export function inferPartOfSpeech(meaning: string): PosTag {
   const normalized = normalizeText(meaning);
   if (!normalized) {
     return 'other';
@@ -125,7 +125,7 @@ function inferPartOfSpeech(meaning: string): PosTag {
   if (/\bly\b|\w+ly$/.test(normalized)) {
     return 'adverb';
   }
-  if (/\b(ous|ive|able|ible|al|ic|ish|less|ful|ary)$/.test(normalized)) {
+  if (/\b\w+(ous|ive|able|ible|al|ic|ish|less|ful|ary)$/.test(normalized)) {
     return 'adjective';
   }
   if (/^(a\s+|an\s+|the\s+|someone\s+|something\s+)/.test(normalized)) {

@@ -47,11 +47,25 @@ function parseDueAtOrNaN(dueAt: unknown): number {
   return parseTimeOrNaN(dueAt);
 }
 
-function normalizeReviewState(value: unknown): Card['state'] {
+function normalizeReviewState(value: unknown): Card['state'] | null {
   if (value === 'review' || value === 'relearning' || value === 'learning') {
     return value;
   }
-  return 'learning';
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const normalized = value.trim().toLowerCase();
+  const folded = normalized.replace(/[\s_-]+/g, '');
+  if (folded === 'review') {
+    return 'review';
+  }
+  if (folded === 'learning' || folded === 'learn') {
+    return 'learning';
+  }
+  if (folded === 'relearning' || folded === 'relearn') {
+    return 'relearning';
+  }
+  return null;
 }
 
 function minScheduleMsForState(state: Card['state']): number {
@@ -67,17 +81,19 @@ function minScheduleMsForState(state: Card['state']): number {
 export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'>): boolean {
   const dueMs = parseTimeOrNaN(card.dueAt);
   const updatedMs = parseTimeOrNaN(card.updatedAt);
+  const state = normalizeReviewState(card.state);
   if (!Number.isFinite(dueMs) || !Number.isFinite(updatedMs)) {
+    return true;
+  }
+  if (!state) {
     return true;
   }
   if (dueMs < updatedMs) {
     return true;
   }
   if (dueMs > updatedMs) {
-    const state = normalizeReviewState(card.state);
     return dueMs - updatedMs < minScheduleMsForState(state);
   }
-  const state = normalizeReviewState(card.state);
   // Learning cards are legitimately due at creation time; review/relearning cards should always move forward.
   return state !== 'learning';
 }

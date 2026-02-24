@@ -357,7 +357,14 @@ function normalizeState(input: unknown): ReviewState {
     if (normalized === 'review' || normalized === 'relearning' || normalized === 'learning') {
       return normalized;
     }
-    if (normalized === 'relearn' || normalized === 're-learn') {
+    const folded = normalized.replace(/[\s_-]+/g, '');
+    if (folded === 'review') {
+      return 'review';
+    }
+    if (folded === 'learning' || folded === 'learn') {
+      return 'learning';
+    }
+    if (folded === 'relearning' || folded === 'relearn') {
       return 'relearning';
     }
   }

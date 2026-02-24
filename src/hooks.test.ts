@@ -995,6 +995,28 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(learningAtFloor)).toBe(false);
   });
 
+  it('flags cards with unknown state values for scheduler repair', () => {
+    const unknownState = {
+      ...createNewCard('repair-unknown-state', 'test', NOW),
+      state: 'archived' as unknown as Card['state'],
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:10:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(unknownState)).toBe(true);
+  });
+
+  it('accepts folded relearning state aliases at the minimum relearning floor', () => {
+    const foldedRelearning = {
+      ...createNewCard('repair-folded-relearning', 'test', NOW),
+      state: 're-learning' as unknown as Card['state'],
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:10:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(foldedRelearning)).toBe(false);
+  });
+
   it('does not flag healthy schedules', () => {
     const healthy = {
       ...createNewCard('repair-healthy', 'test', NOW),
