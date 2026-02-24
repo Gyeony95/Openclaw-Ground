@@ -187,6 +187,29 @@ describe('deck repository', () => {
     expect(deck.cards[0].meaning).toBe('very large city');
   });
 
+  it('collapses internal whitespace in persisted notes fields', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'collapsed-notes',
+            word: 'alpha',
+            meaning: 'first letter',
+            notes: '  line   one \n\t line   two  ',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'learning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].notes).toBe('line one line two');
+  });
+
   it('computes due and state counts', () => {
     const stats = computeDeckStats(
       [
@@ -1319,6 +1342,36 @@ describe('deck repository', () => {
     expect(savedDeck.cards[0].word).toHaveLength(80);
     expect(savedDeck.cards[0].meaning).toHaveLength(180);
     expect(savedDeck.cards[0].notes).toHaveLength(240);
+  });
+
+  it('collapses internal whitespace in notes before persisting deck data', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: 'notes-save-collapse',
+          word: 'alpha',
+          meaning: 'first',
+          notes: '  keep   this \n\t compact  ',
+          dueAt: '2026-02-23T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'learning',
+          reps: 0,
+          lapses: 0,
+          stability: 0.5,
+          difficulty: 5,
+        },
+      ],
+      lastReviewedAt: undefined,
+    });
+
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as {
+      cards: Array<{ notes?: string }>;
+    };
+    expect(savedDeck.cards[0].notes).toBe('keep this compact');
   });
 
   it('normalizes malformed card states before persisting deck data', async () => {

@@ -715,7 +715,7 @@ function normalizeNotesValue(notes?: string): string | undefined {
   if (notes !== undefined && typeof notes !== 'string') {
     return undefined;
   }
-  return notes?.trim().slice(0, NOTES_MAX_LENGTH);
+  return notes?.trim().replace(/\s+/g, ' ').slice(0, NOTES_MAX_LENGTH);
 }
 
 export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewResult {

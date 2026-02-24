@@ -11,9 +11,14 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const { width } = useWindowDimensions();
   const isNarrow = width < 360;
   const displayValue = Number.isFinite(value) ? value.toLocaleString() : '--';
+  const accessibilityValue = Number.isFinite(value) ? displayValue : 'unavailable';
 
   return (
-    <View style={[styles.card, isNarrow && styles.cardNarrow]} accessible accessibilityLabel={`${label}: ${displayValue}`}>
+    <View
+      style={[styles.card, isNarrow && styles.cardNarrow]}
+      accessible
+      accessibilityLabel={`${label}: ${accessibilityValue}`}
+    >
       <View style={[styles.topBorder, { backgroundColor: accent }]} />
       <View style={styles.head}>
         <View style={[styles.dot, { backgroundColor: accent }]} />

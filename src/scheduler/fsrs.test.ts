@@ -221,6 +221,21 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.notes).toBeUndefined();
   });
 
+  it('collapses internal whitespace in notes during create and review normalization', () => {
+    const created = createNewCard('phi-notes-create', 'letter', NOW, '  line   one \n\t line   two  ');
+    expect(created.notes).toBe('line one line two');
+
+    const reviewed = reviewCard(
+      {
+        ...created,
+        notes: '  keep   this \n\t compact  ',
+      },
+      3,
+      NOW,
+    );
+    expect(reviewed.card.notes).toBe('keep this compact');
+  });
+
   it('repairs whitespace-only word and meaning values during review normalization', () => {
     const card = {
       ...createNewCard('phi-placeholders', 'letter', NOW),
