@@ -32,9 +32,9 @@ describe('formatDueLabel', () => {
     expect(formatDueLabel('2026-02-23T13:00:01.000Z', NOW)).toBe('Due in 1h');
   });
 
-  it('returns unavailable for invalid timestamps', () => {
-    expect(formatDueLabel('bad', NOW)).toBe('Due date unavailable');
-    expect(formatDueLabel('2026-02-23T12:00:00.000Z', 'bad')).toBe('Due date unavailable');
+  it('returns repair label for invalid timestamps', () => {
+    expect(formatDueLabel('bad', NOW)).toBe('Needs schedule repair');
+    expect(formatDueLabel('2026-02-23T12:00:00.000Z', 'bad')).toBe('Needs schedule repair');
   });
 
   it('floors overdue durations so labels do not overstate lateness', () => {

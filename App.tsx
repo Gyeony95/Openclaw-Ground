@@ -268,7 +268,9 @@ export default function App() {
   const followUpQueueLabel = loading
     ? '--'
     : dueCards[1]
-      ? `Then ${formatDueLabel(dueCards[1].dueAt, clockIso)}`
+      ? hasScheduleRepairNeed(dueCards[1]) || !hasValidIso(dueCards[1].dueAt)
+        ? 'Then needs schedule repair'
+        : `Then ${formatDueLabel(dueCards[1].dueAt, clockIso)}`
       : 'No second card queued';
   const queuePositionLabel = loading
     ? '--'

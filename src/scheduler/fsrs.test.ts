@@ -2238,6 +2238,22 @@ describe('fsrs scheduler', () => {
     expect(preview[3]).toBeLessThanOrEqual(preview[4]);
   });
 
+  it('keeps preview intervals aligned with wall-safe review clocks when preview timestamp is pathologically future', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      const card = createNewCard('chi-future-preview', 'letter', NOW);
+      const base = reviewCard(card, 4, NOW).card;
+
+      const previewAtWallClock = previewIntervals(base, '2026-02-23T12:00:00.000Z');
+      const previewAtFutureClock = previewIntervals(base, '2099-01-01T00:00:00.000Z');
+
+      expect(previewAtFutureClock).toEqual(previewAtWallClock);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('keeps preview intervals ordered for corrupted relearning cards', () => {
     const card = createNewCard('chi-relearning-preview', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;

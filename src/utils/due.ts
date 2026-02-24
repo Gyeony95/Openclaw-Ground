@@ -12,7 +12,7 @@ export function formatDueLabel(dueAt: string, clockIso: string): string {
   const dueMs = parseIso(dueAt);
   const nowMs = parseIso(clockIso);
   if (dueMs === null || nowMs === null) {
-    return 'Due date unavailable';
+    return 'Needs schedule repair';
   }
 
   const deltaMs = dueMs - nowMs;

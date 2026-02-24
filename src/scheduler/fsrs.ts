@@ -882,13 +882,13 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
 
 export function previewIntervals(card: Card, nowIso: string): RatingIntervalPreview {
   const normalized = normalizeSchedulingCard(card, nowIso);
-  const { currentIso } = normalized;
   const previewCard = normalized.card;
+  const previewIso = resolveReviewIso(previewCard.updatedAt, normalized.currentIso);
   const preview = {
-    1: reviewCard(previewCard, 1, currentIso).scheduledDays,
-    2: reviewCard(previewCard, 2, currentIso).scheduledDays,
-    3: reviewCard(previewCard, 3, currentIso).scheduledDays,
-    4: reviewCard(previewCard, 4, currentIso).scheduledDays,
+    1: reviewCard(previewCard, 1, previewIso).scheduledDays,
+    2: reviewCard(previewCard, 2, previewIso).scheduledDays,
+    3: reviewCard(previewCard, 3, previewIso).scheduledDays,
+    4: reviewCard(previewCard, 4, previewIso).scheduledDays,
   };
 
   return ensureOrderedPreview(preview);
