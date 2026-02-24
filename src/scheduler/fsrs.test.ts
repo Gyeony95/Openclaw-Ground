@@ -886,7 +886,7 @@ describe('fsrs scheduler', () => {
     }
   });
 
-  it('falls back to wall-safe preview clock when caller preview clock is pathologically stale', () => {
+  it('anchors stale preview clocks to the card timeline instead of wall-clock fallback', () => {
     jest.useFakeTimers();
     try {
       const wallSafeNow = '2026-02-25T12:00:00.000Z';
@@ -902,10 +902,12 @@ describe('fsrs scheduler', () => {
         difficulty: 5.5,
       };
 
-      const expected = previewIntervals(reviewCardBase, wallSafeNow);
+      const expected = previewIntervals(reviewCardBase, reviewCardBase.updatedAt);
       const staleSkewed = previewIntervals(reviewCardBase, '1980-01-01T00:00:00.000Z');
+      const wallSafePreview = previewIntervals(reviewCardBase, wallSafeNow);
 
       expect(staleSkewed).toEqual(expected);
+      expect(staleSkewed).not.toEqual(wallSafePreview);
     } finally {
       jest.useRealTimers();
     }

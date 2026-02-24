@@ -24,6 +24,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
       accessibilityRole="text"
       accessibilityLabel={`${label}: ${accessibilityValue}`}
       accessibilityHint={hasValue ? 'Metric is up to date.' : 'Metric is loading and will update shortly.'}
+      accessibilityLiveRegion="polite"
     >
       <View style={[styles.topBorder, { backgroundColor: accent }]} />
       <View style={[styles.accentWash, { backgroundColor: `${accent}12` }]} />

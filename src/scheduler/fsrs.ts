@@ -313,12 +313,6 @@ function resolvePreviewIso(requestedNowIso: string): string {
   ) {
     return wallClockIso;
   }
-  if (
-    Number.isFinite(wallClockMs) &&
-    wallClockMs - candidateMs > MAX_CREATE_TIME_OFFSET_MS
-  ) {
-    return wallClockIso;
-  }
   return toCanonicalIso(normalizedRequestedNowIso, wallClockIso);
 }
 
