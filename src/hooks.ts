@@ -275,6 +275,11 @@ export function hasScheduleRepairNeed(
     if (scheduleMs < minScheduleMsForState(state)) {
       return true;
     }
+    if (state === 'relearning' && scheduleMs >= REVIEW_MIN_SCHEDULE_MS) {
+      // Day-like relearning windows indicate phase drift; scheduler inference
+      // treats these as review cadence and should be normalized via repair.
+      return true;
+    }
     if (scheduleMs > maxScheduleMsBeforeRepair(state, stabilityValue)) {
       return true;
     }

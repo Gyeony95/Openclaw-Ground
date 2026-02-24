@@ -1752,6 +1752,17 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(relearningTooSoon)).toBe(true);
   });
 
+  it('flags relearning cards with day-like schedules for phase normalization repair', () => {
+    const relearningDayLike = {
+      ...createNewCard('repair-relearning-daylike-drift', 'test', NOW),
+      state: 'relearning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T00:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(relearningDayLike)).toBe(true);
+  });
+
   it('does not flag learning cards scheduled at the one-minute learning floor', () => {
     const learningAtFloor = {
       ...createNewCard('repair-learning-floor', 'test', NOW),

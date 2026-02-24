@@ -339,7 +339,11 @@ export default function App() {
         } pending.`
       : 'No cards due. Add new words below.';
   const emptyQueueActionLabel = scheduleRepairCount > 0 ? 'Add more words' : 'Start adding words';
-  const dueCardStateConfig = dueCard ? stateConfig(dueCard.state) : null;
+  const dueCardStateConfig = dueCard
+    ? dueNeedsRepair
+      ? { tone: colors.warn, label: 'Repair' }
+      : stateConfig(dueCard.state)
+    : null;
   const dueCardUrgency = dueUrgency({
     dueAt: dueCard?.dueAt,
     clockIso,
