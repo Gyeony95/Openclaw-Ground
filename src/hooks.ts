@@ -279,6 +279,26 @@ function toCanonicalIso(value: string): string {
   return new Date(Date.parse(value)).toISOString();
 }
 
+function resolveActionClock(currentIso: string, runtimeNowIso: string): string {
+  if (!isValidIso(currentIso)) {
+    return resolveReviewClock(currentIso, runtimeNowIso);
+  }
+
+  const currentMs = Date.parse(currentIso);
+  const runtimeMs = parseTimeOrNaN(runtimeNowIso);
+  const wallClockMs = safeNowMs();
+  const currentTooFarFromRuntime =
+    Number.isFinite(runtimeMs) && Math.abs(currentMs - runtimeMs) > MAX_CLOCK_SKEW_MS;
+  const currentTooFarFromWall =
+    Number.isFinite(wallClockMs) && Math.abs(currentMs - wallClockMs) > MAX_CLOCK_SKEW_MS;
+
+  if (currentTooFarFromRuntime || currentTooFarFromWall) {
+    return resolveReviewClock(currentIso, runtimeNowIso);
+  }
+
+  return toCanonicalIso(currentIso);
+}
+
 function pickFreshestCard(existing: Card, loaded: Card): Card {
   const existingUpdated = parseTimeOrMin(existing.updatedAt);
   const loadedUpdated = parseTimeOrMin(loaded.updatedAt);
@@ -469,9 +489,7 @@ export function applyDueReview(
   if (!normalizedCardId) {
     return { cards, reviewed: false };
   }
-  const effectiveCurrentIso = isValidIso(currentIso)
-    ? toCanonicalIso(currentIso)
-    : resolveReviewClock(currentIso, runtimeNowIso);
+  const effectiveCurrentIso = resolveActionClock(currentIso, runtimeNowIso);
   let targetIndex = -1;
   for (let index = 0; index < cards.length; index += 1) {
     const candidate = cards[index];
@@ -531,9 +549,7 @@ export function hasDueCard(cards: Card[], cardId: string, currentIso: string, ru
   if (!normalizedCardId) {
     return false;
   }
-  const effectiveCurrentIso = isValidIso(currentIso)
-    ? toCanonicalIso(currentIso)
-    : resolveReviewClock(currentIso, runtimeNowIso);
+  const effectiveCurrentIso = resolveActionClock(currentIso, runtimeNowIso);
   return cards.some(
     (card) =>
       isRuntimeCard(card) &&

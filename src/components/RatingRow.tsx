@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Rating } from '../types';
 import { colors, radii } from '../theme';
 
@@ -51,14 +51,6 @@ export function RatingRow({
 
   return (
     <View style={styles.container}>
-      {busy ? (
-        <View style={styles.busyRow} accessibilityRole="alert" accessibilityLabel="Saving review" accessibilityLiveRegion="polite">
-          <ActivityIndicator size="small" color={colors.subInk} />
-          <Text style={styles.busyLabel}>
-            Saving review...
-          </Text>
-        </View>
-      ) : null}
       <View style={styles.row}>
         {labels.map((item) => {
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
@@ -143,23 +135,6 @@ export function RatingRow({
 const styles = StyleSheet.create({
   container: {
     gap: 8,
-  },
-  busyLabel: {
-    fontSize: 12,
-    color: colors.subInk,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  busyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderRadius: radii.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceAlt,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
   },
   row: {
     flexDirection: 'row',
