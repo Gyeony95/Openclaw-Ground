@@ -79,6 +79,18 @@ describe('scheduleStatus', () => {
       expect(tone).toBe(colors.danger);
     });
 
+    it('uses success tone when the next due card is comfortably in the future', () => {
+      const tone = queueTone({
+        dueAt: '2026-02-24T16:00:00.000Z',
+        clockIso: NOW,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(tone).toBe(colors.success);
+    });
+
     it('treats loose non-ISO dueAt values as malformed schedule inputs', () => {
       const tone = queueTone({
         dueAt: '2026-02-24 11:58:30Z',

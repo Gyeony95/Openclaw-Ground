@@ -17,6 +17,10 @@ const RATING_INTEGER_TOLERANCE = 1e-4;
 
 export type StudyMode = 'flashcard' | 'multiple-choice';
 
+function fallbackRatingForState(state?: Card['state']): Rating {
+  return state === 'learning' || state === 'relearning' ? 1 : 3;
+}
+
 function normalizeId(value: unknown, fallback: string): string {
   if (typeof value !== 'string') {
     return fallback;
@@ -69,7 +73,11 @@ export function resolveLockedQuizSelection(
   return requested ? requested.id : null;
 }
 
-export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {
+export function resolveMultipleChoiceRating(
+  requestedRating: Rating,
+  selectionIsCorrect: boolean,
+  currentState?: Card['state'],
+): Rating {
   if (selectionIsCorrect) {
     const parsedRequestedRating = parseRuntimeRatingValue(requestedRating);
     const roundedRating = Math.round(parsedRequestedRating);
@@ -80,8 +88,8 @@ export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIs
       roundedRating < 1 ||
       roundedRating > 4
     ) {
-      // Runtime-corrupted quiz ratings should resolve to a neutral review signal.
-      return 3;
+      // Align malformed quiz ratings with scheduler safety by phase.
+      return fallbackRatingForState(currentState);
     }
     return roundedRating as Rating;
   }

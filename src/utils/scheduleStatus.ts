@@ -48,7 +48,7 @@ export function queueTone({
   if (deltaMs <= 60 * 60 * 1000) {
     return colors.warn;
   }
-  return colors.primary;
+  return colors.success;
 }
 
 export function dueUrgency({ dueAt, clockIso, needsRepair }: DueUrgencyInput): { label: string; tone: string } {

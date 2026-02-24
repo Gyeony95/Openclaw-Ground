@@ -661,7 +661,7 @@ export default function App() {
     reviewLockRef.current = true;
     const resolvedRating =
       studyMode === 'multiple-choice'
-        ? resolveMultipleChoiceRating(rating, quizSelectionIsCorrect)
+        ? resolveMultipleChoiceRating(rating, quizSelectionIsCorrect, dueCard.state)
         : rating;
     let reviewed = false;
     try {

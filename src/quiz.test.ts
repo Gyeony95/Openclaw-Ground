@@ -437,6 +437,13 @@ describe('quiz distractors', () => {
     expect(resolveMultipleChoiceRating(9 as Rating, true)).toBe(3);
   });
 
+  it('maps malformed correct-selection ratings to Again in learning/relearning states', () => {
+    expect(resolveMultipleChoiceRating(Number.NaN as Rating, true, 'learning')).toBe(1);
+    expect(resolveMultipleChoiceRating(2.5 as Rating, true, 'learning')).toBe(1);
+    expect(resolveMultipleChoiceRating(9 as Rating, true, 'relearning')).toBe(1);
+    expect(resolveMultipleChoiceRating('0x4' as unknown as Rating, true, 'relearning')).toBe(1);
+  });
+
   it('accepts near-integer correct-selection ratings and normalizes them', () => {
     expect(resolveMultipleChoiceRating((2 + Number.EPSILON) as Rating, true)).toBe(2);
     expect(resolveMultipleChoiceRating((4 - Number.EPSILON) as Rating, true)).toBe(4);
