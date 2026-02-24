@@ -55,6 +55,10 @@ describe('quiz distractors', () => {
     expect(inferPartOfSpeech('dangerous and risky')).toBe('adjective');
   });
 
+  it('detects adverbs that appear mid-phrase instead of only at the end', () => {
+    expect(inferPartOfSpeech('in a quickly changing market')).toBe('adverb');
+  });
+
   it('picks three wrong distractors biased toward lexical or semantic similarity', () => {
     const distractors = generateDistractors(target, deck, 3);
 

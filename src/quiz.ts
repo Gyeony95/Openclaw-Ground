@@ -207,7 +207,7 @@ export function inferPartOfSpeech(meaning: string): PosTag {
   if (/^(to\s+|be\s+|become\s+)/.test(normalized)) {
     return 'verb';
   }
-  if (/\bly\b|\w+ly$/.test(normalized)) {
+  if (/\b\w+ly\b/.test(normalized)) {
     return 'adverb';
   }
   if (/\b\w+(ous|ive|able|ible|al|ic|ish|less|ful|ary)$/.test(normalized)) {

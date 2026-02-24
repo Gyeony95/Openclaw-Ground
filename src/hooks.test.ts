@@ -1741,6 +1741,20 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(reviewTooSoon)).toBe(true);
   });
 
+  it('does not flag valid review schedules only because counters have fractional runtime drift', () => {
+    const reviewWithFractionalCounters = {
+      ...createNewCard('repair-review-fractional-counter-drift', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T12:00:00.000Z',
+      stability: 3,
+      reps: 2.8,
+      lapses: 1.2,
+    };
+
+    expect(hasScheduleRepairNeed(reviewWithFractionalCounters)).toBe(false);
+  });
+
   it('flags relearning cards scheduled below the 10-minute relearning floor', () => {
     const relearningTooSoon = {
       ...createNewCard('repair-relearning-too-soon', 'test', NOW),

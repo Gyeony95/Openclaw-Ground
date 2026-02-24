@@ -157,13 +157,27 @@ function normalizeNonNegativeCounter(value: unknown): number | null {
     }
   }
   const parsed = parseRuntimeFiniteNumber(value);
-  if (parsed === null || !Number.isInteger(parsed)) {
+  if (parsed === null) {
     return null;
   }
   if (parsed < 0) {
     return null;
   }
-  return parsed;
+  return Math.floor(parsed);
+}
+
+function isWholeNonNegativeCounter(value: unknown): boolean {
+  if (value === Number.POSITIVE_INFINITY) {
+    return false;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed === 'infinity' || trimmed === '+infinity' || trimmed === '-infinity') {
+      return false;
+    }
+  }
+  const parsed = parseRuntimeFiniteNumber(value);
+  return parsed !== null && parsed >= 0 && Number.isInteger(parsed);
 }
 
 function normalizeReviewState(value: unknown): Card['state'] | null {
@@ -301,10 +315,13 @@ export function hasScheduleRepairNeed(
   const reps = normalizeNonNegativeCounter(repsValue);
   const lapsesRawMissing = lapsesValue === undefined || lapsesValue === null;
   const lapses = lapsesRawMissing ? 0 : normalizeNonNegativeCounter(lapsesValue);
-  if (reps === null) {
+  if (!isWholeNonNegativeCounter(repsValue)) {
     return true;
   }
-  if (lapses === null) {
+  if (!lapsesRawMissing && !isWholeNonNegativeCounter(lapsesValue)) {
+    return true;
+  }
+  if (reps === null || lapses === null) {
     return true;
   }
   return reps > 0 || lapses > 0;
