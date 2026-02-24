@@ -63,7 +63,12 @@ export function RatingRow({
           return (
             <Pressable
               key={item.rating}
-              onPress={() => onRate(item.rating)}
+              onPress={() => {
+                if (ratingDisabled) {
+                  return;
+                }
+                onRate(item.rating);
+              }}
               disabled={ratingDisabled}
               hitSlop={6}
               android_ripple={ratingDisabled ? undefined : { color: `${item.tone}20` }}
@@ -80,7 +85,7 @@ export function RatingRow({
                 ratingDisabled && styles.buttonDisabled,
               ]}
               accessibilityRole="button"
-              accessibilityLabel={`Rate ${item.text}. Next ${interval}.`}
+              accessibilityLabel={`Rate ${item.text}. Next interval ${interval}.`}
               accessibilityHint={
                 busy
                   ? 'Saving current review, rating buttons are temporarily disabled'

@@ -16,17 +16,23 @@ export function hasValidQuizSelection(selectedOptionId: string | null, options: 
 
 export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {
   if (selectionIsCorrect) {
+    const parsedRequestedRating =
+      typeof requestedRating === 'number'
+        ? requestedRating
+        : typeof requestedRating === 'string'
+          ? Number(requestedRating.trim())
+          : Number.NaN;
+
     if (
-      typeof requestedRating !== 'number' ||
-      !Number.isFinite(requestedRating) ||
-      !Number.isInteger(requestedRating) ||
-      requestedRating < 1 ||
-      requestedRating > 4
+      !Number.isFinite(parsedRequestedRating) ||
+      !Number.isInteger(parsedRequestedRating) ||
+      parsedRequestedRating < 1 ||
+      parsedRequestedRating > 4
     ) {
       // Runtime-corrupted quiz ratings should resolve to a neutral review signal.
       return 3;
     }
-    return requestedRating;
+    return parsedRequestedRating as Rating;
   }
   // In objective quiz mode, incorrect recognition should always log as a failed recall.
   return 1;

@@ -52,6 +52,10 @@ function normalizeCardIdInput(id: unknown): string | null {
   return id.trim();
 }
 
+function normalizeCardIdForMatch(id: unknown): string | null {
+  return normalizeCardIdInput(id);
+}
+
 function parseTimeOrNaN(iso: string): number {
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
@@ -385,7 +389,8 @@ export function applyDueReview(
   let targetIndex = -1;
   for (let index = 0; index < cards.length; index += 1) {
     const candidate = cards[index];
-    if (candidate.id !== normalizedCardId || !isReviewReadyCard(candidate, effectiveCurrentIso)) {
+    const candidateId = normalizeCardIdForMatch(candidate.id);
+    if (candidateId !== normalizedCardId || !isReviewReadyCard(candidate, effectiveCurrentIso)) {
       continue;
     }
     if (targetIndex === -1 || compareDueCards(candidate, cards[targetIndex]) < 0) {
@@ -427,7 +432,7 @@ export function hasDueCard(cards: Card[], cardId: string, currentIso: string): b
     return false;
   }
   const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
-  return cards.some((card) => card.id === normalizedCardId && isReviewReadyCard(card, effectiveCurrentIso));
+  return cards.some((card) => normalizeCardIdForMatch(card.id) === normalizedCardId && isReviewReadyCard(card, effectiveCurrentIso));
 }
 
 export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: string): string {

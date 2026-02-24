@@ -210,6 +210,19 @@ describe('applyDueReview', () => {
     expect(result.cards[0].reps).toBe(due.reps + 1);
   });
 
+  it('matches due cards when stored card IDs include surrounding whitespace', () => {
+    const due = {
+      ...createNewCard('trimmed-stored-id', 'safe', NOW),
+      id: '  whitespace-stored-id  ',
+    };
+
+    const result = applyDueReview([due], 'whitespace-stored-id', 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).not.toBe(due);
+    expect(result.cards[0].reps).toBe(due.reps + 1);
+  });
+
   it('does nothing when the target card ID is malformed', () => {
     const due = {
       ...createNewCard('invalid-target-id', 'eighth', NOW),
@@ -965,6 +978,15 @@ describe('hasDueCard', () => {
     const due = createNewCard('due-whitespace-id', 'safe', NOW);
 
     expect(hasDueCard([due], ` ${due.id} `, NOW)).toBe(true);
+  });
+
+  it('matches due cards when stored card IDs have surrounding whitespace', () => {
+    const due = {
+      ...createNewCard('due-whitespace-stored-id', 'safe', NOW),
+      id: '  due-stored-id  ',
+    };
+
+    expect(hasDueCard([due], 'due-stored-id', NOW)).toBe(true);
   });
 
   it('falls back to runtime wall clock when the provided clock is invalid', () => {

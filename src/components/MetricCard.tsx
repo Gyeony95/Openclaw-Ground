@@ -24,13 +24,15 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
       <View style={[styles.topBorder, { backgroundColor: accent }]} />
       <View style={styles.head}>
         <View style={[styles.dot, { backgroundColor: accent }]} />
-        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.label} numberOfLines={2} ellipsizeMode="tail">
+          {label}
+        </Text>
       </View>
       <Text
         style={[styles.value, isNarrow && styles.valueNarrow, !hasValue && styles.valueUnavailable]}
         numberOfLines={1}
         adjustsFontSizeToFit
-        minimumFontScale={0.72}
+        minimumFontScale={0.68}
       >
         {displayValue}
       </Text>
@@ -70,9 +72,9 @@ const styles = StyleSheet.create({
   },
   head: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 7,
-    minHeight: 20,
+    minHeight: 24,
   },
   dot: {
     width: 8,
@@ -98,5 +100,7 @@ const styles = StyleSheet.create({
     color: colors.subInk,
     textTransform: 'uppercase',
     letterSpacing: 0.9,
+    flexShrink: 1,
+    lineHeight: 14,
   },
 });

@@ -132,6 +132,13 @@ describe('quiz distractors', () => {
     expect(resolveMultipleChoiceRating(4, true)).toBe(4);
   });
 
+  it('accepts numeric-string ratings for correct selections', () => {
+    expect(resolveMultipleChoiceRating('1' as unknown as Rating, true)).toBe(1);
+    expect(resolveMultipleChoiceRating('2' as unknown as Rating, true)).toBe(2);
+    expect(resolveMultipleChoiceRating('3' as unknown as Rating, true)).toBe(3);
+    expect(resolveMultipleChoiceRating('4' as unknown as Rating, true)).toBe(4);
+  });
+
   it('normalizes malformed correct-selection ratings to neutral Good', () => {
     expect(resolveMultipleChoiceRating(Number.NaN as Rating, true)).toBe(3);
     expect(resolveMultipleChoiceRating(2.5 as Rating, true)).toBe(3);
