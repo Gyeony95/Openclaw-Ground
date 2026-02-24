@@ -591,8 +591,26 @@ export default function App() {
     setFlashcardSide((current) => flipFlashcardSide(current));
   }
 
+  function handleSelectStudyMode(mode: StudyMode) {
+    if (isReviewBusy) {
+      return;
+    }
+    if (mode === 'multiple-choice' && !canUseMultipleChoice) {
+      return;
+    }
+    setStudyMode(mode);
+    setReviewActionError(null);
+    if (mode === 'flashcard') {
+      setSelectedQuizOptionId(null);
+      setFlashcardSide('front');
+    }
+  }
+
   function handleSelectQuizOption(optionId: string) {
     if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice' || hasQuizSelection) {
+      return;
+    }
+    if (!quizOptions.some((option) => option.id === optionId)) {
       return;
     }
     setSelectedQuizOptionId(optionId);
@@ -844,7 +862,7 @@ export default function App() {
                     </View>
                     <View style={styles.studyModeToggleRow}>
                       <Pressable
-                        onPress={() => setStudyMode('flashcard')}
+                        onPress={() => handleSelectStudyMode('flashcard')}
                         disabled={isReviewBusy}
                         style={({ pressed }) => [
                           styles.studyModeToggleBtn,
@@ -866,7 +884,7 @@ export default function App() {
                         </Text>
                       </Pressable>
                       <Pressable
-                        onPress={() => setStudyMode('multiple-choice')}
+                        onPress={() => handleSelectStudyMode('multiple-choice')}
                         disabled={isReviewBusy || !canUseMultipleChoice}
                         style={({ pressed }) => [
                           styles.studyModeToggleBtn,

@@ -878,10 +878,12 @@ function normalizeSchedulingCard(
 
 export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewResult {
   const normalized = normalizeSchedulingCard(card, nowIso);
-  const baseCard = normalized.card;
+  return reviewNormalizedCard(normalized.card, normalized.currentIso, rating);
+}
+
+function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating): ReviewResult {
   const currentState = baseCard.state;
   const normalizedRating = normalizeRating(rating, currentState);
-  const { currentIso } = normalized;
   const previousReps = baseCard.reps;
   const previousLapses = baseCard.lapses;
   const updatedAt = baseCard.updatedAt;
@@ -984,10 +986,10 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
   const previewIso = normalized.currentIso;
   const previewFloor = previewMinimumIntervalByRating(previewCard.state);
   const preview = {
-    1: Math.max(previewFloor[1], reviewCard(previewCard, 1, previewIso).scheduledDays),
-    2: Math.max(previewFloor[2], reviewCard(previewCard, 2, previewIso).scheduledDays),
-    3: Math.max(previewFloor[3], reviewCard(previewCard, 3, previewIso).scheduledDays),
-    4: Math.max(previewFloor[4], reviewCard(previewCard, 4, previewIso).scheduledDays),
+    1: Math.max(previewFloor[1], reviewNormalizedCard(previewCard, previewIso, 1).scheduledDays),
+    2: Math.max(previewFloor[2], reviewNormalizedCard(previewCard, previewIso, 2).scheduledDays),
+    3: Math.max(previewFloor[3], reviewNormalizedCard(previewCard, previewIso, 3).scheduledDays),
+    4: Math.max(previewFloor[4], reviewNormalizedCard(previewCard, previewIso, 4).scheduledDays),
   };
 
   return ensureOrderedPreview(preview);

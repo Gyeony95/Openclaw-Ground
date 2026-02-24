@@ -2359,6 +2359,24 @@ describe('fsrs scheduler', () => {
     expect(preview[3]).toBeLessThanOrEqual(preview[4]);
   });
 
+  it('normalizes preview timeline once per render to keep rating previews clock-consistent', () => {
+    const card = createNewCard('chi-preview-single-normalize', 'letter', NOW);
+    const base = reviewCard(card, 4, NOW).card;
+    const nowSpy = jest.spyOn(Date, 'now');
+
+    try {
+      const preview = previewIntervals(base, 'bad-clock');
+
+      expect(Number.isFinite(preview[1])).toBe(true);
+      expect(Number.isFinite(preview[2])).toBe(true);
+      expect(Number.isFinite(preview[3])).toBe(true);
+      expect(Number.isFinite(preview[4])).toBe(true);
+      expect(nowSpy.mock.calls.length).toBeLessThanOrEqual(6);
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it('keeps half-day review preview intervals from inflating to one day', () => {
     const base = createNewCard('chi-halfday-preview', 'letter', NOW);
     const halfDayReviewCard = {
