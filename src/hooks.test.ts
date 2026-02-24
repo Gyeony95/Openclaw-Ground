@@ -165,6 +165,39 @@ describe('applyDueReview', () => {
     expect(result.cards[0].lapses).toBe(0);
     expect(result.cards[0].reps).toBe(1);
   });
+
+  it('treats out-of-range review ratings as neutral instead of Easy promotions', () => {
+    const due = {
+      ...createNewCard('invalid-range-review-hook', 'safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 1),
+      updatedAt: NOW,
+      reps: 3,
+      lapses: 1,
+      stability: 2,
+      difficulty: 5,
+    };
+    const reviewAt = addDaysIso(NOW, 1);
+
+    const result = applyDueReview([due], due.id, 99 as Rating, reviewAt);
+    const neutral = applyDueReview([due], due.id, 3, reviewAt);
+
+    expect(result.reviewed).toBe(true);
+    expect(neutral.reviewed).toBe(true);
+    expect(result.cards[0].state).toBe('review');
+    expect(result.cards[0].lapses).toBe(due.lapses);
+    expect(result.cards[0].dueAt).toBe(neutral.cards[0].dueAt);
+  });
+
+  it('treats out-of-range learning ratings as Again to avoid accidental promotion', () => {
+    const due = createNewCard('invalid-range-learning-hook', 'safe', NOW);
+    const result = applyDueReview([due], due.id, 99 as Rating, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0].state).toBe('learning');
+    expect(result.cards[0].lapses).toBe(0);
+    expect(result.cards[0].reps).toBe(1);
+  });
 });
 
 describe('applyReviewToDeckState', () => {

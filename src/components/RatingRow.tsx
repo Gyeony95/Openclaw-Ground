@@ -18,6 +18,7 @@ const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: 
 export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRowProps) {
   const { width } = useWindowDimensions();
   const isCompact = width < 360;
+  const isWide = width >= 520;
 
   return (
     <View style={styles.row}>
@@ -33,6 +34,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
             style={({ pressed }) => [
               styles.button,
               isCompact ? styles.buttonCompact : null,
+              isWide ? styles.buttonWide : null,
               disabled
                 ? styles.buttonDisabledSurface
                 : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
@@ -73,6 +75,9 @@ const styles = StyleSheet.create({
   },
   buttonCompact: {
     flexBasis: '100%',
+  },
+  buttonWide: {
+    flexBasis: '23%',
   },
   buttonPressed: {
     transform: [{ translateY: 1 }, { scale: 0.99 }],

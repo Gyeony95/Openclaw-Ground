@@ -125,6 +125,9 @@ function normalizeRating(input: Rating, currentState: ReviewState): Rating {
   }
 
   const rounded = Math.round(input);
+  if (rounded < 1 || rounded > 4) {
+    return currentState === 'review' ? 3 : 1;
+  }
   if (rounded <= 1) {
     return 1;
   }
