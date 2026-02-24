@@ -105,21 +105,19 @@ export function RatingRow({
                 {item.text}
               </Text>
               {isRatingLocked ? <Text style={[styles.lockedLabel, { color: item.tone }]}>Locked</Text> : null}
-              {isRatingLocked ? <View style={styles.intervalMetaPlaceholder} /> : (
-                <View style={styles.intervalMeta}>
-                  <Text style={[styles.hintLabel, { color: contentTone }]} numberOfLines={1}>
-                    Next
-                  </Text>
-                  <Text
-                    style={[styles.hint, styles.hintCentered, { color: contentTone }]}
-                    numberOfLines={intervalLineCount}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.8}
-                  >
-                    {interval}
-                  </Text>
-                </View>
-              )}
+              <View style={styles.intervalMeta}>
+                <Text style={[styles.hintLabel, { color: contentTone }]} numberOfLines={1}>
+                  Next
+                </Text>
+                <Text
+                  style={[styles.hint, styles.hintCentered, { color: contentTone }]}
+                  numberOfLines={intervalLineCount}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.8}
+                >
+                  {interval}
+                </Text>
+              </View>
             </Pressable>
           );
         })}
@@ -150,9 +148,6 @@ const styles = StyleSheet.create({
   intervalMeta: {
     alignItems: 'center',
     gap: 2,
-  },
-  intervalMetaPlaceholder: {
-    minHeight: 30,
   },
   button: {
     borderWidth: 1,

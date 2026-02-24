@@ -677,6 +677,25 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('caps malformed review due anchors to the conservative repair window', () => {
+    const malformedReviewDue = {
+      ...createNewCard('malformed-review-due-cap', 'timeline', NOW),
+      state: 'review' as const,
+      reps: 12,
+      lapses: 1,
+      updatedAt: NOW,
+      dueAt: 'not-an-iso-due',
+      stability: 120,
+      difficulty: 5.8,
+    };
+
+    const reviewed = reviewCard(malformedReviewDue, 3, NOW);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(14);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('falls back to runtime wall clock when review time is invalid and card timeline is future-corrupted', () => {
     jest.useFakeTimers();
     try {

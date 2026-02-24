@@ -437,7 +437,7 @@ function normalizeTimeline(
     Number.isFinite(expectedReviewScheduleDays) &&
     (dueBeyondReviewMaxWindow || dueBeyondReviewStabilityWindow);
   const dueNeedsRepair =
-    !rawDueAt ||
+    !rawDueAtIsValid ||
     dueNotAfterUpdatedAt ||
     dueBelowStateFloor ||
     dueBeyondStateWindow ||
