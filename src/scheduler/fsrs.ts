@@ -119,6 +119,10 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
 
     // Only roll backward when the card timestamp itself looks corrupted far into the future.
     if (Number.isFinite(wallClockMs) && fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+      // Guard against stale review timestamps when recovering from corrupted future card timelines.
+      if (wallClockMs - candidateMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+        return wallClockIso;
+      }
       return candidate;
     }
     return fallback;

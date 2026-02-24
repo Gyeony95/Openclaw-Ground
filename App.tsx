@@ -341,6 +341,9 @@ export default function App() {
   }, []);
 
   function focusAddForm() {
+    if (!isFormEditable) {
+      return;
+    }
     scrollRef.current?.scrollToEnd({ animated: true });
     requestAnimationFrame(() => {
       wordInputRef.current?.focus();
