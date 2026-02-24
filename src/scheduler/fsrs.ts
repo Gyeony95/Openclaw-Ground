@@ -449,7 +449,11 @@ function normalizeTimeline(
     rawDueMs >= MAX_DATE_MS &&
     updatedAtMs >= MAX_DATE_MS;
   const stateScheduleFloorDays = scheduleFallbackForState(normalizedState);
-  const expectedReviewScheduleDays = normalizeScheduledDays(card.stability, 'review');
+  const parsedReviewStability = parseRuntimeFiniteNumber(card.stability);
+  const expectedReviewScheduleDays = normalizeScheduledDays(
+    parsedReviewStability ?? (typeof card.stability === 'number' ? card.stability : Number.NaN),
+    'review',
+  );
   const maxStateScheduleDays = maxScheduleDaysForState(normalizedState);
   const repairedReviewScheduleDaysForInvalidDue = clamp(
     expectedReviewScheduleDays,

@@ -5,13 +5,14 @@ export function queueLoadStatusLabel(percent: number, repairCount: number, total
   if (total <= 0) {
     return 'Clear';
   }
-  if (percent >= 80) {
+  const boundedPercent = Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;
+  if (boundedPercent >= 80) {
     return 'Heavy';
   }
-  if (percent >= 50) {
+  if (boundedPercent >= 50) {
     return 'Moderate';
   }
-  if (percent > 0) {
+  if (boundedPercent > 0) {
     return 'Light';
   }
   return 'Clear';

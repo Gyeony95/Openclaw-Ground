@@ -16,4 +16,13 @@ describe('queueLoadStatusLabel', () => {
     expect(queueLoadStatusLabel(50, 0, 10)).toBe('Moderate');
     expect(queueLoadStatusLabel(80, 0, 10)).toBe('Heavy');
   });
+
+  it('treats malformed or negative percentages as clear when cards exist', () => {
+    expect(queueLoadStatusLabel(Number.NaN, 0, 10)).toBe('Clear');
+    expect(queueLoadStatusLabel(-25, 0, 10)).toBe('Clear');
+  });
+
+  it('clamps oversized percentages into the heavy band', () => {
+    expect(queueLoadStatusLabel(1000, 0, 10)).toBe('Heavy');
+  });
 });

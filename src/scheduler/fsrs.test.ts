@@ -616,6 +616,35 @@ describe('fsrs scheduler', () => {
     expect(scientificReviewed.card.dueAt).toBe(numericReviewed.card.dueAt);
   });
 
+  it('coerces string stability for invalid review due dates without changing repair scheduling', () => {
+    const reviewedAt = addDaysIso(NOW, 4);
+    const numericCard = {
+      ...createNewCard('invalid-due-repair-numeric-stability', 'control', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: 'invalid-due',
+      reps: 5,
+      lapses: 1,
+      stability: 4,
+      difficulty: 7.5,
+    };
+    const stringStabilityCard = {
+      ...numericCard,
+      stability: '4',
+    } as unknown as Card;
+
+    const numericReviewed = reviewCard(numericCard, 3, reviewedAt);
+    const stringReviewed = reviewCard(stringStabilityCard, 3, reviewedAt);
+
+    expect(stringReviewed.card.state).toBe(numericReviewed.card.state);
+    expect(stringReviewed.card.reps).toBe(numericReviewed.card.reps);
+    expect(stringReviewed.card.lapses).toBe(numericReviewed.card.lapses);
+    expect(stringReviewed.card.difficulty).toBeCloseTo(numericReviewed.card.difficulty, 8);
+    expect(stringReviewed.card.stability).toBeCloseTo(numericReviewed.card.stability, 8);
+    expect(stringReviewed.scheduledDays).toBeCloseTo(numericReviewed.scheduledDays, 8);
+    expect(stringReviewed.card.dueAt).toBe(numericReviewed.card.dueAt);
+  });
+
   it('keeps on-time day-like hard reviews from shrinking to a shorter day bucket', () => {
     const runtimeCard = {
       ...createNewCard('daylike-hard-preserve-floor', 'interval floor', NOW),
