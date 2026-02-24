@@ -389,6 +389,26 @@ describe('applyDueReview', () => {
     expect(result.reviewedAt).toBe('2026-02-23T12:02:30.000Z');
   });
 
+  it('keeps rendered review clock when runtime is ahead exactly at tolerance boundary', () => {
+    const toleranceBoundary = {
+      ...createNewCard('review-clock-tolerance-boundary', 'safe', NOW),
+      dueAt: '2026-02-23T12:00:50.000Z',
+      updatedAt: NOW,
+      state: 'review' as const,
+    };
+
+    const result = applyDueReview(
+      [toleranceBoundary],
+      toleranceBoundary.id,
+      3,
+      '2026-02-23T12:00:00.000Z',
+      '2026-02-23T12:01:00.000Z',
+    );
+
+    expect(result.reviewed).toBe(false);
+    expect(result.cards[0]).toBe(toleranceBoundary);
+  });
+
   it('does not review early when rendered clock is ahead of runtime', () => {
     const nearBoundary = {
       ...createNewCard('no-early-review-clock', 'safe', NOW),

@@ -842,7 +842,7 @@ export default function App() {
                 },
               ]}
             >
-              <View style={[styles.panel, styles.reviewPanel, isWideLayout && styles.panelWide]}>
+              <View style={[styles.panel, styles.reviewPanel, isCompactLayout && styles.panelCompact, isWideLayout && styles.panelWide]}>
                 <View style={styles.panelHead}>
                   <View style={styles.panelTitleWrap}>
                     <Text style={styles.panelTitle} accessibilityRole="header">
@@ -1268,7 +1268,7 @@ export default function App() {
                   </View>
                 ) : null}
               </View>
-              <View style={[styles.panel, styles.addPanel, isWideLayout && styles.panelWide]}>
+              <View style={[styles.panel, styles.addPanel, isCompactLayout && styles.panelCompact, isWideLayout && styles.panelWide]}>
                 <View style={styles.panelTitleWrap}>
                   <Text style={styles.panelTitle} accessibilityRole="header">
                     Add Vocabulary
@@ -1749,6 +1749,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 14,
     elevation: 3,
+  },
+  panelCompact: {
+    minHeight: 0,
+    padding: 14,
+    gap: 10,
   },
   reviewCardCompact: {
     padding: 13,

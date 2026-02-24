@@ -346,8 +346,43 @@ function resolveActionClock(currentIso: string, runtimeNowIso: string): string {
   }
 
   if (Number.isFinite(runtimeMs)) {
-    // Keep queue visibility and review actions aligned to the runtime clock so
-    // due cards do not appear late when the rendered clock trails slightly.
+    const runtimeAheadMs = runtimeMs - currentMs;
+    if (runtimeAheadMs > MAX_UI_FUTURE_SKEW_MS) {
+      // If the rendered clock trails materially, use runtime so reviews are not rejected as stale.
+      return canonicalRuntimeIso ?? canonicalCurrentIso;
+    }
+    if (runtimeAheadMs < 0) {
+      // Never allow action clocks to move ahead of runtime time; this prevents early reviews.
+      return canonicalRuntimeIso ?? canonicalCurrentIso;
+    }
+    // Keep near-boundary review actions deterministic while rendered and runtime clocks are close.
+    return canonicalCurrentIso;
+  }
+
+  return canonicalCurrentIso;
+}
+
+function resolveQueueClock(currentIso: string, runtimeNowIso: string): string {
+  if (!isValidIso(currentIso)) {
+    return resolveReviewClock(currentIso, runtimeNowIso);
+  }
+
+  const currentMs = Date.parse(currentIso);
+  const runtimeMs = parseTimeOrNaN(runtimeNowIso);
+  const wallClockMs = safeNowMs();
+  const canonicalCurrentIso = toCanonicalIso(currentIso);
+  const canonicalRuntimeIso = Number.isFinite(runtimeMs) ? toCanonicalIso(runtimeNowIso) : undefined;
+  const currentTooFarFromRuntime =
+    Number.isFinite(runtimeMs) && Math.abs(currentMs - runtimeMs) > MAX_CLOCK_SKEW_MS;
+  const currentTooFarFromWall =
+    Number.isFinite(wallClockMs) && Math.abs(currentMs - wallClockMs) > MAX_CLOCK_SKEW_MS;
+
+  if (currentTooFarFromRuntime || currentTooFarFromWall) {
+    return resolveReviewClock(currentIso, runtimeNowIso);
+  }
+
+  if (Number.isFinite(runtimeMs)) {
+    // Queue visibility should track runtime closely so due cards surface immediately.
     return canonicalRuntimeIso ?? canonicalCurrentIso;
   }
 
@@ -482,8 +517,7 @@ export function compareDueCards(a: Card, b: Card): number {
 }
 
 export function collectDueCards(cards: Card[], currentIso: string, runtimeNowIso: string): Card[] {
-  // Keep queue eligibility aligned with the same anti-early-review guard used by review submissions.
-  const effectiveCurrentIso = resolveActionClock(currentIso, runtimeNowIso);
+  const effectiveCurrentIso = resolveQueueClock(currentIso, runtimeNowIso);
   return cards
     .filter((card): card is Card => isRuntimeCard(card) && isReviewReadyCard(card, effectiveCurrentIso))
     .sort(compareDueCards);
