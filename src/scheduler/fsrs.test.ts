@@ -643,6 +643,25 @@ describe('fsrs scheduler', () => {
     expect(easy.scheduledDays).toBe(1);
   });
 
+  it('keeps relearning graduation stability at least as large as the graduation schedule', () => {
+    const relearning = {
+      ...createNewCard('relearning-grad-stability-floor', 'definition', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10 / 1440),
+      stability: 0.1,
+      difficulty: 5,
+      reps: 10,
+      lapses: 3,
+    };
+
+    const graduated = reviewCard(relearning, 3, relearning.dueAt);
+
+    expect(graduated.card.state).toBe('review');
+    expect(graduated.scheduledDays).toBe(0.5);
+    expect(graduated.card.stability).toBeGreaterThanOrEqual(graduated.scheduledDays);
+  });
+
   it('grows review interval after successful reviews', () => {
     const card = createNewCard('beta', 'second letter', NOW);
     const first = reviewCard(card, 4, NOW).card;

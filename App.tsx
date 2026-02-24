@@ -212,6 +212,8 @@ export default function App() {
       .sort(compareDueCards)[0];
   }, [cards, clockIso]);
   const retentionBarWidth = `${retentionScore}%`;
+  const retentionTone =
+    retentionScore >= 80 ? colors.success : retentionScore >= 50 ? colors.primary : colors.warn;
   const queueLabel = loading
     ? 'Loading'
     : dueCard
@@ -578,7 +580,7 @@ export default function App() {
               <View style={styles.scoreRow}>
                 <View style={styles.scoreHeader}>
                   <Text style={styles.scoreLabel}>Retention score</Text>
-                  <Text style={styles.scoreValue}>{retentionScore}%</Text>
+                  <Text style={[styles.scoreValue, { color: retentionTone }]}>{retentionScore}%</Text>
                 </View>
                 <View
                   style={styles.scoreTrack}
@@ -587,7 +589,7 @@ export default function App() {
                   accessibilityLabel="Retention score"
                   accessibilityValue={{ min: 0, max: 100, now: retentionScore }}
                 >
-                  <View style={[styles.scoreFill, { width: retentionBarWidth }]} />
+                  <View style={[styles.scoreFill, { width: retentionBarWidth, backgroundColor: retentionTone }]} />
                 </View>
               </View>
             </Animated.View>

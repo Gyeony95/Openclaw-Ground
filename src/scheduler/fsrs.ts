@@ -815,6 +815,16 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   }
 
   const safeScheduledDays = normalizeScheduledDays(nextScheduledDays, state);
+  const stableGraduationFloor =
+    currentState === 'relearning' && state === 'review' && normalizedRating >= 3
+      ? safeScheduledDays
+      : STABILITY_MIN;
+  const normalizedNextStability = clampFinite(
+    Math.max(nextStability, stableGraduationFloor),
+    STABILITY_MIN,
+    STABILITY_MAX,
+    safeScheduledDays,
+  );
   const nextDueAt = addDaysIso(currentIso, safeScheduledDays);
 
   return {
@@ -824,7 +834,7 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
       createdAt,
       state,
       difficulty: nextDifficulty,
-      stability: nextStability,
+      stability: normalizedNextStability,
       reps: Math.min(COUNTER_MAX, previousReps + 1),
       lapses: Math.min(COUNTER_MAX, previousLapses + lapseIncrement),
       updatedAt: currentIso,
