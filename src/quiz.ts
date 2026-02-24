@@ -282,6 +282,17 @@ function readCardText(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+function safeReadCardText(card: unknown, field: 'id' | 'word' | 'meaning' | 'updatedAt'): string {
+  if (!card || typeof card !== 'object') {
+    return '';
+  }
+  try {
+    return readCardText((card as Record<string, unknown>)[field]);
+  } catch {
+    return '';
+  }
+}
+
 function scoreDistractor(
   targetWord: string,
   targetMeaning: string,
@@ -332,7 +343,7 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
     if (!card || typeof card !== 'object') {
       continue;
     }
-    const candidateMeaningRaw = readCardText(card.meaning);
+    const candidateMeaningRaw = safeReadCardText(card, 'meaning');
     if (isInvalidOptionText(candidateMeaningRaw)) {
       continue;
     }
@@ -343,7 +354,7 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
     if (!candidateMeaning || candidateMeaning === targetMeaning) {
       continue;
     }
-    const candidateWordRaw = readCardText(card.word);
+    const candidateWordRaw = safeReadCardText(card, 'word');
     ranked.push({
       card,
       score: scoreDistractor(targetWordRaw, targetMeaningRaw, candidateWordRaw, candidateMeaningRaw),
@@ -354,13 +365,13 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
     if (right.score !== left.score) {
       return right.score - left.score;
     }
-    const leftId = normalizeId(left.card?.id, 'left-missing-id');
-    const rightId = normalizeId(right.card?.id, 'right-missing-id');
+    const leftId = normalizeId(safeReadCardText(left.card, 'id'), 'left-missing-id');
+    const rightId = normalizeId(safeReadCardText(right.card, 'id'), 'right-missing-id');
     return leftId.localeCompare(rightId);
   });
 
   for (const candidate of ranked) {
-    const normalized = normalizeText(candidate.card.meaning);
+    const normalized = normalizeText(safeReadCardText(candidate.card, 'meaning'));
     if (!seenNormalizedMeanings.has(normalized)) {
       seenNormalizedMeanings.add(normalized);
       selected.push(candidate.card);
@@ -380,10 +391,10 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
       if (isSameCardIdentity(target, card)) {
         continue;
       }
-      if (isInvalidOptionText(readCardText(card.meaning))) {
+      if (isInvalidOptionText(safeReadCardText(card, 'meaning'))) {
         continue;
       }
-      const normalized = normalizeText(readCardText(card.meaning));
+      const normalized = normalizeText(safeReadCardText(card, 'meaning'));
       if (!normalized || normalized === targetMeaning || seenNormalizedMeanings.has(normalized)) {
         continue;
       }
@@ -400,22 +411,25 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
 
 export function composeQuizOptions(target: Card, deckCards: Card[], seed: string, distractorCount = 3): QuizOption[] {
   const distractors = generateDistractors(target, deckCards, distractorCount);
-  const normalizedTargetId = normalizeId(target?.id, 'target-missing-id');
-  const normalizedTargetUpdatedAt = typeof target?.updatedAt === 'string' ? target.updatedAt : 'invalid-updated-at';
+  const normalizedTargetId = normalizeId(safeReadCardText(target, 'id'), 'target-missing-id');
+  const normalizedTargetUpdatedAt = normalizeId(
+    safeReadCardText(target, 'updatedAt'),
+    'invalid-updated-at',
+  );
   const optionIdBase = `${seed}:${normalizedTargetId}:${normalizedTargetUpdatedAt}`;
   const options: QuizOption[] = [
     {
       id: `${normalizedTargetId}:correct:${hashString(`${optionIdBase}:correct`).toString(36)}`,
       cardId: normalizedTargetId,
-      text: normalizeOptionText(target?.meaning),
+      text: normalizeOptionText(safeReadCardText(target, 'meaning')),
       isCorrect: true,
     },
     ...distractors.map((card, index) => ({
-      id: `${normalizeId(card?.id, `distractor-${index}`)}:distractor:${index}:${hashString(
-        `${optionIdBase}:distractor:${normalizeId(card?.id, `distractor-${index}`)}:${normalizeOptionText(card?.meaning)}:${index}`,
+      id: `${normalizeId(safeReadCardText(card, 'id'), `distractor-${index}`)}:distractor:${index}:${hashString(
+        `${optionIdBase}:distractor:${normalizeId(safeReadCardText(card, 'id'), `distractor-${index}`)}:${normalizeOptionText(safeReadCardText(card, 'meaning'))}:${index}`,
       ).toString(36)}`,
-      cardId: normalizeId(card?.id, `distractor-${index}`),
-      text: normalizeOptionText(card?.meaning),
+      cardId: normalizeId(safeReadCardText(card, 'id'), `distractor-${index}`),
+      text: normalizeOptionText(safeReadCardText(card, 'meaning')),
       isCorrect: false,
     })),
   ];

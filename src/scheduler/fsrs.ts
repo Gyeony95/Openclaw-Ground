@@ -658,10 +658,11 @@ function rollbackScheduleFallbackForState(state: ReviewState, stability: number)
     return scheduleFallbackForState(state);
   }
   // Keep rollback repairs conservative while preserving mature review context.
+  // Recovery should not collapse mature review cadence all the way into relearning windows.
   return clamp(
     normalizeScheduledDays(stability, 'review'),
     REVIEW_SCHEDULE_FLOOR_DAYS,
-    RELEARNING_MAX_SCHEDULE_DAYS,
+    REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
   );
 }
 

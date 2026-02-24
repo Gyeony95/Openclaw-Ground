@@ -1374,7 +1374,7 @@ export default function App() {
                   onPress={handleAddCard}
                   disabled={!canAttemptAdd}
                   accessibilityRole="button"
-                  accessibilityLabel="Add card"
+                  accessibilityLabel={`Add card. ${addButtonLabel}.`}
                   accessibilityHint={canAdd ? 'Adds this word to your study deck' : addFormHint}
                   accessibilityState={{ disabled: !canAttemptAdd, busy: isAddBusy }}
                 >

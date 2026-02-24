@@ -755,7 +755,7 @@ describe('fsrs scheduler', () => {
     }
   });
 
-  it('resets schedule anchors when rolling back pathologically future review timelines', () => {
+  it('resets schedule anchors conservatively when rolling back pathologically future review timelines', () => {
     jest.useFakeTimers();
     try {
       jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
@@ -771,7 +771,7 @@ describe('fsrs scheduler', () => {
 
       expect(reviewed.card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
       expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(0.5);
-      expect(reviewed.scheduledDays).toBeLessThanOrEqual(2);
+      expect(reviewed.scheduledDays).toBeLessThanOrEqual(7);
       expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
     } finally {
       jest.useRealTimers();
@@ -796,7 +796,7 @@ describe('fsrs scheduler', () => {
       expect(reviewed.card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
       expect(reviewed.card.state).toBe('review');
       expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
-      expect(reviewed.scheduledDays).toBeLessThanOrEqual(2);
+      expect(reviewed.scheduledDays).toBeLessThanOrEqual(7);
     } finally {
       jest.useRealTimers();
     }

@@ -305,6 +305,50 @@ describe('quiz distractors', () => {
     expect(options.every((option) => option.text !== '[invalid meaning]')).toBe(true);
   });
 
+  it('does not throw when runtime card meaning getters throw during distractor generation', () => {
+    const targetCard = createCard('getter-target', 'anchor', 'to fix firmly in place');
+    const throwingMeaningCard = createCard('getter-throw-meaning', 'pin', 'to fasten with a pin');
+    Object.defineProperty(throwingMeaningCard, 'meaning', {
+      get() {
+        throw new Error('bad runtime meaning getter');
+      },
+    });
+    const deckWithThrowingGetter = [
+      targetCard,
+      throwingMeaningCard,
+      createCard('getter-c3', 'clip', 'to hold together'),
+      createCard('getter-c4', 'bind', 'to tie tightly'),
+      createCard('getter-c5', 'moor', 'to secure a boat with ropes'),
+    ] as Card[];
+
+    expect(() => generateDistractors(targetCard, deckWithThrowingGetter, 3)).not.toThrow();
+    const distractors = generateDistractors(targetCard, deckWithThrowingGetter, 3);
+    expect(distractors).toHaveLength(3);
+    expect(distractors.some((card) => card.id === 'getter-throw-meaning')).toBe(false);
+  });
+
+  it('does not throw when runtime card id getters throw during option composition', () => {
+    const targetCard = createCard('getter-target-options', 'anchor', 'to fix firmly in place');
+    const throwingIdCard = createCard('getter-throw-id', 'pin', 'to fasten with a pin');
+    Object.defineProperty(throwingIdCard, 'id', {
+      get() {
+        throw new Error('bad runtime id getter');
+      },
+    });
+    const deckWithThrowingId = [
+      targetCard,
+      throwingIdCard,
+      createCard('getter-o3', 'clip', 'to hold together'),
+      createCard('getter-o4', 'bind', 'to tie tightly'),
+      createCard('getter-o5', 'moor', 'to secure a boat with ropes'),
+    ] as Card[];
+
+    expect(() => composeQuizOptions(targetCard, deckWithThrowingId, 'getter-id-seed')).not.toThrow();
+    const options = composeQuizOptions(targetCard, deckWithThrowingId, 'getter-id-seed');
+    expect(options).toHaveLength(4);
+    expect(new Set(options.map((option) => option.id)).size).toBe(options.length);
+  });
+
   it('excludes placeholder and blank meanings from distractor choices', () => {
     const deckWithInvalidMeanings = [
       createCard('target-clean', 'anchor', 'to fix firmly in place'),
