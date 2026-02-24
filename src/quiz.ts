@@ -7,6 +7,22 @@ export interface QuizOption {
   isCorrect: boolean;
 }
 
+function normalizeId(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
+}
+
+function normalizeOptionText(value: unknown): string {
+  if (typeof value !== 'string') {
+    return '[invalid meaning]';
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : '[invalid meaning]';
+}
+
 export function hasValidQuizSelection(selectedOptionId: string | null, options: QuizOption[]): boolean {
   if (typeof selectedOptionId !== 'string') {
     return false;
@@ -15,7 +31,7 @@ export function hasValidQuizSelection(selectedOptionId: string | null, options: 
   if (normalizedSelectedId.length === 0) {
     return false;
   }
-  return options.some((option) => option.id.trim() === normalizedSelectedId);
+  return options.some((option) => typeof option?.id === 'string' && option.id.trim() === normalizedSelectedId);
 }
 
 export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {
@@ -270,7 +286,9 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
     if (right.score !== left.score) {
       return right.score - left.score;
     }
-    return left.card.id.localeCompare(right.card.id);
+    const leftId = normalizeId(left.card?.id, 'left-missing-id');
+    const rightId = normalizeId(right.card?.id, 'right-missing-id');
+    return leftId.localeCompare(rightId);
   });
 
   for (const candidate of ranked) {
@@ -308,21 +326,25 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
 
 export function composeQuizOptions(target: Card, deckCards: Card[], seed: string, distractorCount = 3): QuizOption[] {
   const distractors = generateDistractors(target, deckCards, distractorCount);
-  const optionIdBase = `${seed}:${target.id}:${target.updatedAt}`;
+  const normalizedTargetId = normalizeId(target?.id, 'target-missing-id');
+  const normalizedTargetUpdatedAt = typeof target?.updatedAt === 'string' ? target.updatedAt : 'invalid-updated-at';
+  const optionIdBase = `${seed}:${normalizedTargetId}:${normalizedTargetUpdatedAt}`;
   const options: QuizOption[] = [
     {
-      id: `${target.id}:correct:${hashString(`${optionIdBase}:correct`).toString(36)}`,
-      cardId: target.id,
-      text: target.meaning,
+      id: `${normalizedTargetId}:correct:${hashString(`${optionIdBase}:correct`).toString(36)}`,
+      cardId: normalizedTargetId,
+      text: normalizeOptionText(target?.meaning),
       isCorrect: true,
     },
     ...distractors.map((card, index) => ({
-      id: `${card.id}:distractor:${index}:${hashString(`${optionIdBase}:distractor:${card.id}:${card.meaning}:${index}`).toString(36)}`,
-      cardId: card.id,
-      text: card.meaning,
+      id: `${normalizeId(card?.id, `distractor-${index}`)}:distractor:${index}:${hashString(
+        `${optionIdBase}:distractor:${normalizeId(card?.id, `distractor-${index}`)}:${normalizeOptionText(card?.meaning)}:${index}`,
+      ).toString(36)}`,
+      cardId: normalizeId(card?.id, `distractor-${index}`),
+      text: normalizeOptionText(card?.meaning),
       isCorrect: false,
     })),
   ];
 
-  return seededShuffle(options, `${seed}:${target.id}:${target.updatedAt}`);
+  return seededShuffle(options, `${seed}:${normalizedTargetId}:${normalizedTargetUpdatedAt}`);
 }

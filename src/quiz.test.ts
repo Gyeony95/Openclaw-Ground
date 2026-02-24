@@ -93,6 +93,16 @@ describe('quiz distractors', () => {
     expect(hasValidQuizSelection(null, options)).toBe(false);
   });
 
+  it('does not throw when option ids are malformed at runtime', () => {
+    const malformedOptions = [
+      { id: undefined as unknown as string, cardId: 'c2', text: 'bad', isCorrect: false },
+      { id: 'valid-option', cardId: 'c3', text: 'good', isCorrect: true },
+    ];
+
+    expect(() => hasValidQuizSelection('valid-option', malformedOptions)).not.toThrow();
+    expect(hasValidQuizSelection('valid-option', malformedOptions)).toBe(true);
+  });
+
   it('treats whitespace-padded selection ids as valid when the target option exists', () => {
     const options = composeQuizOptions(target, deck, 'seed-1');
     const selectedId = options[0].id;
@@ -124,6 +134,23 @@ describe('quiz distractors', () => {
 
     expect(distractors).toHaveLength(3);
     expect(new Set(distractors.map((card) => card.meaning.toLowerCase())).size).toBe(3);
+  });
+
+  it('composes options safely when deck cards contain malformed ids or blank meanings', () => {
+    const malformedDeck = [
+      createCard('target', 'anchor', 'to fix firmly in place'),
+      { ...createCard('c2', 'pin', ''), id: '   ' as unknown as string },
+      { ...createCard('c3', 'tack', '   '), id: undefined as unknown as string },
+      { ...createCard('c4', 'clip', 'to hold together') },
+      { ...createCard('c5', 'bind', 'to tie tightly') },
+    ];
+
+    const options = composeQuizOptions(malformedDeck[0], malformedDeck as Card[], 'malformed-seed');
+
+    expect(options).toHaveLength(4);
+    expect(new Set(options.map((option) => option.id)).size).toBe(4);
+    expect(options.every((option) => option.id.trim().length > 0)).toBe(true);
+    expect(options.every((option) => option.text.trim().length > 0)).toBe(true);
   });
 
   it('forces incorrect multiple-choice selections to Again for FSRS consistency', () => {
