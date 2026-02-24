@@ -107,14 +107,30 @@ function parseDueAtOrNaN(dueAt: unknown): number {
   return parseTimeOrNaN(dueAt);
 }
 
+function parseRuntimeFiniteNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!/^[+-]?\d+(?:\.\d+)?$/.test(trimmed)) {
+    return null;
+  }
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function normalizeNonNegativeCounter(value: unknown): number | null {
-  if (typeof value !== 'number' || !Number.isFinite(value) || !Number.isInteger(value)) {
+  const parsed = parseRuntimeFiniteNumber(value);
+  if (parsed === null || !Number.isInteger(parsed)) {
     return null;
   }
-  if (value < 0) {
+  if (parsed < 0) {
     return null;
   }
-  return value;
+  return parsed;
 }
 
 function normalizeReviewState(value: unknown): Card['state'] | null {
@@ -149,10 +165,11 @@ function minScheduleMsForState(state: Card['state']): number {
 }
 
 function normalizedReviewStabilityDays(stability: unknown): number | null {
-  if (typeof stability !== 'number' || !Number.isFinite(stability) || stability <= 0) {
+  const parsed = parseRuntimeFiniteNumber(stability);
+  if (parsed === null || parsed <= 0) {
     return null;
   }
-  return clamp(stability, STABILITY_MIN, STABILITY_MAX);
+  return clamp(parsed, STABILITY_MIN, STABILITY_MAX);
 }
 
 function maxScheduleMsBeforeRepair(state: Card['state'], stability: unknown): number {

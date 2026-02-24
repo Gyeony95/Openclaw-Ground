@@ -51,6 +51,24 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+function safeReadString(read: () => unknown, fallback: string): string {
+  try {
+    const value = read();
+    return typeof value === 'string' ? value : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function safeReadNumber(read: () => unknown, fallback: number): number {
+  try {
+    const value = read();
+    return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function safeNowMs(): number {
   const runtimeNow = Date.now();
   if (Number.isFinite(runtimeNow)) {
@@ -1161,13 +1179,14 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
 }
 
 export function previewIntervals(card: Card, nowIso: string): RatingIntervalPreview {
-  const fallbackState = (() => {
-    try {
-      return normalizeState(card.state);
-    } catch {
-      return 'learning' as const;
-    }
-  })();
+  const fallbackState = inferStateFromCard({
+    state: safeReadString(() => card.state, 'learning'),
+    reps: safeReadNumber(() => card.reps, 0),
+    lapses: safeReadNumber(() => card.lapses, 0),
+    stability: safeReadNumber(() => card.stability, STABILITY_MIN),
+    updatedAt: safeReadString(() => card.updatedAt, nowIso),
+    dueAt: safeReadString(() => card.dueAt, nowIso),
+  });
   const fallbackPreview = ensureOrderedPreview(previewMinimumIntervalByRating(fallbackState));
   try {
     const normalized = normalizeSchedulingCard(card, nowIso);

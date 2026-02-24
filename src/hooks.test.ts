@@ -1632,6 +1632,30 @@ describe('hasScheduleRepairNeed', () => {
 
     expect(hasScheduleRepairNeed(shortMalformedStabilityReview)).toBe(false);
   });
+
+  it('accepts numeric-string stability values when evaluating review schedule windows', () => {
+    const stringStabilityReview = {
+      ...createNewCard('repair-review-string-stability', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-06-03T12:00:00.000Z',
+      stability: '12' as unknown as number,
+    };
+
+    expect(hasScheduleRepairNeed(stringStabilityReview)).toBe(false);
+  });
+
+  it('accepts numeric-string reps for learning cards due exactly at updatedAt', () => {
+    const stringRepsLearningDueNow = {
+      ...createNewCard('repair-learning-string-reps-now', 'test', NOW),
+      state: 'learning' as const,
+      reps: '0' as unknown as number,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(stringRepsLearningDueNow)).toBe(false);
+  });
 });
 
 describe('countScheduleRepairCards', () => {

@@ -1299,15 +1299,15 @@ export default function App() {
                   style={({ pressed }) => [
                     styles.primaryBtn,
                     pressed && styles.primaryBtnPressed,
-                    !canAttemptAdd && styles.primaryBtnDisabled,
+                    (!canAttemptAdd || !canAdd) && styles.primaryBtnDisabled,
                     !canAdd && canAttemptAdd && styles.primaryBtnInactive,
                   ]}
                   onPress={handleAddCard}
-                  disabled={!canAttemptAdd}
+                  disabled={!canAttemptAdd || !canAdd}
                   accessibilityRole="button"
                   accessibilityLabel="Add card"
                   accessibilityHint={canAdd ? 'Adds this word to your study deck' : addFormHint}
-                  accessibilityState={{ disabled: !canAttemptAdd, busy: isAddBusy }}
+                  accessibilityState={{ disabled: !canAttemptAdd || !canAdd, busy: isAddBusy }}
                 >
                   <View style={styles.primaryBtnContent}>
                     {isAddBusy ? <ActivityIndicator size="small" color="#fff" /> : null}

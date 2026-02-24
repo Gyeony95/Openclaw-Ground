@@ -237,6 +237,36 @@ describe('fsrs scheduler', () => {
     });
   });
 
+  it('infers review fallback intervals when state access is corrupted during preview recovery', () => {
+    const corruptedPreviewState = {
+      ...createNewCard('preview-corrupted-state-fallback', 'safe', NOW),
+      state: 'review' as const,
+      reps: 5,
+      lapses: 1,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 3),
+    };
+    Object.defineProperty(corruptedPreviewState, 'state', {
+      get() {
+        throw new Error('bad runtime state');
+      },
+    });
+    Object.defineProperty(corruptedPreviewState, 'difficulty', {
+      get() {
+        throw new Error('bad runtime difficulty');
+      },
+    });
+
+    const intervals = previewIntervals(corruptedPreviewState, NOW);
+
+    expect(intervals).toEqual({
+      1: 10 / 1440,
+      2: 0.5,
+      3: 0.5,
+      4: 0.5,
+    });
+  });
+
   it('falls back to runtime wall clock when creation timestamp is pathologically far past', () => {
     jest.useFakeTimers();
     try {
