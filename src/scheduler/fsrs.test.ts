@@ -128,6 +128,16 @@ describe('fsrs scheduler', () => {
     expect(card.dueAt).toBe('1970-01-01T00:00:00.000Z');
   });
 
+  it('keeps explicit valid creation timestamps when runtime clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const card = createNewCard('nan-clock-valid-now', 'safe', NOW);
+    nowSpy.mockRestore();
+
+    expect(card.createdAt).toBe(NOW);
+    expect(card.updatedAt).toBe(NOW);
+    expect(card.dueAt).toBe(NOW);
+  });
+
   it('falls back to runtime wall clock when creation timestamp is pathologically far past', () => {
     jest.useFakeTimers();
     try {
@@ -198,6 +208,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.notes).toHaveLength(240);
     expect(reviewed.card.word.startsWith(' ')).toBe(false);
     expect(reviewed.card.meaning.startsWith(' ')).toBe(false);
+  });
+
+  it('keeps explicit valid review timestamps when runtime clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const reviewAt = addDaysIso(NOW, 1);
+    const reviewed = reviewCard(
+      {
+        ...createNewCard('nan-review-clock', 'safe', NOW),
+        state: 'review' as const,
+        dueAt: addDaysIso(NOW, 1),
+        updatedAt: NOW,
+      },
+      3,
+      reviewAt,
+    );
+    nowSpy.mockRestore();
+
+    expect(reviewed.card.updatedAt).toBe(reviewAt);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
   it('collapses internal whitespace in word and meaning when creating cards', () => {

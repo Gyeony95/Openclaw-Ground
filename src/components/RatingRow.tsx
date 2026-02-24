@@ -22,7 +22,13 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
   const isWide = width >= 520;
 
   return (
-    <View style={styles.row}>
+    <View
+      style={styles.row}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel="Recall rating actions"
+      accessibilityHint="Choose how well you recalled the card to set the next review interval"
+    >
       {labels.map((item) => {
         const interval = intervalLabels?.[item.rating] ?? item.fallbackHint;
         return (
@@ -31,7 +37,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
             onPress={() => onRate(item.rating)}
             disabled={disabled}
             hitSlop={6}
-            android_ripple={{ color: `${item.tone}20` }}
+            android_ripple={disabled ? undefined : { color: `${item.tone}20` }}
             style={({ pressed }) => [
               styles.button,
               isNarrow ? styles.buttonNarrow : null,
@@ -46,15 +52,14 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
             accessibilityRole="button"
             accessibilityLabel={`Rate ${item.text}. Next ${interval}.`}
             accessibilityHint={disabled ? 'Wait for the current review to finish' : `Schedules next review ${interval}`}
-            accessibilityState={{ disabled }}
+            accessibilityState={{ disabled, busy: disabled }}
           >
             <Text style={[styles.buttonText, { color: disabled ? colors.subInk : item.tone }]}>{item.text}</Text>
             <Text
-              style={[styles.hint, { color: disabled ? colors.subInk : item.tone }]}
+              style={[styles.hint, styles.hintCentered, { color: disabled ? colors.subInk : item.tone }]}
               numberOfLines={2}
               adjustsFontSizeToFit
               minimumFontScale={0.8}
-              textAlign="center"
             >
               {interval}
             </Text>
@@ -115,5 +120,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.35,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
+  },
+  hintCentered: {
+    textAlign: 'center',
   },
 });

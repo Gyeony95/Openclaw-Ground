@@ -44,15 +44,12 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function safeNowMs(): number {
-  const parsed = Date.parse(currentNowIso());
-  if (Number.isFinite(parsed)) {
-    return parsed;
-  }
   const runtimeNow = Date.now();
   if (Number.isFinite(runtimeNow)) {
     return runtimeNow;
   }
-  return 0;
+  // Preserve unknown wall-clock state so explicit caller timestamps can still be trusted.
+  return Number.NaN;
 }
 
 function toSafeIso(ms: number): string {
@@ -857,10 +854,13 @@ export function createNewCard(word: string, meaning: string, nowIso: string, not
   const createOffsetMs = requestedCreatedMs - wallClockMs;
   const requestedIsPlausible =
     Number.isFinite(requestedCreatedMs) &&
-    Number.isFinite(wallClockMs) &&
-    createOffsetMs >= -MAX_CREATE_TIME_OFFSET_MS &&
-    createOffsetMs <= MAX_CREATE_FUTURE_OFFSET_MS;
-  const safeCreatedMs = requestedIsPlausible ? requestedCreatedMs : wallClockMs;
+    (!Number.isFinite(wallClockMs) ||
+      (createOffsetMs >= -MAX_CREATE_TIME_OFFSET_MS && createOffsetMs <= MAX_CREATE_FUTURE_OFFSET_MS));
+  const safeCreatedMs = requestedIsPlausible
+    ? requestedCreatedMs
+    : Number.isFinite(wallClockMs)
+      ? wallClockMs
+      : 0;
   const createdAt = toSafeIso(safeCreatedMs);
   const trimmedWord = normalizeWordValue(word);
   const trimmedMeaning = normalizeMeaningValue(meaning);
