@@ -44,6 +44,11 @@ describe('quiz distractors', () => {
     expect(normalizedTokenOverlap('write a word incorrectly', 'small bird in cities')).toBe(0);
   });
 
+  it('preserves non-Latin tokens when computing overlap', () => {
+    expect(normalizedTokenOverlap('안녕하세요 세계', '안녕하세요 친구')).toBeGreaterThan(0);
+    expect(normalizedTokenOverlap('안녕하세요 세계', '감사합니다 모두')).toBe(0);
+  });
+
   it('detects adjective meanings by suffix for distractor scoring', () => {
     expect(inferPartOfSpeech('dangerous and risky')).toBe('adjective');
   });

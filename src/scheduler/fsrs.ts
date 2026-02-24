@@ -9,6 +9,8 @@ import {
   MEANING_MAX_LENGTH,
   MINUTE_IN_DAYS,
   NOTES_MAX_LENGTH,
+  REVIEW_STABILITY_OUTLIER_FLOOR_DAYS,
+  REVIEW_STABILITY_OUTLIER_MULTIPLIER,
   STABILITY_MAX,
   STABILITY_MIN,
   WORD_MAX_LENGTH,
@@ -328,8 +330,8 @@ function normalizeTimeline(
     dueDaysFromUpdated <= maxStateScheduleDays * NON_REVIEW_OUTLIER_MULTIPLIER;
   const reviewStabilityOutlierWindowDays = Math.max(
     REVIEW_SCHEDULE_FLOOR_DAYS,
-    expectedReviewScheduleDays * 12,
-    120,
+    expectedReviewScheduleDays * REVIEW_STABILITY_OUTLIER_MULTIPLIER,
+    REVIEW_STABILITY_OUTLIER_FLOOR_DAYS,
   );
   const dueBeyondReviewStabilityWindow =
     normalizedState === 'review' &&

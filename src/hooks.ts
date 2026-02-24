@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createNewCard, reviewCard } from './scheduler/fsrs';
-import { MEANING_MAX_LENGTH, NOTES_MAX_LENGTH, STABILITY_MAX, STABILITY_MIN, WORD_MAX_LENGTH } from './scheduler/constants';
+import {
+  MEANING_MAX_LENGTH,
+  NOTES_MAX_LENGTH,
+  REVIEW_STABILITY_OUTLIER_FLOOR_DAYS,
+  REVIEW_STABILITY_OUTLIER_MULTIPLIER,
+  STABILITY_MAX,
+  STABILITY_MIN,
+  WORD_MAX_LENGTH,
+} from './scheduler/constants';
 import { computeDeckStats, loadDeck, saveDeck } from './storage/deckRepository';
 import { Card, DeckStats, Rating } from './types';
 import { isDue, isIsoDateTime, nowIso } from './utils/time';
@@ -20,8 +28,6 @@ const REVIEW_MIN_SCHEDULE_MS = 0.5 * DAY_MS;
 const LEARNING_MAX_SCHEDULE_MS = DAY_MS;
 const RELEARNING_MAX_SCHEDULE_MS = 2 * DAY_MS;
 const REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS = 7;
-const REVIEW_STABILITY_OUTLIER_MULTIPLIER = 12;
-const REVIEW_STABILITY_OUTLIER_FLOOR_DAYS = 120;
 const MAX_UPCOMING_HOURS = 24 * 365 * 20;
 
 function parseTimeOrRepairPriority(iso: string): number {
@@ -308,7 +314,7 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
 
   return cards.filter((card) => {
     const dueMs = parseDueAtOrNaN(card.dueAt);
-    return Number.isFinite(dueMs) && dueMs > nowMs && dueMs <= cutoffMs;
+    return Number.isFinite(dueMs) && dueMs >= nowMs && dueMs <= cutoffMs;
   }).length;
 }
 

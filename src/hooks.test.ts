@@ -1149,14 +1149,14 @@ describe('hasDueCard', () => {
 });
 
 describe('countUpcomingDueCards', () => {
-  it('counts only cards due after now and within the upcoming window', () => {
+  it('counts cards due now or later within the upcoming window', () => {
     const now = NOW;
     const dueNow = createNewCard('due-now', 'now', now);
     const overdue = { ...createNewCard('overdue', 'past', now), dueAt: '2026-02-23T11:00:00.000Z' };
     const upcoming = { ...createNewCard('upcoming', 'soon', now), dueAt: '2026-02-23T18:00:00.000Z' };
     const tooFar = { ...createNewCard('too-far', 'later', now), dueAt: '2026-02-24T12:00:01.000Z' };
 
-    expect(countUpcomingDueCards([dueNow, overdue, upcoming, tooFar], now)).toBe(1);
+    expect(countUpcomingDueCards([dueNow, overdue, upcoming, tooFar], now)).toBe(2);
   });
 
   it('returns zero for invalid runtime clocks', () => {

@@ -224,7 +224,7 @@ export default function App() {
   }, [cards, clockIso]);
   const queueProgressMeta = loading
     ? '--'
-    : `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due in 24h`;
+    : `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due within 24h`;
   const queueProgressTone = loading
     ? colors.primary
     : queueProgressPercent >= 80
