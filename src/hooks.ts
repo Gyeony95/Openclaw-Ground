@@ -54,7 +54,10 @@ function normalizeMergeCounter(value: number): number {
   if (!Number.isFinite(value)) {
     return Number.MIN_SAFE_INTEGER;
   }
-  return value;
+  if (value < 0) {
+    return Number.MIN_SAFE_INTEGER;
+  }
+  return Math.floor(value);
 }
 
 function isValidIso(value?: string): value is string {

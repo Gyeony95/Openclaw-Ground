@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 10,
     minWidth: 78,
-    minHeight: 72,
+    minHeight: 76,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     flexBasis: '100%',
   },
   buttonNarrow: {
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 8,
   },
   buttonWide: {
@@ -104,13 +104,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
   },
   buttonText: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.72,
     textTransform: 'uppercase',
   },
   hint: {
-    fontSize: 10.5,
+    fontSize: 11,
     letterSpacing: 0.35,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],

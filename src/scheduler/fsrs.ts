@@ -315,9 +315,15 @@ function toReviewRating(rating: Rating): 2 | 3 | 4 {
   return rating === 4 ? 4 : 3;
 }
 
-function normalizeState(input: ReviewState): ReviewState {
-  if (input === 'review' || input === 'relearning') {
+function normalizeState(input: unknown): ReviewState {
+  if (input === 'review' || input === 'relearning' || input === 'learning') {
     return input;
+  }
+  if (typeof input === 'string') {
+    const normalized = input.trim().toLowerCase();
+    if (normalized === 'review' || normalized === 'relearning') {
+      return normalized;
+    }
   }
   return 'learning';
 }

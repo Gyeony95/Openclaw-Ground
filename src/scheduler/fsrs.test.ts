@@ -384,6 +384,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeCloseTo(1 / 1440, 7);
   });
 
+  it('normalizes whitespace-padded review state strings at runtime', () => {
+    const reviewCardBase = {
+      ...createNewCard('runtime-state-review', 'letter', NOW),
+      state: ' REVIEW ' as unknown as 'review',
+      dueAt: addDaysIso(NOW, 1),
+      updatedAt: NOW,
+      reps: 5,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(reviewCardBase, 3, addDaysIso(NOW, 1));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.card.lapses).toBe(reviewCardBase.lapses);
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
   it('anchors malformed low review stability to the existing schedule for early good reviews', () => {
     const inconsistent = {
       ...createNewCard('stability-anchor-good', 'definition', NOW),

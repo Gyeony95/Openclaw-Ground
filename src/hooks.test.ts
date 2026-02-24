@@ -629,6 +629,34 @@ describe('mergeDeckCards', () => {
     expect(merged[0].reps).toBe(4);
     expect(merged[0].lapses).toBe(1);
   });
+
+  it('ignores negative and fractional counters when merge candidates tie', () => {
+    const local = {
+      ...createNewCard('tie-counter-local-sanitized', 'local', NOW),
+      id: 'tie-counter-sanitized',
+      createdAt: '2026-02-23T10:00:00.000Z',
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 1.9,
+      lapses: -2,
+    };
+    const loaded = {
+      ...createNewCard('tie-counter-loaded-sanitized', 'loaded', NOW),
+      id: 'tie-counter-sanitized',
+      createdAt: '2026-02-23T10:00:00.000Z',
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 1,
+      lapses: 0,
+    };
+
+    const merged = mergeDeckCards([local], [loaded]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].meaning).toBe('loaded');
+    expect(merged[0].reps).toBe(1);
+    expect(merged[0].lapses).toBe(0);
+  });
 });
 
 describe('hasDueCard', () => {
