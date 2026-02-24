@@ -54,7 +54,7 @@ export function dueUrgency({ dueAt, clockIso, needsRepair }: DueUrgencyInput): {
     return { label: 'Needs repair', tone: colors.warn };
   }
   if (!dueAt) {
-    return { label: 'Schedule pending', tone: colors.warn };
+    return { label: 'Needs repair', tone: colors.warn };
   }
   const dueMs = isIsoDateTime(dueAt) ? Date.parse(dueAt) : Number.NaN;
   const nowMs = isIsoDateTime(clockIso) ? Date.parse(clockIso) : Number.NaN;

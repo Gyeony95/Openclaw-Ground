@@ -192,7 +192,10 @@ export default function App() {
   const previousHadDueCardRef = useRef(false);
 
   const dueCard = dueCards[0];
+  const nextDueCard = dueCards[1];
   const dueQueueCount = dueCards.length;
+  const dueNeedsRepair = dueCard ? hasScheduleRepairNeed(dueCard) : false;
+  const nextDueNeedsRepair = nextDueCard ? hasScheduleRepairNeed(nextDueCard) : false;
   const retentionScore = useMemo(() => {
     if (stats.total === 0) {
       return 0;
@@ -220,7 +223,7 @@ export default function App() {
   const queueLabel = loading
     ? 'Loading'
     : dueCard
-      ? !hasScheduleRepairNeed(dueCard) && hasValidIso(dueCard.dueAt)
+      ? !dueNeedsRepair && hasValidIso(dueCard.dueAt)
         ? formatDueLabel(dueCard.dueAt, clockIso)
         : 'Needs schedule repair'
       : 'Queue clear';
@@ -234,7 +237,7 @@ export default function App() {
     clockIso,
     loading,
     hasDueCard: Boolean(dueCard),
-    needsRepair: dueCard ? hasScheduleRepairNeed(dueCard) : false,
+    needsRepair: dueNeedsRepair,
   });
   const queueShareLabel = loading
     ? '--'
@@ -261,10 +264,10 @@ export default function App() {
       : queueShareLabel;
   const followUpQueueLabel = loading
     ? '--'
-    : dueCards[1]
-      ? hasScheduleRepairNeed(dueCards[1]) || !hasValidIso(dueCards[1].dueAt)
+    : nextDueCard
+      ? nextDueNeedsRepair || !hasValidIso(nextDueCard.dueAt)
         ? 'Then needs schedule repair'
-        : `Then ${formatDueLabel(dueCards[1].dueAt, clockIso)}`
+        : `Then ${formatDueLabel(nextDueCard.dueAt, clockIso)}`
       : 'No second card queued';
   const queuePositionLabel = loading
     ? '--'
@@ -290,7 +293,6 @@ export default function App() {
     : scheduleRepairCount === 0
       ? 'Schedules healthy'
       : `${scheduleRepairCount.toLocaleString()} schedule ${scheduleRepairCount === 1 ? 'repair' : 'repairs'}`;
-  const dueNeedsRepair = dueCard ? hasScheduleRepairNeed(dueCard) : false;
   const dueCardWord = dueCard ? normalizeBoundedText(dueCard.word, WORD_MAX_LENGTH) || '[invalid word]' : '[no card]';
   const dueCardMeaning = dueCard
     ? normalizeBoundedText(dueCard.meaning, MEANING_MAX_LENGTH) || '[invalid meaning]'

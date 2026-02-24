@@ -87,6 +87,16 @@ describe('scheduleStatus', () => {
       expect(urgency).toEqual({ label: 'Needs repair', tone: colors.warn });
     });
 
+    it('treats missing dueAt as needing repair when no explicit repair flag is present', () => {
+      const urgency = dueUrgency({
+        dueAt: undefined,
+        clockIso: NOW,
+        needsRepair: false,
+      });
+
+      expect(urgency).toEqual({ label: 'Needs repair', tone: colors.warn });
+    });
+
     it('uses due-now label for schedules within the one-minute window', () => {
       const urgency = dueUrgency({
         dueAt: '2026-02-24T12:00:30.000Z',
