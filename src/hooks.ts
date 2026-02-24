@@ -29,7 +29,11 @@ function parseTimeOrNaN(iso: string): number {
 
 function safeNowMs(): number {
   const runtimeNow = Date.now();
-  return Number.isFinite(runtimeNow) ? runtimeNow : FALLBACK_NOW_MS;
+  return Number.isFinite(runtimeNow) ? runtimeNow : Number.NaN;
+}
+
+function toSafeIso(ms: number): string {
+  return new Date(Number.isFinite(ms) ? ms : FALLBACK_NOW_MS).toISOString();
 }
 
 function parseDueAtOrNaN(dueAt: unknown): number {
@@ -273,13 +277,18 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
   const renderedMs = parseTimeOrNaN(renderedClockIso);
   const runtimeMs = parseTimeOrNaN(runtimeNowIso);
   const wallClockMs = safeNowMs();
-  const wallClockIso = new Date(wallClockMs).toISOString();
+  const wallClockIso = toSafeIso(wallClockMs);
+  const hasFiniteWallClock = Number.isFinite(wallClockMs);
   const canonicalRenderedIso = Number.isFinite(renderedMs) ? new Date(renderedMs).toISOString() : undefined;
   const canonicalRuntimeIso = Number.isFinite(runtimeMs) ? new Date(runtimeMs).toISOString() : undefined;
-  const runtimeTooFarAheadOfWall = Number.isFinite(runtimeMs) && runtimeMs - wallClockMs > MAX_CLOCK_SKEW_MS;
-  const runtimeTooFarBehindWall = Number.isFinite(runtimeMs) && wallClockMs - runtimeMs > MAX_CLOCK_SKEW_MS;
-  const renderedTooFarAheadOfWall = Number.isFinite(renderedMs) && renderedMs - wallClockMs > MAX_CLOCK_SKEW_MS;
-  const renderedTooFarBehindWall = Number.isFinite(renderedMs) && wallClockMs - renderedMs > MAX_CLOCK_SKEW_MS;
+  const runtimeTooFarAheadOfWall =
+    hasFiniteWallClock && Number.isFinite(runtimeMs) && runtimeMs - wallClockMs > MAX_CLOCK_SKEW_MS;
+  const runtimeTooFarBehindWall =
+    hasFiniteWallClock && Number.isFinite(runtimeMs) && wallClockMs - runtimeMs > MAX_CLOCK_SKEW_MS;
+  const renderedTooFarAheadOfWall =
+    hasFiniteWallClock && Number.isFinite(renderedMs) && renderedMs - wallClockMs > MAX_CLOCK_SKEW_MS;
+  const renderedTooFarBehindWall =
+    hasFiniteWallClock && Number.isFinite(renderedMs) && wallClockMs - renderedMs > MAX_CLOCK_SKEW_MS;
 
   if (Number.isFinite(renderedMs) && Number.isFinite(runtimeMs)) {
     if (runtimeTooFarAheadOfWall || runtimeTooFarBehindWall) {
@@ -316,17 +325,20 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
 
 export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: string): string {
   const wallClockMs = safeNowMs();
-  const wallClockIso = new Date(wallClockMs).toISOString();
+  const wallClockIso = toSafeIso(wallClockMs);
+  const hasFiniteWallClock = Number.isFinite(wallClockMs);
   const normalizeWallSafeIso = (candidate?: string): string | undefined => {
     if (!isValidIso(candidate)) {
       return undefined;
     }
     const candidateMs = Date.parse(candidate);
-    if (candidateMs - wallClockMs > MAX_UI_FUTURE_SKEW_MS) {
-      return undefined;
-    }
-    if (wallClockMs - candidateMs > MAX_CLOCK_SKEW_MS) {
-      return undefined;
+    if (hasFiniteWallClock) {
+      if (candidateMs - wallClockMs > MAX_UI_FUTURE_SKEW_MS) {
+        return undefined;
+      }
+      if (wallClockMs - candidateMs > MAX_CLOCK_SKEW_MS) {
+        return undefined;
+      }
     }
     return toCanonicalIso(candidate);
   };

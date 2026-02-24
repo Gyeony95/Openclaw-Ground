@@ -1016,6 +1016,14 @@ describe('resolveReviewClock', () => {
 
     expect(reviewedAt).toBe('1970-01-01T00:00:00.000Z');
   });
+
+  it('keeps valid review timestamps when wall clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const reviewedAt = resolveReviewClock('2026-02-23T12:00:00.000Z', '2026-02-23T12:05:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(reviewedAt).toBe('2026-02-23T12:05:00.000Z');
+  });
 });
 
 describe('resolveNextUiClock', () => {
@@ -1098,5 +1106,13 @@ describe('resolveNextUiClock', () => {
     nowSpy.mockRestore();
 
     expect(resolved).toBe('1970-01-01T00:00:00.000Z');
+  });
+
+  it('keeps valid UI clocks when wall clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const resolved = resolveNextUiClock('2026-02-23T12:10:00.000Z', '2026-02-23T12:15:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:15:00.000Z');
   });
 });

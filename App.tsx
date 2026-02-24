@@ -108,6 +108,13 @@ function formatQueuePositionLabel(position: number, total: number): string {
   return `Card ${position.toLocaleString()} of ${total.toLocaleString()}`;
 }
 
+function formatRemainingQueueLabel(remaining: number): string {
+  if (remaining <= 0) {
+    return 'Last card in queue';
+  }
+  return `${remaining.toLocaleString()} ${remaining === 1 ? 'card' : 'cards'} remain`;
+}
+
 function hasValidIso(value?: string): boolean {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
 }
@@ -250,6 +257,11 @@ export default function App() {
     : dueCard
       ? formatQueuePositionLabel(1, Math.max(1, dueQueueCount))
       : 'Queue empty';
+  const remainingQueueLabel = loading
+    ? '--'
+    : dueCard
+      ? formatRemainingQueueLabel(Math.max(0, dueQueueCount - 1))
+      : 'No cards remaining';
   const dueWithinDay = useMemo(() => {
     return countUpcomingDueCards(cards, clockIso, 24);
   }, [cards, clockIso]);
@@ -747,6 +759,7 @@ export default function App() {
                         <Text style={styles.reviewTimelineRepair}>Malformed schedule will be repaired on review.</Text>
                       ) : null}
                       <Text style={styles.reviewTimelineMeta}>{queuePositionLabel}</Text>
+                      <Text style={styles.reviewTimelineMeta}>{remainingQueueLabel}</Text>
                     </View>
                     <View style={styles.reviewHeader}>
                       <Text style={[styles.word, isCompactLayout && styles.wordCompact]} numberOfLines={2} ellipsizeMode="tail">
