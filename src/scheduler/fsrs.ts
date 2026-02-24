@@ -124,6 +124,11 @@ function normalizeRating(input: Rating, currentState: ReviewState): Rating {
     return currentState === 'review' ? 3 : 1;
   }
 
+  // Runtime-corrupted fractional ratings should use the same safe fallback as other invalid values.
+  if (!Number.isInteger(input)) {
+    return currentState === 'review' ? 3 : 1;
+  }
+
   const rounded = Math.round(input);
   if (rounded < 1 || rounded > 4) {
     return currentState === 'review' ? 3 : 1;

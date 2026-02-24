@@ -17,7 +17,8 @@ const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: 
 
 export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRowProps) {
   const { width } = useWindowDimensions();
-  const isCompact = width < 360;
+  const isCompact = width < 320;
+  const isNarrow = width < 380;
   const isWide = width >= 520;
 
   return (
@@ -33,6 +34,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
             android_ripple={{ color: `${item.tone}20` }}
             style={({ pressed }) => [
               styles.button,
+              isNarrow ? styles.buttonNarrow : null,
               isCompact ? styles.buttonCompact : null,
               isWide ? styles.buttonWide : null,
               disabled
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 10,
     minWidth: 78,
-    minHeight: 68,
+    minHeight: 72,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
@@ -75,6 +77,10 @@ const styles = StyleSheet.create({
   },
   buttonCompact: {
     flexBasis: '100%',
+  },
+  buttonNarrow: {
+    paddingVertical: 10,
+    paddingHorizontal: 8,
   },
   buttonWide: {
     flexBasis: '23%',

@@ -182,9 +182,39 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBe(neutral.scheduledDays);
   });
 
+  it('treats fractional review ratings as neutral reviews instead of rounding to Easy', () => {
+    const reviewCardBase = {
+      ...createNewCard('invalid-rating-fractional-review', 'letter', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 1),
+      updatedAt: NOW,
+      reps: 5,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(reviewCardBase, 3.6 as Rating, addDaysIso(NOW, 1));
+    const neutral = reviewCard(reviewCardBase, 3, addDaysIso(NOW, 1));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.card.lapses).toBe(reviewCardBase.lapses);
+    expect(reviewed.scheduledDays).toBe(neutral.scheduledDays);
+  });
+
   it('treats out-of-range learning ratings as Again to avoid accidental promotion', () => {
     const learningCard = createNewCard('invalid-rating-range-learning', 'letter', NOW);
     const reviewed = reviewCard(learningCard, 99 as Rating, NOW);
+
+    expect(reviewed.card.state).toBe('learning');
+    expect(reviewed.card.lapses).toBe(0);
+    expect(reviewed.card.reps).toBe(1);
+    expect(reviewed.scheduledDays).toBeCloseTo(1 / 1440, 7);
+  });
+
+  it('treats fractional learning ratings as Again to avoid accidental promotion', () => {
+    const learningCard = createNewCard('invalid-rating-fractional-learning', 'letter', NOW);
+    const reviewed = reviewCard(learningCard, 2.7 as Rating, NOW);
 
     expect(reviewed.card.state).toBe('learning');
     expect(reviewed.card.lapses).toBe(0);
@@ -1198,23 +1228,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(12);
   });
 
-  it('treats invalid runtime rating values as nearest supported rating', () => {
+  it('treats out-of-range runtime rating values as Again during learning', () => {
     const base = createNewCard('eta', 'letter', NOW);
     const reviewed = reviewCard(base, 9 as unknown as Rating, NOW);
 
-    expect(reviewed.card.state).toBe('review');
-    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+    expect(reviewed.card.state).toBe('learning');
+    expect(reviewed.card.lapses).toBe(0);
+    expect(reviewed.scheduledDays).toBeLessThan(0.002);
   });
 
-  it('rounds runtime fractional rating values to the nearest valid button', () => {
+  it('treats runtime fractional rating values as Again during learning', () => {
     const base = createNewCard('eta-2', 'letter', NOW);
-    const roundedHard = reviewCard(base, 1.6 as unknown as Rating, NOW);
-    const roundedGood = reviewCard(base, 2.6 as unknown as Rating, NOW);
+    const fractionalHard = reviewCard(base, 1.6 as unknown as Rating, NOW);
+    const fractionalGood = reviewCard(base, 2.6 as unknown as Rating, NOW);
 
-    expect(roundedHard.card.state).toBe('learning');
-    expect(roundedHard.scheduledDays).toBeGreaterThan(0.006);
-    expect(roundedGood.card.state).toBe('review');
-    expect(roundedGood.scheduledDays).toBe(0.5);
+    expect(fractionalHard.card.state).toBe('learning');
+    expect(fractionalHard.scheduledDays).toBeLessThan(0.002);
+    expect(fractionalGood.card.state).toBe('learning');
+    expect(fractionalGood.scheduledDays).toBeLessThan(0.002);
   });
 
   it('treats non-finite runtime ratings as Again to avoid accidental promotion', () => {

@@ -223,6 +223,16 @@ describe('applyDueReview', () => {
     expect(result.cards[0].lapses).toBe(0);
     expect(result.cards[0].reps).toBe(1);
   });
+
+  it('treats fractional learning ratings as Again to avoid accidental promotion', () => {
+    const due = createNewCard('invalid-fractional-learning-hook', 'safe', NOW);
+    const result = applyDueReview([due], due.id, 2.8 as Rating, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0].state).toBe('learning');
+    expect(result.cards[0].lapses).toBe(0);
+    expect(result.cards[0].reps).toBe(1);
+  });
 });
 
 describe('applyReviewToDeckState', () => {
