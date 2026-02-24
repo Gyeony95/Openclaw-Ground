@@ -324,8 +324,8 @@ export function hasScheduleRepairNeed(
     }
     return false;
   }
-  if (state !== 'learning' && isMaxIsoBound(dueMs) && isMaxIsoBound(updatedMs)) {
-    // Saturated upper-bound schedules cannot move forward in time and are still valid.
+  if (state === 'review' && isMaxIsoBound(dueMs) && isMaxIsoBound(updatedMs)) {
+    // Saturated upper-bound review schedules cannot move forward in time and are still valid.
     return false;
   }
   // Brand-new learning cards are legitimately due at creation time; persisted learning cards should move forward.

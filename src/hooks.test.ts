@@ -955,6 +955,23 @@ describe('collectDueCards', () => {
     expect(dueCards).toHaveLength(0);
   });
 
+  it('surfaces saturated max-date relearning cards as due repairs', () => {
+    const saturatedRelearning = {
+      ...createNewCard('max-date-relearning-queue', 'boundary', NOW),
+      state: 'relearning' as const,
+      updatedAt: MAX_ISO,
+      dueAt: MAX_ISO,
+      reps: 10,
+      lapses: 1,
+      stability: 1,
+    };
+
+    const dueCards = collectDueCards([saturatedRelearning], NOW, NOW);
+
+    expect(dueCards).toHaveLength(1);
+    expect(dueCards[0].id).toBe(saturatedRelearning.id);
+  });
+
   it('keeps loose non-ISO dueAt cards in front for immediate repair', () => {
     const looseDue = {
       ...createNewCard('loose-iso-queue', 'repair', NOW),
@@ -1834,6 +1851,20 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(saturatedReview)).toBe(false);
   });
 
+  it('flags saturated max-date relearning schedules as corrupted', () => {
+    const saturatedRelearning = {
+      ...createNewCard('repair-max-date-relearning', 'test', NOW),
+      state: 'relearning' as const,
+      updatedAt: MAX_ISO,
+      dueAt: MAX_ISO,
+      reps: 8,
+      lapses: 2,
+      stability: 1,
+    };
+
+    expect(hasScheduleRepairNeed(saturatedRelearning)).toBe(true);
+  });
+
   it('flags cards with dueAt before updatedAt', () => {
     const broken = {
       ...createNewCard('repair-due-before-updated', 'test', NOW),
@@ -2315,6 +2346,20 @@ describe('countScheduleRepairCards', () => {
     };
 
     expect(countScheduleRepairCards([saturatedReview])).toBe(0);
+  });
+
+  it('counts saturated max-date relearning schedules as repair-needed', () => {
+    const saturatedRelearning = {
+      ...createNewCard('repair-count-max-date-relearning', 'test', NOW),
+      state: 'relearning' as const,
+      updatedAt: MAX_ISO,
+      dueAt: MAX_ISO,
+      reps: 4,
+      lapses: 2,
+      stability: 1,
+    };
+
+    expect(countScheduleRepairCards([saturatedRelearning])).toBe(1);
   });
 });
 

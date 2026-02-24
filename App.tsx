@@ -1197,7 +1197,7 @@ export default function App() {
                           </View>
                         </View>
                         <Text style={styles.answerActionsLabel}>Choose the correct meaning</Text>
-                        {quickRatingPreviewLabel ? (
+                        {!hasQuizSelection && quickRatingPreviewLabel ? (
                           <Text style={styles.quizPreviewHint} numberOfLines={2} ellipsizeMode="tail">
                             {quickRatingPreviewLabel}
                           </Text>
