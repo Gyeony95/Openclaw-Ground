@@ -38,7 +38,7 @@ function normalizeCardIdForSort(id: unknown): string {
   if (typeof id !== 'string') {
     return '';
   }
-  return id;
+  return id.trim();
 }
 
 function isValidCardId(id: unknown): id is string {

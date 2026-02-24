@@ -592,6 +592,28 @@ describe('compareDueCards', () => {
 
     expect(() => [valid, malformed].sort(compareDueCards)).not.toThrow();
   });
+
+  it('normalizes whitespace around ids before id tie-break sorting', () => {
+    const base = createNewCard('queue-id-trim', 'ordering', NOW);
+    const spaced = {
+      ...base,
+      id: '  z-last  ',
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+    const plain = {
+      ...base,
+      id: 'a-first',
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+
+    const orderedIds = [spaced, plain].sort(compareDueCards).map((card) => card.id);
+
+    expect(orderedIds).toEqual(['a-first', '  z-last  ']);
+  });
 });
 
 describe('collectDueCards', () => {

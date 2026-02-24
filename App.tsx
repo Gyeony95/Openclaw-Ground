@@ -319,6 +319,20 @@ export default function App() {
         : undefined,
     [ratingIntervals],
   );
+  const visibleRatingIntervalLabels = useMemo(() => {
+    if (!ratingIntervalLabels) {
+      return undefined;
+    }
+    if (!forceAgainForQuizSelection) {
+      return ratingIntervalLabels;
+    }
+    return {
+      ...ratingIntervalLabels,
+      2: 'Locked',
+      3: 'Locked',
+      4: 'Locked',
+    };
+  }, [forceAgainForQuizSelection, ratingIntervalLabels]);
   const quickRatingPreviewLabel = ratingIntervalLabels
     ? `Again ${ratingIntervalLabels[1]} · Hard ${ratingIntervalLabels[2]} · Good ${ratingIntervalLabels[3]} · Easy ${ratingIntervalLabels[4]}`
     : null;
@@ -1077,7 +1091,7 @@ export default function App() {
                         <Text style={styles.answerActionsLabel}>Rate recall quality</Text>
                         <RatingRow
                           onRate={handleRate}
-                          intervalLabels={ratingIntervalLabels}
+                          intervalLabels={visibleRatingIntervalLabels}
                           disabled={isReviewBusy}
                           busy={isReviewBusy}
                           disabledRatings={disabledRatingsInQuizMode}
