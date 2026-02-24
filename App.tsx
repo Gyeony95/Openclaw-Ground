@@ -153,8 +153,12 @@ function queueTone({
   if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
     return colors.warn;
   }
-  if (dueMs - nowMs <= 60 * 1000) {
+  const deltaMs = dueMs - nowMs;
+  if (deltaMs <= 60 * 1000) {
     return colors.danger;
+  }
+  if (deltaMs <= 60 * 60 * 1000) {
+    return colors.warn;
   }
   return colors.primary;
 }

@@ -227,6 +227,29 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('resets schedule anchors when rolling back pathologically future review timelines', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const futureCorrupted = {
+        ...createNewCard('future-corrupted-anchor-reset', 'timeline', NOW),
+        state: 'review' as const,
+        updatedAt: '2030-01-01T00:00:00.000Z',
+        dueAt: '2030-05-01T00:00:00.000Z',
+        stability: 120,
+      };
+
+      const reviewed = reviewCard(futureCorrupted, 3, 'not-a-date');
+
+      expect(reviewed.card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(0.5);
+      expect(reviewed.scheduledDays).toBeLessThanOrEqual(2);
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('normalizes folded relearning state aliases before applying ratings', () => {
     const foldedRelearning = {
       ...createNewCard('folded-relearning', 'state alias', NOW),

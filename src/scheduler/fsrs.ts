@@ -815,14 +815,25 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   const updatedAt = baseCard.updatedAt;
   const dueAt = baseCard.dueAt;
   const createdAt = baseCard.createdAt;
-  const elapsedDays = normalizeElapsedDays(daysBetween(updatedAt, currentIso));
-  const scheduledDays = daysBetween(updatedAt, dueAt);
+  const updatedAtMs = Date.parse(updatedAt);
+  const currentMs = Date.parse(currentIso);
+  const timelineRolledBack =
+    Number.isFinite(updatedAtMs) &&
+    Number.isFinite(currentMs) &&
+    updatedAtMs - currentMs > MAX_MONOTONIC_CLOCK_SKEW_MS;
+  const scheduleAnchorUpdatedAt = timelineRolledBack ? currentIso : updatedAt;
+  const scheduleAnchorDueAt = timelineRolledBack
+    ? addDaysIso(currentIso, scheduleFallbackForState(currentState))
+    : dueAt;
+  const elapsedDays = normalizeElapsedDays(daysBetween(scheduleAnchorUpdatedAt, currentIso));
+  const scheduledDays = daysBetween(scheduleAnchorUpdatedAt, scheduleAnchorDueAt);
   const previousScheduledDays = normalizeScheduledDays(scheduledDays, currentState);
   const state = nextState(currentState, normalizedRating);
   const phase = currentState;
   const lapseIncrement = shouldCountLapse(currentState, normalizedRating) ? 1 : 0;
   const previousDifficulty = baseCard.difficulty;
-  const previousStability = effectivePreviousStability(baseCard.stability, previousScheduledDays, phase);
+  const stabilitySeed = timelineRolledBack ? previousScheduledDays : baseCard.stability;
+  const previousStability = effectivePreviousStability(stabilitySeed, previousScheduledDays, phase);
 
   const nextDifficulty = nextDifficultyForPhase(previousDifficulty, currentState, normalizedRating);
   const nextStability = updateStability(
