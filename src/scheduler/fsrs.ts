@@ -432,6 +432,11 @@ function normalizeTimeline(
   const rawDueMs = rawDueAt ? Date.parse(rawDueAt) : Number.NaN;
   const updatedAtMs = Date.parse(updatedAt);
   const dueDaysFromUpdated = Number.isFinite(rawDueMs) ? (rawDueMs - updatedAtMs) / DAY_MS : Number.NaN;
+  const hasSaturatedUpperBoundTimeline =
+    Number.isFinite(rawDueMs) &&
+    Number.isFinite(updatedAtMs) &&
+    rawDueMs >= MAX_DATE_MS &&
+    updatedAtMs >= MAX_DATE_MS;
   const stateScheduleFloorDays = scheduleFallbackForState(normalizedState);
   const expectedReviewScheduleDays = normalizeScheduledDays(card.stability, 'review');
   const maxStateScheduleDays = maxScheduleDaysForState(normalizedState);
@@ -447,7 +452,8 @@ function normalizeTimeline(
   );
   const dueNotAfterUpdatedAt =
     Number.isFinite(rawDueMs) &&
-    rawDueMs <= updatedAtMs;
+    rawDueMs <= updatedAtMs &&
+    !hasSaturatedUpperBoundTimeline;
   const dueBelowStateFloor =
     Number.isFinite(dueDaysFromUpdated) &&
     dueDaysFromUpdated < stateScheduleFloorDays;

@@ -44,6 +44,7 @@ import { formatIntervalLabel } from './src/utils/interval';
 import { dueUrgency, queueTone } from './src/utils/scheduleStatus';
 import { normalizeBoundedText } from './src/utils/text';
 import { isIsoDateTime } from './src/utils/time';
+import { queueLoadStatusLabel } from './src/utils/queue';
 import { Rating, ReviewState } from './src/types';
 
 const INVALID_MEANING_PLACEHOLDER = '[invalid meaning]';
@@ -161,25 +162,6 @@ function formatRemainingQueueLabel(remaining: number): string {
     return 'Last card in queue';
   }
   return `${remaining.toLocaleString()} ${remaining === 1 ? 'card' : 'cards'} remain`;
-}
-
-function queueLoadStatusLabel(percent: number, repairCount: number, total: number): string {
-  if (total <= 0) {
-    return 'Clear';
-  }
-  if (repairCount > 0) {
-    return 'Repair needed';
-  }
-  if (percent >= 80) {
-    return 'Heavy';
-  }
-  if (percent >= 50) {
-    return 'Moderate';
-  }
-  if (percent > 0) {
-    return 'Light';
-  }
-  return 'Clear';
 }
 
 function hasValidIso(value?: string): boolean {

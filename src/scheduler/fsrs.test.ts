@@ -4,6 +4,7 @@ import { addDaysIso } from '../utils/time';
 import { STABILITY_MAX } from './constants';
 
 const NOW = '2026-02-23T12:00:00.000Z';
+const MAX_ISO = '+275760-09-13T00:00:00.000Z';
 
 describe('fsrs scheduler', () => {
   it('creates new cards with trimmed fields', () => {
@@ -1615,6 +1616,31 @@ describe('fsrs scheduler', () => {
 
     expect(reviewed.card.reps).toBe(Number.MAX_SAFE_INTEGER);
     expect(reviewed.card.lapses).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it('preserves stability signal for saturated upper-bound review timelines', () => {
+    const saturatedHighStability = {
+      ...createNewCard('saturated-max-high', 'bound', NOW),
+      state: 'review' as const,
+      updatedAt: MAX_ISO,
+      dueAt: MAX_ISO,
+      reps: 8,
+      lapses: 1,
+      stability: 180,
+      difficulty: 5,
+    };
+    const saturatedLowStability = {
+      ...saturatedHighStability,
+      id: 'saturated-max-low',
+      stability: 0.5,
+    };
+
+    const highPreview = previewIntervals(saturatedHighStability, NOW);
+    const lowPreview = previewIntervals(saturatedLowStability, NOW);
+
+    expect(highPreview[3]).toBeGreaterThan(lowPreview[3]);
+    expect(highPreview[4]).toBeGreaterThanOrEqual(highPreview[3]);
+    expect(lowPreview[4]).toBeGreaterThanOrEqual(lowPreview[3]);
   });
 
   it('normalizes whitespace-padded review state strings at runtime', () => {
