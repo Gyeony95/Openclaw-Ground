@@ -293,6 +293,7 @@ export default function App() {
   const meaningCountTone = meaningRemaining === 0 ? colors.danger : meaningRemaining <= 20 ? colors.warn : colors.subInk;
   const noteCountTone = notesRemaining === 0 ? colors.danger : notesRemaining <= 20 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
+  const isCompactLayout = width < 380;
   const isReviewBusy = pendingReviewCardId !== null;
   const isFormEditable = !loading && !isAddBusy;
   const shouldAutoFocusAddInput = !loading && !dueCard;
@@ -468,6 +469,7 @@ export default function App() {
             <Animated.View
               style={[
                 styles.headerCard,
+                isCompactLayout && styles.headerCardCompact,
                 {
                   opacity: entryAnim,
                   transform: [
@@ -517,13 +519,27 @@ export default function App() {
             </Animated.View>
 
             <View style={styles.metrics}>
-              <MetricCard label="Due now" value={loading ? Number.NaN : stats.dueNow} accent={colors.primary} />
-              <MetricCard label="Overdue" value={loading ? Number.NaN : overdueNow} accent={colors.danger} />
-              <MetricCard label="Upcoming 24h" value={loading ? Number.NaN : dueWithinDay} accent={colors.accent} />
-              <MetricCard label="Learning" value={loading ? Number.NaN : stats.learning} accent={colors.warn} />
-              <MetricCard label="Review" value={loading ? Number.NaN : stats.review} accent={colors.success} />
-              <MetricCard label="Relearning" value={loading ? Number.NaN : stats.relearning} accent={colors.danger} />
-              <MetricCard label="Total cards" value={loading ? Number.NaN : stats.total} accent={colors.accent} />
+              <View style={isCompactLayout ? styles.metricCardCompact : null}>
+                <MetricCard label="Due now" value={loading ? Number.NaN : stats.dueNow} accent={colors.primary} />
+              </View>
+              <View style={isCompactLayout ? styles.metricCardCompact : null}>
+                <MetricCard label="Overdue" value={loading ? Number.NaN : overdueNow} accent={colors.danger} />
+              </View>
+              <View style={isCompactLayout ? styles.metricCardCompact : null}>
+                <MetricCard label="Upcoming 24h" value={loading ? Number.NaN : dueWithinDay} accent={colors.accent} />
+              </View>
+              <View style={isCompactLayout ? styles.metricCardCompact : null}>
+                <MetricCard label="Learning" value={loading ? Number.NaN : stats.learning} accent={colors.warn} />
+              </View>
+              <View style={isCompactLayout ? styles.metricCardCompact : null}>
+                <MetricCard label="Review" value={loading ? Number.NaN : stats.review} accent={colors.success} />
+              </View>
+              <View style={isCompactLayout ? styles.metricCardCompact : null}>
+                <MetricCard label="Relearning" value={loading ? Number.NaN : stats.relearning} accent={colors.danger} />
+              </View>
+              <View style={isCompactLayout ? styles.metricCardCompact : null}>
+                <MetricCard label="Total cards" value={loading ? Number.NaN : stats.total} accent={colors.accent} />
+              </View>
             </View>
 
             <Animated.View
@@ -610,6 +626,7 @@ export default function App() {
                   <View
                     style={[
                       styles.reviewCard,
+                      isCompactLayout && styles.reviewCardCompact,
                       { borderColor: `${dueCardUrgency.tone}66` },
                       isReviewBusy && styles.reviewCardBusy,
                     ]}
@@ -627,7 +644,7 @@ export default function App() {
                       <Text style={styles.reviewTimelineMeta}>{queuePositionLabel}</Text>
                     </View>
                     <View style={styles.reviewHeader}>
-                      <Text style={styles.word} numberOfLines={2} ellipsizeMode="tail">
+                      <Text style={[styles.word, isCompactLayout && styles.wordCompact]} numberOfLines={2} ellipsizeMode="tail">
                         {dueCard.word}
                       </Text>
                       <View style={styles.reviewBadgeColumn}>
@@ -871,6 +888,10 @@ const styles = StyleSheet.create({
     shadowRadius: 22,
     elevation: 4,
   },
+  headerCardCompact: {
+    padding: 16,
+    gap: 8,
+  },
   headerGlowA: {
     position: 'absolute',
     right: -26,
@@ -991,6 +1012,9 @@ const styles = StyleSheet.create({
     gap: 9,
     flexWrap: 'wrap',
   },
+  metricCardCompact: {
+    flexBasis: '48%',
+  },
   panelGrid: {
     gap: 14,
   },
@@ -1108,6 +1132,10 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
     gap: 14,
   },
+  reviewCardCompact: {
+    padding: 13,
+    gap: 11,
+  },
   reviewCardBusy: {
     opacity: 0.82,
   },
@@ -1165,6 +1193,10 @@ const styles = StyleSheet.create({
     color: colors.ink,
     lineHeight: 38,
     flexShrink: 1,
+  },
+  wordCompact: {
+    fontSize: 30,
+    lineHeight: 34,
   },
   stateBadge: {
     fontSize: 10,

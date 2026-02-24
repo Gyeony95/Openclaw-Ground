@@ -17,6 +17,7 @@ const FSRS_FACTOR = 19 / 81;
 const ON_TIME_TOLERANCE_DAYS = MINUTE_IN_DAYS;
 const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_CREATE_TIME_OFFSET_MS = 20 * 365 * DAY_MS;
 export interface ReviewResult {
   card: Card;
   scheduledDays: number;
@@ -721,8 +722,12 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
   const wallClockMs = safeNowMs();
   const requestedCreatedMs = isValidIso(nowIso) ? Date.parse(nowIso) : Number.NaN;
-  // Preserve valid caller-provided creation timestamps for deterministic imports/tests.
-  const safeCreatedMs = Number.isFinite(requestedCreatedMs) ? requestedCreatedMs : wallClockMs;
+  // Preserve deterministic import timestamps, but reject pathological wall-clock outliers.
+  const requestedIsPlausible =
+    Number.isFinite(requestedCreatedMs) &&
+    Number.isFinite(wallClockMs) &&
+    Math.abs(requestedCreatedMs - wallClockMs) <= MAX_CREATE_TIME_OFFSET_MS;
+  const safeCreatedMs = requestedIsPlausible ? requestedCreatedMs : wallClockMs;
   const createdAt = toSafeIso(safeCreatedMs);
   const trimmedWord = normalizeWordValue(word);
   const trimmedMeaning = normalizeMeaningValue(meaning);
