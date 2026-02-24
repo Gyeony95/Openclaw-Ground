@@ -33,6 +33,7 @@ import { composeQuizOptions, hasValidQuizSelection } from './src/quiz';
 import { colors, radii } from './src/theme';
 import { formatDueLabel } from './src/utils/due';
 import { formatIntervalLabel } from './src/utils/interval';
+import { dueUrgency, queueTone } from './src/utils/scheduleStatus';
 import { normalizeBoundedText } from './src/utils/text';
 import { Rating, ReviewState } from './src/types';
 
@@ -135,60 +136,6 @@ function hasValidIso(value?: string): boolean {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
 }
 
-function queueTone({
-  dueAt,
-  clockIso,
-  loading,
-  hasDueCard,
-}: {
-  dueAt?: string;
-  clockIso: string;
-  loading: boolean;
-  hasDueCard: boolean;
-}): string {
-  if (loading) {
-    return colors.subInk;
-  }
-  if (!hasDueCard) {
-    return colors.success;
-  }
-  const dueMs = dueAt ? Date.parse(dueAt) : Number.NaN;
-  const nowMs = Date.parse(clockIso);
-  if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
-    return colors.warn;
-  }
-  const deltaMs = dueMs - nowMs;
-  if (deltaMs <= 60 * 1000) {
-    return colors.danger;
-  }
-  if (deltaMs <= 60 * 60 * 1000) {
-    return colors.warn;
-  }
-  return colors.primary;
-}
-
-function dueUrgency(dueAt: string | undefined, clockIso: string): { label: string; tone: string } {
-  if (!dueAt) {
-    return { label: 'Schedule pending', tone: colors.warn };
-  }
-  const dueMs = Date.parse(dueAt);
-  const nowMs = Date.parse(clockIso);
-  if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
-    return { label: 'Needs repair', tone: colors.warn };
-  }
-  const deltaMs = dueMs - nowMs;
-  if (deltaMs <= 60 * 1000 && deltaMs >= -60 * 1000) {
-    return { label: 'Due now', tone: colors.primary };
-  }
-  if (deltaMs < -60 * 1000) {
-    return { label: 'Overdue', tone: colors.danger };
-  }
-  if (deltaMs <= 60 * 60 * 1000) {
-    return { label: 'Due soon', tone: colors.warn };
-  }
-  return { label: 'On track', tone: colors.success };
-}
-
 export default function App() {
   const { loading, cards, dueCards, stats, addCard, reviewDueCard, clockIso, lastReviewedAt } = useDeck();
   const { width } = useWindowDimensions();
@@ -255,6 +202,7 @@ export default function App() {
     clockIso,
     loading,
     hasDueCard: Boolean(dueCard),
+    needsRepair: dueCard ? hasScheduleRepairNeed(dueCard) : false,
   });
   const queueShareLabel = loading
     ? '--'
@@ -324,8 +272,15 @@ export default function App() {
       : 'No cards due. Add new words below.';
   const emptyQueueActionLabel = scheduleRepairCount > 0 ? 'Add more words' : 'Start adding words';
   const dueCardStateConfig = dueCard ? stateConfig(dueCard.state) : null;
-  const dueCardUrgency = dueUrgency(dueCard?.dueAt, clockIso);
-  const ratingIntervals = useMemo(() => (dueCard ? previewIntervals(dueCard, clockIso) : null), [dueCard, clockIso]);
+  const dueCardUrgency = dueUrgency({
+    dueAt: dueCard?.dueAt,
+    clockIso,
+    needsRepair: dueNeedsRepair,
+  });
+  const ratingIntervals = useMemo(
+    () => (dueCard && !dueNeedsRepair ? previewIntervals(dueCard, clockIso) : null),
+    [clockIso, dueCard, dueNeedsRepair],
+  );
   const dueCardRevealKey = dueCard ? `${dueCard.id}:${dueCard.updatedAt}:${dueCard.dueAt}` : 'none';
   const quizSeed = dueCard ? `${dueCard.id}:${dueCard.updatedAt}` : 'none';
   const quizOptions = useMemo(() => (dueCard ? composeQuizOptions(dueCard, cards, quizSeed, 3) : []), [cards, dueCard, quizSeed]);
