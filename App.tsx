@@ -852,7 +852,12 @@ export default function App() {
                     ) : (
                       <View style={styles.answerActions}>
                         <Text style={styles.answerActionsLabel}>Rate recall quality</Text>
-                        <RatingRow onRate={handleRate} intervalLabels={ratingIntervalLabels} disabled={isReviewBusy} />
+                        <RatingRow
+                          onRate={handleRate}
+                          intervalLabels={ratingIntervalLabels}
+                          disabled={isReviewBusy}
+                          busy={isReviewBusy}
+                        />
                         <Pressable
                           style={({ pressed }) => [
                             styles.ghostBtn,

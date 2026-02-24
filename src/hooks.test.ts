@@ -537,6 +537,20 @@ describe('collectDueCards', () => {
     expect(dueCards[0].id).toBe(malformed.id);
     expect(dueCards[1].id).toBe(valid.id);
   });
+
+  it('uses the provided effective clock deterministically for near-boundary due cards', () => {
+    const nearFuture = {
+      ...createNewCard('near-boundary', 'queue', NOW),
+      dueAt: '2026-02-23T12:00:30.000Z',
+    };
+
+    const notYetDue = collectDueCards([nearFuture], '2026-02-23T12:00:00.000Z', '2026-02-23T12:00:00.000Z');
+    const nowDue = collectDueCards([nearFuture], '2026-02-23T12:00:31.000Z', '2026-02-23T12:00:31.000Z');
+
+    expect(notYetDue).toHaveLength(0);
+    expect(nowDue).toHaveLength(1);
+    expect(nowDue[0].id).toBe(nearFuture.id);
+  });
 });
 
 describe('mergeDeckCards', () => {

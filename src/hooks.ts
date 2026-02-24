@@ -448,8 +448,9 @@ export function useDeck() {
   const effectiveClockIso = useMemo(() => resolveReviewClock(clockIso, nowIso()), [clockIso]);
 
   const dueCards = useMemo(() => {
-    return collectDueCards(deckState.cards, clockIso, nowIso());
-  }, [deckState.cards, clockIso]);
+    // Keep due queue selection aligned with the same wall-safe clock exposed to the UI and stats.
+    return collectDueCards(deckState.cards, effectiveClockIso, effectiveClockIso);
+  }, [deckState.cards, effectiveClockIso]);
 
   const addCard = useCallback((word: string, meaning: string, notes?: string) => {
     const trimmedWord = word.trim();

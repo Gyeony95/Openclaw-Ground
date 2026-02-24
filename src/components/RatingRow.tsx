@@ -6,6 +6,7 @@ interface RatingRowProps {
   onRate: (rating: Rating) => void;
   intervalLabels?: Partial<Record<Rating, string>>;
   disabled?: boolean;
+  busy?: boolean;
 }
 
 const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: string }> = [
@@ -15,7 +16,7 @@ const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: 
   { rating: 4, text: 'Easy', fallbackHint: 'Longer', tone: colors.success },
 ];
 
-export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRowProps) {
+export function RatingRow({ onRate, intervalLabels, disabled = false, busy = false }: RatingRowProps) {
   const { width } = useWindowDimensions();
   const isCompact = width < 320;
   const isNarrow = width < 380;
@@ -46,7 +47,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
             accessibilityRole="button"
             accessibilityLabel={`Rate ${item.text}. Next ${interval}.`}
             accessibilityHint={disabled ? 'Wait for the current review to finish' : `Schedules next review ${interval}`}
-            accessibilityState={{ disabled, busy: disabled }}
+            accessibilityState={{ disabled, busy }}
           >
             <Text style={[styles.buttonText, { color: disabled ? colors.subInk : item.tone }]}>{item.text}</Text>
             <Text
