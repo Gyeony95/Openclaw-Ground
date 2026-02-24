@@ -876,6 +876,22 @@ describe('collectDueCards', () => {
     expect(nowDue[0].id).toBe(nearFuture.id);
   });
 
+  it('uses runtime time when rendered clock trails slightly so due cards are not delayed', () => {
+    const nearFuture = {
+      ...createNewCard('runtime-ahead-queue', 'clock', NOW),
+      dueAt: '2026-02-23T12:00:20.000Z',
+    };
+
+    const dueCards = collectDueCards(
+      [nearFuture],
+      '2026-02-23T12:00:00.000Z',
+      '2026-02-23T12:00:21.000Z',
+    );
+
+    expect(dueCards).toHaveLength(1);
+    expect(dueCards[0].id).toBe(nearFuture.id);
+  });
+
   it('does not surface cards early when rendered clock is materially ahead of runtime', () => {
     const dueSoon = {
       ...createNewCard('queue-material-future-render', 'clock', NOW),

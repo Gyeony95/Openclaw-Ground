@@ -345,13 +345,9 @@ function resolveActionClock(currentIso: string, runtimeNowIso: string): string {
     return resolveReviewClock(currentIso, runtimeNowIso);
   }
 
-  if (Number.isFinite(runtimeMs) && currentMs > runtimeMs) {
-    // Prevent early reviews when rendered UI clocks run ahead of runtime.
-    return canonicalRuntimeIso ?? canonicalCurrentIso;
-  }
-
-  if (Number.isFinite(runtimeMs) && runtimeMs - currentMs > MAX_UI_FUTURE_SKEW_MS) {
-    // Keep review eligibility aligned with runtime once UI clock drift exceeds tolerance.
+  if (Number.isFinite(runtimeMs)) {
+    // Keep queue visibility and review actions aligned to the runtime clock so
+    // due cards do not appear late when the rendered clock trails slightly.
     return canonicalRuntimeIso ?? canonicalCurrentIso;
   }
 

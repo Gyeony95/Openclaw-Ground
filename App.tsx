@@ -162,6 +162,25 @@ function formatRemainingQueueLabel(remaining: number): string {
   return `${remaining.toLocaleString()} ${remaining === 1 ? 'card' : 'cards'} remain`;
 }
 
+function queueLoadStatusLabel(percent: number, repairCount: number, total: number): string {
+  if (total <= 0) {
+    return 'Clear';
+  }
+  if (repairCount > 0) {
+    return 'Repair needed';
+  }
+  if (percent >= 80) {
+    return 'Heavy';
+  }
+  if (percent >= 50) {
+    return 'Moderate';
+  }
+  if (percent > 0) {
+    return 'Light';
+  }
+  return 'Clear';
+}
+
 function hasValidIso(value?: string): boolean {
   return isIsoDateTime(value);
 }
@@ -246,6 +265,7 @@ export default function App() {
   const queueProgressPercent = loading || stats.total === 0 ? 0 : clampPercent((dueQueueCount / stats.total) * 100);
   const queueProgressWidth = `${queueProgressPercent}%`;
   const scheduleRepairCount = useMemo(() => countScheduleRepairCards(cards), [cards]);
+  const queueLoadStatus = queueLoadStatusLabel(queueProgressPercent, scheduleRepairCount, stats.total);
   const dueWithinDay = useMemo(() => {
     return countUpcomingDueCards(cards, clockIso, 24);
   }, [cards, clockIso]);
@@ -871,7 +891,10 @@ export default function App() {
                   <View style={styles.queueProgressWrap}>
                     <View style={styles.queueProgressHeader}>
                       <Text style={styles.queueProgressLabel}>Queue load</Text>
-                      <Text style={styles.queueProgressValue}>{queueProgressPercent}%</Text>
+                      <View style={styles.queueProgressValueWrap}>
+                        <Text style={[styles.queueProgressStatus, { color: queueProgressTone }]}>{queueLoadStatus}</Text>
+                        <Text style={styles.queueProgressValue}>{queueProgressPercent}%</Text>
+                      </View>
                     </View>
                     <View
                       style={styles.queueProgressTrack}
@@ -1636,6 +1659,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     fontWeight: '700',
+  },
+  queueProgressValueWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  queueProgressStatus: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.55,
   },
   queueProgressValue: {
     color: colors.ink,
