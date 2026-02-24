@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createNewCard, reviewCard } from './scheduler/fsrs';
+import { STABILITY_MAX, STABILITY_MIN } from './scheduler/constants';
 import { computeDeckStats, loadDeck, saveDeck } from './storage/deckRepository';
 import { Card, Rating } from './types';
 import { isDue, nowIso } from './utils/time';
@@ -13,6 +14,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const LEARNING_MIN_SCHEDULE_MS = 60 * 1000;
 const RELEARNING_MIN_SCHEDULE_MS = 10 * 60 * 1000;
 const REVIEW_MIN_SCHEDULE_MS = 0.5 * DAY_MS;
+const LEARNING_MAX_SCHEDULE_MS = DAY_MS;
+const RELEARNING_MAX_SCHEDULE_MS = 2 * DAY_MS;
+const REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS = 7;
+const REVIEW_STABILITY_OUTLIER_MULTIPLIER = 12;
+const REVIEW_STABILITY_OUTLIER_FLOOR_DAYS = 120;
 
 function parseTimeOrRepairPriority(iso: string): number {
   const parsed = Date.parse(iso);
@@ -78,7 +84,35 @@ function minScheduleMsForState(state: Card['state']): number {
   return LEARNING_MIN_SCHEDULE_MS;
 }
 
-export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'>): boolean {
+function normalizedReviewStabilityDays(stability: unknown): number {
+  if (typeof stability !== 'number' || !Number.isFinite(stability) || stability <= 0) {
+    return REVIEW_MIN_SCHEDULE_MS / DAY_MS;
+  }
+  return clamp(stability, STABILITY_MIN, STABILITY_MAX);
+}
+
+function maxScheduleMsBeforeRepair(state: Card['state'], stability: unknown): number {
+  if (state === 'learning') {
+    return LEARNING_MAX_SCHEDULE_MS;
+  }
+  if (state === 'relearning') {
+    return RELEARNING_MAX_SCHEDULE_MS;
+  }
+
+  const normalizedStabilityDays = normalizedReviewStabilityDays(stability);
+  const stabilityOutlierWindowDays = Math.max(
+    REVIEW_MIN_SCHEDULE_MS / DAY_MS,
+    normalizedStabilityDays * REVIEW_STABILITY_OUTLIER_MULTIPLIER,
+    REVIEW_STABILITY_OUTLIER_FLOOR_DAYS,
+  );
+  const maxReviewDays = Math.min(
+    STABILITY_MAX,
+    Math.max(REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS, stabilityOutlierWindowDays),
+  );
+  return maxReviewDays * DAY_MS;
+}
+
+export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & Partial<Pick<Card, 'stability'>>): boolean {
   const dueMs = parseTimeOrNaN(card.dueAt);
   const updatedMs = parseTimeOrNaN(card.updatedAt);
   const state = normalizeReviewState(card.state);
@@ -92,7 +126,11 @@ export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt' | '
     return true;
   }
   if (dueMs > updatedMs) {
-    return dueMs - updatedMs < minScheduleMsForState(state);
+    const scheduleMs = dueMs - updatedMs;
+    if (scheduleMs < minScheduleMsForState(state)) {
+      return true;
+    }
+    return scheduleMs > maxScheduleMsBeforeRepair(state, card.stability);
   }
   // Learning cards are legitimately due at creation time; review/relearning cards should always move forward.
   return state !== 'learning';

@@ -1026,6 +1026,41 @@ describe('hasScheduleRepairNeed', () => {
 
     expect(hasScheduleRepairNeed(healthy)).toBe(false);
   });
+
+  it('flags learning schedules that exceed the one-day ceiling', () => {
+    const overlongLearning = {
+      ...createNewCard('repair-learning-overlong', 'test', NOW),
+      state: 'learning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-25T12:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(overlongLearning)).toBe(true);
+  });
+
+  it('flags review schedules that exceed the stability outlier window', () => {
+    const overlongReview = {
+      ...createNewCard('repair-review-overlong', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-09-01T12:00:00.000Z',
+      stability: 1,
+    };
+
+    expect(hasScheduleRepairNeed(overlongReview)).toBe(true);
+  });
+
+  it('keeps plausible long review schedules that stay within the stability outlier window', () => {
+    const plausibleReview = {
+      ...createNewCard('repair-review-plausible-long', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-06-03T12:00:00.000Z',
+      stability: 12,
+    };
+
+    expect(hasScheduleRepairNeed(plausibleReview)).toBe(false);
+  });
 });
 
 describe('countScheduleRepairCards', () => {
@@ -1061,6 +1096,31 @@ describe('countScheduleRepairCards', () => {
     };
 
     expect(countScheduleRepairCards([learningDueNow, reviewDueNow])).toBe(1);
+  });
+
+  it('counts overlong schedules that should be repaired', () => {
+    const overlongLearning = {
+      ...createNewCard('repair-count-learning-overlong', 'test', NOW),
+      state: 'learning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-25T12:00:00.000Z',
+    };
+    const overlongReview = {
+      ...createNewCard('repair-count-review-overlong', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-09-01T12:00:00.000Z',
+      stability: 1,
+    };
+    const healthyReview = {
+      ...createNewCard('repair-count-review-healthy', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-03-05T12:00:00.000Z',
+      stability: 6,
+    };
+
+    expect(countScheduleRepairCards([overlongLearning, overlongReview, healthyReview])).toBe(2);
   });
 });
 

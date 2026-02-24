@@ -16,6 +16,19 @@ const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: 
   { rating: 4, text: 'Easy', fallbackHint: 'Longer', tone: colors.success },
 ];
 
+function resolveIntervalLabel(
+  intervalLabels: RatingRowProps['intervalLabels'],
+  rating: Rating,
+  fallbackHint: string,
+): string {
+  const raw = intervalLabels?.[rating];
+  if (typeof raw !== 'string') {
+    return fallbackHint;
+  }
+  const normalized = raw.trim();
+  return normalized.length > 0 ? normalized : fallbackHint;
+}
+
 export function RatingRow({ onRate, intervalLabels, disabled = false, busy = false }: RatingRowProps) {
   const { width } = useWindowDimensions();
   const isCompact = width < 320;
@@ -26,7 +39,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
   return (
     <View style={styles.row}>
       {labels.map((item) => {
-        const interval = intervalLabels?.[item.rating] ?? item.fallbackHint;
+        const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
         return (
           <Pressable
             key={item.rating}
@@ -50,7 +63,9 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
             accessibilityHint={isDisabled ? 'Wait for the current review to finish' : `Schedules next review ${interval}`}
             accessibilityState={{ disabled: isDisabled, busy }}
           >
-            <Text style={[styles.buttonText, { color: isDisabled ? colors.subInk : item.tone }]}>{item.text}</Text>
+            <Text style={[styles.buttonText, { color: isDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
+              {item.text}
+            </Text>
             <Text
               style={[styles.hint, styles.hintCentered, { color: isDisabled ? colors.subInk : item.tone }]}
               numberOfLines={2}
