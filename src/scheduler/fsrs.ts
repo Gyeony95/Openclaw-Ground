@@ -291,15 +291,23 @@ function normalizeTimeline(
   if (Date.parse(createdAt) > Date.parse(updatedAt)) {
     createdAt = updatedAt;
   }
-  const normalizedState = normalizeState(card.state);
+  const rawDueAtIsValid = isValidIso(card.dueAt);
+  const rawDueAt = rawDueAtIsValid ? card.dueAt : undefined;
+  const normalizedState =
+    parseState(card.state) ??
+    inferStateFromCard({
+      state: 'learning',
+      reps: card.reps,
+      stability: card.stability,
+      updatedAt,
+      dueAt: rawDueAt ?? addDaysIso(updatedAt, MINUTE_IN_DAYS),
+    });
   const reviewFallbackDueDays =
     normalizedState === 'review'
       ? normalizeScheduledDays(card.stability, 'review')
       : scheduleFallbackForState(normalizedState);
   const fallbackDueAt = addDaysIso(updatedAt, reviewFallbackDueDays);
   const timelineRepairDueAt = addDaysIso(updatedAt, scheduleFallbackForState(normalizedState));
-  const rawDueAtIsValid = isValidIso(card.dueAt);
-  const rawDueAt = rawDueAtIsValid ? card.dueAt : undefined;
   const rawDueMs = rawDueAt ? Date.parse(rawDueAt) : Number.NaN;
   const updatedAtMs = Date.parse(updatedAt);
   const dueDaysFromUpdated = Number.isFinite(rawDueMs) ? (rawDueMs - updatedAtMs) / DAY_MS : Number.NaN;

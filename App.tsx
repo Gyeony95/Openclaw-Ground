@@ -1080,6 +1080,11 @@ export default function App() {
                           </View>
                         </View>
                         <Text style={styles.answerActionsLabel}>Choose the correct meaning</Text>
+                        {quickRatingPreviewLabel ? (
+                          <Text style={styles.quizPreviewHint} numberOfLines={2} ellipsizeMode="tail">
+                            {quickRatingPreviewLabel}
+                          </Text>
+                        ) : null}
                         {!canUseMultipleChoice ? (
                           <Text style={styles.revealHint}>
                             {multipleChoiceRequirementLabel ?? 'Add more distinct cards to enable multiple-choice mode.'}
@@ -1813,6 +1818,13 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   revealPreviewHint: {
+    fontSize: 12,
+    color: colors.subInk,
+    lineHeight: 18,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  },
+  quizPreviewHint: {
     fontSize: 12,
     color: colors.subInk,
     lineHeight: 18,

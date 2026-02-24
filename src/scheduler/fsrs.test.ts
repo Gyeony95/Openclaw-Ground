@@ -401,6 +401,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(5);
   });
 
+  it('keeps mature malformed-state cards on the review path instead of learning fallback repair', () => {
+    const matureWithMalformedState = {
+      ...createNewCard('malformed-state-review-lapse-path', 'state fallback', NOW),
+      state: 'unknown_state' as unknown as 'learning',
+      reps: 18,
+      lapses: 2,
+      stability: 28,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 28),
+    };
+
+    const reviewed = reviewCard(matureWithMalformedState, 1, matureWithMalformedState.dueAt);
+
+    expect(reviewed.card.state).toBe('relearning');
+    expect(reviewed.card.lapses).toBe(matureWithMalformedState.lapses + 1);
+    expect(reviewed.scheduledDays).toBeCloseTo(10 / 1440, 10);
+  });
+
   it('infers relearning phase for malformed states when schedule is in short-step retry range', () => {
     const relearningWithMalformedState = {
       ...createNewCard('malformed-state-relearning-infer', 'state fallback', NOW),
