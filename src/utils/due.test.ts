@@ -37,6 +37,11 @@ describe('formatDueLabel', () => {
     expect(formatDueLabel('2026-02-23T12:00:00.000Z', 'bad')).toBe('Needs schedule repair');
   });
 
+  it('returns repair label for loose non-ISO timestamps', () => {
+    expect(formatDueLabel('2026-02-23 12:00:00Z', NOW)).toBe('Needs schedule repair');
+    expect(formatDueLabel('2026-02-23T12:00:00.000Z', '2026-02-23 12:00:00Z')).toBe('Needs schedule repair');
+  });
+
   it('floors overdue durations so labels do not overstate lateness', () => {
     expect(formatDueLabel('2026-02-23T10:59:59.000Z', NOW)).toBe('Overdue 1h');
     expect(formatDueLabel('2026-02-22T10:59:59.000Z', NOW)).toBe('Overdue 1d');

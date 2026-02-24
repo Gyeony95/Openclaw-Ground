@@ -1,9 +1,14 @@
+import { isIsoDateTime } from './time';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 const NOW_THRESHOLD_MS = 60 * 1000;
 
 function parseIso(iso: string): number | null {
+  if (!isIsoDateTime(iso)) {
+    return null;
+  }
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : null;
 }

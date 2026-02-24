@@ -184,6 +184,9 @@ export default function App() {
     }
     return cards
       .filter((card) => {
+        if (!isIsoDateTime(card.dueAt)) {
+          return false;
+        }
         const dueMs = Date.parse(card.dueAt);
         return Number.isFinite(dueMs) && dueMs > nowMs;
       })
