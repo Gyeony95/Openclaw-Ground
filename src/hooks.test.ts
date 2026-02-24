@@ -217,6 +217,17 @@ describe('applyDueReview', () => {
     }
   });
 
+  it('normalizes reviewedAt into canonical ISO format for valid review clocks', () => {
+    const due = createNewCard('canonical-reviewed-at', 'safe', NOW);
+    const cards = [due];
+
+    const result = applyDueReview(cards, due.id, 3, '2026-02-23T12:00:00Z');
+
+    expect(result.reviewed).toBe(true);
+    expect(result.reviewedAt).toBe('2026-02-23T12:00:00.000Z');
+    expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:00.000Z');
+  });
+
   it('uses runtime wall-safe clock when provided review clock is pathologically far future', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(NOW));

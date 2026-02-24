@@ -59,6 +59,14 @@ function toSafeIso(ms: number): string {
   return new Date(Number.isFinite(ms) ? ms : 0).toISOString();
 }
 
+function toCanonicalIso(value: string, fallbackIso: string): string {
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) {
+    return fallbackIso;
+  }
+  return toSafeIso(parsed);
+}
+
 function clampFinite(value: number, min: number, max: number, fallback: number): number {
   if (!Number.isFinite(value)) {
     return clamp(fallback, min, max);
@@ -71,7 +79,8 @@ function isValidIso(value: string): boolean {
 }
 
 function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): string {
-  const fallback = isValidIso(cardUpdatedAt) ? cardUpdatedAt : currentNowIso();
+  const fallbackRaw = isValidIso(cardUpdatedAt) ? cardUpdatedAt : currentNowIso();
+  const fallback = toCanonicalIso(fallbackRaw, currentNowIso());
   const requestedValid = isValidIso(requestedNowIso);
   const wallClockMs = safeNowMs();
   const wallClockIso = toSafeIso(wallClockMs);
@@ -106,7 +115,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
       const candidateIsWallSafe = Math.abs(candidateMs - wallClockMs) <= MAX_CREATE_TIME_OFFSET_MS;
       if (fallbackIsPathologicallyStale && candidateIsWallSafe) {
         // Recover stale/corrupted card timelines by accepting a wall-safe review clock.
-        return toSafeIso(candidateMs);
+        return toCanonicalIso(candidate, fallback);
       }
     }
     // Prevent runaway elapsed intervals when review timestamps jump far beyond card history.
@@ -148,11 +157,11 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
       if (wallClockMs - candidateMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
         return wallClockIso;
       }
-      return candidate;
+      return toCanonicalIso(candidate, fallback);
     }
     return fallback;
   }
-  return candidate;
+  return toCanonicalIso(candidate, fallback);
 }
 
 function normalizeRating(input: Rating, currentState: ReviewState): Rating {

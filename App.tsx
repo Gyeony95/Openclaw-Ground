@@ -105,6 +105,10 @@ function trimmedLength(value: string, max: number): number {
   return normalizeBoundedText(value, max).length;
 }
 
+function inputLength(value: string, max: number): number {
+  return Math.min(max, value.length);
+}
+
 function formatQueueShareLabel(dueNow: number, total: number): string {
   const dueLabel = dueNow === 1 ? 'due card' : 'due cards';
   const totalLabel = total === 1 ? 'card' : 'cards';
@@ -355,9 +359,9 @@ export default function App() {
   const normalizedWord = normalizeBoundedText(word, WORD_MAX_LENGTH);
   const normalizedMeaning = normalizeBoundedText(meaning, MEANING_MAX_LENGTH);
   const normalizedNotes = normalizeBoundedText(notes, NOTES_MAX_LENGTH);
-  const wordLength = trimmedWordLength;
-  const meaningLength = trimmedMeaningLength;
-  const notesLength = trimmedLength(notes, NOTES_MAX_LENGTH);
+  const wordLength = inputLength(word, WORD_MAX_LENGTH);
+  const meaningLength = inputLength(meaning, MEANING_MAX_LENGTH);
+  const notesLength = inputLength(notes, NOTES_MAX_LENGTH);
   const missingWord = trimmedWordLength === 0;
   const missingMeaning = trimmedMeaningLength === 0;
   const canAdd = useMemo(
