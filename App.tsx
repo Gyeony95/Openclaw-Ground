@@ -931,7 +931,14 @@ export default function App() {
                     accessibilityLabel={`Review card ${dueCardWord}. ${dueCardStateConfig?.label ?? 'Learning'}. ${relativeDueLabel}.`}
                   >
                     <View style={[styles.reviewTimeline, { borderColor: `${dueCardUrgency.tone}44` }]}>
-                      <Text style={styles.reviewTimelineLabel}>Scheduled for</Text>
+                      <View style={styles.reviewTimelineHeader}>
+                        <Text style={styles.reviewTimelineLabel}>Scheduled for</Text>
+                        <View style={[styles.reviewUrgencyBadge, { borderColor: `${dueCardUrgency.tone}66` }]}>
+                          <Text style={[styles.reviewUrgencyText, { color: dueCardUrgency.tone }]}>
+                            {dueCardUrgency.label}
+                          </Text>
+                        </View>
+                      </View>
                       <Text style={styles.reviewTimelineValue} numberOfLines={1}>
                         {exactDueLabel}
                       </Text>
@@ -1707,12 +1714,31 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 3,
   },
+  reviewTimelineHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   reviewTimelineLabel: {
     color: colors.subInk,
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.85,
+  },
+  reviewUrgencyBadge: {
+    borderWidth: 1,
+    borderRadius: radii.pill,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    backgroundColor: colors.surface,
+  },
+  reviewUrgencyText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.55,
   },
   reviewTimelineValue: {
     color: colors.ink,

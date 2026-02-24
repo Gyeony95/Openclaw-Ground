@@ -10,6 +10,8 @@ export interface QuizOption {
   isCorrect: boolean;
 }
 
+const INVALID_MEANING_PLACEHOLDER = '[invalid meaning]';
+
 function normalizeId(value: unknown, fallback: string): string {
   if (typeof value !== 'string') {
     return fallback;
@@ -20,7 +22,11 @@ function normalizeId(value: unknown, fallback: string): string {
 
 function normalizeOptionText(value: unknown): string {
   const normalized = normalizeBoundedText(value, MEANING_MAX_LENGTH);
-  return normalized.length > 0 ? normalized : '[invalid meaning]';
+  return normalized.length > 0 ? normalized : INVALID_MEANING_PLACEHOLDER;
+}
+
+function isInvalidOptionText(value: unknown): boolean {
+  return normalizeOptionText(value) === INVALID_MEANING_PLACEHOLDER;
 }
 
 export function hasValidQuizSelection(selectedOptionId: string | null, options: QuizOption[]): boolean {
@@ -311,6 +317,9 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
       continue;
     }
     const candidateMeaningRaw = readCardText(card.meaning);
+    if (isInvalidOptionText(candidateMeaningRaw)) {
+      continue;
+    }
     if (isSameCardIdentity(target, card)) {
       continue;
     }
@@ -353,6 +362,9 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
         continue;
       }
       if (isSameCardIdentity(target, card)) {
+        continue;
+      }
+      if (isInvalidOptionText(readCardText(card.meaning))) {
         continue;
       }
       const normalized = normalizeText(readCardText(card.meaning));

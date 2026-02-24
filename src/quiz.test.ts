@@ -284,6 +284,26 @@ describe('quiz distractors', () => {
     expect(options.every((option) => option.text !== '[invalid meaning]')).toBe(true);
   });
 
+  it('excludes placeholder and blank meanings from distractor choices', () => {
+    const deckWithInvalidMeanings = [
+      createCard('target-clean', 'anchor', 'to fix firmly in place'),
+      createCard('bad-1', 'blank', '   '),
+      createCard('bad-2', 'placeholder', '[invalid meaning]'),
+      createCard('good-1', 'pin', 'to fasten with a pin'),
+      createCard('good-2', 'clip', 'to hold together'),
+      createCard('good-3', 'bind', 'to tie tightly'),
+    ];
+
+    const distractors = generateDistractors(deckWithInvalidMeanings[0], deckWithInvalidMeanings, 3);
+    const options = composeQuizOptions(deckWithInvalidMeanings[0], deckWithInvalidMeanings, 'invalid-meaning-seed');
+
+    expect(distractors).toHaveLength(3);
+    expect(distractors.some((card) => card.id === 'bad-1')).toBe(false);
+    expect(distractors.some((card) => card.id === 'bad-2')).toBe(false);
+    expect(options).toHaveLength(4);
+    expect(options.every((option) => option.text !== '[invalid meaning]')).toBe(true);
+  });
+
   it('forces incorrect multiple-choice selections to Again for FSRS consistency', () => {
     expect(resolveMultipleChoiceRating(4, false)).toBe(1);
     expect(resolveMultipleChoiceRating(3, false)).toBe(1);
