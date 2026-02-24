@@ -76,6 +76,34 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back to runtime wall clock when creation timestamp is materially future-skewed', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const card = createNewCard('future-skew', 'timestamp', '2026-02-24T14:30:00.000Z');
+
+      expect(card.createdAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.dueAt).toBe('2026-02-23T14:30:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('keeps near-future creation timestamps that are within monotonic skew tolerance', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const card = createNewCard('small-skew', 'timestamp', '2026-02-23T16:00:00.000Z');
+
+      expect(card.createdAt).toBe('2026-02-23T16:00:00.000Z');
+      expect(card.updatedAt).toBe('2026-02-23T16:00:00.000Z');
+      expect(card.dueAt).toBe('2026-02-23T16:00:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('falls back to runtime wall clock when creation timestamp input is invalid', () => {
     jest.useFakeTimers();
     try {

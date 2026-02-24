@@ -18,6 +18,7 @@ const ON_TIME_TOLERANCE_DAYS = MINUTE_IN_DAYS;
 const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_CREATE_TIME_OFFSET_MS = 20 * 365 * DAY_MS;
+const MAX_CREATE_FUTURE_OFFSET_MS = MAX_MONOTONIC_CLOCK_SKEW_MS;
 export interface ReviewResult {
   card: Card;
   scheduledDays: number;
@@ -796,12 +797,13 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
   const wallClockMs = safeNowMs();
   const requestedCreatedMs = isValidIso(nowIso) ? Date.parse(nowIso) : Number.NaN;
-  // Preserve realistic historical import timestamps, but reject pathological clock skew.
+  // Preserve realistic historical import timestamps, but avoid future-created cards from bad device clocks.
   const createOffsetMs = requestedCreatedMs - wallClockMs;
   const requestedIsPlausible =
     Number.isFinite(requestedCreatedMs) &&
     Number.isFinite(wallClockMs) &&
-    Math.abs(createOffsetMs) <= MAX_CREATE_TIME_OFFSET_MS;
+    createOffsetMs >= -MAX_CREATE_TIME_OFFSET_MS &&
+    createOffsetMs <= MAX_CREATE_FUTURE_OFFSET_MS;
   const safeCreatedMs = requestedIsPlausible ? requestedCreatedMs : wallClockMs;
   const createdAt = toSafeIso(safeCreatedMs);
   const trimmedWord = normalizeWordValue(word);
