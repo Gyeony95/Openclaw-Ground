@@ -11,7 +11,9 @@ export interface QuizOption {
 }
 
 const INVALID_MEANING_PLACEHOLDER = '[invalid meaning]';
-const RATING_INTEGER_TOLERANCE = 1e-6;
+// Keep quiz-mode rating normalization aligned with scheduler-side tolerance so
+// tiny runtime float drift does not alter the resulting FSRS update path.
+const RATING_INTEGER_TOLERANCE = 1e-4;
 
 export type StudyMode = 'flashcard' | 'multiple-choice';
 

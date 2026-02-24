@@ -447,6 +447,11 @@ describe('quiz distractors', () => {
     expect(resolveMultipleChoiceRating(3.9999996 as Rating, true)).toBe(4);
   });
 
+  it('accepts scheduler-tolerated floating-point drift in correct-selection ratings', () => {
+    expect(resolveMultipleChoiceRating(2.00005 as Rating, true)).toBe(2);
+    expect(resolveMultipleChoiceRating(3.99995 as Rating, true)).toBe(4);
+  });
+
   it('keeps larger fractional drift as neutral Good for correct selections', () => {
     expect(resolveMultipleChoiceRating(2.0002 as Rating, true)).toBe(3);
     expect(resolveMultipleChoiceRating(3.999 as Rating, true)).toBe(3);

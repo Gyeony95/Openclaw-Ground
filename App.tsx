@@ -193,6 +193,7 @@ export default function App() {
   const addUnlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const addSuccessTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousHadDueCardRef = useRef(false);
+  const quizSelectionLockRef = useRef(false);
 
   const dueCard = dueCards[0];
   const nextDueCard = dueCards[1];
@@ -466,6 +467,7 @@ export default function App() {
     setFlashcardSide('front');
     setSelectedQuizOptionId(null);
     setReviewActionError(null);
+    quizSelectionLockRef.current = false;
   }, [dueCardRevealKey]);
 
   useEffect(() => {
@@ -484,6 +486,10 @@ export default function App() {
       setSelectedQuizOptionId(null);
     }
   }, [quizOptions, selectedQuizOptionId]);
+
+  useEffect(() => {
+    quizSelectionLockRef.current = studyMode === 'multiple-choice' && hasQuizSelection;
+  }, [hasQuizSelection, studyMode]);
 
   useEffect(() => {
     if (pendingReviewCardKey === null) {
@@ -682,7 +688,7 @@ export default function App() {
   }
 
   function handleSelectStudyMode(mode: StudyMode) {
-    if (modeSwitchLocked) {
+    if (modeSwitchLocked || (studyMode === 'multiple-choice' && quizSelectionLockRef.current)) {
       return;
     }
     if (mode === 'multiple-choice' && !canUseMultipleChoice) {
@@ -705,6 +711,8 @@ export default function App() {
       if (!nextSelectionId || !hasValidQuizSelection(nextSelectionId, quizOptions)) {
         return null;
       }
+      // Lock mode switching immediately so rapid taps cannot bypass forced review rating.
+      quizSelectionLockRef.current = true;
       return nextSelectionId;
     });
     setReviewActionError(null);
