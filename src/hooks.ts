@@ -509,6 +509,23 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
   }).length;
 }
 
+export function findNextUpcomingCard(cards: Card[], currentIso: string): Card | undefined {
+  const nowMs = parseTimeOrNaN(currentIso);
+  if (!Number.isFinite(nowMs)) {
+    return undefined;
+  }
+
+  return cards
+    .filter((card): card is Card => {
+      if (!isRuntimeCard(card) || hasScheduleRepairNeed(card)) {
+        return false;
+      }
+      const dueMs = parseDueAtOrNaN(card.dueAt);
+      return Number.isFinite(dueMs) && dueMs > nowMs;
+    })
+    .sort(compareDueCards)[0];
+}
+
 export function countOverdueCards(cards: Card[], currentIso: string): number {
   const nowMs = parseTimeOrNaN(currentIso);
   if (!Number.isFinite(nowMs)) {

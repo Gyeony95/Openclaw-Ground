@@ -20,10 +20,10 @@ import { MetricCard } from './src/components/MetricCard';
 import { RatingRow } from './src/components/RatingRow';
 import { MEANING_MAX_LENGTH, NOTES_MAX_LENGTH, WORD_MAX_LENGTH } from './src/scheduler/constants';
 import {
-  compareDueCards,
   countOverdueCards,
   countScheduleRepairCards,
   countUpcomingDueCards,
+  findNextUpcomingCard,
   hasScheduleRepairNeed,
   useDeck,
 } from './src/hooks';
@@ -224,20 +224,9 @@ export default function App() {
     return clampPercent(((stats.review + stats.relearning * 0.5 + stats.learning * 0.2) / stats.total) * 100);
   }, [stats]);
   const nextUpcomingCard = useMemo(() => {
-    const nowMs = Date.parse(clockIso);
-    if (!Number.isFinite(nowMs)) {
-      return undefined;
-    }
-    return cards
-      .filter((card) => {
-        if (!isIsoDateTime(card.dueAt)) {
-          return false;
-        }
-        const dueMs = Date.parse(card.dueAt);
-        return Number.isFinite(dueMs) && dueMs > nowMs;
-      })
-      .sort(compareDueCards)[0];
+    return findNextUpcomingCard(cards, clockIso);
   }, [cards, clockIso]);
+  const scheduleRepairCount = useMemo(() => countScheduleRepairCards(cards), [cards]);
   const retentionBarWidth = `${retentionScore}%`;
   const retentionTone =
     retentionScore >= 80 ? colors.success : retentionScore >= 50 ? colors.primary : colors.warn;
@@ -252,8 +241,9 @@ export default function App() {
     ? '--'
     : nextUpcomingCard
       ? `Next ${formatDueLabel(nextUpcomingCard.dueAt, clockIso)}`
-      : 'No upcoming card';
-  const scheduleRepairCount = useMemo(() => countScheduleRepairCards(cards), [cards]);
+      : scheduleRepairCount > 0
+        ? 'Next card needs schedule repair'
+        : 'No upcoming card';
   const queueLabelTone = queueTone({
     dueAt: dueCard?.dueAt,
     clockIso,

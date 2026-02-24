@@ -7,6 +7,7 @@ import {
   countOverdueCards,
   countScheduleRepairCards,
   countUpcomingDueCards,
+  findNextUpcomingCard,
   hasScheduleRepairNeed,
   hasDueCard,
   mergeDeckCards,
@@ -1548,6 +1549,54 @@ describe('countUpcomingDueCards', () => {
     };
 
     expect(countUpcomingDueCards([malformedSchedule], NOW)).toBe(0);
+  });
+});
+
+describe('findNextUpcomingCard', () => {
+  it('returns the earliest upcoming card with a healthy schedule', () => {
+    const firstUpcoming = {
+      ...createNewCard('next-upcoming-first', 'safe', NOW),
+      dueAt: '2026-02-23T13:00:00.000Z',
+    };
+    const secondUpcoming = {
+      ...createNewCard('next-upcoming-second', 'safe', NOW),
+      dueAt: '2026-02-23T14:00:00.000Z',
+    };
+
+    const nextUpcoming = findNextUpcomingCard([secondUpcoming, firstUpcoming], NOW);
+
+    expect(nextUpcoming).toEqual(firstUpcoming);
+  });
+
+  it('skips upcoming cards that need schedule repair and returns the next healthy card', () => {
+    const repairNeededUpcoming = {
+      ...createNewCard('next-upcoming-repair-needed', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1000),
+      stability: 2,
+    };
+    const healthyUpcoming = {
+      ...createNewCard('next-upcoming-healthy', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: '2026-02-24T12:00:00.000Z',
+      stability: 2,
+    };
+
+    const nextUpcoming = findNextUpcomingCard([repairNeededUpcoming, healthyUpcoming], NOW);
+
+    expect(hasScheduleRepairNeed(repairNeededUpcoming)).toBe(true);
+    expect(nextUpcoming).toEqual(healthyUpcoming);
+  });
+
+  it('returns undefined when current clock is invalid', () => {
+    const upcoming = {
+      ...createNewCard('next-upcoming-invalid-clock', 'safe', NOW),
+      dueAt: '2026-02-23T14:00:00.000Z',
+    };
+
+    expect(findNextUpcomingCard([upcoming], 'bad-clock')).toBeUndefined();
   });
 });
 
