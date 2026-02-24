@@ -10,9 +10,19 @@ describe('text normalization', () => {
     expect(normalizeBoundedText('  alpha   beta  ', 20)).toBe('alpha beta');
   });
 
+  it('removes zero-width characters during normalization', () => {
+    expect(normalizeBoundedText('\u200B\u200C alpha \uFEFF beta \u200D', 40)).toBe('alpha beta');
+    expect(normalizeOptionalBoundedText('\u200B\uFEFF', 20)).toBeUndefined();
+  });
+
   it('returns empty string for non-string bounded values', () => {
     expect(normalizeBoundedText(undefined, 10)).toBe('');
     expect(normalizeBoundedText(42, 10)).toBe('');
+  });
+
+  it('guards non-finite and negative max lengths', () => {
+    expect(normalizeBoundedText('alpha', Number.NaN)).toBe('');
+    expect(normalizeBoundedText('alpha', -3)).toBe('');
   });
 
   it('normalizes optional bounded text and drops empty values', () => {

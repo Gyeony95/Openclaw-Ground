@@ -1006,6 +1006,7 @@ export default function App() {
                               const isSelected = selectedQuizOptionId === option.id;
                               const showCorrect = hasQuizSelection && option.isCorrect;
                               const showIncorrect = hasQuizSelection && isSelected && !option.isCorrect;
+                              const optionPrefix = showCorrect ? 'Correct: ' : showIncorrect ? 'Incorrect: ' : '';
                               return (
                                 <Pressable
                                   key={option.id}
@@ -1026,7 +1027,17 @@ export default function App() {
                                     disabled: isReviewBusy || hasQuizSelection,
                                   }}
                                 >
-                                  <Text style={styles.quizOptionText}>{option.text}</Text>
+                                  <Text
+                                    style={[
+                                      styles.quizOptionText,
+                                      isSelected && styles.quizOptionTextSelected,
+                                      showCorrect && styles.quizOptionTextCorrect,
+                                      showIncorrect && styles.quizOptionTextIncorrect,
+                                    ]}
+                                  >
+                                    {optionPrefix}
+                                    {option.text}
+                                  </Text>
                                 </Pressable>
                               );
                             })}
@@ -1719,6 +1730,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '600',
+  },
+  quizOptionTextSelected: {
+    color: colors.primary,
+  },
+  quizOptionTextCorrect: {
+    color: colors.success,
+  },
+  quizOptionTextIncorrect: {
+    color: colors.danger,
   },
   quizFeedback: {
     fontSize: 12,

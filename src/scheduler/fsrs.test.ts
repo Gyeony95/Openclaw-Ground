@@ -24,6 +24,14 @@ describe('fsrs scheduler', () => {
     expect(card.notes).toBe('note');
   });
 
+  it('repairs zero-width-only word and meaning values when creating cards', () => {
+    const card = createNewCard('\u200B\u200C', '\u200D\uFEFF', NOW, '\u200B note \uFEFF');
+
+    expect(card.word).toBe('[invalid word]');
+    expect(card.meaning).toBe('[invalid meaning]');
+    expect(card.notes).toBe('note');
+  });
+
   it('enforces scheduler-side field length limits when creating cards', () => {
     const card = createNewCard('a'.repeat(120), 'b'.repeat(220), NOW, 'c'.repeat(320));
 
@@ -434,6 +442,21 @@ describe('fsrs scheduler', () => {
 
     expect(reviewed.card.word).toBe('[invalid word]');
     expect(reviewed.card.meaning).toBe('[invalid meaning]');
+  });
+
+  it('repairs zero-width-only word and meaning values during review normalization', () => {
+    const card = {
+      ...createNewCard('phi-placeholders-zero-width', 'letter', NOW),
+      word: '\u200B\u200C',
+      meaning: '\u200D\uFEFF',
+      notes: '\u200B\uFEFF',
+    };
+
+    const reviewed = reviewCard(card, 3, NOW);
+
+    expect(reviewed.card.word).toBe('[invalid word]');
+    expect(reviewed.card.meaning).toBe('[invalid meaning]');
+    expect(reviewed.card.notes).toBeUndefined();
   });
 
   it('falls back to placeholders when runtime card text fields are malformed', () => {
