@@ -937,6 +937,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
+  it('treats infinite review stability as long schedule context instead of half-day fallback context', () => {
+    const base = {
+      ...createNewCard('rho-inf-schedule-context', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: 'bad-due-value',
+      difficulty: 5,
+      reps: 22,
+      lapses: 2,
+    };
+    const infiniteStability = reviewCard({ ...base, stability: Number.POSITIVE_INFINITY }, 3, NOW);
+    const unknownStability = reviewCard({ ...base, stability: Number.NaN }, 3, NOW);
+
+    expect(infiniteStability.card.state).toBe('review');
+    expect(unknownStability.card.state).toBe('review');
+    expect(infiniteStability.scheduledDays).toBeGreaterThan(unknownStability.scheduledDays);
+  });
+
   it('uses the scheduled interval as fallback context when review stability is corrupted', () => {
     const mature = {
       ...createNewCard('rho-stability-fallback', 'letter', NOW),

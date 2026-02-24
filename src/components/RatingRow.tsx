@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Rating } from '../types';
 import { colors, radii } from '../theme';
 
@@ -16,6 +16,9 @@ const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: 
 ];
 
 export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRowProps) {
+  const { width } = useWindowDimensions();
+  const isCompact = width < 360;
+
   return (
     <View style={styles.row}>
       {labels.map((item) => {
@@ -29,6 +32,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
             android_ripple={{ color: `${item.tone}20` }}
             style={({ pressed }) => [
               styles.button,
+              isCompact ? styles.buttonCompact : null,
               { borderColor: item.tone, backgroundColor: `${item.tone}16` },
               pressed && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
               disabled && styles.buttonDisabled,
@@ -64,6 +68,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     gap: 4,
+  },
+  buttonCompact: {
+    flexBasis: '100%',
   },
   buttonPressed: {
     transform: [{ translateY: 1 }, { scale: 0.99 }],

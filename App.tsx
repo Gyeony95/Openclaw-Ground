@@ -786,6 +786,7 @@ export default function App() {
                   disabled={!canAdd}
                   accessibilityRole="button"
                   accessibilityLabel="Add card"
+                  accessibilityHint={canAdd ? 'Adds this word to your study deck' : addFormHint}
                   accessibilityState={{ disabled: !canAdd, busy: isAddBusy }}
                 >
                   <View style={styles.primaryBtnContent}>

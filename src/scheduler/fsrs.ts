@@ -319,6 +319,9 @@ function shouldUseReviewStabilityFallbackForDueRepair(
 }
 
 function normalizeScheduledDays(value: number, state: ReviewState): number {
+  if (value === Number.POSITIVE_INFINITY) {
+    return maxScheduleDaysForState(state);
+  }
   if (Number.isFinite(value) && value > 0) {
     const normalized = clamp(value, MINUTE_IN_DAYS, STABILITY_MAX);
     if (state === 'review') {
