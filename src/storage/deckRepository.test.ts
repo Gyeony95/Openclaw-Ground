@@ -627,7 +627,7 @@ describe('deck repository', () => {
             createdAt: '2026-02-20T00:00:00.000Z',
             updatedAt: '2026-02-22T00:00:00.000Z',
             state: 'review',
-            reps: Number.NaN,
+            reps: Number.POSITIVE_INFINITY,
             lapses: Number.POSITIVE_INFINITY,
             stability: Number.NaN,
             difficulty: Number.POSITIVE_INFINITY,

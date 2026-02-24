@@ -25,6 +25,8 @@ const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 const REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS = 7;
 
 const VALID_STATES: ReviewState[] = ['learning', 'review', 'relearning'];
+type CounterNormalizationMode = 'sanitize' | 'saturate';
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
@@ -33,15 +35,21 @@ function asFiniteNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-function asNonNegativeInt(value: unknown, fallback: number): number {
-  if (value === Number.POSITIVE_INFINITY) {
-    return COUNTER_MAX;
-  }
-  const numeric = asFiniteNumber(value);
-  if (numeric === null) {
+function asNonNegativeInt(
+  value: unknown,
+  fallback: number,
+  mode: CounterNormalizationMode = 'sanitize',
+): number {
+  if (typeof value !== 'number') {
     return fallback;
   }
-  return clamp(Math.floor(numeric), 0, COUNTER_MAX);
+  if (!Number.isFinite(value)) {
+    if (mode === 'saturate' && value === Number.POSITIVE_INFINITY) {
+      return COUNTER_MAX;
+    }
+    return fallback;
+  }
+  return clamp(Math.floor(value), 0, COUNTER_MAX);
 }
 
 function isValidState(state: unknown): state is ReviewState {
@@ -137,7 +145,7 @@ function pickFreshestDuplicate(existing: Card, incoming: Card): Card {
   return existing;
 }
 
-function normalizeCard(raw: Partial<Card>): Card | null {
+function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode = 'sanitize'): Card | null {
   const id = typeof raw.id === 'string' ? raw.id.trim() : '';
   const wordValue = typeof raw.word === 'string' ? raw.word.trim().slice(0, WORD_MAX_LENGTH) : '';
   const meaningValue = typeof raw.meaning === 'string' ? raw.meaning.trim().slice(0, MEANING_MAX_LENGTH) : '';
@@ -250,8 +258,8 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     createdAt: normalizedCreatedAt,
     updatedAt: normalizedUpdatedAt,
     state,
-    reps: asNonNegativeInt(raw.reps, 0),
-    lapses: asNonNegativeInt(raw.lapses, 0),
+    reps: asNonNegativeInt(raw.reps, 0, counterMode),
+    lapses: asNonNegativeInt(raw.lapses, 0, counterMode),
     stability: normalizedStability,
     difficulty: clamp(asFiniteNumber(raw.difficulty) ?? 5, DIFFICULTY_MIN, DIFFICULTY_MAX),
   };
@@ -267,7 +275,7 @@ export async function loadDeck(): Promise<Deck> {
     const parsed = JSON.parse(serialized) as Partial<Deck>;
     const rawCards = Array.isArray(parsed.cards) ? parsed.cards : [];
     const cards = rawCards
-      .map((item) => normalizeCard(item as Partial<Card>))
+      .map((item) => normalizeCard(item as Partial<Card>, 'sanitize'))
       .filter((item): item is Card => item !== null)
       .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
     const dedupedById = new Map<string, Card>();
@@ -292,7 +300,7 @@ export async function loadDeck(): Promise<Deck> {
 
 export async function saveDeck(deck: Deck): Promise<void> {
   const normalizedCards = deck.cards
-    .map((card) => normalizeCard(card))
+    .map((card) => normalizeCard(card, 'saturate'))
     .filter((card): card is Card => card !== null)
     .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
   const dedupedById = new Map<string, Card>();

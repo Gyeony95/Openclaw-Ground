@@ -90,6 +90,20 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back to runtime wall clock when creation timestamp is pathologically far past', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const card = createNewCard('past-now', 'timestamp', '1980-01-01T00:00:00.000Z');
+
+      expect(card.createdAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.dueAt).toBe('2026-02-23T14:30:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('ignores pathologically old dueAt values as timeline anchors when creation fields are malformed', () => {
     jest.useFakeTimers();
     try {

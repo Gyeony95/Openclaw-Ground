@@ -301,7 +301,6 @@ export default function App() {
   const isCompactLayout = width < 380;
   const isReviewBusy = pendingReviewCardId !== null;
   const isFormEditable = !loading && !isAddBusy;
-  const shouldAutoFocusAddInput = !loading && !dueCard;
 
   useEffect(() => {
     setShowMeaning(false);
@@ -793,7 +792,6 @@ export default function App() {
                   returnKeyType="next"
                   maxLength={WORD_MAX_LENGTH}
                   selectionColor={colors.primary}
-                  autoFocus={shouldAutoFocusAddInput}
                   blurOnSubmit={false}
                   editable={isFormEditable}
                   accessibilityLabel="Word input"
