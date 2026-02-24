@@ -963,6 +963,7 @@ export default function App() {
                     ]}
                     accessible
                     accessibilityLabel={`Review card ${dueCardWord}. ${dueCardStateConfig?.label ?? 'Learning'}. ${relativeDueLabel}.`}
+                    accessibilityState={{ busy: isReviewBusy || undefined }}
                   >
                     <View style={[styles.reviewTimeline, { borderColor: `${dueCardUrgency.tone}44` }]}>
                       <View style={styles.reviewTimelineHeader}>

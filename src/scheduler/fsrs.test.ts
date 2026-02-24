@@ -4323,4 +4323,22 @@ describe('fsrs scheduler', () => {
     expect(relearningPreview[3]).toBeLessThanOrEqual(0.5);
     expect(relearningPreview[4]).toBeLessThanOrEqual(1);
   });
+
+  it('caps review stability to the review outlier window after hard ratings on short schedules', () => {
+    const shortScheduleReview = {
+      ...createNewCard('review-stability-cap-hard', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 0.5),
+      reps: 24,
+      lapses: 2,
+      stability: 120,
+      difficulty: 1,
+    };
+
+    const reviewed = reviewCard(shortScheduleReview, 2, addDaysIso(NOW, 2)).card;
+
+    expect(reviewed.state).toBe('review');
+    expect(reviewed.stability).toBeLessThanOrEqual(120);
+  });
 });

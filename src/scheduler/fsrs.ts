@@ -1328,7 +1328,10 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
       ? safeScheduledDays
       : STABILITY_MIN;
   const normalizedNextStability = clampFinite(
-    Math.max(nextStability, stableGraduationFloor),
+    Math.min(
+      Math.max(nextStability, stableGraduationFloor),
+      stabilityCeilingForState(state, safeScheduledDays),
+    ),
     STABILITY_MIN,
     STABILITY_MAX,
     safeScheduledDays,
