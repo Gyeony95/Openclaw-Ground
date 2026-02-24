@@ -34,6 +34,8 @@ const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 const RELEARNING_SCHEDULE_FLOOR_DAYS = 10 * MINUTE_IN_DAYS;
 const LEARNING_MAX_SCHEDULE_DAYS = 1;
 const RELEARNING_MAX_SCHEDULE_DAYS = 2;
+const REVIEW_LAPSE_STABILITY_CEILING_DAYS = 1;
+const RELEARNING_LAPSE_STABILITY_CEILING_DAYS = 2;
 const REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS = 7;
 const NON_REVIEW_OUTLIER_MULTIPLIER = 6;
 const COUNTER_MAX = Number.MAX_SAFE_INTEGER;
@@ -552,7 +554,24 @@ function updateStability(
   if (rating === 1) {
     const forgetPenalty = 0.12 + 0.22 * difficultyFactor;
     const overdueFailurePenalty = timingRatio > 1 ? 1 + (timingRatio - 1) * 0.25 : 1;
-    return clampFinite((previous * forgetPenalty) / overdueFailurePenalty, STABILITY_MIN, STABILITY_MAX, previous);
+    const reducedStability = (previous * forgetPenalty) / overdueFailurePenalty;
+    if (phase === 'review') {
+      return clampFinite(
+        Math.min(reducedStability, REVIEW_LAPSE_STABILITY_CEILING_DAYS),
+        STABILITY_MIN,
+        STABILITY_MAX,
+        previous,
+      );
+    }
+    if (phase === 'relearning') {
+      return clampFinite(
+        Math.min(reducedStability, RELEARNING_LAPSE_STABILITY_CEILING_DAYS),
+        STABILITY_MIN,
+        STABILITY_MAX,
+        previous,
+      );
+    }
+    return clampFinite(reducedStability, STABILITY_MIN, STABILITY_MAX, previous);
   }
 
   if (rating === 2) {

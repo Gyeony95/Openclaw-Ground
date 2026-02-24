@@ -893,6 +893,7 @@ export default function App() {
                   <Text style={styles.panelSubtitle}>Keep entries precise and compact</Text>
                 </View>
                 <Text style={styles.info}>Capture one precise definition and optional context note.</Text>
+                <Text style={styles.inputLabel}>Word</Text>
                 <TextInput
                   ref={wordInputRef}
                   value={word}
@@ -914,6 +915,7 @@ export default function App() {
                   {formatCountLabel(wordLength, WORD_MAX_LENGTH)}
                 </Text>
                 {addAttempted && missingWord ? <Text style={styles.inputErrorText}>Word is required.</Text> : null}
+                <Text style={styles.inputLabel}>Meaning</Text>
                 <TextInput
                   ref={meaningInputRef}
                   value={meaning}
@@ -939,6 +941,7 @@ export default function App() {
                   {formatCountLabel(meaningLength, MEANING_MAX_LENGTH)}
                 </Text>
                 {addAttempted && missingMeaning ? <Text style={styles.inputErrorText}>Meaning is required.</Text> : null}
+                <Text style={styles.inputLabel}>Notes (optional)</Text>
                 <TextInput
                   ref={notesInputRef}
                   value={notes}
@@ -1482,6 +1485,13 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: 15,
     lineHeight: 21,
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: colors.subInk,
   },
   inputError: {
     borderColor: colors.danger,

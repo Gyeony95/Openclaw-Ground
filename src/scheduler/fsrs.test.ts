@@ -740,6 +740,44 @@ describe('fsrs scheduler', () => {
     expect(overdueFail.card.stability).toBeLessThan(onTimeFail.card.stability);
   });
 
+  it('caps failed mature review stability to a short relearning-safe window', () => {
+    const mature = {
+      ...createNewCard('lambda-mature-lapse', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 120),
+      stability: 240,
+      difficulty: 4.2,
+      reps: 80,
+      lapses: 3,
+    };
+
+    const failed = reviewCard(mature, 1, mature.dueAt);
+
+    expect(failed.card.state).toBe('relearning');
+    expect(failed.card.stability).toBeLessThanOrEqual(1);
+    expect(failed.card.stability).toBeGreaterThan(0);
+  });
+
+  it('keeps repeated relearning failures capped to a short stability ceiling', () => {
+    const relearning = {
+      ...createNewCard('lambda-relearning-lapse', 'letter', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1),
+      stability: 25,
+      difficulty: 6.4,
+      reps: 81,
+      lapses: 7,
+    };
+
+    const failed = reviewCard(relearning, 1, relearning.dueAt);
+
+    expect(failed.card.state).toBe('relearning');
+    expect(failed.card.stability).toBeLessThanOrEqual(2);
+    expect(failed.card.stability).toBeGreaterThan(0);
+  });
+
   it('keeps easy review intervals at least as long as the current schedule', () => {
     const card = createNewCard('nu', 'letter', NOW);
     const first = reviewCard(card, 4, NOW).card;
