@@ -22,6 +22,8 @@ const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_CREATE_TIME_OFFSET_MS = 20 * 365 * DAY_MS;
 const MAX_CREATE_FUTURE_OFFSET_MS = MAX_MONOTONIC_CLOCK_SKEW_MS;
+const MIN_DATE_MS = -8640000000000000;
+const MAX_DATE_MS = 8640000000000000;
 export interface ReviewResult {
   card: Card;
   scheduledDays: number;
@@ -57,7 +59,10 @@ function safeNowMs(): number {
 }
 
 function toSafeIso(ms: number): string {
-  return new Date(Number.isFinite(ms) ? ms : 0).toISOString();
+  const safeMs = Number.isFinite(ms)
+    ? Math.min(MAX_DATE_MS, Math.max(MIN_DATE_MS, ms))
+    : 0;
+  return new Date(safeMs).toISOString();
 }
 
 function toCanonicalIso(value: string, fallbackIso: string): string {

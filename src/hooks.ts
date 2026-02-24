@@ -11,6 +11,8 @@ const MAX_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const MAX_UI_FUTURE_SKEW_MS = 60 * 1000;
 const OVERDUE_GRACE_MS = 60 * 1000;
 const FALLBACK_NOW_MS = Date.parse('1970-01-01T00:00:00.000Z');
+const MIN_DATE_MS = -8640000000000000;
+const MAX_DATE_MS = 8640000000000000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const LEARNING_MIN_SCHEDULE_MS = 60 * 1000;
 const RELEARNING_MIN_SCHEDULE_MS = 10 * 60 * 1000;
@@ -71,7 +73,10 @@ function safeNowMs(): number {
 }
 
 function toSafeIso(ms: number): string {
-  return new Date(Number.isFinite(ms) ? ms : FALLBACK_NOW_MS).toISOString();
+  const safeMs = Number.isFinite(ms)
+    ? Math.min(MAX_DATE_MS, Math.max(MIN_DATE_MS, ms))
+    : FALLBACK_NOW_MS;
+  return new Date(safeMs).toISOString();
 }
 
 function parseDueAtOrNaN(dueAt: unknown): number {

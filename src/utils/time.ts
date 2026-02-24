@@ -1,6 +1,8 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 const EPOCH_ISO = '1970-01-01T00:00:00.000Z';
 const EPOCH_MS = Date.parse(EPOCH_ISO);
+const MIN_DATE_MS = -8640000000000000;
+const MAX_DATE_MS = 8640000000000000;
 
 function parseIso(iso: string): number | null {
   const parsed = Date.parse(iso);
@@ -13,7 +15,10 @@ function safeNowMs(): number {
 }
 
 function toSafeIso(ms: number): string {
-  return new Date(Number.isFinite(ms) ? ms : EPOCH_MS).toISOString();
+  const safeMs = Number.isFinite(ms)
+    ? Math.min(MAX_DATE_MS, Math.max(MIN_DATE_MS, ms))
+    : EPOCH_MS;
+  return new Date(safeMs).toISOString();
 }
 
 export function nowIso(): string {

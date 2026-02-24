@@ -38,6 +38,12 @@ describe('time utils', () => {
     expect(shifted).toBe('1970-01-01T00:00:00.000Z');
   });
 
+  it('clamps overflowed date math to the max supported ISO timestamp', () => {
+    const shifted = addDaysIso('+275760-09-13T00:00:00.000Z', 1);
+
+    expect(shifted).toBe('+275760-09-13T00:00:00.000Z');
+  });
+
   it('returns canonical runtime timestamps from nowIso', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-24T08:15:30.000Z'));
     const current = nowIso();

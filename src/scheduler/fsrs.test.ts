@@ -136,6 +136,26 @@ describe('fsrs scheduler', () => {
     expect(card.dueAt).toBe('1970-01-01T00:00:00.000Z');
   });
 
+  it('clamps overflowed review schedules to the max supported ISO timestamp instead of throwing', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    try {
+      const maxIso = '+275760-09-13T00:00:00.000Z';
+      const card = {
+        ...createNewCard('max-date', 'safe', maxIso),
+        state: 'review' as const,
+        dueAt: maxIso,
+        updatedAt: maxIso,
+      };
+
+      expect(() => reviewCard(card, 4, maxIso)).not.toThrow();
+      const reviewed = reviewCard(card, 4, maxIso);
+      expect(reviewed.card.updatedAt).toBe(maxIso);
+      expect(reviewed.card.dueAt).toBe(maxIso);
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it('avoids NaN segments in generated card IDs when runtime clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const card = createNewCard('nan-clock-id', 'safe', NOW);

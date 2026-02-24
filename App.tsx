@@ -624,10 +624,11 @@ export default function App() {
     if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice' || hasQuizSelection) {
       return;
     }
-    if (!quizOptions.some((option) => option.id === optionId)) {
+    if (!hasValidQuizSelection(optionId, quizOptions)) {
       return;
     }
-    setSelectedQuizOptionId(optionId);
+    setSelectedQuizOptionId(optionId.trim());
+    setReviewActionError(null);
   }
 
   return (
@@ -927,6 +928,13 @@ export default function App() {
                         </Text>
                       </Pressable>
                     </View>
+                    {studyMode === 'multiple-choice' && !hasQuizSelection ? (
+                      <Text style={styles.studyModeHelper}>
+                        {canUseMultipleChoice
+                          ? 'Select one answer to unlock FSRS rating buttons.'
+                          : multipleChoiceRequirementLabel ?? 'Need at least four distinct card meanings.'}
+                      </Text>
+                    ) : null}
 
                     {studyMode === 'flashcard' ? (
                       <Pressable
@@ -1675,6 +1683,12 @@ const styles = StyleSheet.create({
   },
   studyModeToggleTextActive: {
     color: colors.primary,
+  },
+  studyModeHelper: {
+    color: colors.subInk,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '600',
   },
   reviewHeader: {
     flexDirection: 'row',
