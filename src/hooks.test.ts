@@ -1076,6 +1076,22 @@ describe('resolveNextUiClock', () => {
     expect(resolved).toBe('2026-02-23T12:10:00.000Z');
   });
 
+  it('ignores reviewedAt values that are materially ahead of wall clock', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const resolved = resolveNextUiClock('2026-02-23T12:34:30.000Z', '2026-02-23T12:40:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:34:30.000Z');
+  });
+
+  it('falls back to wall clock when both UI clock candidates are ahead of wall clock', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const resolved = resolveNextUiClock('2026-02-23T12:40:00.000Z', '2026-02-23T12:42:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:34:56.000Z');
+  });
+
   it('falls back to epoch when wall clock is non-finite and inputs are invalid', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const resolved = resolveNextUiClock('bad-current-time', 'bad-reviewed-time');

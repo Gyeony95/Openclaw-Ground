@@ -22,13 +22,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
   const isWide = width >= 520;
 
   return (
-    <View
-      style={styles.row}
-      accessible
-      accessibilityRole="text"
-      accessibilityLabel="Recall rating actions"
-      accessibilityHint="Choose how well you recalled the card to set the next review interval"
-    >
+    <View style={styles.row}>
       {labels.map((item) => {
         const interval = intervalLabels?.[item.rating] ?? item.fallbackHint;
         return (

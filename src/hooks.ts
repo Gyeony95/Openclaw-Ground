@@ -6,6 +6,7 @@ import { isDue, nowIso } from './utils/time';
 
 const CLOCK_REFRESH_MS = 15000;
 const MAX_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
+const MAX_UI_FUTURE_SKEW_MS = 60 * 1000;
 const OVERDUE_GRACE_MS = 60 * 1000;
 const FALLBACK_NOW_MS = Date.parse('1970-01-01T00:00:00.000Z');
 
@@ -321,7 +322,10 @@ export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: stri
       return undefined;
     }
     const candidateMs = Date.parse(candidate);
-    if (Math.abs(candidateMs - wallClockMs) > MAX_CLOCK_SKEW_MS) {
+    if (candidateMs - wallClockMs > MAX_UI_FUTURE_SKEW_MS) {
+      return undefined;
+    }
+    if (wallClockMs - candidateMs > MAX_CLOCK_SKEW_MS) {
       return undefined;
     }
     return toCanonicalIso(candidate);

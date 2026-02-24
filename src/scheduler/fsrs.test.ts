@@ -128,6 +128,14 @@ describe('fsrs scheduler', () => {
     expect(card.dueAt).toBe('1970-01-01T00:00:00.000Z');
   });
 
+  it('avoids NaN segments in generated card IDs when runtime clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const card = createNewCard('nan-clock-id', 'safe', NOW);
+    nowSpy.mockRestore();
+
+    expect(card.id.includes('NaN')).toBe(false);
+  });
+
   it('keeps explicit valid creation timestamps when runtime clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const card = createNewCard('nan-clock-valid-now', 'safe', NOW);
