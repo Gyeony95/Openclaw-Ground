@@ -211,6 +211,29 @@ describe('fsrs scheduler', () => {
 
       const reviewed = reviewCard(futureCorrupted, 3, 'not-a-date');
 
+      expect(Date.parse(reviewed.card.createdAt)).toBeLessThanOrEqual(Date.parse(reviewed.card.updatedAt));
+      expect(reviewed.card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('normalizes createdAt to never exceed updatedAt when recovering from future-corrupted timelines', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const futureCorrupted = {
+        ...createNewCard('future-corrupted-created', 'timeline', NOW),
+        state: 'review' as const,
+        createdAt: '2026-04-02T00:00:00.000Z',
+        updatedAt: '2026-04-03T00:00:00.000Z',
+        dueAt: '2026-04-05T00:00:00.000Z',
+      };
+
+      const reviewed = reviewCard(futureCorrupted, 3, 'not-a-date');
+
+      expect(reviewed.card.createdAt).toBe('2026-02-23T14:30:00.000Z');
       expect(reviewed.card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
       expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
     } finally {

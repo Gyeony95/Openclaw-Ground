@@ -857,12 +857,18 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
     safeScheduledDays,
   );
   const nextDueAt = addDaysIso(currentIso, safeScheduledDays);
+  const nextUpdatedMs = Date.parse(currentIso);
+  const createdMs = Date.parse(createdAt);
+  const normalizedCreatedAt =
+    Number.isFinite(nextUpdatedMs) && Number.isFinite(createdMs) && createdMs > nextUpdatedMs
+      ? currentIso
+      : createdAt;
 
   return {
     scheduledDays: safeScheduledDays,
     card: {
       ...baseCard,
-      createdAt,
+      createdAt: normalizedCreatedAt,
       state,
       difficulty: nextDifficulty,
       stability: normalizedNextStability,

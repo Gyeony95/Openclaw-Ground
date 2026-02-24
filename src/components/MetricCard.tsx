@@ -10,13 +10,15 @@ interface MetricCardProps {
 export function MetricCard({ label, value, accent = colors.primary }: MetricCardProps) {
   const { width } = useWindowDimensions();
   const isNarrow = width < 360;
-  const displayValue = Number.isFinite(value) ? value.toLocaleString() : '--';
-  const accessibilityValue = Number.isFinite(value) ? displayValue : 'unavailable';
+  const hasValue = Number.isFinite(value);
+  const displayValue = hasValue ? value.toLocaleString() : '--';
+  const accessibilityValue = hasValue ? displayValue : 'unavailable';
 
   return (
     <View
       style={[styles.card, isNarrow && styles.cardNarrow]}
       accessible
+      accessibilityRole="text"
       accessibilityLabel={`${label}: ${accessibilityValue}`}
     >
       <View style={[styles.topBorder, { backgroundColor: accent }]} />
@@ -25,7 +27,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
         <Text style={styles.label}>{label}</Text>
       </View>
       <Text
-        style={[styles.value, isNarrow && styles.valueNarrow]}
+        style={[styles.value, isNarrow && styles.valueNarrow, !hasValue && styles.valueUnavailable]}
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.72}
@@ -86,6 +88,9 @@ const styles = StyleSheet.create({
   },
   valueNarrow: {
     fontSize: 26,
+  },
+  valueUnavailable: {
+    color: colors.subInk,
   },
   label: {
     fontSize: 10,
