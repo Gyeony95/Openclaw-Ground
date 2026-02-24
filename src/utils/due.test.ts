@@ -3,8 +3,8 @@ import { formatDueLabel } from './due';
 describe('formatDueLabel', () => {
   const NOW = '2026-02-23T12:00:00.000Z';
 
-  it('returns due now within one minute threshold', () => {
-    expect(formatDueLabel('2026-02-23T12:00:30.000Z', NOW)).toBe('Due now');
+  it('returns due now within one minute after the due time has passed', () => {
+    expect(formatDueLabel('2026-02-23T12:00:30.000Z', NOW)).toBe('Due in <1m');
     expect(formatDueLabel('2026-02-23T11:59:30.000Z', NOW)).toBe('Due now');
   });
 
@@ -15,6 +15,7 @@ describe('formatDueLabel', () => {
   it('formats sub-hour labels in minutes', () => {
     expect(formatDueLabel('2026-02-23T11:10:00.000Z', NOW)).toBe('Overdue 50m');
     expect(formatDueLabel('2026-02-23T12:35:00.000Z', NOW)).toBe('Due in 35m');
+    expect(formatDueLabel('2026-02-23T12:00:30.000Z', NOW)).toBe('Due in <1m');
   });
 
   it('formats long overdue labels in days', () => {

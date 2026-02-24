@@ -22,8 +22,11 @@ export function formatDueLabel(dueAt: string, clockIso: string): string {
 
   const deltaMs = dueMs - nowMs;
   const overdueMs = Math.abs(deltaMs);
-  if (Math.abs(deltaMs) <= NOW_THRESHOLD_MS) {
+  if (deltaMs <= 0 && overdueMs <= NOW_THRESHOLD_MS) {
     return 'Due now';
+  }
+  if (deltaMs > 0 && deltaMs < MINUTE_MS) {
+    return 'Due in <1m';
   }
   if (deltaMs < 0 && overdueMs < HOUR_MS) {
     return `Overdue ${Math.max(1, Math.floor(overdueMs / MINUTE_MS))}m`;
