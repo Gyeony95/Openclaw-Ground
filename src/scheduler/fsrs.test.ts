@@ -70,6 +70,21 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('keeps deep historical import timestamps beyond 20 years instead of forcing wall clock', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-24T00:00:00.000Z'));
+      const historicalNow = '1980-06-15T00:00:00.000Z';
+      const card = createNewCard('legacy-deep', 'imported', historicalNow);
+
+      expect(card.createdAt).toBe(historicalNow);
+      expect(card.updatedAt).toBe(historicalNow);
+      expect(card.dueAt).toBe(historicalNow);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('falls back to runtime wall clock when creation timestamp is pathologically far future', () => {
     jest.useFakeTimers();
     try {
