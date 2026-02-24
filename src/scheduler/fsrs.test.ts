@@ -90,6 +90,27 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('ignores pathologically old dueAt values as timeline anchors when creation fields are malformed', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const malformedTimeline = {
+        ...createNewCard('old-anchor', 'timeline', NOW),
+        createdAt: 'not-a-time',
+        updatedAt: 'also-not-a-time',
+        dueAt: '1900-01-01T00:00:00.000Z',
+      };
+
+      const reviewed = reviewCard(malformedTimeline, 3, '2026-02-23T14:30:00.000Z');
+
+      expect(reviewed.card.createdAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(reviewed.card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('normalizes oversized card text fields while reviewing existing cards', () => {
     const card = {
       ...createNewCard('phi-text', 'letter', NOW),

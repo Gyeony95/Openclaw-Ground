@@ -168,10 +168,11 @@ function normalizeTimeline(
   const fallbackMs = safeNowMs();
   const fallback = toSafeIso(fallbackMs);
   const dueMs = isValidIso(card.dueAt) ? Date.parse(card.dueAt) : Number.NaN;
-  const safeDueAsCreatedAt =
-    Number.isFinite(dueMs) && Number.isFinite(fallbackMs) && dueMs - fallbackMs <= MAX_MONOTONIC_CLOCK_SKEW_MS
-      ? card.dueAt
-      : undefined;
+  const dueLooksLikePlausibleAnchor =
+    Number.isFinite(dueMs) &&
+    Number.isFinite(fallbackMs) &&
+    Math.abs(dueMs - fallbackMs) <= MAX_CREATE_TIME_OFFSET_MS;
+  const safeDueAsCreatedAt = dueLooksLikePlausibleAnchor ? card.dueAt : undefined;
   let createdAt = isValidIso(card.createdAt)
     ? card.createdAt
     : isValidIso(card.updatedAt)

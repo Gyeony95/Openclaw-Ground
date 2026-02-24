@@ -331,6 +331,8 @@ export function useDeck() {
       })
       .catch(() => {
         // Keep in-memory defaults when storage is unavailable.
+        // Enable best-effort writes for later user actions if storage recovers.
+        setCanPersist(true);
       })
       .finally(() => {
         if (active) {
