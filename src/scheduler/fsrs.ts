@@ -100,6 +100,11 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     return fallback;
   }
 
+  if (requestedValid && candidateMs - fallbackMs > MAX_CREATE_TIME_OFFSET_MS) {
+    // Prevent runaway elapsed intervals when review timestamps jump far beyond card history.
+    return fallback;
+  }
+
   if (
     requestedValid &&
     Number.isFinite(wallClockMs) &&

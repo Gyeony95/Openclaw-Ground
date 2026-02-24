@@ -761,7 +761,7 @@ export default function App() {
                       onPress={focusAddForm}
                       disabled={!isFormEditable}
                       accessibilityRole="button"
-                      accessibilityLabel="Start adding words"
+                      accessibilityLabel={emptyQueueActionLabel}
                       accessibilityHint="Scrolls to the add form and focuses the word input"
                       accessibilityState={{ disabled: !isFormEditable }}
                     >
