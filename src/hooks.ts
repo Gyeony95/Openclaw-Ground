@@ -352,7 +352,10 @@ export function hasScheduleRepairNeed(
   return reps > 0 || lapses > 0;
 }
 
-function isReviewReadyCard(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & Partial<Pick<Card, 'stability' | 'reps'>>, currentIso: string): boolean {
+function isReviewReadyCard(
+  card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & Partial<Pick<Card, 'stability' | 'reps' | 'lapses'>>,
+  currentIso: string,
+): boolean {
   if (hasScheduleRepairNeed(card)) {
     return true;
   }

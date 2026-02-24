@@ -6,10 +6,11 @@ const MINUTE_MS = 60 * 1000;
 const NOW_THRESHOLD_MS = 60 * 1000;
 
 function parseIso(iso: string): number | null {
-  if (!isIsoDateTime(iso)) {
+  const normalized = iso.trim();
+  if (!isIsoDateTime(normalized)) {
     return null;
   }
-  const parsed = Date.parse(iso);
+  const parsed = Date.parse(normalized);
   return Number.isFinite(parsed) ? parsed : null;
 }
 

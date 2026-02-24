@@ -102,6 +102,18 @@ describe('scheduleStatus', () => {
 
       expect(tone).toBe(colors.warn);
     });
+
+    it('accepts surrounding whitespace on ISO timestamps', () => {
+      const tone = queueTone({
+        dueAt: ' 2026-02-24T11:58:30.000Z ',
+        clockIso: ` ${NOW} `,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(tone).toBe(colors.danger);
+    });
   });
 
   describe('dueUrgency', () => {
@@ -153,6 +165,16 @@ describe('scheduleStatus', () => {
       });
 
       expect(urgency).toEqual({ label: 'Needs repair', tone: colors.warn });
+    });
+
+    it('accepts surrounding whitespace on due and clock timestamps', () => {
+      const urgency = dueUrgency({
+        dueAt: ' 2026-02-24T12:00:30.000Z ',
+        clockIso: ` ${NOW} `,
+        needsRepair: false,
+      });
+
+      expect(urgency).toEqual({ label: 'Due now', tone: colors.primary });
     });
   });
 });

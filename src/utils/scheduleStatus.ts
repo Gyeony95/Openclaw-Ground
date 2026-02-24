@@ -16,6 +16,17 @@ export interface DueUrgencyInput {
   needsRepair: boolean;
 }
 
+function parseIsoOrNaN(value?: string): number {
+  if (typeof value !== 'string') {
+    return Number.NaN;
+  }
+  const normalized = value.trim();
+  if (!isIsoDateTime(normalized)) {
+    return Number.NaN;
+  }
+  return Date.parse(normalized);
+}
+
 export function queueTone({
   dueAt,
   clockIso,
@@ -33,8 +44,8 @@ export function queueTone({
   if (needsRepair) {
     return colors.warn;
   }
-  const dueMs = dueAt && isIsoDateTime(dueAt) ? Date.parse(dueAt) : Number.NaN;
-  const nowMs = isIsoDateTime(clockIso) ? Date.parse(clockIso) : Number.NaN;
+  const dueMs = parseIsoOrNaN(dueAt);
+  const nowMs = parseIsoOrNaN(clockIso);
   if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
     return colors.warn;
   }
@@ -58,8 +69,8 @@ export function dueUrgency({ dueAt, clockIso, needsRepair }: DueUrgencyInput): {
   if (!dueAt) {
     return { label: 'Needs repair', tone: colors.warn };
   }
-  const dueMs = isIsoDateTime(dueAt) ? Date.parse(dueAt) : Number.NaN;
-  const nowMs = isIsoDateTime(clockIso) ? Date.parse(clockIso) : Number.NaN;
+  const dueMs = parseIsoOrNaN(dueAt);
+  const nowMs = parseIsoOrNaN(clockIso);
   if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
     return { label: 'Needs repair', tone: colors.warn };
   }

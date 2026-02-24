@@ -64,11 +64,12 @@ function stateConfig(state: ReviewState): { tone: string; label: string } {
 }
 
 function formatIsoStamp(iso?: string): string | null {
-  if (!iso || !isIsoDateTime(iso)) {
+  const normalizedIso = typeof iso === 'string' ? iso.trim() : '';
+  if (!normalizedIso || !isIsoDateTime(normalizedIso)) {
     return null;
   }
   try {
-    const stampDate = new Date(iso);
+    const stampDate = new Date(normalizedIso);
     if (!Number.isFinite(stampDate.getTime())) {
       return null;
     }
@@ -172,7 +173,7 @@ function formatRemainingQueueLabel(remaining: number): string {
 }
 
 function hasValidIso(value?: string): boolean {
-  return isIsoDateTime(value);
+  return typeof value === 'string' && isIsoDateTime(value.trim());
 }
 
 export default function App() {
