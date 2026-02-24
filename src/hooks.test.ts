@@ -1952,6 +1952,32 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(freshLearning)).toBe(false);
   });
 
+  it('flags learning cards with malformed reps even when schedule remains sub-day', () => {
+    const corruptedCounterSubday = {
+      ...createNewCard('repair-learning-subday-bad-reps', 'test', NOW),
+      state: 'learning' as const,
+      reps: Number.NaN,
+      lapses: 0,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:30:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(corruptedCounterSubday)).toBe(true);
+  });
+
+  it('flags learning cards with malformed lapses even when schedule remains sub-day', () => {
+    const corruptedCounterSubday = {
+      ...createNewCard('repair-learning-subday-bad-lapses', 'test', NOW),
+      state: 'learning' as const,
+      reps: 0,
+      lapses: Number.NaN,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:30:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(corruptedCounterSubday)).toBe(true);
+  });
+
   it('flags cards with unknown state values for scheduler repair', () => {
     const unknownState = {
       ...createNewCard('repair-unknown-state', 'test', NOW),

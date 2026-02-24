@@ -865,14 +865,14 @@ export default function App() {
               ]}
             >
               <View style={[styles.panel, styles.reviewPanel, isCompactLayout && styles.panelCompact, isWideLayout && styles.panelWide]}>
-                <View style={styles.panelHead}>
+                <View style={[styles.panelHead, isCompactLayout && styles.panelHeadCompact]}>
                   <View style={styles.panelTitleWrap}>
                     <Text style={styles.panelTitle} accessibilityRole="header">
                       Review Queue
                     </Text>
                     <Text style={styles.panelSubtitle}>Prioritized by due time and recency</Text>
                   </View>
-                  <View style={styles.panelKpiWrap}>
+                  <View style={[styles.panelKpiWrap, isCompactLayout && styles.panelKpiWrapCompact]}>
                     <Text
                       style={[styles.panelKpi, { color: queueLabelTone }]}
                       accessibilityLiveRegion="polite"
@@ -1638,6 +1638,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 8,
   },
+  panelHeadCompact: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 6,
+  },
   panelTitleWrap: {
     gap: 3,
     flex: 1,
@@ -1658,6 +1663,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: 2,
     flexShrink: 1,
+  },
+  panelKpiWrapCompact: {
+    alignItems: 'flex-start',
   },
   panelKpi: {
     fontSize: 11,
