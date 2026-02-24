@@ -222,6 +222,22 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('includes a deterministic runtime salt segment in generated card IDs', () => {
+    jest.useFakeTimers();
+    try {
+      const systemTime = '2026-02-23T12:34:56.000Z';
+      jest.setSystemTime(new Date(systemTime));
+      const card = createNewCard('salted-id', 'format', NOW);
+      const [timestampPart, saltPart, sequencePart] = card.id.split('-');
+
+      expect(timestampPart).toBe(String(Date.parse(NOW)));
+      expect(saltPart).toBe(Date.parse(systemTime).toString(36));
+      expect(sequencePart.length).toBeGreaterThan(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('schedules short relearning interval on failure', () => {
     const card = createNewCard('echo', 'sound', NOW);
     const firstReview = reviewCard(card, 3, NOW).card;

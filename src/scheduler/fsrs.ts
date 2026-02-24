@@ -793,9 +793,10 @@ export function createNewCard(word: string, meaning: string, nowIso: string, not
   const createdAtMs = Date.parse(createdAt);
   cardIdSequence = cardIdSequence >= COUNTER_MAX ? 1 : cardIdSequence + 1;
   const uniqueSuffix = cardIdSequence.toString(36);
+  const runtimeSalt = safeNowMs().toString(36);
 
   return {
-    id: `${Number.isFinite(createdAtMs) ? createdAtMs : safeNowMs()}-${uniqueSuffix}`,
+    id: `${Number.isFinite(createdAtMs) ? createdAtMs : safeNowMs()}-${runtimeSalt}-${uniqueSuffix}`,
     word: trimmedWord.length > 0 ? trimmedWord : '[invalid word]',
     meaning: trimmedMeaning.length > 0 ? trimmedMeaning : '[invalid meaning]',
     notes: trimmedNotes || undefined,
