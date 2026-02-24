@@ -63,6 +63,7 @@ export function RatingRow({
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
+          const accessibilityIntervalLabel = isRatingLocked ? 'Locked' : interval;
           return (
             <Pressable
               key={item.rating}
@@ -88,7 +89,7 @@ export function RatingRow({
                 ratingDisabled && styles.buttonDisabled,
               ]}
               accessibilityRole="button"
-              accessibilityLabel={`Rate ${item.text}. Next interval ${interval}.`}
+              accessibilityLabel={`Rate ${item.text}. Next interval ${accessibilityIntervalLabel}.`}
               accessibilityHint={
                 busy
                   ? 'Saving current review, rating buttons are temporarily disabled'
@@ -104,17 +105,21 @@ export function RatingRow({
                 {item.text}
               </Text>
               {isRatingLocked ? <Text style={styles.lockedLabel}>Locked</Text> : null}
-              <Text style={[styles.hintLabel, { color: ratingDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
-                Next
-              </Text>
-              <Text
-                style={[styles.hint, styles.hintCentered, { color: ratingDisabled ? colors.subInk : item.tone }]}
-                numberOfLines={intervalLineCount}
-                adjustsFontSizeToFit
-                minimumFontScale={0.8}
-              >
-                {interval}
-              </Text>
+              {isRatingLocked ? null : (
+                <View style={styles.intervalMeta}>
+                  <Text style={[styles.hintLabel, { color: ratingDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
+                    Next
+                  </Text>
+                  <Text
+                    style={[styles.hint, styles.hintCentered, { color: ratingDisabled ? colors.subInk : item.tone }]}
+                    numberOfLines={intervalLineCount}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.8}
+                  >
+                    {interval}
+                  </Text>
+                </View>
+              )}
             </Pressable>
           );
         })}
@@ -142,6 +147,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 9,
+  },
+  intervalMeta: {
+    alignItems: 'center',
+    gap: 2,
   },
   button: {
     borderWidth: 1,

@@ -3288,4 +3288,47 @@ describe('fsrs scheduler', () => {
     expect(relearningPreview[3]).toBeGreaterThanOrEqual(0.5);
     expect(relearningPreview[4]).toBeGreaterThanOrEqual(1);
   });
+
+  it('keeps preview intervals finite and phase-safe for cards with non-finite scheduling fields', () => {
+    const corruptedReview = {
+      ...createNewCard('preview-non-finite-review', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: 'not-a-time',
+      stability: Number.POSITIVE_INFINITY,
+      difficulty: Number.NaN,
+      reps: Number.NaN,
+      lapses: Number.NaN,
+    };
+    const corruptedRelearning = {
+      ...createNewCard('preview-non-finite-relearning', 'definition', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: 'not-a-time',
+      stability: Number.NEGATIVE_INFINITY,
+      difficulty: Number.POSITIVE_INFINITY,
+      reps: Number.POSITIVE_INFINITY,
+      lapses: Number.NaN,
+    };
+
+    const reviewPreview = previewIntervals(corruptedReview, NOW);
+    const relearningPreview = previewIntervals(corruptedRelearning, NOW);
+
+    expect(Number.isFinite(reviewPreview[1])).toBe(true);
+    expect(Number.isFinite(reviewPreview[2])).toBe(true);
+    expect(Number.isFinite(reviewPreview[3])).toBe(true);
+    expect(Number.isFinite(reviewPreview[4])).toBe(true);
+    expect(reviewPreview[1]).toBeGreaterThanOrEqual(10 / 1440);
+    expect(reviewPreview[2]).toBeGreaterThanOrEqual(0.5);
+    expect(reviewPreview[4]).toBeGreaterThanOrEqual(reviewPreview[3]);
+
+    expect(Number.isFinite(relearningPreview[1])).toBe(true);
+    expect(Number.isFinite(relearningPreview[2])).toBe(true);
+    expect(Number.isFinite(relearningPreview[3])).toBe(true);
+    expect(Number.isFinite(relearningPreview[4])).toBe(true);
+    expect(relearningPreview[1]).toBeGreaterThanOrEqual(10 / 1440);
+    expect(relearningPreview[2]).toBeGreaterThanOrEqual(15 / 1440);
+    expect(relearningPreview[3]).toBeGreaterThanOrEqual(0.5);
+    expect(relearningPreview[4]).toBeGreaterThanOrEqual(1);
+  });
 });

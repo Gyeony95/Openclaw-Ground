@@ -1020,11 +1020,17 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
   const previewCard = normalized.card;
   const previewIso = normalized.currentIso;
   const previewFloor = previewMinimumIntervalByRating(previewCard.state);
+  const ensureFiniteFloor = (candidate: number, floor: number): number => {
+    if (!Number.isFinite(candidate)) {
+      return floor;
+    }
+    return Math.max(floor, candidate);
+  };
   const preview = {
-    1: Math.max(previewFloor[1], reviewNormalizedCard(previewCard, previewIso, 1).scheduledDays),
-    2: Math.max(previewFloor[2], reviewNormalizedCard(previewCard, previewIso, 2).scheduledDays),
-    3: Math.max(previewFloor[3], reviewNormalizedCard(previewCard, previewIso, 3).scheduledDays),
-    4: Math.max(previewFloor[4], reviewNormalizedCard(previewCard, previewIso, 4).scheduledDays),
+    1: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 1).scheduledDays, previewFloor[1]),
+    2: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 2).scheduledDays, previewFloor[2]),
+    3: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 3).scheduledDays, previewFloor[3]),
+    4: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 4).scheduledDays, previewFloor[4]),
   };
 
   return ensureOrderedPreview(preview);
