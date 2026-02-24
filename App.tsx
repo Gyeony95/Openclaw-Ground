@@ -63,53 +63,53 @@ function stateConfig(state: ReviewState): { tone: string; label: string } {
   return { tone: colors.warn, label: 'Learning' };
 }
 
+function formatIsoStamp(iso?: string): string | null {
+  if (!iso || !isIsoDateTime(iso)) {
+    return null;
+  }
+  try {
+    const stamp = new Date(iso).toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return stamp || null;
+  } catch {
+    return null;
+  }
+}
+
 function reviewedAtLabel(lastReviewedAt?: string): string {
-  if (!lastReviewedAt || !isIsoDateTime(lastReviewedAt)) {
+  const stamp = formatIsoStamp(lastReviewedAt);
+  if (!stamp) {
     return 'No review history yet';
   }
-  return `Last review ${new Date(lastReviewedAt).toLocaleString([], {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })}`;
+  return `Last review ${stamp}`;
 }
 
 function cardActivityLabel(updatedAt?: string, reps = 0): string {
-  if (!updatedAt || !isIsoDateTime(updatedAt)) {
+  const stamp = formatIsoStamp(updatedAt);
+  if (!stamp) {
     return 'Schedule activity unavailable';
   }
-  const stamp = new Date(updatedAt).toLocaleString([], {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
   return reps > 0 ? `Last review ${stamp}` : `Created ${stamp}`;
 }
 
 function exactDateLabel(iso?: string): string {
-  if (!iso || !isIsoDateTime(iso)) {
+  const stamp = formatIsoStamp(iso);
+  if (!stamp) {
     return 'Schedule unavailable';
   }
-  return new Date(iso).toLocaleString([], {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return stamp;
 }
 
 function asOfLabel(iso: string): string {
-  if (!isIsoDateTime(iso)) {
+  const stamp = formatIsoStamp(iso);
+  if (!stamp) {
     return 'Clock unavailable';
   }
-  return `As of ${new Date(iso).toLocaleString([], {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })}`;
+  return `As of ${stamp}`;
 }
 
 function formatMetricNumber(value: number, digits: number): string {

@@ -534,6 +534,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(addDaysIso(NOW, 15 / 1440), 15 / 1440));
   });
 
+  it('keeps explicit review cards in review phase when schedule anchors collapse to updatedAt', () => {
+    const runtimeCard = {
+      ...createNewCard('review-collapsed-preserve-phase', 'state inference', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: 6,
+      lapses: 2,
+      stability: 0.2,
+      difficulty: 5.3,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 3, NOW).card;
+
+    expect(reviewed.state).toBe('review');
+    expect(reviewed.lapses).toBe(2);
+    expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+  });
+
   it('keeps persisted relearning cards in short-step cadence when schedule is sub-day', () => {
     const runtimeCard = {
       ...createNewCard('relearning-subday-preserve', 'state inference', NOW),
