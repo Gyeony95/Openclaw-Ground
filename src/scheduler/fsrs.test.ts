@@ -407,6 +407,24 @@ describe('fsrs scheduler', () => {
     expect(early.scheduledDays).toBeLessThan(onTime.scheduledDays);
   });
 
+  it('keeps early good reviews from collapsing mature review schedules below half', () => {
+    const card = {
+      ...createNewCard('kappa-early-good-floor', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 20),
+      stability: 0.1,
+      difficulty: 10,
+      reps: 20,
+      lapses: 2,
+    };
+    const earlyGood = reviewCard(card, 3, addDaysIso(NOW, 1));
+
+    expect(earlyGood.card.state).toBe('review');
+    expect(earlyGood.scheduledDays).toBeGreaterThanOrEqual(10);
+    expect(earlyGood.scheduledDays).toBeLessThan(20);
+  });
+
   it('reduces stability more when failing overdue review cards', () => {
     const card = createNewCard('lambda', 'letter', NOW);
     const first = reviewCard(card, 4, NOW).card;

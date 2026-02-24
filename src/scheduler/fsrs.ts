@@ -605,6 +605,13 @@ function rawReviewIntervalDays(
     return quantizeReviewIntervalDays(Math.min(flooredInterval, hardCap), scheduled);
   }
 
+  if (phase === 'review' && rating === 3 && elapsed + ON_TIME_TOLERANCE_DAYS < scheduled) {
+    const earlyGoodFloor = scheduleIsDayLike
+      ? Math.max(1, Math.floor(scheduled * 0.5))
+      : REVIEW_SCHEDULE_FLOOR_DAYS;
+    return quantizeReviewIntervalDays(Math.max(flooredInterval, earlyGoodFloor), scheduled);
+  }
+
   return quantizeReviewIntervalDays(flooredInterval, scheduled);
 }
 

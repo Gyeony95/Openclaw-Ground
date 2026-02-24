@@ -166,7 +166,8 @@ export default function App() {
   const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
   const [isAddBusy, setIsAddBusy] = useState(false);
   const [addAttempted, setAddAttempted] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [addActionError, setAddActionError] = useState<string | null>(null);
+  const [reviewActionError, setReviewActionError] = useState<string | null>(null);
   const [entryAnim] = useState(() => new Animated.Value(0));
   const scrollRef = useRef<ScrollView>(null);
   const wordInputRef = useRef<TextInput>(null);
@@ -304,6 +305,7 @@ export default function App() {
 
   useEffect(() => {
     setShowMeaning(false);
+    setReviewActionError(null);
   }, [dueCardRevealKey]);
 
   useEffect(() => {
@@ -375,6 +377,13 @@ export default function App() {
   }, [addAttempted, missingMeaning, missingWord]);
 
   useEffect(() => {
+    if (addActionError === null) {
+      return;
+    }
+    setAddActionError(null);
+  }, [addActionError, word, meaning, notes]);
+
+  useEffect(() => {
     if (loading || dueCard || !isFormEditable) {
       return;
     }
@@ -388,7 +397,7 @@ export default function App() {
     if (loading || addLockRef.current) {
       return;
     }
-    setActionError(null);
+    setAddActionError(null);
     const trimmedWord = word.trim();
     const trimmedMeaning = meaning.trim();
     const trimmedNotes = notes.trim();
@@ -412,7 +421,7 @@ export default function App() {
     } catch {
       addLockRef.current = false;
       setIsAddBusy(false);
-      setActionError('Unable to add this card right now.');
+      setAddActionError('Unable to add this card right now.');
       return;
     }
     meaningInputRef.current?.blur();
@@ -444,7 +453,7 @@ export default function App() {
     if (!dueCard || pendingReviewCardId !== null || reviewLockRef.current) {
       return;
     }
-    setActionError(null);
+    setReviewActionError(null);
     Keyboard.dismiss();
     reviewLockRef.current = true;
     let reviewed = false;
@@ -453,7 +462,7 @@ export default function App() {
     } catch {
       setPendingReviewCardId(null);
       reviewLockRef.current = false;
-      setActionError('Unable to record this review right now.');
+      setReviewActionError('Unable to record this review right now.');
       return;
     }
     if (reviewed) {
@@ -754,9 +763,9 @@ export default function App() {
                             </Text>
                           </View>
                         ) : null}
-                        {actionError ? (
+                        {reviewActionError ? (
                           <Text style={styles.actionError} accessibilityLiveRegion="polite">
-                            {actionError}
+                            {reviewActionError}
                           </Text>
                         ) : null}
                       </View>
@@ -861,9 +870,9 @@ export default function App() {
                 <Text style={[styles.addHint, { color: addHintTone }]} accessibilityLiveRegion="polite">
                   {addFormHint}
                 </Text>
-                {actionError ? (
+                {addActionError ? (
                   <Text style={styles.actionError} accessibilityLiveRegion="polite">
-                    {actionError}
+                    {addActionError}
                   </Text>
                 ) : null}
               </View>
