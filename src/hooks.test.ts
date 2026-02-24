@@ -1441,6 +1441,20 @@ describe('hasDueCard', () => {
     expect(hasDueCard([due], 'due-stored-id', NOW)).toBe(true);
   });
 
+  it('treats whitespace-padded dueAt and updatedAt timestamps as valid', () => {
+    const paddedTimelineCard = {
+      ...createNewCard('due-whitespace-iso', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: `  ${NOW}  `,
+      dueAt: `  ${NOW}  `,
+      reps: 3,
+      lapses: 1,
+      stability: 2,
+    };
+
+    expect(hasDueCard([paddedTimelineCard], paddedTimelineCard.id, NOW)).toBe(true);
+  });
+
   it('falls back to runtime wall clock when the provided clock is invalid', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
@@ -1701,6 +1715,20 @@ describe('hasScheduleRepairNeed', () => {
     };
 
     expect(hasScheduleRepairNeed(looseDue)).toBe(true);
+  });
+
+  it('does not flag cards with valid dueAt and updatedAt wrapped in surrounding whitespace', () => {
+    const paddedValidTimeline = {
+      ...createNewCard('repair-padded-valid-iso', 'test', NOW),
+      dueAt: `  ${addDaysIso(NOW, 2)}  `,
+      updatedAt: `  ${NOW}  `,
+      state: 'review' as const,
+      stability: 2,
+      reps: 3,
+      lapses: 1,
+    };
+
+    expect(hasScheduleRepairNeed(paddedValidTimeline)).toBe(false);
   });
 
   it('flags cards with pathologically future timeline anchors', () => {
@@ -2412,6 +2440,10 @@ describe('resolveNextUiClock', () => {
       '2026-02-23T12:10:00.000Z',
     );
     expect(resolveNextUiClock('2026-02-23T12:10:00.000Z', 'bad-time')).toBe('2026-02-23T12:10:00.000Z');
+  });
+
+  it('accepts whitespace-padded ISO clock inputs', () => {
+    expect(resolveNextUiClock(`  ${NOW}  `, `  ${addDaysIso(NOW, 0.01)}  `)).toBe(addDaysIso(NOW, 0.01));
   });
 
   it('falls back to wall clock when both current and reviewed clock values are invalid', () => {

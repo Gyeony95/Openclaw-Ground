@@ -103,10 +103,11 @@ function isRuntimeCard(value: unknown): value is Card {
 }
 
 function parseTimeOrNaN(iso: string): number {
-  if (!isIsoDateTime(iso)) {
+  const normalized = normalizeIsoInput(iso);
+  if (!normalized || !isIsoDateTime(normalized)) {
     return Number.NaN;
   }
-  return Date.parse(iso);
+  return Date.parse(normalized);
 }
 
 function safeNowMs(): number {
@@ -355,10 +356,11 @@ function isReviewReadyCard(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & P
 }
 
 function parseTimeOrMin(iso?: string): number {
-  if (!iso || !isIsoDateTime(iso)) {
+  const normalized = normalizeIsoInput(iso);
+  if (!normalized || !isIsoDateTime(normalized)) {
     return Number.MIN_SAFE_INTEGER;
   }
-  const parsed = Date.parse(iso);
+  const parsed = Date.parse(normalized);
   return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
 }
 
@@ -372,12 +374,25 @@ function normalizeMergeCounter(value: number): number {
   return Math.floor(value);
 }
 
+function normalizeIsoInput(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 function isValidIso(value?: string): value is string {
-  return isIsoDateTime(value);
+  const normalized = normalizeIsoInput(value);
+  return Boolean(normalized && isIsoDateTime(normalized));
 }
 
 function toCanonicalIso(value: string): string {
-  return new Date(Date.parse(value)).toISOString();
+  const normalized = normalizeIsoInput(value);
+  if (!normalized) {
+    return new Date(FALLBACK_NOW_MS).toISOString();
+  }
+  return new Date(Date.parse(normalized)).toISOString();
 }
 
 function resolveActionClock(currentIso: string, runtimeNowIso: string): string {

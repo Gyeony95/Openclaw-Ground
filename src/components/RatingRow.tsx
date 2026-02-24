@@ -18,6 +18,7 @@ const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: 
   { rating: 3, text: 'Good', fallbackHint: 'On schedule', tone: colors.primary },
   { rating: 4, text: 'Easy', fallbackHint: 'Stretch out', tone: colors.success },
 ];
+const validRatings = new Set<Rating>(labels.map((item) => item.rating));
 
 function resolveIntervalLabel(
   intervalLabels: RatingRowProps['intervalLabels'],
@@ -46,7 +47,10 @@ export function RatingRow({
   const isWide = width >= 520;
   const intervalLineCount = isCompact ? 1 : 2;
   const isDisabled = disabled || busy;
-  const disabledSet = useMemo(() => new Set(disabledRatings), [disabledRatings]);
+  const disabledSet = useMemo(
+    () => new Set(disabledRatings.filter((rating): rating is Rating => validRatings.has(rating))),
+    [disabledRatings],
+  );
   const hasLockedRatings = !isDisabled && disabledSet.size > 0;
   const lockReasonHint = lockedHint ?? 'Some ratings are locked for this review.';
 
