@@ -734,25 +734,59 @@ function normalizeNotesValue(notes?: string): string | undefined {
   return notes?.trim().replace(/\s+/g, ' ').slice(0, NOTES_MAX_LENGTH);
 }
 
+function normalizeSchedulingCard(
+  card: Card,
+  requestedNowIso: string,
+): { card: Card; currentIso: string } {
+  const { createdAt, currentIso, updatedAt, dueAt } = normalizeTimeline(card, requestedNowIso);
+  const normalizedText = normalizeCardText(card);
+  const normalizedState = normalizeState(card.state);
+  const normalizedDifficulty = clampFinite(
+    card.difficulty,
+    DIFFICULTY_MIN,
+    DIFFICULTY_MAX,
+    DIFFICULTY_MEAN_REVERSION,
+  );
+  const normalizedStability = clampFinite(card.stability, STABILITY_MIN, STABILITY_MAX, 0.5);
+  const normalizedReps = normalizeCounter(card.reps);
+  const normalizedLapses = normalizeCounter(card.lapses);
+
+  return {
+    currentIso,
+    card: {
+      ...card,
+      ...normalizedText,
+      createdAt,
+      updatedAt,
+      dueAt,
+      state: normalizedState,
+      difficulty: normalizedDifficulty,
+      stability: normalizedStability,
+      reps: normalizedReps,
+      lapses: normalizedLapses,
+    },
+  };
+}
+
 export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewResult {
-  const currentState = normalizeState(card.state);
+  const normalized = normalizeSchedulingCard(card, nowIso);
+  const baseCard = normalized.card;
+  const currentState = baseCard.state;
   const normalizedRating = normalizeRating(rating, currentState);
-  const previousReps = normalizeCounter(card.reps);
-  const previousLapses = normalizeCounter(card.lapses);
-  const { createdAt, currentIso, updatedAt, dueAt } = normalizeTimeline(card, nowIso);
+  const { currentIso } = normalized;
+  const previousReps = baseCard.reps;
+  const previousLapses = baseCard.lapses;
+  const updatedAt = baseCard.updatedAt;
+  const dueAt = baseCard.dueAt;
+  const createdAt = baseCard.createdAt;
   const elapsedDays = normalizeElapsedDays(daysBetween(updatedAt, currentIso));
   const scheduledDays = daysBetween(updatedAt, dueAt);
   const previousScheduledDays = normalizeScheduledDays(scheduledDays, currentState);
   const state = nextState(currentState, normalizedRating);
   const phase = currentState;
   const lapseIncrement = shouldCountLapse(currentState, normalizedRating) ? 1 : 0;
-  const previousDifficulty = clampFinite(
-    card.difficulty,
-    DIFFICULTY_MIN,
-    DIFFICULTY_MAX,
-    DIFFICULTY_MEAN_REVERSION,
-  );
-  const previousStability = effectivePreviousStability(card.stability, previousScheduledDays, phase);
+  const previousDifficulty = baseCard.difficulty;
+  const previousStability = effectivePreviousStability(baseCard.stability, previousScheduledDays, phase);
 
   const nextDifficulty = nextDifficultyForPhase(previousDifficulty, currentState, normalizedRating);
   const nextStability = updateStability(
@@ -785,13 +819,11 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
 
   const safeScheduledDays = normalizeScheduledDays(nextScheduledDays, state);
   const nextDueAt = addDaysIso(currentIso, safeScheduledDays);
-  const normalizedText = normalizeCardText(card);
 
   return {
     scheduledDays: safeScheduledDays,
     card: {
-      ...card,
-      ...normalizedText,
+      ...baseCard,
       createdAt,
       state,
       difficulty: nextDifficulty,
@@ -805,12 +837,14 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
 }
 
 export function previewIntervals(card: Card, nowIso: string): RatingIntervalPreview {
-  const { currentIso } = normalizeTimeline(card, nowIso);
+  const normalized = normalizeSchedulingCard(card, nowIso);
+  const { currentIso } = normalized;
+  const previewCard = normalized.card;
   const preview = {
-    1: reviewCard(card, 1, currentIso).scheduledDays,
-    2: reviewCard(card, 2, currentIso).scheduledDays,
-    3: reviewCard(card, 3, currentIso).scheduledDays,
-    4: reviewCard(card, 4, currentIso).scheduledDays,
+    1: reviewCard(previewCard, 1, currentIso).scheduledDays,
+    2: reviewCard(previewCard, 2, currentIso).scheduledDays,
+    3: reviewCard(previewCard, 3, currentIso).scheduledDays,
+    4: reviewCard(previewCard, 4, currentIso).scheduledDays,
   };
 
   return ensureOrderedPreview(preview);

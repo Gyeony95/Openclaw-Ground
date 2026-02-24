@@ -2482,4 +2482,57 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.state).toBe('review');
     expect(reviewed.scheduledDays).toBeLessThanOrEqual(1.2);
   });
+
+  it('normalizes malformed scheduling fields before applying review math', () => {
+    const malformed = {
+      ...createNewCard('normalize-baseline', 'definition', NOW),
+      state: ' REVIEW ' as unknown as 'review',
+      reps: Number.NaN,
+      lapses: Number.POSITIVE_INFINITY,
+      stability: Number.NaN,
+      difficulty: Number.NaN,
+      dueAt: 'not-a-time',
+      updatedAt: 'not-a-time',
+      createdAt: 'not-a-time',
+      word: '  ',
+      meaning: '\n\t',
+      notes: '  ',
+    };
+
+    const reviewed = reviewCard(malformed, 3, NOW);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.card.reps).toBe(1);
+    expect(reviewed.card.lapses).toBe(0);
+    expect(reviewed.card.word).toBe('[invalid word]');
+    expect(reviewed.card.meaning).toBe('[invalid meaning]');
+    expect(reviewed.card.notes).toBeUndefined();
+    expect(Number.isFinite(Date.parse(reviewed.card.createdAt))).toBe(true);
+    expect(Number.isFinite(Date.parse(reviewed.card.updatedAt))).toBe(true);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
+  it('keeps preview interval ordering stable for cards with malformed fields', () => {
+    const malformed = {
+      ...createNewCard('preview-stability', 'definition', NOW),
+      state: ' REVIEW ' as unknown as 'review',
+      reps: Number.NaN,
+      lapses: Number.NaN,
+      stability: Number.NaN,
+      difficulty: Number.NaN,
+      dueAt: 'not-a-time',
+      updatedAt: 'not-a-time',
+      createdAt: 'not-a-time',
+      word: '   ',
+      meaning: '   ',
+      notes: '   ',
+    };
+
+    const preview = previewIntervals(malformed, NOW);
+
+    expect(preview[1]).toBeGreaterThan(0);
+    expect(preview[2]).toBeGreaterThanOrEqual(preview[1]);
+    expect(preview[3]).toBeGreaterThanOrEqual(preview[2]);
+    expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
+  });
 });

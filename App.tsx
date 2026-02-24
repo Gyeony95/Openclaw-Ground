@@ -776,7 +776,9 @@ export default function App() {
                     </View>
                     {!showMeaning ? <Text style={styles.revealHint}>Reveal to check meaning and notes.</Text> : null}
                     {!showMeaning && quickRatingPreviewLabel ? (
-                      <Text style={styles.revealPreviewHint}>{quickRatingPreviewLabel}</Text>
+                      <Text style={styles.revealPreviewHint} numberOfLines={2} ellipsizeMode="tail">
+                        {quickRatingPreviewLabel}
+                      </Text>
                     ) : null}
                     {showMeaning ? <Text style={styles.meaning}>{dueCard.meaning}</Text> : null}
                     {dueCard.notes && showMeaning ? <Text style={styles.notes}>{dueCard.notes}</Text> : null}
