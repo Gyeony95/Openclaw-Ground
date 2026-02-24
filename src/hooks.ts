@@ -43,6 +43,16 @@ function parseDueAtOrNaN(dueAt: unknown): number {
   return parseTimeOrNaN(dueAt);
 }
 
+export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt'>): boolean {
+  const dueMs = parseTimeOrNaN(card.dueAt);
+  const updatedMs = parseTimeOrNaN(card.updatedAt);
+  if (!Number.isFinite(dueMs) || !Number.isFinite(updatedMs)) {
+    return true;
+  }
+  // Schedules at-or-before the last review timestamp are timeline corruption targets.
+  return dueMs <= updatedMs;
+}
+
 function isReviewReadyDueAt(dueAt: unknown, currentIso: string): boolean {
   if (typeof dueAt !== 'string') {
     return true;
@@ -167,6 +177,10 @@ export function countOverdueCards(cards: Card[], currentIso: string): number {
     }
     return dueMs <= overdueCutoff;
   }).length;
+}
+
+export function countScheduleRepairCards(cards: Card[]): number {
+  return cards.filter((card) => hasScheduleRepairNeed(card)).length;
 }
 
 export function compareDueCards(a: Card, b: Card): number {

@@ -4,7 +4,9 @@ import {
   collectDueCards,
   compareDueCards,
   countOverdueCards,
+  countScheduleRepairCards,
   countUpcomingDueCards,
+  hasScheduleRepairNeed,
   hasDueCard,
   mergeDeckCards,
   resolveDeckClockTick,
@@ -916,6 +918,55 @@ describe('countOverdueCards', () => {
     const malformed = { ...createNewCard('malformed-overdue', 'test', NOW), dueAt: null } as unknown as Card;
 
     expect(countOverdueCards([malformed], NOW)).toBe(1);
+  });
+});
+
+describe('hasScheduleRepairNeed', () => {
+  it('flags cards with malformed dueAt or updatedAt values', () => {
+    const malformedDue = { ...createNewCard('repair-bad-due', 'test', NOW), dueAt: 'bad-due' };
+    const malformedUpdated = { ...createNewCard('repair-bad-updated', 'test', NOW), updatedAt: 'bad-updated' };
+
+    expect(hasScheduleRepairNeed(malformedDue)).toBe(true);
+    expect(hasScheduleRepairNeed(malformedUpdated)).toBe(true);
+  });
+
+  it('flags cards with dueAt at-or-before updatedAt', () => {
+    const broken = {
+      ...createNewCard('repair-due-before-updated', 'test', NOW),
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(broken)).toBe(true);
+  });
+
+  it('does not flag healthy schedules', () => {
+    const healthy = {
+      ...createNewCard('repair-healthy', 'test', NOW),
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:10:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(healthy)).toBe(false);
+  });
+});
+
+describe('countScheduleRepairCards', () => {
+  it('counts malformed and timeline-broken schedules', () => {
+    const malformedDue = { ...createNewCard('repair-count-bad-due', 'test', NOW), dueAt: 'bad-due' };
+    const malformedUpdated = { ...createNewCard('repair-count-bad-updated', 'test', NOW), updatedAt: 'bad-updated' };
+    const dueBeforeUpdated = {
+      ...createNewCard('repair-count-due-before-updated', 'test', NOW),
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T11:59:59.000Z',
+    };
+    const healthy = {
+      ...createNewCard('repair-count-healthy', 'test', NOW),
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:10:00.000Z',
+    };
+
+    expect(countScheduleRepairCards([malformedDue, malformedUpdated, dueBeforeUpdated, healthy])).toBe(3);
   });
 });
 

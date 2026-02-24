@@ -19,7 +19,14 @@ import {
 import { MetricCard } from './src/components/MetricCard';
 import { RatingRow } from './src/components/RatingRow';
 import { MEANING_MAX_LENGTH, NOTES_MAX_LENGTH, WORD_MAX_LENGTH } from './src/scheduler/constants';
-import { compareDueCards, countOverdueCards, countUpcomingDueCards, useDeck } from './src/hooks';
+import {
+  compareDueCards,
+  countOverdueCards,
+  countScheduleRepairCards,
+  countUpcomingDueCards,
+  hasScheduleRepairNeed,
+  useDeck,
+} from './src/hooks';
 import { previewIntervals } from './src/scheduler/fsrs';
 import { colors, radii } from './src/theme';
 import { formatDueLabel } from './src/utils/due';
@@ -220,7 +227,7 @@ export default function App() {
   const queueLabel = loading
     ? 'Loading'
     : dueCard
-      ? hasValidIso(dueCard.dueAt)
+      ? !hasScheduleRepairNeed(dueCard) && hasValidIso(dueCard.dueAt)
         ? formatDueLabel(dueCard.dueAt, clockIso)
         : 'Needs schedule repair'
       : 'Queue clear';
@@ -273,9 +280,7 @@ export default function App() {
   const overdueNow = useMemo(() => {
     return countOverdueCards(cards, clockIso);
   }, [cards, clockIso]);
-  const scheduleRepairCount = useMemo(() => {
-    return cards.filter((card) => !hasValidIso(card.dueAt)).length;
-  }, [cards]);
+  const scheduleRepairCount = useMemo(() => countScheduleRepairCards(cards), [cards]);
   const overdueQueueLabel = loading
     ? '--'
     : overdueNow === 0
@@ -287,9 +292,9 @@ export default function App() {
       ? 'Schedules healthy'
       : `${scheduleRepairCount.toLocaleString()} schedule ${scheduleRepairCount === 1 ? 'repair' : 'repairs'}`;
   const exactDueLabel = exactDateLabel(dueCard?.dueAt);
-  const dueNeedsRepair = dueCard ? !hasValidIso(dueCard.dueAt) : false;
+  const dueNeedsRepair = dueCard ? hasScheduleRepairNeed(dueCard) : false;
   const relativeDueLabel = dueCard
-    ? hasValidIso(dueCard.dueAt)
+    ? !dueNeedsRepair && hasValidIso(dueCard.dueAt)
       ? formatDueLabel(dueCard.dueAt, clockIso)
       : 'Needs schedule repair'
     : 'Schedule unavailable';
