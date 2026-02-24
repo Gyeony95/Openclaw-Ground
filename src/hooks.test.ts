@@ -962,6 +962,39 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(reviewDueNow)).toBe(true);
   });
 
+  it('flags review cards scheduled below the half-day review floor', () => {
+    const reviewTooSoon = {
+      ...createNewCard('repair-review-too-soon', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:10:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(reviewTooSoon)).toBe(true);
+  });
+
+  it('flags relearning cards scheduled below the 10-minute relearning floor', () => {
+    const relearningTooSoon = {
+      ...createNewCard('repair-relearning-too-soon', 'test', NOW),
+      state: 'relearning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:05:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(relearningTooSoon)).toBe(true);
+  });
+
+  it('does not flag learning cards scheduled at the one-minute learning floor', () => {
+    const learningAtFloor = {
+      ...createNewCard('repair-learning-floor', 'test', NOW),
+      state: 'learning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:01:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(learningAtFloor)).toBe(false);
+  });
+
   it('does not flag healthy schedules', () => {
     const healthy = {
       ...createNewCard('repair-healthy', 'test', NOW),

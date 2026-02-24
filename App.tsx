@@ -996,7 +996,12 @@ export default function App() {
                         {!canUseMultipleChoice ? (
                           <Text style={styles.revealHint}>Add more distinct cards to enable multiple-choice mode.</Text>
                         ) : (
-                          <View style={styles.quizOptionList}>
+                          <View
+                            style={styles.quizOptionList}
+                            accessible
+                            accessibilityRole="radiogroup"
+                            accessibilityLabel="Meaning options"
+                          >
                             {quizOptions.map((option) => {
                               const isSelected = selectedQuizOptionId === option.id;
                               const showCorrect = hasQuizSelection && option.isCorrect;
@@ -1013,9 +1018,13 @@ export default function App() {
                                     showIncorrect && styles.quizOptionBtnIncorrect,
                                     pressed && !isReviewBusy && !hasQuizSelection && styles.ghostBtnPressed,
                                   ]}
-                                  accessibilityRole="button"
+                                  accessibilityRole="radio"
                                   accessibilityLabel={option.text}
-                                  accessibilityState={{ selected: isSelected, disabled: isReviewBusy || hasQuizSelection }}
+                                  accessibilityState={{
+                                    selected: isSelected,
+                                    checked: isSelected,
+                                    disabled: isReviewBusy || hasQuizSelection,
+                                  }}
                                 >
                                   <Text style={styles.quizOptionText}>{option.text}</Text>
                                 </Pressable>

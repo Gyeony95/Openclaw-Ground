@@ -237,6 +237,7 @@ function normalizeTimeline(
   const rawDueMs = rawDueAt ? Date.parse(rawDueAt) : Number.NaN;
   const updatedAtMs = Date.parse(updatedAt);
   const dueDaysFromUpdated = Number.isFinite(rawDueMs) ? (rawDueMs - updatedAtMs) / DAY_MS : Number.NaN;
+  const stateScheduleFloorDays = scheduleFallbackForState(normalizedState);
   const expectedReviewScheduleDays = normalizeScheduledDays(card.stability, 'review');
   const maxStateScheduleDays = maxScheduleDaysForState(normalizedState);
   const repairedReviewScheduleDaysForInvalidDue = clamp(
@@ -252,10 +253,10 @@ function normalizeTimeline(
   const dueNotAfterUpdatedAt =
     Number.isFinite(rawDueMs) &&
     rawDueMs <= updatedAtMs;
-  const dueBelowReviewFloor =
-    normalizedState === 'review' &&
+  const dueBelowStateFloor =
     Number.isFinite(dueDaysFromUpdated) &&
-    dueDaysFromUpdated < REVIEW_SCHEDULE_FLOOR_DAYS;
+    dueDaysFromUpdated < stateScheduleFloorDays;
+  const dueBelowReviewFloor = normalizedState === 'review' && dueBelowStateFloor;
   const dueBeyondReviewMaxWindow =
     normalizedState === 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
@@ -293,7 +294,7 @@ function normalizeTimeline(
   const dueNeedsRepair =
     !rawDueAt ||
     dueNotAfterUpdatedAt ||
-    dueBelowReviewFloor ||
+    dueBelowStateFloor ||
     dueBeyondStateWindow ||
     dueBeyondReviewMaxWindow ||
     dueBeyondReviewStabilityWindow;

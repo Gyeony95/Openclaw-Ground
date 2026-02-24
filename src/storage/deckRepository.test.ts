@@ -978,6 +978,28 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2026-02-24T00:10:00.000Z');
   });
 
+  it('repairs relearning cards with sub-floor dueAt values to the 10-minute floor', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'relearning-subfloor-due-repair',
+            word: 'eta-relearning-subfloor',
+            meaning: 'letter',
+            dueAt: '2026-02-24T00:05:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-24T00:00:00.000Z',
+            state: 'relearning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards[0].updatedAt).toBe('2026-02-24T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-24T00:10:00.000Z');
+  });
+
   it('keeps freshest card data when duplicate IDs are persisted', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

@@ -9,6 +9,10 @@ const MAX_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const MAX_UI_FUTURE_SKEW_MS = 60 * 1000;
 const OVERDUE_GRACE_MS = 60 * 1000;
 const FALLBACK_NOW_MS = Date.parse('1970-01-01T00:00:00.000Z');
+const DAY_MS = 24 * 60 * 60 * 1000;
+const LEARNING_MIN_SCHEDULE_MS = 60 * 1000;
+const RELEARNING_MIN_SCHEDULE_MS = 10 * 60 * 1000;
+const REVIEW_MIN_SCHEDULE_MS = 0.5 * DAY_MS;
 
 function parseTimeOrRepairPriority(iso: string): number {
   const parsed = Date.parse(iso);
@@ -50,6 +54,16 @@ function normalizeReviewState(value: unknown): Card['state'] {
   return 'learning';
 }
 
+function minScheduleMsForState(state: Card['state']): number {
+  if (state === 'review') {
+    return REVIEW_MIN_SCHEDULE_MS;
+  }
+  if (state === 'relearning') {
+    return RELEARNING_MIN_SCHEDULE_MS;
+  }
+  return LEARNING_MIN_SCHEDULE_MS;
+}
+
 export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'>): boolean {
   const dueMs = parseTimeOrNaN(card.dueAt);
   const updatedMs = parseTimeOrNaN(card.updatedAt);
@@ -60,7 +74,8 @@ export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt' | '
     return true;
   }
   if (dueMs > updatedMs) {
-    return false;
+    const state = normalizeReviewState(card.state);
+    return dueMs - updatedMs < minScheduleMsForState(state);
   }
   const state = normalizeReviewState(card.state);
   // Learning cards are legitimately due at creation time; review/relearning cards should always move forward.
