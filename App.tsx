@@ -33,6 +33,7 @@ import {
   composeQuizOptions,
   findQuizOptionById,
   hasValidQuizSelection,
+  resolveLockedQuizSelection,
   resolveMultipleChoiceRating,
 } from './src/quiz';
 import { colors, radii } from './src/theme';
@@ -319,6 +320,7 @@ export default function App() {
   );
   const normalizedSelectedQuizOptionId = normalizedSelectedQuizOption?.id ?? null;
   const hasQuizSelection = normalizedSelectedQuizOption !== undefined;
+  const quizSelectionLocked = studyMode === 'multiple-choice' && hasQuizSelection;
   const quizSelectionIsCorrect = normalizedSelectedQuizOption?.isCorrect ?? false;
   const forceAgainForQuizSelection = studyMode === 'multiple-choice' && hasQuizSelection && !quizSelectionIsCorrect;
   const disabledRatingsInQuizMode = forceAgainForQuizSelection ? ([2, 3, 4] as Rating[]) : [];
@@ -639,10 +641,11 @@ export default function App() {
     if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice') {
       return;
     }
-    if (!hasValidQuizSelection(optionId, quizOptions)) {
+    const nextSelectionId = resolveLockedQuizSelection(quizOptions, selectedQuizOptionId, optionId);
+    if (!nextSelectionId || !hasValidQuizSelection(nextSelectionId, quizOptions)) {
       return;
     }
-    setSelectedQuizOptionId(optionId.trim());
+    setSelectedQuizOptionId(nextSelectionId);
     setReviewActionError(null);
   }
 
@@ -951,6 +954,9 @@ export default function App() {
                           : multipleChoiceRequirementLabel ?? 'Need at least four distinct card meanings.'}
                       </Text>
                     ) : null}
+                    {studyMode === 'multiple-choice' && hasQuizSelection ? (
+                      <Text style={styles.studyModeHelper}>First answer locked. Rate this attempt to continue.</Text>
+                    ) : null}
 
                     {studyMode === 'flashcard' ? (
                       <Pressable
@@ -1065,21 +1071,21 @@ export default function App() {
                                 <Pressable
                                   key={option.id}
                                   onPress={() => handleSelectQuizOption(option.id)}
-                                  disabled={quizOptionsLocked}
+                                  disabled={quizOptionsLocked || quizSelectionLocked}
                                   style={({ pressed }) => [
                                     styles.quizOptionBtn,
                                     isSelected && styles.quizOptionBtnSelected,
                                     showCorrect && styles.quizOptionBtnCorrect,
                                     showIncorrect && styles.quizOptionBtnIncorrect,
-                                    quizOptionsLocked && styles.quizOptionBtnLocked,
-                                    pressed && !quizOptionsLocked && styles.ghostBtnPressed,
+                                    (quizOptionsLocked || quizSelectionLocked) && styles.quizOptionBtnLocked,
+                                    pressed && !quizOptionsLocked && !quizSelectionLocked && styles.ghostBtnPressed,
                                   ]}
                                   accessibilityRole="radio"
                                   accessibilityLabel={option.text}
                                   accessibilityState={{
                                     selected: isSelected,
                                     checked: isSelected,
-                                    disabled: quizOptionsLocked,
+                                    disabled: quizOptionsLocked || quizSelectionLocked,
                                   }}
                                 >
                                   <Text

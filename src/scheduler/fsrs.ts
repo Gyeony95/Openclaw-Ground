@@ -775,6 +775,14 @@ function rawReviewIntervalDays(
     return quantizeReviewIntervalDays(Math.max(flooredInterval, earlyGoodFloor), scheduled);
   }
 
+  if (phase === 'review' && rating === 4 && elapsed + ON_TIME_TOLERANCE_DAYS < scheduled) {
+    // Very-early "Easy" responses should not leap too far ahead of the current plan.
+    const earlyEasyCap = scheduleIsDayLike
+      ? Math.max(1, Math.ceil(scheduled * 2))
+      : 1;
+    return quantizeReviewIntervalDays(Math.min(flooredInterval, earlyEasyCap), scheduled);
+  }
+
   return quantizeReviewIntervalDays(flooredInterval, scheduled);
 }
 

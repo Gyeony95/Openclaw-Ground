@@ -1590,6 +1590,25 @@ describe('fsrs scheduler', () => {
     expect(good.scheduledDays).toBeLessThanOrEqual(easy.scheduledDays);
   });
 
+  it('caps very-early easy reviews to at most double the current day-like schedule', () => {
+    const mature = {
+      ...createNewCard('omicron-early-easy-cap', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10),
+      stability: 20,
+      difficulty: 5,
+      reps: 18,
+      lapses: 1,
+    };
+    const veryEarlyIso = addDaysIso(NOW, 1);
+
+    const easy = reviewCard(mature, 4, veryEarlyIso);
+
+    expect(easy.card.state).toBe('review');
+    expect(easy.scheduledDays).toBeLessThanOrEqual(20);
+  });
+
   it('uses card updatedAt when review timestamp is invalid', () => {
     const card = createNewCard('pi', 'letter', NOW);
     const result = reviewCard(card, 3, 'invalid-iso-value');

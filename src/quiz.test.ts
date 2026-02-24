@@ -6,6 +6,7 @@ import {
   hasValidQuizSelection,
   inferPartOfSpeech,
   normalizedTokenOverlap,
+  resolveLockedQuizSelection,
   resolveMultipleChoiceRating,
 } from './quiz';
 
@@ -135,6 +136,26 @@ describe('quiz distractors', () => {
     expect(findQuizOptionById(options, null)).toBeUndefined();
     expect(findQuizOptionById(options, '   ')).toBeUndefined();
     expect(findQuizOptionById(options, 'missing')).toBeUndefined();
+  });
+
+  it('locks quiz selection to the first valid answer until review is submitted', () => {
+    const options = composeQuizOptions(target, deck, 'seed-1');
+    const firstId = options[0].id;
+    const secondId = options[1].id;
+
+    const firstSelection = resolveLockedQuizSelection(options, null, firstId);
+    const attemptedChange = resolveLockedQuizSelection(options, firstSelection, secondId);
+
+    expect(firstSelection).toBe(firstId);
+    expect(attemptedChange).toBe(firstId);
+  });
+
+  it('returns null when both current and requested quiz selections are invalid', () => {
+    const options = composeQuizOptions(target, deck, 'seed-1');
+
+    const selection = resolveLockedQuizSelection(options, 'missing-option', 'another-missing-option');
+
+    expect(selection).toBeNull();
   });
 
   it('invalidates stale selection ids when options are regenerated with a different seed', () => {

@@ -42,6 +42,19 @@ export function findQuizOptionById(
   return options.find((option) => typeof option?.id === 'string' && option.id.trim() === normalizedSelectedId);
 }
 
+export function resolveLockedQuizSelection(
+  options: QuizOption[],
+  currentSelectedOptionId: string | null,
+  requestedOptionId: string,
+): string | null {
+  const current = findQuizOptionById(options, currentSelectedOptionId);
+  if (current) {
+    return current.id.trim();
+  }
+  const requested = findQuizOptionById(options, requestedOptionId);
+  return requested ? requested.id.trim() : null;
+}
+
 export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {
   if (selectionIsCorrect) {
     const integerTolerance = 1e-9;
