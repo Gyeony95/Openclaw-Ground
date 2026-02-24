@@ -729,6 +729,7 @@ export default function App() {
                 <Text style={[styles.charCount, { color: wordCountTone }]}>
                   {formatCountLabel(wordLength, WORD_MAX_LENGTH)}
                 </Text>
+                {addAttempted && missingWord ? <Text style={styles.inputErrorText}>Word is required.</Text> : null}
                 <TextInput
                   ref={meaningInputRef}
                   value={meaning}
@@ -753,6 +754,7 @@ export default function App() {
                 <Text style={[styles.charCount, { color: meaningCountTone }]}>
                   {formatCountLabel(meaningLength, MEANING_MAX_LENGTH)}
                 </Text>
+                {addAttempted && missingMeaning ? <Text style={styles.inputErrorText}>Meaning is required.</Text> : null}
                 <TextInput
                   ref={notesInputRef}
                   value={notes}
@@ -1228,6 +1230,12 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: colors.danger,
     backgroundColor: '#fff5f6',
+  },
+  inputErrorText: {
+    marginTop: -5,
+    color: colors.danger,
+    fontSize: 11.5,
+    fontWeight: '600',
   },
   notesInput: {
     minHeight: 84,

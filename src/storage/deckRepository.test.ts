@@ -264,6 +264,33 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
   });
 
+  it('repairs minute-scale review schedules to a stable review floor while loading', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'subfloor-due-review',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: '2026-02-22T00:10:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            stability: 2,
+            difficulty: 5,
+            reps: 12,
+            lapses: 1,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
+  });
+
   it('uses capped stability fallback when a mature review card is missing dueAt', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

@@ -1167,6 +1167,30 @@ describe('fsrs scheduler', () => {
     expect(corruptedReview.card.stability).toBeLessThanOrEqual(normalizedReview.card.stability);
   });
 
+  it('repairs minute-scale review schedules using review stability context before interval math', () => {
+    const reviewAt = NOW;
+    const normalized = {
+      ...createNewCard('review-subfloor-normalized', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 2),
+      stability: 2,
+      difficulty: 5,
+      reps: 12,
+      lapses: 1,
+    };
+    const corrupted = {
+      ...normalized,
+      dueAt: addDaysIso(NOW, 10 / 1440),
+    };
+
+    const normalizedReview = reviewCard(normalized, 3, reviewAt);
+    const corruptedReview = reviewCard(corrupted, 3, reviewAt);
+
+    expect(corruptedReview.card.state).toBe('review');
+    expect(corruptedReview.scheduledDays).toBeCloseTo(normalizedReview.scheduledDays, 6);
+  });
+
   it('treats zero-length review schedules like the half-day review floor', () => {
     const card = createNewCard('review-zero-floor', 'letter', NOW);
     const graduated = reviewCard(card, 3, NOW).card;

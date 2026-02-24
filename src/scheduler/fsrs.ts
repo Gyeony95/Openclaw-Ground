@@ -182,6 +182,10 @@ function normalizeTimeline(
   const dueNotAfterUpdatedAt =
     Number.isFinite(rawDueMs) &&
     rawDueMs <= updatedAtMs;
+  const dueBelowReviewFloor =
+    normalizedState === 'review' &&
+    Number.isFinite(dueDaysFromUpdated) &&
+    dueDaysFromUpdated < REVIEW_SCHEDULE_FLOOR_DAYS;
   const dueBeyondReviewMaxWindow =
     normalizedState === 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
@@ -199,6 +203,7 @@ function normalizeTimeline(
     normalizedState,
     rawDueAtIsValid,
     dueNotAfterUpdatedAt,
+    dueBelowReviewFloor,
     expectedReviewScheduleDays,
   );
   const useReviewStabilityFallbackForOutlierDue =
@@ -208,6 +213,7 @@ function normalizeTimeline(
   const dueNeedsRepair =
     !rawDueAt ||
     dueNotAfterUpdatedAt ||
+    dueBelowReviewFloor ||
     dueBeyondStateWindow ||
     dueBeyondReviewMaxWindow ||
     dueBeyondReviewStabilityWindow;
@@ -300,12 +306,13 @@ function shouldUseReviewStabilityFallbackForDueRepair(
   state: ReviewState,
   dueAtIsValid: boolean,
   dueNotAfterUpdatedAt: boolean,
+  dueBelowReviewFloor: boolean,
   stabilityDays?: number,
 ): boolean {
   if (state !== 'review') {
     return false;
   }
-  if (dueAtIsValid && !dueNotAfterUpdatedAt) {
+  if (dueAtIsValid && !dueNotAfterUpdatedAt && !dueBelowReviewFloor) {
     return false;
   }
   return Number.isFinite(stabilityDays);

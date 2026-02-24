@@ -195,6 +195,15 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     normalizedDueMs = normalizedUpdatedMs + fallbackDays * DAY_MS;
     scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
   }
+  if (raw.state === 'review' && scheduleDays < REVIEW_SCHEDULE_FLOOR_DAYS) {
+    const repairedReviewDays = clamp(
+      normalizedStability,
+      REVIEW_SCHEDULE_FLOOR_DAYS,
+      REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
+    );
+    normalizedDueMs = normalizedUpdatedMs + repairedReviewDays * DAY_MS;
+    scheduleDays = repairedReviewDays;
+  }
   if (scheduleDays > maxScheduleDaysForState(raw.state)) {
     if (raw.state === 'review') {
       normalizedDueMs = normalizedUpdatedMs + STABILITY_MAX * DAY_MS;
