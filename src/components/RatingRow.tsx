@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Rating } from '../types';
 import { colors, radii } from '../theme';
 
@@ -40,9 +40,10 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
   return (
     <View style={styles.container}>
       {busy ? (
-        <Text style={styles.busyLabel}>
-          Saving review...
-        </Text>
+        <View style={styles.busyRow} accessibilityRole="alert" accessibilityLabel="Saving review">
+          <ActivityIndicator size="small" color={colors.subInk} />
+          <Text style={styles.busyLabel}>Saving review...</Text>
+        </View>
       ) : null}
       <View style={styles.row}>
         {labels.map((item) => {
@@ -105,6 +106,11 @@ const styles = StyleSheet.create({
     color: colors.subInk,
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+  busyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   row: {
     flexDirection: 'row',

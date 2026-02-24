@@ -872,7 +872,14 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   } else if (state === 'relearning') {
     nextScheduledDays = relearningIntervalDays(normalizedRating);
   } else if (phase !== 'review') {
-    nextScheduledDays = graduationIntervalDays(normalizedRating);
+    const graduationInterval = graduationIntervalDays(normalizedRating);
+    if (phase === 'relearning' && normalizedRating >= 3) {
+      const dayLikeRelearningFloor =
+        previousScheduledDays + ON_TIME_TOLERANCE_DAYS >= 1 ? 1 : REVIEW_SCHEDULE_FLOOR_DAYS;
+      nextScheduledDays = Math.max(graduationInterval, dayLikeRelearningFloor);
+    } else {
+      nextScheduledDays = graduationInterval;
+    }
   } else {
     const intervals = orderedReviewIntervals(
       previousStability,

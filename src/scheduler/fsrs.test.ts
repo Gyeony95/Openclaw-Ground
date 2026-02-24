@@ -867,6 +867,25 @@ describe('fsrs scheduler', () => {
     expect(easy.scheduledDays).toBe(1);
   });
 
+  it('keeps day-like relearning graduation from shrinking below one day', () => {
+    const relearning = {
+      ...createNewCard('omicron-2-daylike', 'letter', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      createdAt: NOW,
+      dueAt: addDaysIso(NOW, 1.25),
+      stability: 1.25,
+      difficulty: 6,
+      reps: 11,
+      lapses: 3,
+    };
+
+    const reviewed = reviewCard(relearning, 3, relearning.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
   it('keeps relearning graduation stability at least as large as the graduation schedule', () => {
     const relearning = {
       ...createNewCard('relearning-grad-stability-floor', 'definition', NOW),
