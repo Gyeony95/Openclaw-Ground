@@ -406,7 +406,7 @@ function toCanonicalIso(value: string): string {
   return new Date(Date.parse(normalized)).toISOString();
 }
 
-function resolveActionClock(currentIso: string, runtimeNowIso: string): string {
+function resolveInteractionClock(currentIso: string, runtimeNowIso: string): string {
   if (!isValidIso(currentIso)) {
     return resolveReviewClock(currentIso, runtimeNowIso);
   }
@@ -434,31 +434,12 @@ function resolveActionClock(currentIso: string, runtimeNowIso: string): string {
   return canonicalCurrentIso;
 }
 
+function resolveActionClock(currentIso: string, runtimeNowIso: string): string {
+  return resolveInteractionClock(currentIso, runtimeNowIso);
+}
+
 function resolveQueueClock(currentIso: string, runtimeNowIso: string): string {
-  if (!isValidIso(currentIso)) {
-    return resolveReviewClock(currentIso, runtimeNowIso);
-  }
-
-  const currentMs = Date.parse(currentIso);
-  const runtimeMs = parseTimeOrNaN(runtimeNowIso);
-  const wallClockMs = safeNowMs();
-  const canonicalCurrentIso = toCanonicalIso(currentIso);
-  const canonicalRuntimeIso = Number.isFinite(runtimeMs) ? toCanonicalIso(runtimeNowIso) : undefined;
-  const currentTooFarFromRuntime =
-    Number.isFinite(runtimeMs) && Math.abs(currentMs - runtimeMs) > MAX_CLOCK_SKEW_MS;
-  const currentTooFarFromWall =
-    Number.isFinite(wallClockMs) && Math.abs(currentMs - wallClockMs) > MAX_CLOCK_SKEW_MS;
-
-  if (currentTooFarFromRuntime || currentTooFarFromWall) {
-    return resolveReviewClock(currentIso, runtimeNowIso);
-  }
-
-  if (Number.isFinite(runtimeMs)) {
-    // Queue visibility should track runtime closely so due cards surface immediately.
-    return canonicalRuntimeIso ?? canonicalCurrentIso;
-  }
-
-  return canonicalCurrentIso;
+  return resolveInteractionClock(currentIso, runtimeNowIso);
 }
 
 function pickFreshestCard(existing: Card, loaded: Card): Card {

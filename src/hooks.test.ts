@@ -1024,6 +1024,54 @@ describe('collectDueCards', () => {
     expect(dueCards[0].id).toBe(nearFuture.id);
   });
 
+  it('keeps queue and review submission aligned when runtime clock input is malformed', () => {
+    const due = {
+      ...createNewCard('invalid-runtime-alignment', 'clock', NOW),
+      dueAt: '2026-02-23T12:00:00.000Z',
+      state: 'review' as const,
+      updatedAt: '2026-02-23T11:00:00.000Z',
+      stability: 2,
+      difficulty: 5,
+      reps: 3,
+      lapses: 1,
+    };
+
+    const queued = collectDueCards([due], NOW, 'bad-runtime');
+    const reviewed = applyDueReview([due], due.id, 3, NOW, 'bad-runtime');
+
+    expect(queued).toHaveLength(1);
+    expect(queued[0].id).toBe(due.id);
+    expect(reviewed.reviewed).toBe(true);
+    expect(reviewed.cards[0]).not.toBe(due);
+    expect(reviewed.cards[0].reps).toBe(due.reps + 1);
+  });
+
+  it('avoids early queue/review actions when rendered clock is future-skewed and runtime clock is malformed', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(NOW));
+    try {
+      const dueSoon = {
+        ...createNewCard('invalid-runtime-future-render', 'clock', NOW),
+        dueAt: '2026-02-23T12:10:00.000Z',
+        updatedAt: NOW,
+        state: 'review' as const,
+        stability: 3,
+        difficulty: 5,
+        reps: 2,
+        lapses: 0,
+      };
+
+      const queued = collectDueCards([dueSoon], '2099-01-01T00:00:00.000Z', 'bad-runtime');
+      const reviewed = applyDueReview([dueSoon], dueSoon.id, 3, '2099-01-01T00:00:00.000Z', 'bad-runtime');
+
+      expect(queued).toHaveLength(0);
+      expect(reviewed.reviewed).toBe(false);
+      expect(reviewed.cards[0]).toBe(dueSoon);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('does not surface cards early when rendered clock is materially ahead of runtime', () => {
     const dueSoon = {
       ...createNewCard('queue-material-future-render', 'clock', NOW),

@@ -694,6 +694,7 @@ export default function App() {
       return;
     }
     setSelectedQuizOptionId(null);
+    setFlashcardSide('front');
     quizSelectionLockRef.current = false;
     setReviewActionError('This card is no longer due. Queue refreshed.');
     reviewLockRef.current = false;
