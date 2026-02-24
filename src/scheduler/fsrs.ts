@@ -84,10 +84,20 @@ function isValidIso(value: string): boolean {
   return isIsoDateTime(value);
 }
 
+function normalizeIsoInput(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): string {
-  const fallbackRaw = isValidIso(cardUpdatedAt) ? cardUpdatedAt : currentNowIso();
+  const normalizedCardUpdatedAt = normalizeIsoInput(cardUpdatedAt);
+  const fallbackRaw = normalizedCardUpdatedAt && isValidIso(normalizedCardUpdatedAt) ? normalizedCardUpdatedAt : currentNowIso();
   const fallback = toCanonicalIso(fallbackRaw, currentNowIso());
-  const requestedValid = isValidIso(requestedNowIso);
+  const normalizedRequestedNowIso = normalizeIsoInput(requestedNowIso);
+  const requestedValid = Boolean(normalizedRequestedNowIso && isValidIso(normalizedRequestedNowIso));
   const wallClockMs = safeNowMs();
   const wallClockIso = toSafeIso(wallClockMs);
   const fallbackMs = Date.parse(fallback);
@@ -109,7 +119,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     return wallClockIso;
   }
 
-  const candidate = requestedValid ? requestedNowIso : fallback;
+  const candidate = requestedValid ? normalizedRequestedNowIso ?? fallback : fallback;
   const candidateMs = Date.parse(candidate);
   if (!Number.isFinite(candidateMs) || !Number.isFinite(fallbackMs)) {
     return fallback;
@@ -225,7 +235,11 @@ function normalizeTimeline(
   dueNeedsRepair: boolean;
 } {
   const wallClockMs = safeNowMs();
-  const requestedNowMs = isValidIso(requestedNowIso) ? Date.parse(requestedNowIso) : Number.NaN;
+  const normalizedRequestedNowIso = normalizeIsoInput(requestedNowIso);
+  const requestedNowMs =
+    normalizedRequestedNowIso && isValidIso(normalizedRequestedNowIso)
+      ? Date.parse(normalizedRequestedNowIso)
+      : Number.NaN;
   const requestedNowLooksWallSafe =
     Number.isFinite(requestedNowMs) &&
     (!Number.isFinite(wallClockMs) || Math.abs(requestedNowMs - wallClockMs) <= MAX_CREATE_TIME_OFFSET_MS);
@@ -355,7 +369,7 @@ function normalizeTimeline(
       ? fallbackDueMs
       : updatedAtMs;
   const dueAt = toSafeIso(Math.max(safeDueAnchorMs, updatedAtMs));
-  const resolvedCurrentIso = resolveReviewIso(updatedAt, requestedNowIso);
+  const resolvedCurrentIso = resolveReviewIso(updatedAt, normalizedRequestedNowIso ?? requestedNowIso);
   const resolvedCurrentMs = Date.parse(resolvedCurrentIso);
   const updatedAtLooksCorruptedFuture =
     Number.isFinite(updatedAtMs) &&
@@ -1018,7 +1032,9 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
 
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
   const wallClockMs = safeNowMs();
-  const requestedCreatedMs = isValidIso(nowIso) ? Date.parse(nowIso) : Number.NaN;
+  const normalizedNowIso = normalizeIsoInput(nowIso);
+  const requestedCreatedMs =
+    normalizedNowIso && isValidIso(normalizedNowIso) ? Date.parse(normalizedNowIso) : Number.NaN;
   // Preserve realistic historical import timestamps, but avoid future-created cards from bad device clocks.
   const createOffsetMs = requestedCreatedMs - wallClockMs;
   const requestedIsPlausible =

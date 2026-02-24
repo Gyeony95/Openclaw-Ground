@@ -140,6 +140,14 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('accepts creation timestamps with surrounding whitespace by trimming to a valid ISO value', () => {
+    const card = createNewCard('trimmed-create-now', 'timestamp', `  ${NOW}  `);
+
+    expect(card.createdAt).toBe(NOW);
+    expect(card.updatedAt).toBe(NOW);
+    expect(card.dueAt).toBe(NOW);
+  });
+
   it('falls back to epoch timestamps when runtime clock is non-finite during card creation', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const card = createNewCard('nan-clock', 'safe', 'not-a-date');
@@ -811,6 +819,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.state).toBe('review');
     expect(reviewed.card.lapses).toBe(reviewCardBase.lapses);
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
+  it('accepts whitespace-padded review clocks and normalizes updatedAt to canonical ISO', () => {
+    const reviewCardBase = {
+      ...createNewCard('runtime-whitespace-clock', 'rating', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 1),
+      updatedAt: NOW,
+      reps: 5,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(reviewCardBase, 3, `  ${addDaysIso(NOW, 1)}  `);
+
+    expect(reviewed.card.updatedAt).toBe(addDaysIso(NOW, 1));
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.card.lapses).toBe(reviewCardBase.lapses);
   });
 
   it('normalizes relearn aliases to relearning at runtime', () => {

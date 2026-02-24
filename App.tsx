@@ -263,8 +263,8 @@ export default function App() {
     : scheduleRepairCount === 0
       ? 'Schedules healthy'
       : `${scheduleRepairCount.toLocaleString()} schedule ${scheduleRepairCount === 1 ? 'repair' : 'repairs'}`;
-  const exactDueLabel = exactDateLabel(dueCard?.dueAt);
   const dueNeedsRepair = dueCard ? hasScheduleRepairNeed(dueCard) : false;
+  const exactDueLabel = dueNeedsRepair ? 'Needs schedule repair' : exactDateLabel(dueCard?.dueAt);
   const relativeDueLabel = dueCard
     ? !dueNeedsRepair && hasValidIso(dueCard.dueAt)
       ? formatDueLabel(dueCard.dueAt, clockIso)
