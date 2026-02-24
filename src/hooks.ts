@@ -344,7 +344,7 @@ export function countOverdueCards(cards: Card[], currentIso: string): number {
 
   return cards.filter((card) => {
     if (!isRuntimeCard(card)) {
-      return true;
+      return false;
     }
     const dueMs = parseDueAtOrNaN(card.dueAt);
     if (!Number.isFinite(dueMs)) {

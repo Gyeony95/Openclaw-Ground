@@ -72,6 +72,19 @@ function reviewedAtLabel(lastReviewedAt?: string): string {
   })}`;
 }
 
+function cardActivityLabel(updatedAt?: string, reps = 0): string {
+  if (!updatedAt || !isIsoDateTime(updatedAt)) {
+    return 'Schedule activity unavailable';
+  }
+  const stamp = new Date(updatedAt).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return reps > 0 ? `Last review ${stamp}` : `Created ${stamp}`;
+}
+
 function exactDateLabel(iso?: string): string {
   if (!iso || !isIsoDateTime(iso)) {
     return 'Schedule unavailable';
@@ -904,7 +917,7 @@ export default function App() {
                       {dueNeedsRepair ? (
                         <Text style={styles.reviewTimelineRepair}>Malformed schedule will be repaired on review.</Text>
                       ) : null}
-                      <Text style={styles.reviewTimelineMeta}>{reviewedAtLabel(dueCard.updatedAt)}</Text>
+                      <Text style={styles.reviewTimelineMeta}>{cardActivityLabel(dueCard.updatedAt, dueCard.reps)}</Text>
                       <Text style={styles.reviewTimelineMeta}>{queuePositionLabel}</Text>
                       <Text style={styles.reviewTimelineMeta}>{remainingQueueLabel}</Text>
                     </View>

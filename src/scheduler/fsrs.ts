@@ -451,11 +451,6 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'stability' | 'u
     return parsedState;
   }
 
-  const reps = normalizeCounter(card.reps);
-  if (reps <= 0) {
-    return 'learning';
-  }
-
   const scheduledDays = normalizeElapsedDays(daysBetween(card.updatedAt, card.dueAt));
   const normalizedStability = clampFinite(card.stability, STABILITY_MIN, STABILITY_MAX, STABILITY_MIN);
 
@@ -472,9 +467,11 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'stability' | 'u
     return 'learning';
   }
 
+  const reps = normalizeCounter(card.reps);
   // When schedule anchors collapse to zero (e.g. dueAt==updatedAt), fall back to
-  // stability to preserve likely mature review context.
-  if (normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+  // stability only for cards that have review history, so brand-new cards do not
+  // get promoted to review due to default stability seeds.
+  if (reps > 0 && normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS) {
     return 'review';
   }
   return 'learning';

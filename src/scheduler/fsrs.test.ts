@@ -385,6 +385,22 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(7);
   });
 
+  it('infers review phase from mature schedule history even when reps are missing', () => {
+    const matureWithMissingReps = {
+      ...createNewCard('malformed-state-review-infer-missing-reps', 'state fallback', NOW),
+      state: 'unknown_state' as unknown as 'learning',
+      reps: 0,
+      stability: 21,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 21),
+    };
+
+    const reviewed = reviewCard(matureWithMissingReps, 3, matureWithMissingReps.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(5);
+  });
+
   it('infers relearning phase for malformed states when schedule is in short-step retry range', () => {
     const relearningWithMalformedState = {
       ...createNewCard('malformed-state-relearning-infer', 'state fallback', NOW),

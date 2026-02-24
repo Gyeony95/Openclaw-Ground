@@ -1324,6 +1324,13 @@ describe('countOverdueCards', () => {
 
     expect(countOverdueCards([malformed], NOW)).toBe(1);
   });
+
+  it('ignores non-card runtime entries in overdue metrics', () => {
+    const malformedRuntimeEntry = { dueAt: NOW } as unknown as Card;
+    const overdue = { ...createNewCard('overdue-real-card', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };
+
+    expect(countOverdueCards([malformedRuntimeEntry, overdue], NOW)).toBe(1);
+  });
 });
 
 describe('hasScheduleRepairNeed', () => {
