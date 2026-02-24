@@ -22,6 +22,7 @@ import { addDaysIso } from './utils/time';
 import type { Card, Rating } from './types';
 
 const NOW = '2026-02-23T12:00:00.000Z';
+const MAX_ISO = '+275760-09-13T00:00:00.000Z';
 
 describe('applyDueReview', () => {
   it('reviews only the target due card', () => {
@@ -861,6 +862,21 @@ describe('collectDueCards', () => {
     expect(dueCards[1].id).toBe(valid.id);
   });
 
+  it('does not surface saturated max-date review cards as due repairs', () => {
+    const saturatedReview = {
+      ...createNewCard('max-date-queue', 'boundary', NOW),
+      state: 'review' as const,
+      updatedAt: MAX_ISO,
+      dueAt: MAX_ISO,
+      reps: 10,
+      stability: 36500,
+    };
+
+    const dueCards = collectDueCards([saturatedReview], NOW, NOW);
+
+    expect(dueCards).toHaveLength(0);
+  });
+
   it('keeps loose non-ISO dueAt cards in front for immediate repair', () => {
     const looseDue = {
       ...createNewCard('loose-iso-queue', 'repair', NOW),
@@ -1698,6 +1714,19 @@ describe('hasScheduleRepairNeed', () => {
     }
   });
 
+  it('does not flag saturated max-date review schedules as corrupted', () => {
+    const saturatedReview = {
+      ...createNewCard('repair-max-date-review', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: MAX_ISO,
+      dueAt: MAX_ISO,
+      reps: 8,
+      stability: 36500,
+    };
+
+    expect(hasScheduleRepairNeed(saturatedReview)).toBe(false);
+  });
+
   it('flags cards with dueAt before updatedAt', () => {
     const broken = {
       ...createNewCard('repair-due-before-updated', 'test', NOW),
@@ -2118,6 +2147,19 @@ describe('countScheduleRepairCards', () => {
     const cards = [healthy, null, { id: 'partial' }] as unknown as Card[];
 
     expect(countScheduleRepairCards(cards)).toBe(2);
+  });
+
+  it('does not count saturated max-date review schedules as repair-needed', () => {
+    const saturatedReview = {
+      ...createNewCard('repair-count-max-date-review', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: MAX_ISO,
+      dueAt: MAX_ISO,
+      reps: 4,
+      stability: 36500,
+    };
+
+    expect(countScheduleRepairCards([saturatedReview])).toBe(0);
   });
 });
 

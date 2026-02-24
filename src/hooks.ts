@@ -121,6 +121,10 @@ function toSafeIso(ms: number): string {
   return new Date(safeMs).toISOString();
 }
 
+function isMaxIsoBound(ms: number): boolean {
+  return Number.isFinite(ms) && ms >= MAX_DATE_MS;
+}
+
 function parseDueAtOrNaN(dueAt: unknown): number {
   if (typeof dueAt !== 'string') {
     return Number.NaN;
@@ -306,6 +310,10 @@ export function hasScheduleRepairNeed(
       // persisted phase drift and should be repaired before queueing.
       return true;
     }
+    return false;
+  }
+  if (state !== 'learning' && isMaxIsoBound(dueMs) && isMaxIsoBound(updatedMs)) {
+    // Saturated upper-bound schedules cannot move forward in time and are still valid.
     return false;
   }
   // Brand-new learning cards are legitimately due at creation time; persisted learning cards should move forward.
