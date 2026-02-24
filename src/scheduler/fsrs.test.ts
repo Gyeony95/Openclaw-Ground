@@ -230,6 +230,38 @@ describe('fsrs scheduler', () => {
     expect(reviewed.notes).toBeUndefined();
   });
 
+  it('keeps review scheduling functional when runtime state/history accessors throw', () => {
+    const runtimeCard = {
+      ...createNewCard('state-history-accessor-throw', 'safe', NOW),
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1),
+      stability: 1.5,
+      difficulty: 5,
+    } as Card;
+    Object.defineProperty(runtimeCard, 'state', {
+      get() {
+        throw new Error('bad runtime state');
+      },
+    });
+    Object.defineProperty(runtimeCard, 'reps', {
+      get() {
+        throw new Error('bad runtime reps');
+      },
+    });
+    Object.defineProperty(runtimeCard, 'lapses', {
+      get() {
+        throw new Error('bad runtime lapses');
+      },
+    });
+
+    const reviewed = reviewCard(runtimeCard, 3, NOW).card;
+
+    expect(reviewed.reps).toBe(1);
+    expect(reviewed.lapses).toBe(0);
+    expect(reviewed.updatedAt).toBe(NOW);
+    expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+  });
+
   it('avoids NaN segments in generated card IDs when runtime clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const card = createNewCard('nan-clock-id', 'safe', NOW);
@@ -619,6 +651,42 @@ describe('fsrs scheduler', () => {
       3: 0.5,
       4: 0.5,
     });
+  });
+
+  it('keeps interval previews finite and ordered when runtime state/history accessors throw', () => {
+    const runtimeCard = {
+      ...createNewCard('preview-state-history-accessor-throw', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 4),
+      stability: 4,
+      difficulty: 5,
+    } as Card;
+    Object.defineProperty(runtimeCard, 'state', {
+      get() {
+        throw new Error('bad runtime state');
+      },
+    });
+    Object.defineProperty(runtimeCard, 'reps', {
+      get() {
+        throw new Error('bad runtime reps');
+      },
+    });
+    Object.defineProperty(runtimeCard, 'lapses', {
+      get() {
+        throw new Error('bad runtime lapses');
+      },
+    });
+
+    const intervals = previewIntervals(runtimeCard, addDaysIso(NOW, 4));
+
+    expect(Number.isFinite(intervals[1])).toBe(true);
+    expect(Number.isFinite(intervals[2])).toBe(true);
+    expect(Number.isFinite(intervals[3])).toBe(true);
+    expect(Number.isFinite(intervals[4])).toBe(true);
+    expect(intervals[1]).toBeLessThanOrEqual(intervals[2]);
+    expect(intervals[2]).toBeLessThanOrEqual(intervals[3]);
+    expect(intervals[3]).toBeLessThanOrEqual(intervals[4]);
   });
 
   it('uses a wall-safe preview clock when runtime dueAt access is corrupted and caller preview clock is invalid', () => {

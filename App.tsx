@@ -755,9 +755,23 @@ export default function App() {
               </Text>
               <Text style={styles.subtitle}>FSRS-inspired scheduler calibrated for consistent long-term recall.</Text>
               <View style={styles.heroTags}>
-                <Text style={[styles.heroTag, { color: queueLabelTone }]}>{queueLabel}</Text>
-                <Text style={styles.heroTag}>{queueShareLabel}</Text>
-                <Text style={styles.heroTag}>{nextUpcomingLabel}</Text>
+                <Text
+                  style={[
+                    styles.heroTag,
+                    styles.heroTagPriority,
+                    { color: queueLabelTone, borderColor: `${queueLabelTone}55`, backgroundColor: `${queueLabelTone}14` },
+                  ]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {queueLabel}
+                </Text>
+                <Text style={styles.heroTag} numberOfLines={1} ellipsizeMode="tail">
+                  {queueShareLabel}
+                </Text>
+                <Text style={styles.heroTag} numberOfLines={1} ellipsizeMode="tail">
+                  {nextUpcomingLabel}
+                </Text>
               </View>
               <View style={styles.metaLine}>
                 <Text style={styles.subMeta} numberOfLines={1} ellipsizeMode="tail">
@@ -1493,6 +1507,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.45,
     textTransform: 'uppercase',
     fontVariant: ['tabular-nums'],
+    maxWidth: '100%',
+  },
+  heroTagPriority: {
+    fontWeight: '800',
   },
   subMeta: {
     color: colors.subInk,

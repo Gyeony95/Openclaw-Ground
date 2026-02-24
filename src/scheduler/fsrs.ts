@@ -1230,9 +1230,9 @@ function snapshotSchedulingCard(card: Card): Card {
     createdAt: safeReadString(() => card.createdAt, fallbackUpdatedAt),
     updatedAt: fallbackUpdatedAt,
     dueAt: fallbackDueAt,
-    state: card.state,
-    reps: card.reps,
-    lapses: card.lapses,
+    state: normalizeState(safeReadString(() => card.state, 'learning')),
+    reps: safeReadCounter(() => card.reps, 0),
+    lapses: safeReadCounter(() => card.lapses, 0),
     stability: card.stability,
     difficulty: card.difficulty,
   };
