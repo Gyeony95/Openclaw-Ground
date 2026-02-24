@@ -175,6 +175,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
 }
 
 function normalizeRating(input: Rating, currentState: ReviewState): Rating {
+  const integerTolerance = 1e-9;
   const parsedInput =
     typeof input === 'number'
       ? input
@@ -189,12 +190,13 @@ function normalizeRating(input: Rating, currentState: ReviewState): Rating {
     return currentState === 'review' ? 3 : 1;
   }
 
+  const rounded = Math.round(parsedInput);
+  const isIntegerLike = Math.abs(parsedInput - rounded) <= integerTolerance;
   // Runtime-corrupted fractional ratings should use the same safe fallback as other invalid values.
-  if (!Number.isInteger(parsedInput)) {
+  if (!isIntegerLike) {
     return currentState === 'review' ? 3 : 1;
   }
 
-  const rounded = Math.round(parsedInput);
   if (rounded < 1 || rounded > 4) {
     return currentState === 'review' ? 3 : 1;
   }

@@ -660,6 +660,26 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBe(neutral.scheduledDays);
   });
 
+  it('accepts near-integer review ratings and normalizes them to intended buckets', () => {
+    const reviewCardBase = {
+      ...createNewCard('near-integer-review', 'rating', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 1),
+      updatedAt: NOW,
+      reps: 5,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(reviewCardBase, (3 + Number.EPSILON) as Rating, addDaysIso(NOW, 1));
+    const neutral = reviewCard(reviewCardBase, 3, addDaysIso(NOW, 1));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.card.lapses).toBe(reviewCardBase.lapses);
+    expect(reviewed.scheduledDays).toBe(neutral.scheduledDays);
+  });
+
   it('treats out-of-range learning ratings as Again to avoid accidental promotion', () => {
     const learningCard = createNewCard('invalid-rating-range-learning', 'letter', NOW);
     const reviewed = reviewCard(learningCard, 99 as Rating, NOW);

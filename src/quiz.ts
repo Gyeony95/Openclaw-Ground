@@ -8,31 +8,37 @@ export interface QuizOption {
 }
 
 export function hasValidQuizSelection(selectedOptionId: string | null, options: QuizOption[]): boolean {
-  if (!selectedOptionId) {
+  if (typeof selectedOptionId !== 'string') {
     return false;
   }
-  return options.some((option) => option.id === selectedOptionId);
+  const normalizedSelectedId = selectedOptionId.trim();
+  if (normalizedSelectedId.length === 0) {
+    return false;
+  }
+  return options.some((option) => option.id.trim() === normalizedSelectedId);
 }
 
 export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {
   if (selectionIsCorrect) {
+    const integerTolerance = 1e-9;
     const parsedRequestedRating =
       typeof requestedRating === 'number'
         ? requestedRating
         : typeof requestedRating === 'string'
           ? Number(requestedRating.trim())
           : Number.NaN;
+    const roundedRating = Math.round(parsedRequestedRating);
 
     if (
       !Number.isFinite(parsedRequestedRating) ||
-      !Number.isInteger(parsedRequestedRating) ||
-      parsedRequestedRating < 1 ||
-      parsedRequestedRating > 4
+      Math.abs(parsedRequestedRating - roundedRating) > integerTolerance ||
+      roundedRating < 1 ||
+      roundedRating > 4
     ) {
       // Runtime-corrupted quiz ratings should resolve to a neutral review signal.
       return 3;
     }
-    return parsedRequestedRating as Rating;
+    return roundedRating as Rating;
   }
   // In objective quiz mode, incorrect recognition should always log as a failed recall.
   return 1;

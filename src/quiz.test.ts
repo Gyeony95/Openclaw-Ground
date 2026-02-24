@@ -93,6 +93,14 @@ describe('quiz distractors', () => {
     expect(hasValidQuizSelection(null, options)).toBe(false);
   });
 
+  it('treats whitespace-padded selection ids as valid when the target option exists', () => {
+    const options = composeQuizOptions(target, deck, 'seed-1');
+    const selectedId = options[0].id;
+
+    expect(hasValidQuizSelection(`  ${selectedId}  `, options)).toBe(true);
+    expect(hasValidQuizSelection('   ', options)).toBe(false);
+  });
+
   it('invalidates stale selection ids when options are regenerated with a different seed', () => {
     const first = composeQuizOptions(target, deck, 'seed-1');
     const second = composeQuizOptions(target, deck, 'seed-2');
@@ -144,5 +152,10 @@ describe('quiz distractors', () => {
     expect(resolveMultipleChoiceRating(2.5 as Rating, true)).toBe(3);
     expect(resolveMultipleChoiceRating(0 as Rating, true)).toBe(3);
     expect(resolveMultipleChoiceRating(9 as Rating, true)).toBe(3);
+  });
+
+  it('accepts near-integer correct-selection ratings and normalizes them', () => {
+    expect(resolveMultipleChoiceRating((2 + Number.EPSILON) as Rating, true)).toBe(2);
+    expect(resolveMultipleChoiceRating((4 - Number.EPSILON) as Rating, true)).toBe(4);
   });
 });
