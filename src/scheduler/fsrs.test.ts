@@ -1270,6 +1270,15 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('keeps card IDs delimiter-safe for historical pre-epoch creation timestamps', () => {
+    const preEpochNow = '1965-02-23T12:00:00.000Z';
+    const card = createNewCard('pre-epoch-id', 'safe', preEpochNow);
+
+    expect(card.createdAt).toBe(preEpochNow);
+    expect(card.id.startsWith('-')).toBe(false);
+    expect(card.id.startsWith('n')).toBe(true);
+  });
+
   it('schedules short relearning interval on failure', () => {
     const card = createNewCard('echo', 'sound', NOW);
     const firstReview = reviewCard(card, 3, NOW).card;

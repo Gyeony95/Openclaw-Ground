@@ -114,6 +114,18 @@ function clockToken(ms: number): string {
   return Math.trunc(Math.abs(ms)).toString(36);
 }
 
+function cardIdAnchorToken(ms: number): string {
+  if (!Number.isFinite(ms)) {
+    return '0';
+  }
+  const truncated = Math.trunc(ms);
+  if (truncated >= 0) {
+    return String(truncated);
+  }
+  // Keep IDs delimiter-safe for historical pre-epoch imports.
+  return `n${Math.abs(truncated)}`;
+}
+
 function toSafeIso(ms: number): string {
   const safeMs = Number.isFinite(ms)
     ? Math.min(MAX_DATE_MS, Math.max(MIN_DATE_MS, ms))
@@ -1390,9 +1402,10 @@ export function createNewCard(word: string, meaning: string, nowIso: string, not
   const runtimeSalt = clockToken(runtimeSaltMs);
   const entropySalt = idEntropySalt();
   const idAnchor = Number.isFinite(createdAtMs) ? createdAtMs : safeCreatedMs;
+  const idAnchorToken = cardIdAnchorToken(idAnchor);
 
   return {
-    id: `${idAnchor}-${runtimeSalt}-${entropySalt}-${uniqueSuffix}`,
+    id: `${idAnchorToken}-${runtimeSalt}-${entropySalt}-${uniqueSuffix}`,
     word: trimmedWord.length > 0 ? trimmedWord : '[invalid word]',
     meaning: trimmedMeaning.length > 0 ? trimmedMeaning : '[invalid meaning]',
     notes: trimmedNotes || undefined,
