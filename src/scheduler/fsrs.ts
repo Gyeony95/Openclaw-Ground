@@ -625,15 +625,15 @@ function rawReviewIntervalDays(
 }
 
 function orderedReviewIntervals(
-  prevStability: number,
+  baselineStability: number,
   prevDifficulty: number,
   elapsedDays: number,
   scheduledDays: number,
   phase: SchedulerPhase,
 ): ReviewIntervalsByRating {
-  const hardStability = updateStability(prevStability, prevDifficulty, 2, elapsedDays, phase, scheduledDays);
-  const goodStability = updateStability(prevStability, prevDifficulty, 3, elapsedDays, phase, scheduledDays);
-  const easyStability = updateStability(prevStability, prevDifficulty, 4, elapsedDays, phase, scheduledDays);
+  const hardStability = updateStability(baselineStability, prevDifficulty, 2, elapsedDays, phase, scheduledDays);
+  const goodStability = updateStability(baselineStability, prevDifficulty, 3, elapsedDays, phase, scheduledDays);
+  const easyStability = updateStability(baselineStability, prevDifficulty, 4, elapsedDays, phase, scheduledDays);
 
   const hard = rawReviewIntervalDays(hardStability, 2, elapsedDays, scheduledDays, phase);
   const good = rawReviewIntervalDays(goodStability, 3, elapsedDays, scheduledDays, phase);
