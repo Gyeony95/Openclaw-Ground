@@ -476,7 +476,7 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeCloseTo(15 / 1440, 10);
   });
 
-  it('infers relearning phase for malformed states on day-like retry schedules when lapse history exists', () => {
+  it('keeps malformed-state day-like schedules on the review path even when lapse history exists', () => {
     const relearningWithMalformedState = {
       ...createNewCard('malformed-state-relearning-day-like', 'state fallback', NOW),
       state: 'unknown_state' as unknown as 'learning',
@@ -489,9 +489,9 @@ describe('fsrs scheduler', () => {
 
     const reviewed = reviewCard(relearningWithMalformedState, 2, relearningWithMalformedState.dueAt);
 
-    expect(reviewed.card.state).toBe('relearning');
+    expect(reviewed.card.state).toBe('review');
     expect(reviewed.card.lapses).toBe(relearningWithMalformedState.lapses);
-    expect(reviewed.scheduledDays).toBeCloseTo(15 / 1440, 10);
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
   it('keeps malformed-state short-step cards in learning instead of forcing review lapses from stale stability', () => {

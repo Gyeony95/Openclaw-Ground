@@ -467,18 +467,13 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
 
   // Prefer schedule-based inference so short-step cards are not accidentally
   // promoted by stale/corrupted stability values.
-  if (
-    scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS &&
-    scheduledDays <= RELEARNING_MAX_SCHEDULE_DAYS &&
-    lapses > 0
-  ) {
-    return 'relearning';
-  }
   if (scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
     return 'review';
   }
   if (scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS) {
-    return 'relearning';
+    // Only infer relearning from sub-day retry windows.
+    // Day-like intervals are classified as review cadence by the branch above.
+    return lapses > 0 ? 'relearning' : 'learning';
   }
 
   if (scheduledDays > 0) {

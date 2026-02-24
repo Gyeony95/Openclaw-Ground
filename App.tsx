@@ -1110,25 +1110,31 @@ export default function App() {
                               const showIncorrect = hasQuizSelection && isSelected && !option.isCorrect;
                               const optionLetter = String.fromCharCode(65 + index);
                               const optionPrefix = showCorrect ? 'Correct: ' : showIncorrect ? 'Incorrect: ' : '';
+                              const quizOptionLocked = quizOptionsLocked || quizSelectionLocked;
+                              const quizOptionHint = quizOptionLocked
+                                ? hasQuizSelection
+                                  ? 'Selection is locked until this review is rated'
+                                  : 'Answer options are temporarily unavailable'
+                                : 'Select this meaning';
                               return (
                                 <Pressable
                                   key={option.id}
                                   onPress={() => handleSelectQuizOption(option.id)}
-                                  disabled={quizOptionsLocked || quizSelectionLocked}
+                                  disabled={quizOptionLocked}
                                   style={({ pressed }) => [
                                     styles.quizOptionBtn,
                                     isSelected && styles.quizOptionBtnSelected,
                                     showCorrect && styles.quizOptionBtnCorrect,
                                     showIncorrect && styles.quizOptionBtnIncorrect,
-                                    (quizOptionsLocked || quizSelectionLocked) && styles.quizOptionBtnLocked,
-                                    pressed && !quizOptionsLocked && !quizSelectionLocked && styles.ghostBtnPressed,
+                                    quizOptionLocked && styles.quizOptionBtnLocked,
+                                    pressed && !quizOptionLocked && styles.ghostBtnPressed,
                                   ]}
                                   accessibilityRole="radio"
                                   accessibilityLabel={`${optionLetter}. ${option.text}`}
+                                  accessibilityHint={quizOptionHint}
                                   accessibilityState={{
                                     selected: isSelected,
-                                    checked: isSelected,
-                                    disabled: quizOptionsLocked || quizSelectionLocked,
+                                    disabled: quizOptionLocked,
                                   }}
                                 >
                                   <Text
