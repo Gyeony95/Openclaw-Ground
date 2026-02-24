@@ -63,6 +63,7 @@ export function RatingRow({
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
+          const contentTone = isRatingLocked ? item.tone : ratingDisabled ? colors.subInk : item.tone;
           const accessibilityIntervalLabel = isRatingLocked ? 'Locked' : interval;
           return (
             <Pressable
@@ -102,17 +103,17 @@ export function RatingRow({
               }
               accessibilityState={{ disabled: ratingDisabled, busy: busy || undefined }}
             >
-              <Text style={[styles.buttonText, { color: ratingDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
+              <Text style={[styles.buttonText, { color: contentTone }]} numberOfLines={1}>
                 {item.text}
               </Text>
-              {isRatingLocked ? <Text style={styles.lockedLabel}>Locked</Text> : null}
+              {isRatingLocked ? <Text style={[styles.lockedLabel, { color: item.tone }]}>Locked</Text> : null}
               {isRatingLocked ? null : (
                 <View style={styles.intervalMeta}>
-                  <Text style={[styles.hintLabel, { color: ratingDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
+                  <Text style={[styles.hintLabel, { color: contentTone }]} numberOfLines={1}>
                     Next
                   </Text>
                   <Text
-                    style={[styles.hint, styles.hintCentered, { color: ratingDisabled ? colors.subInk : item.tone }]}
+                    style={[styles.hint, styles.hintCentered, { color: contentTone }]}
                     numberOfLines={intervalLineCount}
                     adjustsFontSizeToFit
                     minimumFontScale={0.8}

@@ -163,6 +163,11 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     if (Math.abs(fallbackMs - wallClockMs) > MAX_CREATE_TIME_OFFSET_MS) {
       return wallClockIso;
     }
+    if (fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+      // Do not preserve future-skewed card timelines when the requested review
+      // timestamp is pathologically stale.
+      return wallClockIso;
+    }
     return fallback;
   }
 
