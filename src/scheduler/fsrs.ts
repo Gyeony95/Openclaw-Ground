@@ -1012,7 +1012,11 @@ function orderedReviewIntervals(
   scheduledDays: number,
   phase: SchedulerPhase,
 ): ReviewIntervalsByRating {
-  const hardStability = updateStability(baselineStability, prevDifficulty, 2, elapsedDays, phase, scheduledDays);
+  const hardStabilityRaw = updateStability(baselineStability, prevDifficulty, 2, elapsedDays, phase, scheduledDays);
+  const hardStability =
+    phase === 'review'
+      ? Math.min(hardStabilityRaw, baselineStability * HARD_REVIEW_STABILITY_GROWTH_CAP)
+      : hardStabilityRaw;
   const goodStability = updateStability(baselineStability, prevDifficulty, 3, elapsedDays, phase, scheduledDays);
   const easyStability = updateStability(baselineStability, prevDifficulty, 4, elapsedDays, phase, scheduledDays);
 

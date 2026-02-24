@@ -1517,6 +1517,32 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(3);
   });
 
+  it('keeps hard review intervals aligned with capped hard stability growth', () => {
+    const mature = {
+      ...createNewCard('hard-cap-interval-alignment', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 200),
+      stability: 200,
+      difficulty: 1.2,
+      reps: 120,
+      lapses: 4,
+    };
+
+    const reviewed = reviewCard(mature, 2, addDaysIso(NOW, 600));
+    const cappedStability = mature.stability * 1.2;
+    const fsrsFactor = 19 / 81;
+    const hardDesiredRetention = 0.95;
+    const fsrsDecay = -0.5;
+    const cappedRawInterval =
+      (cappedStability / fsrsFactor) * (Math.pow(hardDesiredRetention, 1 / fsrsDecay) - 1);
+    const generousQuantizedUpperBound = Math.ceil(cappedRawInterval + 1);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.card.stability).toBeLessThanOrEqual(cappedStability);
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(generousQuantizedUpperBound);
+  });
+
   it('keeps plausible long review schedules instead of over-repairing from stale low stability', () => {
     const imported = {
       ...createNewCard('stability-window-preserve', 'definition', NOW),
