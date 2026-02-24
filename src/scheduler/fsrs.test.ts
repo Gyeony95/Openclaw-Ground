@@ -1540,6 +1540,24 @@ describe('fsrs scheduler', () => {
     expect(onTimeHard.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
+  it('does not increase on-time hard intervals for imported fractional day-like schedules', () => {
+    const imported = {
+      ...createNewCard('daylike-hard-no-roundup', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1.5),
+      stability: 1.5,
+      difficulty: 6,
+      reps: 14,
+      lapses: 1,
+    };
+
+    const onTimeHard = reviewCard(imported, 2, imported.dueAt);
+
+    expect(onTimeHard.card.state).toBe('review');
+    expect(onTimeHard.scheduledDays).toBeLessThanOrEqual(1);
+  });
+
   it('promotes overdue hard reviews on half-day schedules to at least one day', () => {
     const card = createNewCard('halfday-hard-overdue-floor', 'letter', NOW);
     const graduated = reviewCard(card, 3, NOW).card;

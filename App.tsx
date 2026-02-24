@@ -249,10 +249,14 @@ export default function App() {
   }, [cards, clockIso]);
   const queueProgressMeta = loading
     ? '--'
-    : `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due in next 24h`;
+    : scheduleRepairCount > 0
+      ? `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due in next 24h · ${scheduleRepairCount.toLocaleString()} ${scheduleRepairCount === 1 ? 'repair needed' : 'repairs needed'}`
+      : `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due in next 24h`;
   const queueProgressTone = loading
     ? colors.primary
-    : queueProgressPercent >= 80
+    : scheduleRepairCount > 0
+      ? colors.warn
+      : queueProgressPercent >= 80
       ? colors.danger
       : queueProgressPercent >= 50
         ? colors.warn
