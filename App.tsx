@@ -107,7 +107,7 @@ function trimmedLength(value: string, max: number): number {
 }
 
 function inputLength(value: string, max: number): number {
-  return Math.min(max, value.length);
+  return normalizeBoundedText(value, max).length;
 }
 
 function formatQueueShareLabel(dueNow: number, total: number): string {

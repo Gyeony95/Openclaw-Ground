@@ -1976,6 +1976,24 @@ describe('fsrs scheduler', () => {
     expect(fractionalGood.scheduledDays).toBeLessThan(0.002);
   });
 
+  it('coerces numeric-string runtime ratings during learning', () => {
+    const base = createNewCard('eta-string-learning', 'letter', NOW);
+    const easy = reviewCard(base, '4' as unknown as Rating, NOW);
+
+    expect(easy.card.state).toBe('review');
+    expect(easy.scheduledDays).toBe(1);
+  });
+
+  it('coerces numeric-string runtime ratings during review', () => {
+    const base = createNewCard('eta-string-review', 'letter', NOW);
+    const graduated = reviewCard(base, 4, NOW).card;
+    const reviewed = reviewCard(graduated, '2' as unknown as Rating, graduated.dueAt);
+    const neutral = reviewCard(graduated, 3, graduated.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(neutral.scheduledDays);
+  });
+
   it('treats non-finite runtime ratings as Again to avoid accidental promotion', () => {
     const base = createNewCard('eta-3', 'letter', NOW);
     const reviewed = reviewCard(base, Number.NaN as unknown as Rating, NOW);

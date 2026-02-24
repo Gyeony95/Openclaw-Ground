@@ -165,7 +165,14 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
 }
 
 function normalizeRating(input: Rating, currentState: ReviewState): Rating {
-  if (!Number.isFinite(input)) {
+  const parsedInput =
+    typeof input === 'number'
+      ? input
+      : typeof input === 'string'
+        ? Number(input.trim())
+        : Number.NaN;
+
+  if (!Number.isFinite(parsedInput)) {
     // Runtime-corrupted ratings should be safe by phase:
     // - learning/relearning: avoid accidental promotion by treating as Again
     // - review: avoid punitive lapses by treating as neutral Good
@@ -173,11 +180,11 @@ function normalizeRating(input: Rating, currentState: ReviewState): Rating {
   }
 
   // Runtime-corrupted fractional ratings should use the same safe fallback as other invalid values.
-  if (!Number.isInteger(input)) {
+  if (!Number.isInteger(parsedInput)) {
     return currentState === 'review' ? 3 : 1;
   }
 
-  const rounded = Math.round(input);
+  const rounded = Math.round(parsedInput);
   if (rounded < 1 || rounded > 4) {
     return currentState === 'review' ? 3 : 1;
   }
