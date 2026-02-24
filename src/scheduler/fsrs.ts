@@ -757,11 +757,12 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
   const wallClockMs = safeNowMs();
   const requestedCreatedMs = isValidIso(nowIso) ? Date.parse(nowIso) : Number.NaN;
-  // Preserve deterministic historical import timestamps, but reject pathological far-future clocks.
+  // Preserve realistic historical import timestamps, but reject pathological clock skew.
+  const createOffsetMs = requestedCreatedMs - wallClockMs;
   const requestedIsPlausible =
     Number.isFinite(requestedCreatedMs) &&
     Number.isFinite(wallClockMs) &&
-    requestedCreatedMs - wallClockMs <= MAX_CREATE_TIME_OFFSET_MS;
+    Math.abs(createOffsetMs) <= MAX_CREATE_TIME_OFFSET_MS;
   const safeCreatedMs = requestedIsPlausible ? requestedCreatedMs : wallClockMs;
   const createdAt = toSafeIso(safeCreatedMs);
   const trimmedWord = normalizeWordValue(word);
