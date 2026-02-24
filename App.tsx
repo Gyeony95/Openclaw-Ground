@@ -60,7 +60,7 @@ function stateConfig(state: ReviewState): { tone: string; label: string } {
 }
 
 function reviewedAtLabel(lastReviewedAt?: string): string {
-  if (!lastReviewedAt || !Number.isFinite(Date.parse(lastReviewedAt))) {
+  if (!lastReviewedAt || !isIsoDateTime(lastReviewedAt)) {
     return 'No review history yet';
   }
   return `Last review ${new Date(lastReviewedAt).toLocaleString([], {
@@ -72,7 +72,7 @@ function reviewedAtLabel(lastReviewedAt?: string): string {
 }
 
 function exactDateLabel(iso?: string): string {
-  if (!iso || !Number.isFinite(Date.parse(iso))) {
+  if (!iso || !isIsoDateTime(iso)) {
     return 'Schedule unavailable';
   }
   return new Date(iso).toLocaleString([], {
@@ -84,7 +84,7 @@ function exactDateLabel(iso?: string): string {
 }
 
 function asOfLabel(iso: string): string {
-  if (!Number.isFinite(Date.parse(iso))) {
+  if (!isIsoDateTime(iso)) {
     return 'Clock unavailable';
   }
   return `As of ${new Date(iso).toLocaleString([], {

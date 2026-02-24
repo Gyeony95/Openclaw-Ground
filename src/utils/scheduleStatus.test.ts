@@ -52,6 +52,18 @@ describe('scheduleStatus', () => {
 
       expect(tone).toBe(colors.danger);
     });
+
+    it('treats loose non-ISO dueAt values as malformed schedule inputs', () => {
+      const tone = queueTone({
+        dueAt: '2026-02-24 11:58:30Z',
+        clockIso: NOW,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(tone).toBe(colors.warn);
+    });
   });
 
   describe('dueUrgency', () => {
@@ -83,6 +95,16 @@ describe('scheduleStatus', () => {
       });
 
       expect(urgency).toEqual({ label: 'Due now', tone: colors.primary });
+    });
+
+    it('flags loose non-ISO dueAt values as needing repair', () => {
+      const urgency = dueUrgency({
+        dueAt: '2026-02-24 12:00:30Z',
+        clockIso: NOW,
+        needsRepair: false,
+      });
+
+      expect(urgency).toEqual({ label: 'Needs repair', tone: colors.warn });
     });
   });
 });

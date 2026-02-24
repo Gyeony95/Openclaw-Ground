@@ -231,6 +231,26 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('does not trust dueAt as a createdAt anchor when all clocks are invalid', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    try {
+      const malformedTimeline = {
+        ...createNewCard('old-anchor-no-clock', 'timeline', NOW),
+        createdAt: 'not-a-time',
+        updatedAt: 'also-not-a-time',
+        dueAt: '1900-01-01T00:00:00.000Z',
+      };
+
+      const reviewed = reviewCard(malformedTimeline, 3, 'still-not-a-date');
+
+      expect(reviewed.card.createdAt).toBe('1970-01-01T00:00:00.000Z');
+      expect(reviewed.card.updatedAt).toBe('1970-01-01T00:00:00.000Z');
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it('does not let pathologically old dueAt values rewrite valid createdAt history', () => {
     const validTimeline = {
       ...createNewCard('old-due-anchor-preserve-created', 'timeline', NOW),

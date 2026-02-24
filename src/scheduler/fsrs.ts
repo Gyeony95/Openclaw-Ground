@@ -249,7 +249,8 @@ function normalizeTimeline(
   const updatedMsCandidate = isValidIso(card.updatedAt) ? Date.parse(card.updatedAt) : Number.NaN;
   const dueLooksLikePlausibleAnchor =
     Number.isFinite(dueMs) &&
-    (!Number.isFinite(fallbackMs) || Math.abs(dueMs - fallbackMs) <= MAX_CREATE_TIME_OFFSET_MS);
+    Number.isFinite(fallbackMs) &&
+    Math.abs(dueMs - fallbackMs) <= MAX_CREATE_TIME_OFFSET_MS;
   const dueLooksLikeTimelineAnchor =
     Number.isFinite(dueMs) &&
     ((Number.isFinite(updatedMsCandidate) &&

@@ -1,4 +1,5 @@
 import { colors } from '../theme';
+import { isIsoDateTime } from './time';
 
 export interface QueueToneInput {
   dueAt?: string;
@@ -30,8 +31,8 @@ export function queueTone({
   if (needsRepair) {
     return colors.warn;
   }
-  const dueMs = dueAt ? Date.parse(dueAt) : Number.NaN;
-  const nowMs = Date.parse(clockIso);
+  const dueMs = dueAt && isIsoDateTime(dueAt) ? Date.parse(dueAt) : Number.NaN;
+  const nowMs = isIsoDateTime(clockIso) ? Date.parse(clockIso) : Number.NaN;
   if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
     return colors.warn;
   }
@@ -55,8 +56,8 @@ export function dueUrgency({ dueAt, clockIso, needsRepair }: DueUrgencyInput): {
   if (!dueAt) {
     return { label: 'Schedule pending', tone: colors.warn };
   }
-  const dueMs = Date.parse(dueAt);
-  const nowMs = Date.parse(clockIso);
+  const dueMs = isIsoDateTime(dueAt) ? Date.parse(dueAt) : Number.NaN;
+  const nowMs = isIsoDateTime(clockIso) ? Date.parse(clockIso) : Number.NaN;
   if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
     return { label: 'Needs repair', tone: colors.warn };
   }
