@@ -283,6 +283,9 @@ export default function App() {
         : undefined,
     [ratingIntervals],
   );
+  const quickRatingPreviewLabel = ratingIntervalLabels
+    ? `Hard ${ratingIntervalLabels[2]} · Good ${ratingIntervalLabels[3]} · Easy ${ratingIntervalLabels[4]}`
+    : null;
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 
   const trimmedWordLength = trimmedLength(word, WORD_MAX_LENGTH);
@@ -758,6 +761,9 @@ export default function App() {
                       </View>
                     </View>
                     {!showMeaning ? <Text style={styles.revealHint}>Reveal to check meaning and notes.</Text> : null}
+                    {!showMeaning && quickRatingPreviewLabel ? (
+                      <Text style={styles.revealPreviewHint}>{quickRatingPreviewLabel}</Text>
+                    ) : null}
                     {showMeaning ? <Text style={styles.meaning}>{dueCard.meaning}</Text> : null}
                     {dueCard.notes && showMeaning ? <Text style={styles.notes}>{dueCard.notes}</Text> : null}
                     {showMeaning ? (
@@ -1369,6 +1375,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.subInk,
     lineHeight: 19,
+  },
+  revealPreviewHint: {
+    fontSize: 12,
+    color: colors.subInk,
+    lineHeight: 18,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
   },
   notes: {
     fontSize: 14,

@@ -9,9 +9,10 @@ const MAX_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const OVERDUE_GRACE_MS = 60 * 1000;
 const FALLBACK_NOW_MS = Date.parse('1970-01-01T00:00:00.000Z');
 
-function parseTimeOrMax(iso: string): number {
+function parseTimeOrRepairPriority(iso: string): number {
   const parsed = Date.parse(iso);
-  return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+  // Invalid timeline anchors should be prioritized for immediate repair.
+  return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
 }
 
 function parseDueTimeForSort(iso: string): number {
@@ -168,11 +169,11 @@ export function compareDueCards(a: Card, b: Card): number {
   if (dueDelta !== 0) {
     return dueDelta;
   }
-  const updatedDelta = parseTimeOrMax(a.updatedAt) - parseTimeOrMax(b.updatedAt);
+  const updatedDelta = parseTimeOrRepairPriority(a.updatedAt) - parseTimeOrRepairPriority(b.updatedAt);
   if (updatedDelta !== 0) {
     return updatedDelta;
   }
-  const createdDelta = parseTimeOrMax(a.createdAt) - parseTimeOrMax(b.createdAt);
+  const createdDelta = parseTimeOrRepairPriority(a.createdAt) - parseTimeOrRepairPriority(b.createdAt);
   if (createdDelta !== 0) {
     return createdDelta;
   }

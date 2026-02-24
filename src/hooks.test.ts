@@ -137,6 +137,32 @@ describe('applyDueReview', () => {
     expect(result.cards[1]).toBe(second);
   });
 
+  it('prioritizes duplicate cards with malformed updatedAt for immediate timeline repair', () => {
+    const valid = {
+      ...createNewCard('zeta-malformed-updated', 'sixth', NOW),
+      dueAt: '2026-02-23T12:00:00.000Z',
+      updatedAt: '2026-02-23T11:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+      state: 'review' as const,
+    };
+    const malformed = {
+      ...createNewCard('eta-malformed-updated', 'seventh', NOW),
+      id: valid.id,
+      dueAt: '2026-02-23T12:00:00.000Z',
+      updatedAt: 'bad-updated-time',
+      createdAt: 'bad-created-time',
+      state: 'review' as const,
+    };
+
+    const result = applyDueReview([valid, malformed], valid.id, 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).toBe(valid);
+    expect(result.cards[1]).not.toBe(malformed);
+    expect(result.cards[1].updatedAt).toBe(NOW);
+    expect(Number.isFinite(Date.parse(result.cards[1].dueAt))).toBe(true);
+  });
+
   it('does nothing when the target card ID does not exist', () => {
     const due = createNewCard('theta', 'eighth', NOW);
     const cards = [due];
@@ -448,6 +474,28 @@ describe('compareDueCards', () => {
     const orderedIds = [valid, malformed].sort(compareDueCards).map((card) => card.id);
 
     expect(orderedIds).toEqual(['malformed', 'valid']);
+  });
+
+  it('sorts malformed updatedAt/createdAt cards first when dueAt ties to prioritize repair', () => {
+    const base = createNewCard('queue-repair-tie', 'ordering', NOW);
+    const malformedTimeline = {
+      ...base,
+      id: 'malformed-timeline',
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: 'bad-updated',
+      createdAt: 'bad-created',
+    };
+    const validTimeline = {
+      ...base,
+      id: 'valid-timeline',
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+
+    const orderedIds = [validTimeline, malformedTimeline].sort(compareDueCards).map((card) => card.id);
+
+    expect(orderedIds).toEqual(['malformed-timeline', 'valid-timeline']);
   });
 });
 
