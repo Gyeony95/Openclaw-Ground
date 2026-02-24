@@ -155,7 +155,11 @@ export function countOverdueCards(cards: Card[], currentIso: string): number {
 
   return cards.filter((card) => {
     const dueMs = parseDueAtOrNaN(card.dueAt);
-    return Number.isFinite(dueMs) && dueMs <= overdueCutoff;
+    if (!Number.isFinite(dueMs)) {
+      // Keep malformed schedules visible in overdue metrics so repair work stays prominent.
+      return true;
+    }
+    return dueMs <= overdueCutoff;
   }).length;
 }
 

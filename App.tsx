@@ -246,11 +246,19 @@ export default function App() {
   const overdueNow = useMemo(() => {
     return countOverdueCards(cards, clockIso);
   }, [cards, clockIso]);
+  const scheduleRepairCount = useMemo(() => {
+    return cards.filter((card) => !hasValidIso(card.dueAt)).length;
+  }, [cards]);
   const overdueQueueLabel = loading
     ? '--'
     : overdueNow === 0
       ? 'No overdue cards'
       : `${overdueNow.toLocaleString()} overdue`;
+  const scheduleRepairLabel = loading
+    ? '--'
+    : scheduleRepairCount === 0
+      ? 'Schedules healthy'
+      : `${scheduleRepairCount.toLocaleString()} schedule ${scheduleRepairCount === 1 ? 'repair' : 'repairs'}`;
   const exactDueLabel = exactDateLabel(dueCard?.dueAt);
   const dueNeedsRepair = dueCard ? !hasValidIso(dueCard.dueAt) : false;
   const relativeDueLabel = dueCard
@@ -632,6 +640,16 @@ export default function App() {
                     </Text>
                     <Text style={styles.panelSubKpi} numberOfLines={1} ellipsizeMode="tail">
                       {followUpQueueLabel}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.panelSubKpi,
+                        scheduleRepairCount > 0 && !loading ? styles.panelSubKpiAlert : null,
+                      ]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {scheduleRepairLabel}
                     </Text>
                   </View>
                 </View>

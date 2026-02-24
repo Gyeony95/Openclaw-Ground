@@ -810,10 +810,10 @@ describe('countOverdueCards', () => {
     expect(countOverdueCards([overdue], 'bad-clock')).toBe(0);
   });
 
-  it('ignores cards with malformed dueAt values at runtime', () => {
+  it('counts malformed dueAt values so schedule repairs stay visible', () => {
     const malformed = { ...createNewCard('malformed-overdue', 'test', NOW), dueAt: null } as unknown as Card;
 
-    expect(countOverdueCards([malformed], NOW)).toBe(0);
+    expect(countOverdueCards([malformed], NOW)).toBe(1);
   });
 });
 

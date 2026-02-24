@@ -486,8 +486,8 @@ function dayLikeScheduleFloorDays(scheduledDays: number): number {
   if (!Number.isFinite(scheduledDays)) {
     return 1;
   }
-  // Imported/manual schedules can be non-integer; never round them down on on-time review floors.
-  return Math.max(1, Math.ceil(scheduledDays - ON_TIME_TOLERANCE_DAYS));
+  // Keep floor aligned to the same day-quantization used by review intervals.
+  return Math.max(1, quantizeReviewIntervalDays(scheduledDays, scheduledDays));
 }
 
 function updateDifficulty(prevDifficulty: number, rating: Rating): number {

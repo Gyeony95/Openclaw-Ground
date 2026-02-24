@@ -2367,4 +2367,22 @@ describe('fsrs scheduler', () => {
     expect(repairedResult.card.stability).toBeCloseTo(shortScheduleResult.card.stability, 6);
     expect(repairedResult.scheduledDays).toBe(shortScheduleResult.scheduledDays);
   });
+
+  it('does not round 1.x day review schedules up to two days for on-time hard reviews', () => {
+    const updatedAt = '2026-02-23T12:00:00.000Z';
+    const card = {
+      ...reviewCard(createNewCard('daylike-floor-hard', 'definition', NOW), 4, NOW).card,
+      state: 'review' as const,
+      updatedAt,
+      dueAt: addDaysIso(updatedAt, 1.04),
+      stability: 1.04,
+      difficulty: 5,
+      reps: 10,
+    };
+
+    const reviewed = reviewCard(card, 2, card.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(1.2);
+  });
 });
