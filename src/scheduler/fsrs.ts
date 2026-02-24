@@ -405,6 +405,14 @@ function toReviewRating(rating: Rating): 2 | 3 | 4 {
 }
 
 function normalizeState(input: unknown): ReviewState {
+  const parsed = parseState(input);
+  if (parsed) {
+    return parsed;
+  }
+  return 'learning';
+}
+
+function parseState(input: unknown): ReviewState | undefined {
   if (input === 'review' || input === 'relearning' || input === 'learning') {
     return input;
   }
@@ -423,6 +431,29 @@ function normalizeState(input: unknown): ReviewState {
     if (folded === 'relearning' || folded === 'relearn') {
       return 'relearning';
     }
+  }
+  return undefined;
+}
+
+function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'stability' | 'updatedAt' | 'dueAt'>): ReviewState {
+  const parsedState = parseState(card.state);
+  if (parsedState) {
+    return parsedState;
+  }
+
+  const reps = normalizeCounter(card.reps);
+  if (reps <= 0) {
+    return 'learning';
+  }
+
+  const scheduledDays = normalizeElapsedDays(daysBetween(card.updatedAt, card.dueAt));
+  const normalizedStability = clampFinite(card.stability, STABILITY_MIN, STABILITY_MAX, STABILITY_MIN);
+
+  if (normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS || scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+    return 'review';
+  }
+  if (scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS) {
+    return 'relearning';
   }
   return 'learning';
 }
@@ -886,7 +917,13 @@ function normalizeSchedulingCard(
 ): { card: Card; currentIso: string } {
   const { createdAt, currentIso, updatedAt, dueAt, dueNeedsRepair } = normalizeTimeline(card, requestedNowIso);
   const normalizedText = normalizeCardText(card);
-  const normalizedState = normalizeState(card.state);
+  const normalizedState = inferStateFromCard({
+    state: card.state,
+    reps: card.reps,
+    stability: card.stability,
+    updatedAt,
+    dueAt,
+  });
   const normalizedScheduledDays = normalizeScheduledDays(daysBetween(updatedAt, dueAt), normalizedState);
   const normalizedDifficulty = clampFinite(
     card.difficulty,

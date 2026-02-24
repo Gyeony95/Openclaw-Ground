@@ -349,6 +349,22 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.state).toBe('relearning');
   });
 
+  it('infers review phase for malformed states when mature schedule history exists', () => {
+    const matureWithMalformedState = {
+      ...createNewCard('malformed-state-review-infer', 'state fallback', NOW),
+      state: 'unknown_state' as unknown as 'learning',
+      reps: 18,
+      stability: 28,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 28),
+    };
+
+    const reviewed = reviewCard(matureWithMalformedState, 3, matureWithMalformedState.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(7);
+  });
+
   it('normalizes createdAt to never exceed updatedAt when recovering from future-corrupted timelines', () => {
     jest.useFakeTimers();
     try {
