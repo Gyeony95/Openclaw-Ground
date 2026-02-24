@@ -1351,11 +1351,14 @@ export function createNewCard(word: string, meaning: string, nowIso: string, not
   const normalizedNowIso = normalizeIsoInput(nowIso);
   const requestedCreatedMs =
     normalizedNowIso && isValidIso(normalizedNowIso) ? Date.parse(normalizedNowIso) : Number.NaN;
-  // Preserve historical import timestamps, but avoid future-created cards from bad device clocks.
+  // Preserve reasonable historical imports while rejecting pathologically stale/future timestamps.
+  const requestedPastOffsetMs =
+    Number.isFinite(wallClockMs) && Number.isFinite(requestedCreatedMs) ? wallClockMs - requestedCreatedMs : 0;
   const requestedIsPlausible =
     Number.isFinite(requestedCreatedMs) &&
     (!Number.isFinite(wallClockMs) ||
-      requestedCreatedMs - wallClockMs <= MAX_CREATE_FUTURE_OFFSET_MS);
+      (requestedCreatedMs - wallClockMs <= MAX_CREATE_FUTURE_OFFSET_MS &&
+        requestedPastOffsetMs <= MAX_CREATE_TIME_OFFSET_MS));
   const safeCreatedMs = requestedIsPlausible
     ? requestedCreatedMs
     : Number.isFinite(wallClockMs)
