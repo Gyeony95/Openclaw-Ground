@@ -79,6 +79,26 @@ function safeNowMs(): number {
   return Number.NaN;
 }
 
+function idEntropySalt(): string {
+  try {
+    const runtimeCrypto = (globalThis as { crypto?: { getRandomValues?: (buffer: Uint32Array) => Uint32Array } })
+      .crypto;
+    if (runtimeCrypto?.getRandomValues) {
+      const buffer = new Uint32Array(1);
+      runtimeCrypto.getRandomValues(buffer);
+      return buffer[0].toString(36);
+    }
+  } catch {
+    // Fall through to Math.random for older runtimes.
+  }
+
+  const fallbackRandom = Math.random();
+  if (Number.isFinite(fallbackRandom) && fallbackRandom >= 0 && fallbackRandom < 1) {
+    return Math.floor(fallbackRandom * 0x100000000).toString(36);
+  }
+  return '0';
+}
+
 function toSafeIso(ms: number): string {
   const safeMs = Number.isFinite(ms)
     ? Math.min(MAX_DATE_MS, Math.max(MIN_DATE_MS, ms))
@@ -1273,10 +1293,11 @@ export function createNewCard(word: string, meaning: string, nowIso: string, not
   const uniqueSuffix = cardIdSequence.toString(36);
   const runtimeSaltMs = safeNowMs();
   const runtimeSalt = Number.isFinite(runtimeSaltMs) ? runtimeSaltMs.toString(36) : '0';
+  const entropySalt = idEntropySalt();
   const idAnchor = Number.isFinite(createdAtMs) ? createdAtMs : safeCreatedMs;
 
   return {
-    id: `${idAnchor}-${runtimeSalt}-${uniqueSuffix}`,
+    id: `${idAnchor}-${runtimeSalt}-${entropySalt}-${uniqueSuffix}`,
     word: trimmedWord.length > 0 ? trimmedWord : '[invalid word]',
     meaning: trimmedMeaning.length > 0 ? trimmedMeaning : '[invalid meaning]',
     notes: trimmedNotes || undefined,

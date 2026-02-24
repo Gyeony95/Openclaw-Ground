@@ -186,6 +186,32 @@ describe('fsrs scheduler', () => {
     expect(card.id.includes('NaN')).toBe(false);
   });
 
+  it('generates unique IDs when multiple cards are created at the same wall-clock instant', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW));
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+    try {
+      const first = createNewCard('id-collision-1', 'safe', NOW);
+      const second = createNewCard('id-collision-2', 'safe', NOW);
+
+      expect(first.id).not.toBe(second.id);
+    } finally {
+      randomSpy.mockRestore();
+      nowSpy.mockRestore();
+    }
+  });
+
+  it('avoids NaN entropy segments in generated card IDs when random fallback is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW));
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(Number.NaN);
+    try {
+      const card = createNewCard('nan-random-id', 'safe', NOW);
+      expect(card.id.includes('NaN')).toBe(false);
+    } finally {
+      randomSpy.mockRestore();
+      nowSpy.mockRestore();
+    }
+  });
+
   it('keeps explicit valid creation timestamps when runtime clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const card = createNewCard('nan-clock-valid-now', 'safe', NOW);
