@@ -554,6 +554,38 @@ describe('deck repository', () => {
     expect(deck.cards[0].id).toBe('trimmed-id');
   });
 
+  it('normalizes malformed persisted states to learning instead of dropping cards', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'state-recover-1',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: ' REVIEW ',
+          },
+          {
+            id: 'state-recover-2',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'unsupported',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(2);
+    expect(deck.cards[0].state).toBe('review');
+    expect(deck.cards[1].state).toBe('learning');
+  });
+
   it('falls back to defaults for non-finite scheduling numbers', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
@@ -1206,6 +1238,50 @@ describe('deck repository', () => {
     expect(savedDeck.cards[0].word).toHaveLength(80);
     expect(savedDeck.cards[0].meaning).toHaveLength(180);
     expect(savedDeck.cards[0].notes).toHaveLength(240);
+  });
+
+  it('normalizes malformed card states before persisting deck data', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: 'state-save-1',
+          word: 'alpha',
+          meaning: 'first',
+          dueAt: '2026-02-23T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: ' REVIEW ' as unknown as 'review',
+          reps: 0,
+          lapses: 0,
+          stability: 0.5,
+          difficulty: 5,
+        },
+        {
+          id: 'state-save-2',
+          word: 'beta',
+          meaning: 'second',
+          dueAt: '2026-02-23T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'not-a-state' as unknown as 'review',
+          reps: 0,
+          lapses: 0,
+          stability: 0.5,
+          difficulty: 5,
+        },
+      ],
+      lastReviewedAt: undefined,
+    });
+
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as {
+      cards: Array<{ id: string; state: string }>;
+    };
+    expect(savedDeck.cards).toHaveLength(2);
+    expect(savedDeck.cards.find((card) => card.id === 'state-save-1')?.state).toBe('review');
+    expect(savedDeck.cards.find((card) => card.id === 'state-save-2')?.state).toBe('learning');
   });
 
   it('repairs pathologically-future review dueAt values before persisting deck data', async () => {

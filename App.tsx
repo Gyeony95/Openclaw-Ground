@@ -211,6 +211,8 @@ export default function App() {
   const queueShareLabel = loading
     ? '--'
     : formatQueueShareLabel(stats.dueNow, stats.total);
+  const queueProgressPercent = loading || stats.total === 0 ? 0 : clampPercent((stats.dueNow / stats.total) * 100);
+  const queueProgressWidth = `${queueProgressPercent}%`;
   const reviewQueueLabel = loading
     ? '--'
     : dueCard
@@ -598,6 +600,17 @@ export default function App() {
                     </Text>
                   </View>
                 </View>
+                {!loading ? (
+                  <View style={styles.queueProgressWrap}>
+                    <View style={styles.queueProgressHeader}>
+                      <Text style={styles.queueProgressLabel}>Queue load</Text>
+                      <Text style={styles.queueProgressValue}>{queueProgressPercent}%</Text>
+                    </View>
+                    <View style={styles.queueProgressTrack}>
+                      <View style={[styles.queueProgressFill, { width: queueProgressWidth }]} />
+                    </View>
+                  </View>
+                ) : null}
                 {loading ? (
                   <View style={styles.loadingRow}>
                     <ActivityIndicator size="small" color={colors.subInk} />
@@ -1091,6 +1104,41 @@ const styles = StyleSheet.create({
   },
   panelSubKpiAlert: {
     color: colors.danger,
+  },
+  queueProgressWrap: {
+    marginBottom: 14,
+    gap: 6,
+  },
+  queueProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  queueProgressLabel: {
+    color: colors.subInk,
+    fontSize: 11,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    fontWeight: '700',
+  },
+  queueProgressValue: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  queueProgressTrack: {
+    height: 8,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+    overflow: 'hidden',
+  },
+  queueProgressFill: {
+    height: '100%',
+    borderRadius: radii.pill,
+    backgroundColor: colors.primary,
   },
   info: {
     color: colors.subInk,

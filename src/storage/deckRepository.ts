@@ -48,6 +48,19 @@ function isValidState(state: unknown): state is ReviewState {
   return typeof state === 'string' && VALID_STATES.includes(state as ReviewState);
 }
 
+function normalizeState(state: unknown): ReviewState {
+  if (isValidState(state)) {
+    return state;
+  }
+  if (typeof state === 'string') {
+    const normalized = state.trim().toLowerCase();
+    if (isValidState(normalized)) {
+      return normalized;
+    }
+  }
+  return 'learning';
+}
+
 function isValidIso(value: unknown): value is string {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
 }
@@ -129,11 +142,11 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   const wordValue = typeof raw.word === 'string' ? raw.word.trim().slice(0, WORD_MAX_LENGTH) : '';
   const meaningValue = typeof raw.meaning === 'string' ? raw.meaning.trim().slice(0, MEANING_MAX_LENGTH) : '';
   const notesValue = typeof raw.notes === 'string' ? raw.notes.trim().slice(0, NOTES_MAX_LENGTH) : '';
+  const state = normalizeState(raw.state);
   if (
     !id ||
     !wordValue ||
-    !meaningValue ||
-    !isValidState(raw.state)
+    !meaningValue
   ) {
     return null;
   }
@@ -187,7 +200,7 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   let scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
   if (scheduleDays <= 0) {
     const shouldUseReviewStabilityFallback =
-      raw.state === 'review' &&
+      state === 'review' &&
       Number.isFinite(normalizedStability);
     const fallbackDays = shouldUseReviewStabilityFallback
       ? clamp(
@@ -195,11 +208,11 @@ function normalizeCard(raw: Partial<Card>): Card | null {
           REVIEW_SCHEDULE_FLOOR_DAYS,
           REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
         )
-      : scheduleFallbackForState(raw.state);
+      : scheduleFallbackForState(state);
     normalizedDueMs = normalizedUpdatedMs + fallbackDays * DAY_MS;
     scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
   }
-  if (raw.state === 'review' && scheduleDays < REVIEW_SCHEDULE_FLOOR_DAYS) {
+  if (state === 'review' && scheduleDays < REVIEW_SCHEDULE_FLOOR_DAYS) {
     const repairedReviewDays = clamp(
       normalizedStability,
       REVIEW_SCHEDULE_FLOOR_DAYS,
@@ -208,16 +221,16 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     normalizedDueMs = normalizedUpdatedMs + repairedReviewDays * DAY_MS;
     scheduleDays = repairedReviewDays;
   }
-  if (scheduleDays > maxScheduleDaysForState(raw.state)) {
-    if (raw.state === 'review') {
+  if (scheduleDays > maxScheduleDaysForState(state)) {
+    if (state === 'review') {
       normalizedDueMs = normalizedUpdatedMs + STABILITY_MAX * DAY_MS;
     } else {
-      normalizedDueMs = normalizedUpdatedMs + scheduleFallbackForState(raw.state) * DAY_MS;
+      normalizedDueMs = normalizedUpdatedMs + scheduleFallbackForState(state) * DAY_MS;
     }
     scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
   }
   const reviewScheduleCapDays = Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, normalizedStability * 6, 30);
-  if (raw.state === 'review' && scheduleDays > reviewScheduleCapDays) {
+  if (state === 'review' && scheduleDays > reviewScheduleCapDays) {
     const repairedReviewDays = Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, normalizedStability);
     normalizedDueMs = normalizedUpdatedMs + repairedReviewDays * DAY_MS;
     scheduleDays = repairedReviewDays;
@@ -232,7 +245,7 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     dueAt: normalizedDueAt,
     createdAt: normalizedCreatedAt,
     updatedAt: normalizedUpdatedAt,
-    state: raw.state,
+    state,
     reps: asNonNegativeInt(raw.reps, 0),
     lapses: asNonNegativeInt(raw.lapses, 0),
     stability: normalizedStability,
