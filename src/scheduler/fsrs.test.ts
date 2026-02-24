@@ -3005,6 +3005,15 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeLessThan(0.002);
   });
 
+  it('treats positive infinite runtime ratings as Again to avoid accidental promotion', () => {
+    const base = createNewCard('eta-3-infinite', 'letter', NOW);
+    const reviewed = reviewCard(base, Number.POSITIVE_INFINITY as unknown as Rating, NOW);
+
+    expect(reviewed.card.state).toBe('learning');
+    expect(reviewed.card.lapses).toBe(0);
+    expect(reviewed.scheduledDays).toBeLessThan(0.002);
+  });
+
   it('treats non-finite runtime ratings as Again while relearning', () => {
     const base = createNewCard('eta-3-relearning', 'letter', NOW);
     const graduated = reviewCard(base, 4, NOW).card;

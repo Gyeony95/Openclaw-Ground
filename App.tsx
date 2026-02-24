@@ -194,7 +194,7 @@ export default function App() {
   const [studyMode, setStudyMode] = useState<StudyMode>('flashcard');
   const [flashcardSide, setFlashcardSide] = useState<FlashcardSide>('front');
   const [selectedQuizOptionId, setSelectedQuizOptionId] = useState<string | null>(null);
-  const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
+  const [pendingReviewCardKey, setPendingReviewCardKey] = useState<string | null>(null);
   const [isAddBusy, setIsAddBusy] = useState(false);
   const [addAttempted, setAddAttempted] = useState(false);
   const [showAddSuccess, setShowAddSuccess] = useState(false);
@@ -472,7 +472,7 @@ export default function App() {
   const noteCountTone = notesRemaining === 0 ? colors.danger : notesRemaining <= 20 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
   const isCompactLayout = width < 380;
-  const isReviewBusy = pendingReviewCardId !== null;
+  const isReviewBusy = pendingReviewCardKey !== null;
   const modeSwitchLocked = isReviewBusy;
   const quizOptionsLocked = isReviewBusy;
   const isFormEditable = !loading && !isAddBusy;
@@ -506,24 +506,24 @@ export default function App() {
   }, [quizOptions, selectedQuizOptionId]);
 
   useEffect(() => {
-    if (pendingReviewCardId === null) {
+    if (pendingReviewCardKey === null) {
       return;
     }
-    if (!dueCard || dueCard.id !== pendingReviewCardId) {
-      setPendingReviewCardId(null);
+    if (dueCardRevealKey !== pendingReviewCardKey) {
+      setPendingReviewCardKey(null);
     }
-  }, [dueCard, pendingReviewCardId]);
+  }, [dueCardRevealKey, pendingReviewCardKey]);
 
   useEffect(() => {
-    if (pendingReviewCardId === null) {
+    if (pendingReviewCardKey === null) {
       reviewLockRef.current = false;
       return;
     }
     const timer = setTimeout(() => {
-      setPendingReviewCardId(null);
+      setPendingReviewCardKey(null);
     }, 300);
     return () => clearTimeout(timer);
-  }, [pendingReviewCardId]);
+  }, [pendingReviewCardKey]);
 
   useEffect(() => {
     Animated.timing(entryAnim, {
@@ -664,7 +664,7 @@ export default function App() {
     if (studyMode === 'multiple-choice' && !hasQuizSelection) {
       return;
     }
-    if (!dueCard || pendingReviewCardId !== null || reviewLockRef.current) {
+    if (!dueCard || pendingReviewCardKey !== null || reviewLockRef.current) {
       return;
     }
     setReviewActionError(null);
@@ -678,13 +678,13 @@ export default function App() {
     try {
       reviewed = reviewDueCard(dueCard.id, resolvedRating);
     } catch {
-      setPendingReviewCardId(null);
+      setPendingReviewCardKey(null);
       reviewLockRef.current = false;
       setReviewActionError('Unable to record this review right now.');
       return;
     }
     if (reviewed) {
-      setPendingReviewCardId(dueCard.id);
+      setPendingReviewCardKey(dueCardRevealKey);
       return;
     }
     setReviewActionError('This card is no longer due. Queue refreshed.');

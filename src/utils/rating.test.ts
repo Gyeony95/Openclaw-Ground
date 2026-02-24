@@ -12,6 +12,9 @@ describe('parseRuntimeRatingValue', () => {
   it('rejects malformed values', () => {
     expect(parseRuntimeRatingValue('0x4')).toBeNaN();
     expect(parseRuntimeRatingValue('Infinity')).toBeNaN();
+    expect(parseRuntimeRatingValue(Number.POSITIVE_INFINITY)).toBeNaN();
+    expect(parseRuntimeRatingValue(Number.NEGATIVE_INFINITY)).toBeNaN();
+    expect(parseRuntimeRatingValue(Number.NaN)).toBeNaN();
     expect(parseRuntimeRatingValue('')).toBeNaN();
     expect(parseRuntimeRatingValue('abc')).toBeNaN();
   });
