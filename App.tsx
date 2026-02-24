@@ -263,6 +263,7 @@ export default function App() {
       : queueProgressPercent >= 50
         ? colors.warn
         : colors.success;
+  const queueProgressMetaTone = loading || scheduleRepairCount === 0 ? colors.subInk : colors.warn;
   const reviewQueueLabel = loading
     ? '--'
     : dueCard
@@ -881,7 +882,11 @@ export default function App() {
                     >
                       <View style={[styles.queueProgressFill, { width: queueProgressWidth, backgroundColor: queueProgressTone }]} />
                     </View>
-                    <Text style={styles.queueProgressMeta} numberOfLines={isCompactLayout ? 3 : 2} ellipsizeMode="tail">
+                    <Text
+                      style={[styles.queueProgressMeta, { color: queueProgressMetaTone }]}
+                      numberOfLines={isCompactLayout ? 3 : 2}
+                      ellipsizeMode="tail"
+                    >
                       {queueProgressMeta}
                     </Text>
                   </View>
@@ -940,7 +945,7 @@ export default function App() {
                           </Text>
                         </View>
                       </View>
-                      <Text style={styles.reviewTimelineValue} numberOfLines={1}>
+                      <Text style={styles.reviewTimelineValue} numberOfLines={2}>
                         {exactDueLabel}
                       </Text>
                       <Text style={styles.reviewTimelineSubValue} numberOfLines={1}>

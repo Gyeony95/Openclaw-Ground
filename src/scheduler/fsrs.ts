@@ -513,10 +513,28 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
   const reps = normalizeCounter(card.reps);
   const lapses = normalizeCounter(card.lapses);
   const hasReviewHistory = reps > 0 || lapses > 0;
+  const normalizedStability = clampFinite(
+    parseRuntimeFiniteNumber(card.stability) ?? card.stability,
+    STABILITY_MIN,
+    STABILITY_MAX,
+    STABILITY_MIN,
+  );
   const parsedState = parseState(card.state);
   if (parsedState) {
     if (parsedState === 'review') {
-      return parsedState;
+      if (scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+        return parsedState;
+      }
+      if (scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS) {
+        return hasReviewHistory ? 'relearning' : 'learning';
+      }
+      if (scheduledDays > 0) {
+        return hasReviewHistory ? 'relearning' : 'learning';
+      }
+      if (hasReviewHistory) {
+        return normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS ? 'review' : 'relearning';
+      }
+      return 'learning';
     }
     if (parsedState === 'relearning') {
       // Relearning should remain short-step retry cadence; day-like windows indicate
@@ -536,13 +554,6 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
     }
     return parsedState;
   }
-
-  const normalizedStability = clampFinite(
-    parseRuntimeFiniteNumber(card.stability) ?? card.stability,
-    STABILITY_MIN,
-    STABILITY_MAX,
-    STABILITY_MIN,
-  );
 
   // Prefer schedule-based inference so short-step cards are not accidentally
   // promoted by stale/corrupted stability values.

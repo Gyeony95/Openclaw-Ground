@@ -340,6 +340,44 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
   });
 
+  it('normalizes persisted review cards with short-step schedules and no history back to learning', () => {
+    const runtimeCard = {
+      ...createNewCard('review-short-step-no-history', 'state inference', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10 / 1440),
+      reps: 0,
+      lapses: 0,
+      stability: 2,
+      difficulty: 5.3,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 2, addDaysIso(NOW, 10 / 1440)).card;
+
+    expect(reviewed.state).toBe('learning');
+    expect(reviewed.lapses).toBe(0);
+    expect(reviewed.dueAt).toBe(addDaysIso(addDaysIso(NOW, 10 / 1440), 5 / 1440));
+  });
+
+  it('normalizes persisted review cards with short-step schedules and history to relearning', () => {
+    const runtimeCard = {
+      ...createNewCard('review-short-step-with-history', 'state inference', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 15 / 1440),
+      reps: 3,
+      lapses: 1,
+      stability: 2,
+      difficulty: 5.3,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 2, addDaysIso(NOW, 15 / 1440)).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.lapses).toBe(1);
+    expect(reviewed.dueAt).toBe(addDaysIso(addDaysIso(NOW, 15 / 1440), 15 / 1440));
+  });
+
   it('keeps persisted relearning cards in short-step cadence when schedule is sub-day', () => {
     const runtimeCard = {
       ...createNewCard('relearning-subday-preserve', 'state inference', NOW),
