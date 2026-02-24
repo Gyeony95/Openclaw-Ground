@@ -479,6 +479,39 @@ describe('deck repository', () => {
     }
   });
 
+  it('preserves historical timestamps that are old but still within the supported import window', async () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      mockedStorage.getItem.mockResolvedValueOnce(
+        JSON.stringify({
+          cards: [
+            {
+              id: 'historical-supported-window',
+              word: 'archive',
+              meaning: 'imported',
+              dueAt: '2010-01-03T00:00:00.000Z',
+              createdAt: '2010-01-01T00:00:00.000Z',
+              updatedAt: '2010-01-02T00:00:00.000Z',
+              state: 'review',
+              stability: 3,
+              difficulty: 5,
+            },
+          ],
+        }),
+      );
+
+      const deck = await loadDeck();
+
+      expect(deck.cards).toHaveLength(1);
+      expect(deck.cards[0].createdAt).toBe('2010-01-01T00:00:00.000Z');
+      expect(deck.cards[0].updatedAt).toBe('2010-01-02T00:00:00.000Z');
+      expect(deck.cards[0].dueAt).toBe('2010-01-03T00:00:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('ignores non-array cards payloads safely', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

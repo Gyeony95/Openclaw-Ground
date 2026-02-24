@@ -762,6 +762,30 @@ describe('fsrs scheduler', () => {
     expect(result.card.dueAt).toBe('2026-02-24T00:00:00.000Z');
   });
 
+  it('falls back to wall clock when invalid runtime timestamp meets pathologically old updatedAt', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      const oldTimeline = {
+        ...createNewCard('pi-old-updated-at', 'letter', NOW),
+        state: 'review' as const,
+        createdAt: '1999-01-01T00:00:00.000Z',
+        updatedAt: '1999-01-02T00:00:00.000Z',
+        dueAt: '1999-01-03T00:00:00.000Z',
+        stability: 3,
+        difficulty: 5,
+      };
+
+      const reviewed = reviewCard(oldTimeline, 3, 'invalid-iso-value');
+
+      expect(reviewed.card.updatedAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+      expect(reviewed.card.state).toBe('review');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('keeps review timestamps monotonic when request time is older than updatedAt', () => {
     const card = createNewCard('sigma', 'letter', NOW);
     const graduated = reviewCard(card, 4, '2026-02-24T12:00:00.000Z').card;

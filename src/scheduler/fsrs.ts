@@ -77,7 +77,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     !requestedValid &&
     Number.isFinite(fallbackMs) &&
     Number.isFinite(wallClockMs) &&
-    fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS
+    Math.abs(fallbackMs - wallClockMs) > MAX_CREATE_TIME_OFFSET_MS
   ) {
     return wallClockIso;
   }
@@ -95,6 +95,16 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
   ) {
     // Ignore pathological future runtime clocks to prevent runaway elapsed intervals.
     if (fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+      return wallClockIso;
+    }
+    return fallback;
+  }
+  if (
+    requestedValid &&
+    Number.isFinite(wallClockMs) &&
+    wallClockMs - candidateMs > MAX_CREATE_TIME_OFFSET_MS
+  ) {
+    if (Math.abs(fallbackMs - wallClockMs) > MAX_CREATE_TIME_OFFSET_MS) {
       return wallClockIso;
     }
     return fallback;
