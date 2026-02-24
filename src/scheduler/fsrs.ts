@@ -77,6 +77,15 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     !requestedValid &&
     Number.isFinite(fallbackMs) &&
     Number.isFinite(wallClockMs) &&
+    fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS
+  ) {
+    // Invalid review clocks should not preserve future-corrupted card timelines.
+    return wallClockIso;
+  }
+  if (
+    !requestedValid &&
+    Number.isFinite(fallbackMs) &&
+    Number.isFinite(wallClockMs) &&
     Math.abs(fallbackMs - wallClockMs) > MAX_CREATE_TIME_OFFSET_MS
   ) {
     return wallClockIso;

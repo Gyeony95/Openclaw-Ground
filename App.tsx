@@ -483,6 +483,7 @@ export default function App() {
       setPendingReviewCardId(dueCard.id);
       return;
     }
+    setReviewActionError('This card is no longer due. Queue refreshed.');
     reviewLockRef.current = false;
   }
 

@@ -125,6 +125,26 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back to runtime wall clock when review time is invalid and card timeline is future-corrupted', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const futureCorrupted = {
+        ...createNewCard('future-corrupted', 'timeline', NOW),
+        state: 'review' as const,
+        updatedAt: '2026-04-01T00:00:00.000Z',
+        dueAt: '2026-04-05T00:00:00.000Z',
+      };
+
+      const reviewed = reviewCard(futureCorrupted, 3, 'not-a-date');
+
+      expect(reviewed.card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('normalizes oversized card text fields while reviewing existing cards', () => {
     const card = {
       ...createNewCard('phi-text', 'letter', NOW),
