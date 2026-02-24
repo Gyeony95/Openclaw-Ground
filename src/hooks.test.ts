@@ -963,6 +963,30 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(staleLearningDueNow)).toBe(true);
   });
 
+  it('flags learning cards due exactly at updatedAt when reps are malformed', () => {
+    const malformedCounterDueNow = {
+      ...createNewCard('repair-learning-due-now-bad-counter', 'test', NOW),
+      state: 'learning' as const,
+      reps: Number.NaN,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(malformedCounterDueNow)).toBe(true);
+  });
+
+  it('flags learning cards due exactly at updatedAt when reps are non-integer', () => {
+    const fractionalCounterDueNow = {
+      ...createNewCard('repair-learning-due-now-fractional-counter', 'test', NOW),
+      state: 'learning' as const,
+      reps: 0.5,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(fractionalCounterDueNow)).toBe(true);
+  });
+
   it('flags review cards due exactly at updatedAt', () => {
     const reviewDueNow = {
       ...createNewCard('repair-review-due-now', 'test', NOW),

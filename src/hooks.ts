@@ -54,6 +54,16 @@ function parseDueAtOrNaN(dueAt: unknown): number {
   return parseTimeOrNaN(dueAt);
 }
 
+function normalizeNonNegativeCounter(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value) || !Number.isInteger(value)) {
+    return null;
+  }
+  if (value < 0) {
+    return null;
+  }
+  return value;
+}
+
 function normalizeReviewState(value: unknown): Card['state'] | null {
   if (value === 'review' || value === 'relearning' || value === 'learning') {
     return value;
@@ -139,7 +149,10 @@ export function hasScheduleRepairNeed(
   if (state !== 'learning') {
     return true;
   }
-  const reps = typeof card.reps === 'number' && Number.isFinite(card.reps) ? Math.max(0, Math.floor(card.reps)) : 0;
+  const reps = normalizeNonNegativeCounter(card.reps);
+  if (reps === null) {
+    return true;
+  }
   return reps > 0;
 }
 

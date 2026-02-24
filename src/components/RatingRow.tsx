@@ -34,6 +34,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
   const isCompact = width < 320;
   const isNarrow = width < 380;
   const isWide = width >= 520;
+  const intervalLineCount = isCompact ? 1 : 2;
   const isDisabled = disabled || busy;
 
   return (
@@ -52,6 +53,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
               isNarrow ? styles.buttonNarrow : null,
               isCompact ? styles.buttonCompact : null,
               isWide ? styles.buttonWide : null,
+              busy ? styles.buttonBusy : null,
               isDisabled
                 ? styles.buttonDisabledSurface
                 : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
@@ -68,7 +70,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
             </Text>
             <Text
               style={[styles.hint, styles.hintCentered, { color: isDisabled ? colors.subInk : item.tone }]}
-              numberOfLines={2}
+              numberOfLines={intervalLineCount}
               adjustsFontSizeToFit
               minimumFontScale={0.8}
             >
@@ -93,7 +95,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 10,
     minWidth: 78,
-    minHeight: 82,
+    minHeight: 88,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
@@ -105,6 +107,9 @@ const styles = StyleSheet.create({
   buttonNarrow: {
     paddingVertical: 11,
     paddingHorizontal: 8,
+  },
+  buttonBusy: {
+    opacity: 0.88,
   },
   buttonWide: {
     flexBasis: '23%',
