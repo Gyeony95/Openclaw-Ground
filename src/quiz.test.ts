@@ -418,9 +418,9 @@ describe('quiz distractors', () => {
     expect(resolveMultipleChoiceRating('4' as unknown as Rating, true)).toBe(4);
   });
 
-  it('normalizes malformed string ratings for correct selections to neutral Good', () => {
-    expect(resolveMultipleChoiceRating('0x4' as unknown as Rating, true)).toBe(3);
-    expect(resolveMultipleChoiceRating('Infinity' as unknown as Rating, true)).toBe(3);
+  it('normalizes malformed string ratings for correct selections to conservative Again by default', () => {
+    expect(resolveMultipleChoiceRating('0x4' as unknown as Rating, true)).toBe(1);
+    expect(resolveMultipleChoiceRating('Infinity' as unknown as Rating, true)).toBe(1);
   });
 
   it('accepts scientific-notation string ratings for correct selections', () => {
@@ -430,11 +430,16 @@ describe('quiz distractors', () => {
     expect(resolveMultipleChoiceRating('4e0' as unknown as Rating, true)).toBe(4);
   });
 
-  it('normalizes malformed correct-selection ratings to neutral Good', () => {
-    expect(resolveMultipleChoiceRating(Number.NaN as Rating, true)).toBe(3);
-    expect(resolveMultipleChoiceRating(2.5 as Rating, true)).toBe(3);
-    expect(resolveMultipleChoiceRating(0 as Rating, true)).toBe(3);
-    expect(resolveMultipleChoiceRating(9 as Rating, true)).toBe(3);
+  it('normalizes malformed correct-selection ratings to conservative Again by default', () => {
+    expect(resolveMultipleChoiceRating(Number.NaN as Rating, true)).toBe(1);
+    expect(resolveMultipleChoiceRating(2.5 as Rating, true)).toBe(1);
+    expect(resolveMultipleChoiceRating(0 as Rating, true)).toBe(1);
+    expect(resolveMultipleChoiceRating(9 as Rating, true)).toBe(1);
+  });
+
+  it('keeps malformed correct-selection ratings neutral for explicit review state', () => {
+    expect(resolveMultipleChoiceRating(Number.NaN as Rating, true, 'review')).toBe(3);
+    expect(resolveMultipleChoiceRating(9 as Rating, true, 'review')).toBe(3);
   });
 
   it('maps malformed correct-selection ratings to Again in learning/relearning states', () => {
@@ -459,9 +464,9 @@ describe('quiz distractors', () => {
     expect(resolveMultipleChoiceRating(3.99995 as Rating, true)).toBe(4);
   });
 
-  it('keeps larger fractional drift as neutral Good for correct selections', () => {
-    expect(resolveMultipleChoiceRating(2.0002 as Rating, true)).toBe(3);
-    expect(resolveMultipleChoiceRating(3.999 as Rating, true)).toBe(3);
+  it('keeps larger fractional drift conservative for correct selections by default', () => {
+    expect(resolveMultipleChoiceRating(2.0002 as Rating, true)).toBe(1);
+    expect(resolveMultipleChoiceRating(3.999 as Rating, true)).toBe(1);
   });
 
   it('locks mode switching while review is busy regardless of mode', () => {

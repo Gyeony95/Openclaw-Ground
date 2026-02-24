@@ -129,13 +129,13 @@ export function RatingRow({
         })}
       </View>
       {busy ? (
-        <View style={styles.busyRow} accessibilityLiveRegion="polite">
+        <View style={styles.busyRow} accessibilityLiveRegion="polite" accessibilityRole="status">
           <ActivityIndicator size="small" color={colors.subInk} />
           <Text style={styles.lockedHint}>Recording review...</Text>
         </View>
       ) : null}
       {hasLockedRatings && !busy ? (
-        <Text style={styles.lockedHint} accessibilityLiveRegion="polite">
+        <Text style={styles.lockedHint} accessibilityLiveRegion="polite" accessibilityRole="status">
           {lockReasonHint}
         </Text>
       ) : null}

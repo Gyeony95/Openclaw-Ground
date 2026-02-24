@@ -18,7 +18,8 @@ const RATING_INTEGER_TOLERANCE = 1e-4;
 export type StudyMode = 'flashcard' | 'multiple-choice';
 
 function fallbackRatingForState(state?: Card['state']): Rating {
-  return state === 'learning' || state === 'relearning' ? 1 : 3;
+  // Keep malformed/unknown state fallbacks conservative to avoid accidental promotions.
+  return state === 'review' ? 3 : 1;
 }
 
 function normalizeId(value: unknown, fallback: string): string {
