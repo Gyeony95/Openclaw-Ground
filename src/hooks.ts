@@ -311,7 +311,7 @@ function pickFreshestCard(existing: Card, loaded: Card): Card {
 }
 
 export function countUpcomingDueCards(cards: Card[], currentIso: string, hours = 24): number {
-  const nowMs = Date.parse(currentIso);
+  const nowMs = parseTimeOrNaN(currentIso);
   if (!Number.isFinite(nowMs)) {
     return 0;
   }
@@ -336,7 +336,7 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
 }
 
 export function countOverdueCards(cards: Card[], currentIso: string): number {
-  const nowMs = Date.parse(currentIso);
+  const nowMs = parseTimeOrNaN(currentIso);
   if (!Number.isFinite(nowMs)) {
     return 0;
   }
@@ -402,6 +402,9 @@ export function mergeDeckCards(existingCards: Card[], loadedCards: Card[]): Card
   };
 
   for (const existing of existingCards) {
+    if (!isRuntimeCard(existing)) {
+      continue;
+    }
     const mergeKey = normalizeCardIdForMerge(existing.id) ?? fallbackMergeKey('existing');
     const current = mergedById.get(mergeKey);
     if (!current) {
@@ -413,6 +416,9 @@ export function mergeDeckCards(existingCards: Card[], loadedCards: Card[]): Card
   }
 
   for (const loaded of loadedCards) {
+    if (!isRuntimeCard(loaded)) {
+      continue;
+    }
     const mergeKey = normalizeCardIdForMerge(loaded.id) ?? fallbackMergeKey('loaded');
     const current = mergedById.get(mergeKey);
     if (!current) {

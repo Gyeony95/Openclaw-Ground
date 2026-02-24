@@ -47,6 +47,7 @@ export function RatingRow({
   const intervalLineCount = isCompact ? 1 : 2;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(() => new Set(disabledRatings), [disabledRatings]);
+  const hasLockedRatings = !isDisabled && disabledRatings.length > 0;
 
   return (
     <View style={styles.container}>
@@ -130,6 +131,11 @@ export function RatingRow({
           );
         })}
       </View>
+      {hasLockedRatings && lockedHint ? (
+        <Text style={styles.lockedHint} accessibilityLiveRegion="polite">
+          {lockedHint}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -222,6 +228,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     color: colors.subInk,
+  },
+  lockedHint: {
+    fontSize: 11,
+    color: colors.subInk,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   hint: {
     fontSize: 12,

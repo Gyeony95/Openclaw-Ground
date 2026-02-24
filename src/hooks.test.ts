@@ -973,6 +973,45 @@ describe('mergeDeckCards', () => {
     expect(merged[1].word).toBe('B');
   });
 
+  it('ignores malformed non-card entries while merging deck cards', () => {
+    const valid = {
+      ...createNewCard('merge-valid', 'safe', NOW),
+      id: 'merge-valid-id',
+    };
+
+    const merged = mergeDeckCards(
+      [null as unknown as Card, valid],
+      [{ random: true } as unknown as Card, undefined as unknown as Card],
+    );
+
+    expect(merged).toEqual([valid]);
+  });
+
+  it('still merges valid duplicates when malformed entries are interleaved', () => {
+    const local = {
+      ...createNewCard('merge-valid-local', 'local', NOW),
+      id: 'merge-interleaved-id',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      reps: 1,
+    };
+    const loaded = {
+      ...createNewCard('merge-valid-loaded', 'loaded', NOW),
+      id: ' merge-interleaved-id ',
+      updatedAt: '2026-02-23T11:00:00.000Z',
+      reps: 3,
+    };
+
+    const merged = mergeDeckCards(
+      [local, {} as unknown as Card],
+      [null as unknown as Card, loaded],
+    );
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].meaning).toBe('loaded');
+    expect(merged[0].updatedAt).toBe('2026-02-23T11:00:00.000Z');
+    expect(merged[0].reps).toBe(3);
+  });
+
   it('prefers higher reps over later dueAt when updatedAt ties', () => {
     const local = {
       ...createNewCard('tie-reps-local', 'local', NOW),
@@ -1221,6 +1260,11 @@ describe('countUpcomingDueCards', () => {
     expect(countUpcomingDueCards([card], 'bad-clock')).toBe(0);
   });
 
+  it('returns zero for loose non-ISO runtime clocks', () => {
+    const upcoming = { ...createNewCard('upcoming-loose-clock', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
+    expect(countUpcomingDueCards([upcoming], '2026-02-23 12:00:00Z')).toBe(0);
+  });
+
   it('ignores cards with malformed dueAt values at runtime', () => {
     const malformed = { ...createNewCard('malformed-upcoming', 'test', NOW), dueAt: null } as unknown as Card;
 
@@ -1268,6 +1312,11 @@ describe('countOverdueCards', () => {
   it('returns zero for invalid runtime clocks', () => {
     const overdue = { ...createNewCard('overdue-invalid-clock', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };
     expect(countOverdueCards([overdue], 'bad-clock')).toBe(0);
+  });
+
+  it('returns zero for loose non-ISO runtime clocks', () => {
+    const overdue = { ...createNewCard('overdue-loose-clock', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };
+    expect(countOverdueCards([overdue], '2026-02-23 12:00:00Z')).toBe(0);
   });
 
   it('counts malformed dueAt values so schedule repairs stay visible', () => {

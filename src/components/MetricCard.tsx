@@ -12,7 +12,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const isNarrow = width < 360;
   const hasValue = Number.isFinite(value);
   const normalizedValue = hasValue ? Math.max(0, Math.round(value)) : null;
-  const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : 'Loading...';
+  const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : '--';
   const accessibilityValue = hasValue ? displayValue : 'loading';
   const statusLabel = hasValue ? 'Live' : 'Syncing';
 
