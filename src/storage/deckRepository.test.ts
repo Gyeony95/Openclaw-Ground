@@ -1121,6 +1121,52 @@ describe('deck repository', () => {
     expect(deck.cards).toHaveLength(0);
   });
 
+  it('clamps mildly far learning dueAt schedules to one day instead of collapsing to immediate retries', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'learning-mild-outlier',
+            word: 'lambda-learning',
+            meaning: 'mild outlier',
+            dueAt: '2026-02-23T04:48:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'learning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-23T00:00:00.000Z');
+  });
+
+  it('clamps mildly far relearning dueAt schedules to two days instead of collapsing to immediate retries', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'relearning-mild-outlier',
+            word: 'lambda-relearning',
+            meaning: 'mild outlier',
+            dueAt: '2026-02-24T04:48:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'relearning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
+  });
+
   it('repairs pathologically-future learning dueAt values to a short learning interval', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

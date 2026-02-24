@@ -33,6 +33,7 @@ const RELEARNING_SCHEDULE_FLOOR_DAYS = 10 * MINUTE_IN_DAYS;
 const LEARNING_MAX_SCHEDULE_DAYS = 1;
 const RELEARNING_MAX_SCHEDULE_DAYS = 2;
 const REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS = 7;
+const NON_REVIEW_OUTLIER_MULTIPLIER = 6;
 const COUNTER_MAX = Number.MAX_SAFE_INTEGER;
 
 let cardIdSequence = 0;
@@ -219,6 +220,7 @@ function normalizeTimeline(
   const updatedAtMs = Date.parse(updatedAt);
   const dueDaysFromUpdated = Number.isFinite(rawDueMs) ? (rawDueMs - updatedAtMs) / DAY_MS : Number.NaN;
   const expectedReviewScheduleDays = normalizeScheduledDays(card.stability, 'review');
+  const maxStateScheduleDays = maxScheduleDaysForState(normalizedState);
   const repairedReviewScheduleDaysForInvalidDue = clamp(
     expectedReviewScheduleDays,
     REVIEW_SCHEDULE_FLOOR_DAYS,
@@ -243,7 +245,13 @@ function normalizeTimeline(
   const dueBeyondStateWindow =
     normalizedState !== 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
-    dueDaysFromUpdated > maxScheduleDaysForState(normalizedState);
+    dueDaysFromUpdated > maxStateScheduleDays;
+  const dueWithinModerateNonReviewOutlierWindow =
+    normalizedState !== 'review' &&
+    rawDueAtIsValid &&
+    !dueNotAfterUpdatedAt &&
+    Number.isFinite(dueDaysFromUpdated) &&
+    dueDaysFromUpdated <= maxStateScheduleDays * NON_REVIEW_OUTLIER_MULTIPLIER;
   const dueBeyondReviewStabilityWindow =
     normalizedState === 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
@@ -272,7 +280,9 @@ function normalizeTimeline(
       ? addDaysIso(updatedAt, repairedReviewScheduleDaysForInvalidDue)
       : useReviewStabilityFallbackForOutlierDue
         ? addDaysIso(updatedAt, repairedReviewScheduleDaysForOutlierDue)
-        : timelineRepairDueAt
+        : dueWithinModerateNonReviewOutlierWindow
+          ? addDaysIso(updatedAt, maxStateScheduleDays)
+          : timelineRepairDueAt
     : rawDueAt ?? fallbackDueAt;
   const dueAnchorMs = Date.parse(dueTimelineAnchor ?? fallbackDueAt);
   const fallbackDueMs = Date.parse(fallbackDueAt);

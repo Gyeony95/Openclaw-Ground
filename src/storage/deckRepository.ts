@@ -24,6 +24,7 @@ const LEARNING_MAX_SCHEDULE_DAYS = 1;
 const RELEARNING_MAX_SCHEDULE_DAYS = 2;
 const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 const REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS = 7;
+const NON_REVIEW_OUTLIER_MULTIPLIER = 6;
 
 const VALID_STATES: ReviewState[] = ['learning', 'review', 'relearning'];
 type CounterNormalizationMode = 'sanitize' | 'saturate';
@@ -243,9 +244,16 @@ function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode
     normalizedDueMs = normalizedUpdatedMs + repairedReviewDays * DAY_MS;
     scheduleDays = repairedReviewDays;
   }
-  if (scheduleDays > maxScheduleDaysForState(state)) {
+  const maxScheduleDays = maxScheduleDaysForState(state);
+  if (scheduleDays > maxScheduleDays) {
+    const isModerateNonReviewOutlier =
+      state !== 'review' &&
+      Number.isFinite(scheduleDays) &&
+      scheduleDays <= maxScheduleDays * NON_REVIEW_OUTLIER_MULTIPLIER;
     if (state === 'review') {
       normalizedDueMs = normalizedUpdatedMs + STABILITY_MAX * DAY_MS;
+    } else if (isModerateNonReviewOutlier) {
+      normalizedDueMs = normalizedUpdatedMs + maxScheduleDays * DAY_MS;
     } else {
       normalizedDueMs = normalizedUpdatedMs + scheduleFallbackForState(state) * DAY_MS;
     }

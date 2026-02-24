@@ -2383,6 +2383,34 @@ describe('fsrs scheduler', () => {
     expect(repairedResult.scheduledDays).toBe(shortScheduleResult.scheduledDays);
   });
 
+  it('clamps mildly over-window relearning schedules to the relearning max window before review math', () => {
+    const updatedAt = NOW;
+    const bounded = {
+      ...createNewCard('relearning-window-bounded', 'definition', NOW),
+      state: 'relearning' as const,
+      updatedAt,
+      createdAt: NOW,
+      dueAt: addDaysIso(updatedAt, 2),
+      reps: 8,
+      lapses: 2,
+      stability: 2,
+      difficulty: 6,
+    };
+    const mildOutlier = {
+      ...bounded,
+      id: 'relearning-window-outlier',
+      dueAt: addDaysIso(updatedAt, 2.1),
+    };
+    const reviewAt = addDaysIso(updatedAt, 2);
+
+    const boundedReview = reviewCard(bounded, 3, reviewAt);
+    const outlierReview = reviewCard(mildOutlier, 3, reviewAt);
+
+    expect(outlierReview.card.state).toBe('review');
+    expect(outlierReview.card.stability).toBeCloseTo(boundedReview.card.stability, 6);
+    expect(outlierReview.scheduledDays).toBe(boundedReview.scheduledDays);
+  });
+
   it('does not round 1.x day review schedules up to two days for on-time hard reviews', () => {
     const updatedAt = '2026-02-23T12:00:00.000Z';
     const card = {

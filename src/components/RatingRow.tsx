@@ -73,14 +73,14 @@ const styles = StyleSheet.create({
   button: {
     borderWidth: 1,
     borderRadius: radii.md,
-    paddingVertical: 12,
+    paddingVertical: 13,
     paddingHorizontal: 10,
     minWidth: 78,
-    minHeight: 76,
+    minHeight: 82,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   buttonCompact: {
     flexBasis: '100%',
@@ -97,22 +97,22 @@ const styles = StyleSheet.create({
     opacity: 0.95,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.72,
   },
   buttonDisabledSurface: {
     borderColor: colors.border,
     backgroundColor: colors.surfaceAlt,
   },
   buttonText: {
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: '800',
     letterSpacing: 0.72,
     textTransform: 'uppercase',
   },
   hint: {
-    fontSize: 11,
+    fontSize: 11.5,
     letterSpacing: 0.35,
-    fontWeight: '700',
+    fontWeight: '800',
     fontVariant: ['tabular-nums'],
   },
 });
