@@ -185,6 +185,11 @@ export function compareDueCards(a: Card, b: Card): number {
   return a.id.localeCompare(b.id);
 }
 
+export function collectDueCards(cards: Card[], currentIso: string, runtimeNowIso: string): Card[] {
+  const effectiveCurrentIso = resolveReviewClock(currentIso, runtimeNowIso);
+  return cards.filter((card) => isReviewReadyDueAt(card.dueAt, effectiveCurrentIso)).sort(compareDueCards);
+}
+
 export function mergeDeckCards(existingCards: Card[], loadedCards: Card[]): Card[] {
   if (existingCards.length === 0 && loadedCards.length === 0) {
     return [];
@@ -440,10 +445,10 @@ export function useDeck() {
     };
   }, []);
 
+  const effectiveClockIso = useMemo(() => resolveReviewClock(clockIso, nowIso()), [clockIso]);
+
   const dueCards = useMemo(() => {
-    return deckState.cards
-      .filter((card) => isReviewReadyDueAt(card.dueAt, clockIso))
-      .sort(compareDueCards);
+    return collectDueCards(deckState.cards, clockIso, nowIso());
   }, [deckState.cards, clockIso]);
 
   const addCard = useCallback((word: string, meaning: string, notes?: string) => {
@@ -477,11 +482,11 @@ export function useDeck() {
     return true;
   }, [clockIso]);
 
-  const stats = useMemo(() => computeDeckStats(deckState.cards, clockIso), [deckState.cards, clockIso]);
+  const stats = useMemo(() => computeDeckStats(deckState.cards, effectiveClockIso), [deckState.cards, effectiveClockIso]);
 
   return {
     loading,
-    clockIso,
+    clockIso: effectiveClockIso,
     lastReviewedAt: deckState.lastReviewedAt,
     cards: deckState.cards,
     dueCards,

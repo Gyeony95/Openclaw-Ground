@@ -1,6 +1,7 @@
 import {
   applyReviewToDeckState,
   applyDueReview,
+  collectDueCards,
   compareDueCards,
   countOverdueCards,
   countUpcomingDueCards,
@@ -497,6 +498,44 @@ describe('compareDueCards', () => {
     const orderedIds = [validTimeline, malformedTimeline].sort(compareDueCards).map((card) => card.id);
 
     expect(orderedIds).toEqual(['malformed-timeline', 'valid-timeline']);
+  });
+});
+
+describe('collectDueCards', () => {
+  it('filters due cards using the same wall-safe review clock used for submissions', () => {
+    const dueIfFutureClock = {
+      ...createNewCard('future-queue-guard', 'clock', NOW),
+      dueAt: '2026-02-24T00:00:00.000Z',
+    };
+
+    const dueCards = collectDueCards(
+      [dueIfFutureClock],
+      '2099-01-01T00:00:00.000Z',
+      '2026-02-23T12:00:00.000Z',
+    );
+
+    expect(dueCards).toHaveLength(0);
+  });
+
+  it('keeps malformed dueAt cards in front for immediate repair', () => {
+    const malformed = {
+      ...createNewCard('malformed-queue', 'repair', NOW),
+      dueAt: 'bad-due',
+      updatedAt: '2026-02-23T11:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+    const valid = {
+      ...createNewCard('valid-queue', 'repair', NOW),
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+
+    const dueCards = collectDueCards([valid, malformed], NOW, NOW);
+
+    expect(dueCards).toHaveLength(2);
+    expect(dueCards[0].id).toBe(malformed.id);
+    expect(dueCards[1].id).toBe(valid.id);
   });
 });
 

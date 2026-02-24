@@ -875,13 +875,13 @@ export default function App() {
                             </Text>
                           </View>
                         ) : null}
-                        {reviewActionError ? (
-                          <Text style={styles.actionError} accessibilityLiveRegion="polite">
-                            {reviewActionError}
-                          </Text>
-                        ) : null}
                       </View>
                     )}
+                    {reviewActionError ? (
+                      <Text style={styles.actionError} accessibilityLiveRegion="polite">
+                        {reviewActionError}
+                      </Text>
+                    ) : null}
                   </View>
                 ) : null}
               </View>
