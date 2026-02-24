@@ -29,7 +29,12 @@ import {
 } from './src/hooks';
 import { previewIntervals } from './src/scheduler/fsrs';
 import { FlashcardSide, flipFlashcardSide, getFlashcardVisibility } from './src/flashcard';
-import { composeQuizOptions, hasValidQuizSelection, resolveMultipleChoiceRating } from './src/quiz';
+import {
+  composeQuizOptions,
+  findQuizOptionById,
+  hasValidQuizSelection,
+  resolveMultipleChoiceRating,
+} from './src/quiz';
 import { colors, radii } from './src/theme';
 import { formatDueLabel } from './src/utils/due';
 import { formatIntervalLabel } from './src/utils/interval';
@@ -293,10 +298,6 @@ export default function App() {
   const dueCardRevealKey = dueCard ? `${dueCard.id}:${dueCard.updatedAt}:${dueCard.dueAt}` : 'none';
   const quizSeed = dueCard ? `${dueCard.id}:${dueCard.updatedAt}` : 'none';
   const quizOptions = useMemo(() => (dueCard ? composeQuizOptions(dueCard, cards, quizSeed, 3) : []), [cards, dueCard, quizSeed]);
-  const selectedQuizOption = useMemo(
-    () => quizOptions.find((option) => option.id === selectedQuizOptionId),
-    [quizOptions, selectedQuizOptionId],
-  );
   const correctQuizOption = useMemo(() => quizOptions.find((option) => option.isCorrect), [quizOptions]);
   const canUseMultipleChoice = quizOptions.length === 4;
   const missingQuizOptions = Math.max(0, 4 - quizOptions.length);
@@ -306,8 +307,13 @@ export default function App() {
       : `Need ${missingQuizOptions.toLocaleString()} more distinct ${
           missingQuizOptions === 1 ? 'card meaning' : 'card meanings'
         } for multiple-choice mode.`;
-  const hasQuizSelection = hasValidQuizSelection(selectedQuizOptionId, quizOptions);
-  const quizSelectionIsCorrect = selectedQuizOption?.isCorrect ?? false;
+  const normalizedSelectedQuizOption = useMemo(
+    () => findQuizOptionById(quizOptions, selectedQuizOptionId),
+    [quizOptions, selectedQuizOptionId],
+  );
+  const normalizedSelectedQuizOptionId = normalizedSelectedQuizOption?.id ?? null;
+  const hasQuizSelection = normalizedSelectedQuizOption !== undefined;
+  const quizSelectionIsCorrect = normalizedSelectedQuizOption?.isCorrect ?? false;
   const forceAgainForQuizSelection = studyMode === 'multiple-choice' && hasQuizSelection && !quizSelectionIsCorrect;
   const disabledRatingsInQuizMode = forceAgainForQuizSelection ? ([2, 3, 4] as Rating[]) : [];
   const ratingIntervalLabels = useMemo(
@@ -1044,7 +1050,7 @@ export default function App() {
                             accessibilityLabel="Meaning options"
                           >
                             {quizOptions.map((option) => {
-                              const isSelected = selectedQuizOptionId === option.id;
+                              const isSelected = normalizedSelectedQuizOptionId === option.id;
                               const showCorrect = hasQuizSelection && option.isCorrect;
                               const showIncorrect = hasQuizSelection && isSelected && !option.isCorrect;
                               const optionPrefix = showCorrect ? 'Correct: ' : showIncorrect ? 'Incorrect: ' : '';

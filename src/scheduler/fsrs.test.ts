@@ -754,6 +754,26 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBe(neutral.scheduledDays);
   });
 
+  it('accepts decimal-string review ratings and schedules identically to numeric ratings', () => {
+    const reviewCardBase = {
+      ...createNewCard('string-rating-review', 'rating', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 1),
+      updatedAt: NOW,
+      reps: 5,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(reviewCardBase, '2' as unknown as Rating, addDaysIso(NOW, 1));
+    const hard = reviewCard(reviewCardBase, 2, addDaysIso(NOW, 1));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.card.lapses).toBe(reviewCardBase.lapses);
+    expect(reviewed.scheduledDays).toBe(hard.scheduledDays);
+  });
+
   it('treats out-of-range learning ratings as Again to avoid accidental promotion', () => {
     const learningCard = createNewCard('invalid-rating-range-learning', 'letter', NOW);
     const reviewed = reviewCard(learningCard, 99 as Rating, NOW);

@@ -1,6 +1,7 @@
 import { Card, Rating } from './types';
 import {
   composeQuizOptions,
+  findQuizOptionById,
   generateDistractors,
   hasValidQuizSelection,
   inferPartOfSpeech,
@@ -109,6 +110,26 @@ describe('quiz distractors', () => {
 
     expect(hasValidQuizSelection(`  ${selectedId}  `, options)).toBe(true);
     expect(hasValidQuizSelection('   ', options)).toBe(false);
+  });
+
+  it('finds selected options by normalized ids when option ids include whitespace', () => {
+    const options = [
+      { id: '  correct-option  ', cardId: 'c1', text: 'answer', isCorrect: true },
+      { id: 'wrong-option', cardId: 'c2', text: 'wrong', isCorrect: false },
+    ];
+
+    const selected = findQuizOptionById(options, 'correct-option');
+
+    expect(selected?.id).toBe('  correct-option  ');
+    expect(selected?.isCorrect).toBe(true);
+  });
+
+  it('returns undefined for malformed or missing selected option ids', () => {
+    const options = composeQuizOptions(target, deck, 'seed-1');
+
+    expect(findQuizOptionById(options, null)).toBeUndefined();
+    expect(findQuizOptionById(options, '   ')).toBeUndefined();
+    expect(findQuizOptionById(options, 'missing')).toBeUndefined();
   });
 
   it('invalidates stale selection ids when options are regenerated with a different seed', () => {

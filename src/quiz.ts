@@ -25,14 +25,21 @@ function normalizeOptionText(value: unknown): string {
 }
 
 export function hasValidQuizSelection(selectedOptionId: string | null, options: QuizOption[]): boolean {
+  return findQuizOptionById(options, selectedOptionId) !== undefined;
+}
+
+export function findQuizOptionById(
+  options: QuizOption[],
+  selectedOptionId: string | null,
+): QuizOption | undefined {
   if (typeof selectedOptionId !== 'string') {
-    return false;
+    return undefined;
   }
   const normalizedSelectedId = selectedOptionId.trim();
   if (normalizedSelectedId.length === 0) {
-    return false;
+    return undefined;
   }
-  return options.some((option) => typeof option?.id === 'string' && option.id.trim() === normalizedSelectedId);
+  return options.find((option) => typeof option?.id === 'string' && option.id.trim() === normalizedSelectedId);
 }
 
 export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {

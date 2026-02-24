@@ -556,7 +556,7 @@ function retrievability(elapsedDays: number, stability: number): number {
 
 function intervalFromStability(stability: number, desiredRetention: number): number {
   const s = clampFinite(stability, STABILITY_MIN, STABILITY_MAX, 0.5);
-  const retention = clamp(desiredRetention, 0.7, 0.98);
+  const retention = clampFinite(desiredRetention, 0.7, 0.98, 0.9);
   const interval = (s / FSRS_FACTOR) * (Math.pow(retention, 1 / FSRS_DECAY) - 1);
   return clamp(interval, REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX);
 }
