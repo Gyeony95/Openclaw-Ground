@@ -490,7 +490,7 @@ export function applyDueReview(
     return { cards, reviewed: false };
   }
   const effectiveCurrentIso = resolveActionClock(currentIso, runtimeNowIso);
-  let targetIndex = -1;
+  const candidateIndices: number[] = [];
   for (let index = 0; index < cards.length; index += 1) {
     const candidate = cards[index];
     if (!isRuntimeCard(candidate)) {
@@ -500,28 +500,31 @@ export function applyDueReview(
     if (candidateId !== normalizedCardId || !isReviewReadyCard(candidate, effectiveCurrentIso)) {
       continue;
     }
-    if (targetIndex === -1 || compareDueCards(candidate, cards[targetIndex]) < 0) {
-      targetIndex = index;
+    candidateIndices.push(index);
+  }
+  if (candidateIndices.length === 0) {
+    return { cards, reviewed: false };
+  }
+  candidateIndices.sort((a, b) => compareDueCards(cards[a], cards[b]));
+
+  for (const targetIndex of candidateIndices) {
+    const targetCard = cards[targetIndex];
+    if (!isRuntimeCard(targetCard)) {
+      continue;
+    }
+
+    try {
+      const reviewed = reviewCard(targetCard, rating, effectiveCurrentIso).card;
+      const nextCards = [...cards];
+      nextCards[targetIndex] = reviewed;
+      return { cards: nextCards, reviewed: true, reviewedAt: reviewed.updatedAt };
+    } catch {
+      // Keep trying lower-priority due duplicates when one runtime-corrupted entry throws.
     }
   }
-  if (targetIndex < 0) {
-    return { cards, reviewed: false };
-  }
-  const targetCard = cards[targetIndex];
-  if (!isRuntimeCard(targetCard)) {
-    return { cards, reviewed: false };
-  }
 
-  let reviewed: Card;
-  try {
-    reviewed = reviewCard(targetCard, rating, effectiveCurrentIso).card;
-  } catch {
-    // Keep the queue stable when runtime-corrupted cards throw during scheduling.
-    return { cards, reviewed: false };
-  }
-  const nextCards = [...cards];
-  nextCards[targetIndex] = reviewed;
-  return { cards: nextCards, reviewed: true, reviewedAt: reviewed.updatedAt };
+  // Keep the queue stable when all runtime-corrupted candidates throw during scheduling.
+  return { cards, reviewed: false };
 }
 
 export function applyReviewToDeckState(

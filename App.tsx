@@ -869,7 +869,7 @@ export default function App() {
                     >
                       <View style={[styles.queueProgressFill, { width: queueProgressWidth, backgroundColor: queueProgressTone }]} />
                     </View>
-                    <Text style={styles.queueProgressMeta} numberOfLines={isCompactLayout ? 2 : 1} ellipsizeMode="tail">
+                    <Text style={styles.queueProgressMeta} numberOfLines={isCompactLayout ? 3 : 2} ellipsizeMode="tail">
                       {queueProgressMeta}
                     </Text>
                   </View>

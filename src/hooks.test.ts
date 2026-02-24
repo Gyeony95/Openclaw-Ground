@@ -80,6 +80,61 @@ describe('applyDueReview', () => {
     expect(result.cards[0]).toBe(throwingCard);
   });
 
+  it('falls through to the next due duplicate when the highest-priority candidate throws', () => {
+    const validCandidate = {
+      ...createNewCard('valid-duplicate-review', 'safe', NOW),
+      id: 'duplicate-fallback-review',
+      dueAt: '2026-02-23T12:10:00.000Z',
+      updatedAt: '2026-02-23T11:40:00.000Z',
+      state: 'review' as const,
+    };
+    const throwingCandidate = {
+      ...createNewCard('throwing-duplicate-review', 'safe', NOW),
+      id: 'duplicate-fallback-review',
+      dueAt: '2026-02-23T12:00:00.000Z',
+      updatedAt: '2026-02-23T11:30:00.000Z',
+      state: 'review' as const,
+    };
+    Object.defineProperty(throwingCandidate, 'difficulty', {
+      get() {
+        throw new Error('bad runtime difficulty');
+      },
+    });
+
+    const result = applyDueReview([throwingCandidate, validCandidate], 'duplicate-fallback-review', 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).toBe(throwingCandidate);
+    expect(result.cards[1]).not.toBe(validCandidate);
+    expect(result.cards[1].reps).toBe(validCandidate.reps + 1);
+  });
+
+  it('returns not reviewed when all due duplicates throw during scheduler normalization', () => {
+    const firstThrowing = createNewCard('throwing-duplicate-first', 'safe', NOW);
+    const secondThrowing = {
+      ...createNewCard('throwing-duplicate-second', 'safe', NOW),
+      id: firstThrowing.id,
+    };
+    Object.defineProperty(firstThrowing, 'difficulty', {
+      get() {
+        throw new Error('bad runtime difficulty first');
+      },
+    });
+    Object.defineProperty(secondThrowing, 'difficulty', {
+      get() {
+        throw new Error('bad runtime difficulty second');
+      },
+    });
+
+    const cards = [firstThrowing, secondThrowing];
+    const result = applyDueReview(cards, firstThrowing.id, 3, NOW);
+
+    expect(result.reviewed).toBe(false);
+    expect(result.cards).toBe(cards);
+    expect(result.cards[0]).toBe(firstThrowing);
+    expect(result.cards[1]).toBe(secondThrowing);
+  });
+
   it('reviews cards with malformed dueAt to recover corrupted schedules', () => {
     const malformed = {
       ...createNewCard('gamma-broken-due', 'third', NOW),
