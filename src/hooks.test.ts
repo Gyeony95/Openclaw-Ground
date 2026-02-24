@@ -53,6 +53,17 @@ describe('applyDueReview', () => {
     expect(result.cards[0]).toBe(card);
   });
 
+  it('skips malformed runtime deck entries and still reviews the matching due card', () => {
+    const due = createNewCard('apply-due-malformed-runtime', 'safe', NOW);
+    const malformedCards = [null, { dueAt: NOW }, due] as unknown as Card[];
+
+    const result = applyDueReview(malformedCards, due.id, 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[2]).not.toBe(due);
+    expect(result.cards[2].reps).toBe(due.reps + 1);
+  });
+
   it('reviews cards with malformed dueAt to recover corrupted schedules', () => {
     const malformed = {
       ...createNewCard('gamma-broken-due', 'third', NOW),
@@ -728,6 +739,14 @@ describe('collectDueCards', () => {
     expect(dueCards).toHaveLength(2);
   });
 
+  it('ignores non-card runtime entries instead of throwing during queue collection', () => {
+    const due = createNewCard('collect-due-malformed-runtime', 'repair', NOW);
+    const dueCards = collectDueCards([undefined, due, 42] as unknown as Card[], NOW, NOW);
+
+    expect(dueCards).toHaveLength(1);
+    expect(dueCards[0].id).toBe(due.id);
+  });
+
   it('keeps pathologically future timelines in the due queue for immediate repair', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
@@ -1154,6 +1173,14 @@ describe('hasDueCard', () => {
     expect(hasDueCard([malformed], malformed.id, NOW)).toBe(true);
   });
 
+  it('ignores non-card runtime entries during due checks', () => {
+    const due = createNewCard('has-due-malformed-runtime', 'safe', NOW);
+    const cards = [undefined, due, { id: due.id }] as unknown as Card[];
+
+    expect(hasDueCard(cards, due.id, NOW)).toBe(true);
+    expect(hasDueCard(cards, 'missing-id', NOW)).toBe(false);
+  });
+
   it('treats pathologically future timelines as due so they can be repaired', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
@@ -1557,6 +1584,13 @@ describe('countScheduleRepairCards', () => {
     };
 
     expect(countScheduleRepairCards([overlongLearning, overlongReview, healthyReview])).toBe(2);
+  });
+
+  it('counts non-card runtime entries as repair-needed to keep corruption visible', () => {
+    const healthy = createNewCard('repair-count-malformed-runtime', 'test', NOW);
+    const cards = [healthy, null, { id: 'partial' }] as unknown as Card[];
+
+    expect(countScheduleRepairCards(cards)).toBe(2);
   });
 });
 

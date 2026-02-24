@@ -68,6 +68,19 @@ function normalizeCardIdForMerge(id: unknown): string | null {
   return normalizeCardIdInput(id);
 }
 
+function isRuntimeCard(value: unknown): value is Card {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const candidate = value as Partial<Card>;
+  return (
+    typeof candidate.id === 'string' &&
+    typeof candidate.createdAt === 'string' &&
+    typeof candidate.updatedAt === 'string' &&
+    typeof candidate.dueAt === 'string'
+  );
+}
+
 function parseTimeOrNaN(iso: string): number {
   if (!isIsoDateTime(iso)) {
     return Number.NaN;
@@ -313,6 +326,9 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
   const cutoffMs = Number.isFinite(windowMs) ? nowMs + windowMs : Number.POSITIVE_INFINITY;
 
   return cards.filter((card) => {
+    if (!isRuntimeCard(card)) {
+      return false;
+    }
     const dueMs = parseDueAtOrNaN(card.dueAt);
     // "Upcoming" should represent future workload, excluding cards already due now.
     return Number.isFinite(dueMs) && dueMs > nowMs && dueMs <= cutoffMs;
@@ -327,6 +343,9 @@ export function countOverdueCards(cards: Card[], currentIso: string): number {
   const overdueCutoff = nowMs - OVERDUE_GRACE_MS;
 
   return cards.filter((card) => {
+    if (!isRuntimeCard(card)) {
+      return true;
+    }
     const dueMs = parseDueAtOrNaN(card.dueAt);
     if (!Number.isFinite(dueMs)) {
       // Keep malformed schedules visible in overdue metrics so repair work stays prominent.
@@ -337,28 +356,36 @@ export function countOverdueCards(cards: Card[], currentIso: string): number {
 }
 
 export function countScheduleRepairCards(cards: Card[]): number {
-  return cards.filter((card) => hasScheduleRepairNeed(card)).length;
+  return cards.filter((card) => !isRuntimeCard(card) || hasScheduleRepairNeed(card)).length;
 }
 
 export function compareDueCards(a: Card, b: Card): number {
-  const dueDelta = parseDueTimeForSort(a.dueAt) - parseDueTimeForSort(b.dueAt);
+  const aDueAt = typeof a?.dueAt === 'string' ? a.dueAt : '';
+  const bDueAt = typeof b?.dueAt === 'string' ? b.dueAt : '';
+  const aUpdatedAt = typeof a?.updatedAt === 'string' ? a.updatedAt : '';
+  const bUpdatedAt = typeof b?.updatedAt === 'string' ? b.updatedAt : '';
+  const aCreatedAt = typeof a?.createdAt === 'string' ? a.createdAt : '';
+  const bCreatedAt = typeof b?.createdAt === 'string' ? b.createdAt : '';
+  const dueDelta = parseDueTimeForSort(aDueAt) - parseDueTimeForSort(bDueAt);
   if (dueDelta !== 0) {
     return dueDelta;
   }
-  const updatedDelta = parseTimeOrRepairPriority(a.updatedAt) - parseTimeOrRepairPriority(b.updatedAt);
+  const updatedDelta = parseTimeOrRepairPriority(aUpdatedAt) - parseTimeOrRepairPriority(bUpdatedAt);
   if (updatedDelta !== 0) {
     return updatedDelta;
   }
-  const createdDelta = parseTimeOrRepairPriority(a.createdAt) - parseTimeOrRepairPriority(b.createdAt);
+  const createdDelta = parseTimeOrRepairPriority(aCreatedAt) - parseTimeOrRepairPriority(bCreatedAt);
   if (createdDelta !== 0) {
     return createdDelta;
   }
-  return normalizeCardIdForSort(a.id).localeCompare(normalizeCardIdForSort(b.id));
+  return normalizeCardIdForSort(a?.id).localeCompare(normalizeCardIdForSort(b?.id));
 }
 
 export function collectDueCards(cards: Card[], currentIso: string, runtimeNowIso: string): Card[] {
   const effectiveCurrentIso = resolveReviewClock(currentIso, runtimeNowIso);
-  return cards.filter((card) => isReviewReadyCard(card, effectiveCurrentIso)).sort(compareDueCards);
+  return cards
+    .filter((card): card is Card => isRuntimeCard(card) && isReviewReadyCard(card, effectiveCurrentIso))
+    .sort(compareDueCards);
 }
 
 export function mergeDeckCards(existingCards: Card[], loadedCards: Card[]): Card[] {
@@ -419,6 +446,9 @@ export function applyDueReview(
   let targetIndex = -1;
   for (let index = 0; index < cards.length; index += 1) {
     const candidate = cards[index];
+    if (!isRuntimeCard(candidate)) {
+      continue;
+    }
     const candidateId = normalizeCardIdForMatch(candidate.id);
     if (candidateId !== normalizedCardId || !isReviewReadyCard(candidate, effectiveCurrentIso)) {
       continue;
@@ -430,8 +460,12 @@ export function applyDueReview(
   if (targetIndex < 0) {
     return { cards, reviewed: false };
   }
+  const targetCard = cards[targetIndex];
+  if (!isRuntimeCard(targetCard)) {
+    return { cards, reviewed: false };
+  }
 
-  const reviewed = reviewCard(cards[targetIndex], rating, effectiveCurrentIso).card;
+  const reviewed = reviewCard(targetCard, rating, effectiveCurrentIso).card;
   const nextCards = [...cards];
   nextCards[targetIndex] = reviewed;
   return { cards: nextCards, reviewed: true, reviewedAt: reviewed.updatedAt };
@@ -462,7 +496,12 @@ export function hasDueCard(cards: Card[], cardId: string, currentIso: string): b
     return false;
   }
   const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
-  return cards.some((card) => normalizeCardIdForMatch(card.id) === normalizedCardId && isReviewReadyCard(card, effectiveCurrentIso));
+  return cards.some(
+    (card) =>
+      isRuntimeCard(card) &&
+      normalizeCardIdForMatch(card.id) === normalizedCardId &&
+      isReviewReadyCard(card, effectiveCurrentIso),
+  );
 }
 
 export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: string): string {

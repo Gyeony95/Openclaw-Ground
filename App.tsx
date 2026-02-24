@@ -278,6 +278,11 @@ export default function App() {
       ? 'Schedules healthy'
       : `${scheduleRepairCount.toLocaleString()} schedule ${scheduleRepairCount === 1 ? 'repair' : 'repairs'}`;
   const dueNeedsRepair = dueCard ? hasScheduleRepairNeed(dueCard) : false;
+  const dueCardWord = dueCard ? normalizeBoundedText(dueCard.word, WORD_MAX_LENGTH) || '[invalid word]' : '[no card]';
+  const dueCardMeaning = dueCard
+    ? normalizeBoundedText(dueCard.meaning, MEANING_MAX_LENGTH) || '[invalid meaning]'
+    : '[no answer]';
+  const dueCardNotes = dueCard ? normalizeBoundedText(dueCard.notes ?? '', NOTES_MAX_LENGTH) : '';
   const exactDueLabel = dueNeedsRepair ? 'Needs schedule repair' : exactDateLabel(dueCard?.dueAt);
   const relativeDueLabel = dueCard
     ? !dueNeedsRepair && hasValidIso(dueCard.dueAt)
@@ -313,7 +318,8 @@ export default function App() {
   const quizSeed = dueCard ? `${dueCard.id}:${dueCard.updatedAt}` : 'none';
   const quizOptions = useMemo(() => (dueCard ? composeQuizOptions(dueCard, cards, quizSeed, 3) : []), [cards, dueCard, quizSeed]);
   const correctQuizOption = useMemo(() => quizOptions.find((option) => option.isCorrect), [quizOptions]);
-  const correctQuizOptionText = correctQuizOption?.text ?? '[answer unavailable]';
+  const correctQuizOptionText =
+    normalizeBoundedText(correctQuizOption?.text ?? '', MEANING_MAX_LENGTH) || '[answer unavailable]';
   const canUseMultipleChoice = quizOptions.length === 4;
   const missingQuizOptions = Math.max(0, 4 - quizOptions.length);
   const multipleChoiceRequirementLabel =
@@ -411,8 +417,8 @@ export default function App() {
   const quizOptionsLocked = isReviewBusy;
   const isFormEditable = !loading && !isAddBusy;
   const flashcardVisibility = useMemo(
-    () => getFlashcardVisibility(flashcardSide, Boolean(dueCard?.notes?.trim())),
-    [dueCard?.notes, flashcardSide],
+    () => getFlashcardVisibility(flashcardSide, dueCardNotes.length > 0),
+    [dueCardNotes, flashcardSide],
   );
   const canShowRatings = studyMode === 'flashcard' ? flashcardVisibility.showRatings : hasQuizSelection;
 
@@ -885,7 +891,7 @@ export default function App() {
                       isReviewBusy && styles.reviewCardBusy,
                     ]}
                     accessible
-                    accessibilityLabel={`Review card ${dueCard.word}. ${dueCardStateConfig?.label ?? 'Learning'}. ${relativeDueLabel}.`}
+                    accessibilityLabel={`Review card ${dueCardWord}. ${dueCardStateConfig?.label ?? 'Learning'}. ${relativeDueLabel}.`}
                   >
                     <View style={[styles.reviewTimeline, { borderColor: `${dueCardUrgency.tone}44` }]}>
                       <Text style={styles.reviewTimelineLabel}>Scheduled for</Text>
@@ -976,13 +982,13 @@ export default function App() {
                           isReviewBusy && styles.flashcardFaceDisabled,
                         ]}
                         accessibilityRole="button"
-                        accessibilityLabel={`Flashcard ${dueCard.word}. ${flashcardVisibility.showMeaning ? 'Back side showing answer.' : 'Front side showing prompt.'}`}
+                        accessibilityLabel={`Flashcard ${dueCardWord}. ${flashcardVisibility.showMeaning ? 'Back side showing answer.' : 'Front side showing prompt.'}`}
                         accessibilityHint="Tap to flip between word and answer"
                         accessibilityState={{ disabled: isReviewBusy, busy: isReviewBusy }}
                       >
                         <View style={styles.reviewHeader}>
                           <Text style={[styles.word, isCompactLayout && styles.wordCompact]} numberOfLines={2} ellipsizeMode="tail">
-                            {dueCard.word}
+                            {dueCardWord}
                           </Text>
                           <View style={styles.reviewBadgeColumn}>
                             <Text
@@ -1015,8 +1021,8 @@ export default function App() {
                             {quickRatingPreviewLabel}
                           </Text>
                         ) : null}
-                        {flashcardVisibility.showMeaning ? <Text style={styles.meaning}>{dueCard.meaning}</Text> : null}
-                        {flashcardVisibility.showExample ? <Text style={styles.notes}>{dueCard.notes}</Text> : null}
+                        {flashcardVisibility.showMeaning ? <Text style={styles.meaning}>{dueCardMeaning}</Text> : null}
+                        {flashcardVisibility.showExample ? <Text style={styles.notes}>{dueCardNotes}</Text> : null}
                         {flashcardVisibility.showMeaning ? (
                           <View style={styles.metaRow}>
                             <Text style={styles.metaText}>Difficulty {formatMetricNumber(dueCard.difficulty, 1)}</Text>
@@ -1031,7 +1037,7 @@ export default function App() {
                       <View style={styles.flashcardFace}>
                         <View style={styles.reviewHeader}>
                           <Text style={[styles.word, isCompactLayout && styles.wordCompact]} numberOfLines={2} ellipsizeMode="tail">
-                            {dueCard.word}
+                            {dueCardWord}
                           </Text>
                           <View style={styles.reviewBadgeColumn}>
                             <Text
