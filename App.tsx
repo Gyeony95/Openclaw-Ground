@@ -366,6 +366,16 @@ export default function App() {
     }
   }, [addAttempted, missingMeaning, missingWord]);
 
+  useEffect(() => {
+    if (loading || dueCard || !isFormEditable) {
+      return;
+    }
+    const focusId = requestAnimationFrame(() => {
+      wordInputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(focusId);
+  }, [dueCard, isFormEditable, loading]);
+
   function handleAddCard() {
     if (loading || addLockRef.current) {
       return;

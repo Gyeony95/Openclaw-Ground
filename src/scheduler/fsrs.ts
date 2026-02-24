@@ -723,7 +723,7 @@ export function createNewCard(word: string, meaning: string, nowIso: string, not
   const requestedCreatedMs = isValidIso(nowIso) ? Date.parse(nowIso) : Number.NaN;
   const requestedSkewMs = requestedCreatedMs - wallClockMs;
   const safeCreatedMs =
-    Number.isFinite(requestedCreatedMs) && requestedSkewMs <= MAX_MONOTONIC_CLOCK_SKEW_MS
+    Number.isFinite(requestedCreatedMs) && Math.abs(requestedSkewMs) <= MAX_MONOTONIC_CLOCK_SKEW_MS
       ? requestedCreatedMs
       : wallClockMs;
   const createdAt = toSafeIso(safeCreatedMs);
