@@ -47,7 +47,7 @@ export function RatingRow({
   const intervalLineCount = isCompact ? 1 : 2;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(() => new Set(disabledRatings), [disabledRatings]);
-  const hasLockedRatings = !isDisabled && disabledRatings.length > 0;
+  const hasLockedRatings = disabledRatings.length > 0;
 
   return (
     <View style={styles.container}>
@@ -66,7 +66,7 @@ export function RatingRow({
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
           const contentTone = isRatingLocked ? item.tone : ratingDisabled ? colors.subInk : item.tone;
           const accessibilityLabel = isRatingLocked
-            ? `Rate ${item.text}. Locked.`
+            ? `Rate ${item.text}. Locked. ${lockedHint ?? 'Rating is currently unavailable.'}`
             : ratingDisabled
               ? `Rate ${item.text}. Unavailable.`
               : `Rate ${item.text}. Next interval ${interval}.`;
@@ -208,7 +208,8 @@ const styles = StyleSheet.create({
   },
   buttonLocked: {
     borderStyle: 'dashed',
-    opacity: 0.82,
+    opacity: 0.94,
+    backgroundColor: colors.surfaceAlt,
   },
   buttonText: {
     fontSize: 12.5,

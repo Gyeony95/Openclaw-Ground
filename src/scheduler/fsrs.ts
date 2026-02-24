@@ -459,14 +459,21 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'stability' | 'u
   const scheduledDays = normalizeElapsedDays(daysBetween(card.updatedAt, card.dueAt));
   const normalizedStability = clampFinite(card.stability, STABILITY_MIN, STABILITY_MAX, STABILITY_MIN);
 
-  // Prefer schedule-based fallback inference first so short relearning cadences
-  // are not accidentally promoted to review by stale/corrupted stability values.
+  // Prefer schedule-based inference so short-step cards are not accidentally
+  // promoted by stale/corrupted stability values.
   if (scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
     return 'review';
   }
   if (scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS) {
     return 'relearning';
   }
+
+  if (scheduledDays > 0) {
+    return 'learning';
+  }
+
+  // When schedule anchors collapse to zero (e.g. dueAt==updatedAt), fall back to
+  // stability to preserve likely mature review context.
   if (normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS) {
     return 'review';
   }

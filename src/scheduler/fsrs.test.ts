@@ -401,6 +401,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeCloseTo(15 / 1440, 10);
   });
 
+  it('keeps malformed-state short-step cards in learning instead of forcing review lapses from stale stability', () => {
+    const shortStepMalformedState = {
+      ...createNewCard('malformed-state-short-step-learning', 'state fallback', NOW),
+      state: 'unknown_state' as unknown as 'learning',
+      reps: 14,
+      lapses: 2,
+      stability: 32,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 5 / 1440),
+    };
+
+    const reviewed = reviewCard(shortStepMalformedState, 1, shortStepMalformedState.dueAt);
+
+    expect(reviewed.card.state).toBe('learning');
+    expect(reviewed.card.lapses).toBe(shortStepMalformedState.lapses);
+    expect(reviewed.scheduledDays).toBeCloseTo(1 / 1440, 10);
+  });
+
   it('normalizes createdAt to never exceed updatedAt when recovering from future-corrupted timelines', () => {
     jest.useFakeTimers();
     try {
