@@ -273,6 +273,54 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('recovers pathologically stale card timelines when a wall-safe review timestamp is provided', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      const reviewed = reviewCard(
+        {
+          ...createNewCard('stale-timeline-recovery', 'safe', NOW),
+          state: 'review' as const,
+          createdAt: '1980-01-01T00:00:00.000Z',
+          updatedAt: '1980-01-02T00:00:00.000Z',
+          dueAt: '1980-01-03T00:00:00.000Z',
+          stability: 2,
+        },
+        3,
+        '2026-02-23T12:00:00.000Z',
+      );
+
+      expect(reviewed.card.updatedAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('still ignores review timestamps that are far beyond wall clock even when stale timelines are present', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      const reviewed = reviewCard(
+        {
+          ...createNewCard('stale-timeline-future-review-clamp', 'safe', NOW),
+          state: 'review' as const,
+          createdAt: '1980-01-01T00:00:00.000Z',
+          updatedAt: '1980-01-02T00:00:00.000Z',
+          dueAt: '1980-01-03T00:00:00.000Z',
+          stability: 2,
+        },
+        3,
+        '2050-01-01T00:00:00.000Z',
+      );
+
+      expect(reviewed.card.updatedAt).toBe('1980-01-02T00:00:00.000Z');
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('keeps valid dueAt as a timeline anchor when runtime wall clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const repaired = reviewCard(

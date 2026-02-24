@@ -28,11 +28,15 @@ import {
   useDeck,
 } from './src/hooks';
 import { previewIntervals } from './src/scheduler/fsrs';
+import { FlashcardSide, flipFlashcardSide, getFlashcardVisibility } from './src/flashcard';
+import { composeQuizOptions } from './src/quiz';
 import { colors, radii } from './src/theme';
 import { formatDueLabel } from './src/utils/due';
 import { formatIntervalLabel } from './src/utils/interval';
 import { normalizeBoundedText } from './src/utils/text';
 import { Rating, ReviewState } from './src/types';
+
+type StudyMode = 'flashcard' | 'multiple-choice';
 
 function clampPercent(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -183,7 +187,9 @@ export default function App() {
   const [word, setWord] = useState('');
   const [meaning, setMeaning] = useState('');
   const [notes, setNotes] = useState('');
-  const [showMeaning, setShowMeaning] = useState(false);
+  const [studyMode, setStudyMode] = useState<StudyMode>('flashcard');
+  const [flashcardSide, setFlashcardSide] = useState<FlashcardSide>('front');
+  const [selectedQuizOptionId, setSelectedQuizOptionId] = useState<string | null>(null);
   const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
   const [isAddBusy, setIsAddBusy] = useState(false);
   const [addAttempted, setAddAttempted] = useState(false);
@@ -305,11 +311,21 @@ export default function App() {
           scheduleRepairCount === 1 ? 'repair' : 'repairs'
         } pending.`
       : 'No cards due. Add new words below.';
-  const emptyQueueActionLabel = scheduleRepairCount > 0 ? 'Review repair queue' : 'Start adding words';
+  const emptyQueueActionLabel = scheduleRepairCount > 0 ? 'Add more words' : 'Start adding words';
   const dueCardStateConfig = dueCard ? stateConfig(dueCard.state) : null;
   const dueCardUrgency = dueUrgency(dueCard?.dueAt, clockIso);
   const ratingIntervals = useMemo(() => (dueCard ? previewIntervals(dueCard, clockIso) : null), [dueCard, clockIso]);
   const dueCardRevealKey = dueCard ? `${dueCard.id}:${dueCard.updatedAt}:${dueCard.dueAt}` : 'none';
+  const quizSeed = dueCard ? `${dueCard.id}:${dueCard.updatedAt}` : 'none';
+  const quizOptions = useMemo(() => (dueCard ? composeQuizOptions(dueCard, cards, quizSeed, 3) : []), [cards, dueCard, quizSeed]);
+  const selectedQuizOption = useMemo(
+    () => quizOptions.find((option) => option.id === selectedQuizOptionId),
+    [quizOptions, selectedQuizOptionId],
+  );
+  const correctQuizOption = useMemo(() => quizOptions.find((option) => option.isCorrect), [quizOptions]);
+  const canUseMultipleChoice = quizOptions.length === 4;
+  const hasQuizSelection = selectedQuizOptionId !== null;
+  const quizSelectionIsCorrect = selectedQuizOption?.isCorrect ?? false;
   const ratingIntervalLabels = useMemo(
     () =>
       ratingIntervals
@@ -370,9 +386,14 @@ export default function App() {
   const isCompactLayout = width < 380;
   const isReviewBusy = pendingReviewCardId !== null;
   const isFormEditable = !loading && !isAddBusy;
+  const flashcardVisibility = useMemo(
+    () => getFlashcardVisibility(flashcardSide, Boolean(dueCard?.notes?.trim())),
+    [dueCard?.notes, flashcardSide],
+  );
+  const canShowRatings = studyMode === 'flashcard' ? flashcardVisibility.showRatings : hasQuizSelection;
 
   useEffect(() => {
-    setShowMeaning(false);
+    setFlashcardSide('front');
     setReviewActionError(null);
   }, [dueCardRevealKey]);
 
@@ -556,6 +577,13 @@ export default function App() {
     }
     setReviewActionError('This card is no longer due. Queue refreshed.');
     reviewLockRef.current = false;
+  }
+
+  function handleFlipFlashcard() {
+    if (isReviewBusy) {
+      return;
+    }
+    setFlashcardSide((current) => flipFlashcardSide(current));
   }
 
   return (
@@ -799,69 +827,68 @@ export default function App() {
                       <Text style={styles.reviewTimelineMeta}>{queuePositionLabel}</Text>
                       <Text style={styles.reviewTimelineMeta}>{remainingQueueLabel}</Text>
                     </View>
-                    <View style={styles.reviewHeader}>
-                      <Text style={[styles.word, isCompactLayout && styles.wordCompact]} numberOfLines={2} ellipsizeMode="tail">
-                        {dueCard.word}
-                      </Text>
-                      <View style={styles.reviewBadgeColumn}>
-                        <Text
-                          style={[
-                            styles.stateBadge,
-                            {
-                              color: dueCardStateConfig?.tone ?? colors.subInk,
-                              borderColor: dueCardStateConfig?.tone ?? colors.border,
-                            },
-                          ]}
-                        >
-                          {dueCardStateConfig?.label}
+                    <Pressable
+                      onPress={handleFlipFlashcard}
+                      disabled={isReviewBusy}
+                      style={({ pressed }) => [
+                        styles.flashcardFace,
+                        pressed && !isReviewBusy && styles.flashcardFacePressed,
+                        isReviewBusy && styles.flashcardFaceDisabled,
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Flashcard ${dueCard.word}. ${flashcardVisibility.showMeaning ? 'Back side showing answer.' : 'Front side showing prompt.'}`}
+                      accessibilityHint="Tap to flip between word and answer"
+                      accessibilityState={{ disabled: isReviewBusy, busy: isReviewBusy }}
+                    >
+                      <View style={styles.reviewHeader}>
+                        <Text style={[styles.word, isCompactLayout && styles.wordCompact]} numberOfLines={2} ellipsizeMode="tail">
+                          {dueCard.word}
                         </Text>
-                        <Text
-                          style={[
-                            styles.urgencyBadge,
-                            {
-                              color: dueCardUrgency.tone,
-                              borderColor: dueCardUrgency.tone,
-                            },
-                          ]}
-                        >
-                          {dueCardUrgency.label}
-                        </Text>
+                        <View style={styles.reviewBadgeColumn}>
+                          <Text
+                            style={[
+                              styles.stateBadge,
+                              {
+                                color: dueCardStateConfig?.tone ?? colors.subInk,
+                                borderColor: dueCardStateConfig?.tone ?? colors.border,
+                              },
+                            ]}
+                          >
+                            {dueCardStateConfig?.label}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.urgencyBadge,
+                              {
+                                color: dueCardUrgency.tone,
+                                borderColor: dueCardUrgency.tone,
+                              },
+                            ]}
+                          >
+                            {dueCardUrgency.label}
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                    {!showMeaning ? <Text style={styles.revealHint}>Reveal to check meaning and notes.</Text> : null}
-                    {!showMeaning && quickRatingPreviewLabel ? (
-                      <Text style={styles.revealPreviewHint} numberOfLines={2} ellipsizeMode="tail">
-                        {quickRatingPreviewLabel}
-                      </Text>
-                    ) : null}
-                    {showMeaning ? <Text style={styles.meaning}>{dueCard.meaning}</Text> : null}
-                    {dueCard.notes && showMeaning ? <Text style={styles.notes}>{dueCard.notes}</Text> : null}
-                    {showMeaning ? (
-                      <View style={styles.metaRow}>
-                        <Text style={styles.metaText}>Difficulty {formatMetricNumber(dueCard.difficulty, 1)}</Text>
-                        <Text style={styles.metaText}>Stability {formatMetricNumber(dueCard.stability, 2)}d</Text>
-                        <Text style={styles.metaText}>
-                          Reps {dueCard.reps} · Lapses {dueCard.lapses}
+                      {!flashcardVisibility.showMeaning ? <Text style={styles.revealHint}>Tap card to reveal meaning.</Text> : null}
+                      {!flashcardVisibility.showMeaning && quickRatingPreviewLabel ? (
+                        <Text style={styles.revealPreviewHint} numberOfLines={2} ellipsizeMode="tail">
+                          {quickRatingPreviewLabel}
                         </Text>
-                      </View>
-                    ) : null}
+                      ) : null}
+                      {flashcardVisibility.showMeaning ? <Text style={styles.meaning}>{dueCard.meaning}</Text> : null}
+                      {flashcardVisibility.showExample ? <Text style={styles.notes}>{dueCard.notes}</Text> : null}
+                      {flashcardVisibility.showMeaning ? (
+                        <View style={styles.metaRow}>
+                          <Text style={styles.metaText}>Difficulty {formatMetricNumber(dueCard.difficulty, 1)}</Text>
+                          <Text style={styles.metaText}>Stability {formatMetricNumber(dueCard.stability, 2)}d</Text>
+                          <Text style={styles.metaText}>
+                            Reps {dueCard.reps} · Lapses {dueCard.lapses}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </Pressable>
 
-                    {!showMeaning ? (
-                      <Pressable
-                        style={({ pressed }) => [
-                          styles.primaryBtn,
-                          pressed && styles.primaryBtnPressed,
-                          isReviewBusy && styles.primaryBtnDisabled,
-                        ]}
-                        onPress={() => setShowMeaning(true)}
-                        disabled={isReviewBusy}
-                        accessibilityRole="button"
-                        accessibilityLabel="Reveal answer"
-                        accessibilityState={{ disabled: isReviewBusy, busy: isReviewBusy }}
-                      >
-                        <Text style={styles.primaryBtnText}>Reveal answer</Text>
-                      </Pressable>
-                    ) : (
+                    {flashcardVisibility.showRatings ? (
                       <View style={styles.answerActions}>
                         <Text style={styles.answerActionsLabel}>Rate recall quality</Text>
                         <RatingRow
@@ -870,20 +897,7 @@ export default function App() {
                           disabled={isReviewBusy}
                           busy={isReviewBusy}
                         />
-                        <Pressable
-                          style={({ pressed }) => [
-                            styles.ghostBtn,
-                            pressed && styles.ghostBtnPressed,
-                            isReviewBusy && styles.ghostBtnDisabled,
-                          ]}
-                          onPress={() => setShowMeaning(false)}
-                          disabled={isReviewBusy}
-                          accessibilityRole="button"
-                          accessibilityLabel="Hide answer"
-                          accessibilityState={{ disabled: isReviewBusy, busy: isReviewBusy }}
-                        >
-                          <Text style={styles.ghostBtnText}>Hide answer</Text>
-                        </Pressable>
+                        <Text style={styles.flipBackHint}>Tap card to flip back to word</Text>
                         {isReviewBusy ? (
                           <View style={styles.reviewingHintRow}>
                             <ActivityIndicator size="small" color={colors.subInk} />
@@ -893,7 +907,7 @@ export default function App() {
                           </View>
                         ) : null}
                       </View>
-                    )}
+                    ) : null}
                     {reviewActionError ? (
                       <Text style={styles.actionError} accessibilityLiveRegion="polite">
                         {reviewActionError}
@@ -1454,6 +1468,21 @@ const styles = StyleSheet.create({
     color: colors.subInk,
     lineHeight: 19,
   },
+  flashcardFace: {
+    gap: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    padding: 12,
+  },
+  flashcardFacePressed: {
+    transform: [{ translateY: 1 }, { scale: 0.995 }],
+    opacity: 0.96,
+  },
+  flashcardFaceDisabled: {
+    opacity: 0.7,
+  },
   revealPreviewHint: {
     fontSize: 12,
     color: colors.subInk,
@@ -1576,6 +1605,12 @@ const styles = StyleSheet.create({
   },
   answerActions: {
     gap: 10,
+  },
+  flipBackHint: {
+    color: colors.subInk,
+    fontSize: 11.5,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   ghostBtn: {
     borderRadius: radii.md,

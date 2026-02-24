@@ -101,6 +101,14 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
   }
 
   if (requestedValid && candidateMs - fallbackMs > MAX_CREATE_TIME_OFFSET_MS) {
+    if (Number.isFinite(wallClockMs)) {
+      const fallbackIsPathologicallyStale = wallClockMs - fallbackMs > MAX_CREATE_TIME_OFFSET_MS;
+      const candidateIsWallSafe = Math.abs(candidateMs - wallClockMs) <= MAX_CREATE_TIME_OFFSET_MS;
+      if (fallbackIsPathologicallyStale && candidateIsWallSafe) {
+        // Recover stale/corrupted card timelines by accepting a wall-safe review clock.
+        return toSafeIso(candidateMs);
+      }
+    }
     // Prevent runaway elapsed intervals when review timestamps jump far beyond card history.
     return fallback;
   }
