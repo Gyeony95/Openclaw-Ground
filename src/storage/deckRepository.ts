@@ -36,8 +36,23 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+function parseRuntimeFiniteNumber(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!/^[+-]?\d+(?:\.\d+)?$/.test(trimmed)) {
+    return null;
+  }
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function asFiniteNumber(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  return parseRuntimeFiniteNumber(value);
 }
 
 function asNonNegativeInt(
@@ -45,16 +60,14 @@ function asNonNegativeInt(
   fallback: number,
   mode: CounterNormalizationMode = 'sanitize',
 ): number {
-  if (typeof value !== 'number') {
+  if (mode === 'saturate' && value === Number.POSITIVE_INFINITY) {
+    return COUNTER_MAX;
+  }
+  const parsed = parseRuntimeFiniteNumber(value);
+  if (parsed === null) {
     return fallback;
   }
-  if (!Number.isFinite(value)) {
-    if (mode === 'saturate' && value === Number.POSITIVE_INFINITY) {
-      return COUNTER_MAX;
-    }
-    return fallback;
-  }
-  return clamp(Math.floor(value), 0, COUNTER_MAX);
+  return clamp(Math.floor(parsed), 0, COUNTER_MAX);
 }
 
 function isValidState(state: unknown): state is ReviewState {
@@ -96,6 +109,9 @@ function toCanonicalIso(iso: string): string {
 }
 
 function isDueOrInvalid(dueAt: string, currentIso: string): boolean {
+  if (!isValidIso(dueAt)) {
+    return true;
+  }
   const dueMs = Date.parse(dueAt);
   if (!Number.isFinite(dueMs)) {
     return true;

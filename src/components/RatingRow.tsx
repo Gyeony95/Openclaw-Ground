@@ -47,7 +47,7 @@ export function RatingRow({
   const intervalLineCount = isCompact ? 1 : 2;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(() => new Set(disabledRatings), [disabledRatings]);
-  const hasLockedRatings = !isDisabled && disabledRatings.length > 0;
+  const hasLockedRatings = disabledRatings.length > 0;
 
   return (
     <View style={styles.container}>
@@ -156,6 +156,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     gap: 7,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
   },
   buttonCompact: {
     flexBasis: '100%',
@@ -171,8 +176,8 @@ const styles = StyleSheet.create({
     flexBasis: '23%',
   },
   buttonPressed: {
-    transform: [{ translateY: 1 }, { scale: 0.99 }],
-    opacity: 0.95,
+    transform: [{ translateY: 1 }, { scale: 0.985 }],
+    opacity: 0.92,
   },
   buttonDisabled: {
     opacity: 0.72,

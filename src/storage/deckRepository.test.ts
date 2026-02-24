@@ -54,6 +54,35 @@ describe('deck repository', () => {
     expect(deck.cards[0].difficulty).toBe(1);
   });
 
+  it('coerces numeric-string scheduler fields when loading persisted cards', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'string-numbers',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-24T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            reps: '5',
+            lapses: '2',
+            stability: '3.5',
+            difficulty: '7.2',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].reps).toBe(5);
+    expect(deck.cards[0].lapses).toBe(2);
+    expect(deck.cards[0].stability).toBe(3.5);
+    expect(deck.cards[0].difficulty).toBe(7.2);
+  });
+
   it('repairs persisted far-future review due dates using card stability', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
@@ -343,6 +372,35 @@ describe('deck repository', () => {
           word: 'alpha',
           meaning: 'first',
           dueAt: 'not-a-date',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'review',
+          reps: 3,
+          lapses: 1,
+          stability: 1.2,
+          difficulty: 6,
+        },
+      ],
+      '2026-02-23T00:00:00.000Z',
+    );
+
+    expect(stats).toEqual({
+      total: 1,
+      dueNow: 1,
+      learning: 0,
+      review: 1,
+      relearning: 0,
+    });
+  });
+
+  it('treats loose non-ISO dueAt values as due-now so malformed schedules remain visible', () => {
+    const stats = computeDeckStats(
+      [
+        {
+          id: 'loose-due',
+          word: 'alpha',
+          meaning: 'first',
+          dueAt: '2026-02-22 00:00:00Z',
           createdAt: '2026-02-20T00:00:00.000Z',
           updatedAt: '2026-02-22T00:00:00.000Z',
           state: 'review',
