@@ -1122,7 +1122,10 @@ export default function App() {
                   placeholderTextColor={colors.subInk}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  autoComplete="off"
+                  textContentType="none"
                   returnKeyType="next"
+                  enterKeyHint="next"
                   maxLength={WORD_MAX_LENGTH}
                   selectionColor={colors.primary}
                   blurOnSubmit={false}
@@ -1142,7 +1145,11 @@ export default function App() {
                   placeholder="Meaning"
                   style={[styles.input, addAttempted && missingMeaning && styles.inputError]}
                   placeholderTextColor={colors.subInk}
+                  autoCorrect={false}
+                  autoComplete="off"
+                  textContentType="none"
                   returnKeyType="next"
+                  enterKeyHint="next"
                   maxLength={MEANING_MAX_LENGTH}
                   selectionColor={colors.primary}
                   blurOnSubmit={false}
@@ -1170,11 +1177,15 @@ export default function App() {
                   placeholderTextColor={colors.subInk}
                   multiline
                   textAlignVertical="top"
+                  autoCorrect={false}
+                  autoComplete="off"
+                  textContentType="none"
                   maxLength={NOTES_MAX_LENGTH}
                   selectionColor={colors.primary}
                   editable={isFormEditable}
                   accessibilityLabel="Notes input"
                   returnKeyType="done"
+                  enterKeyHint="done"
                   blurOnSubmit
                   onSubmitEditing={handleAddCard}
                 />

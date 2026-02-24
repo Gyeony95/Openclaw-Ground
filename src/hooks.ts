@@ -135,12 +135,18 @@ export function hasScheduleRepairNeed(
 ): boolean {
   const dueMs = parseTimeOrNaN(card.dueAt);
   const updatedMs = parseTimeOrNaN(card.updatedAt);
+  const wallClockMs = safeNowMs();
   const state = normalizeReviewState(card.state);
   if (!Number.isFinite(dueMs) || !Number.isFinite(updatedMs)) {
     return true;
   }
   if (!state) {
     return true;
+  }
+  if (Number.isFinite(wallClockMs)) {
+    if (dueMs - wallClockMs > MAX_CLOCK_SKEW_MS || updatedMs - wallClockMs > MAX_CLOCK_SKEW_MS) {
+      return true;
+    }
   }
   if (dueMs < updatedMs) {
     return true;
@@ -163,15 +169,18 @@ export function hasScheduleRepairNeed(
   return reps > 0;
 }
 
-function isReviewReadyDueAt(dueAt: unknown, currentIso: string): boolean {
-  if (typeof dueAt !== 'string') {
+function isReviewReadyCard(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & Partial<Pick<Card, 'stability' | 'reps'>>, currentIso: string): boolean {
+  if (hasScheduleRepairNeed(card)) {
     return true;
   }
-  const dueMs = parseTimeOrNaN(dueAt);
+  if (typeof card.dueAt !== 'string') {
+    return true;
+  }
+  const dueMs = parseTimeOrNaN(card.dueAt);
   if (!Number.isFinite(dueMs)) {
     return true;
   }
-  return isDue(dueAt, currentIso);
+  return isDue(card.dueAt, currentIso);
 }
 
 function parseTimeOrMin(iso?: string): number {
@@ -311,7 +320,7 @@ export function compareDueCards(a: Card, b: Card): number {
 
 export function collectDueCards(cards: Card[], currentIso: string, runtimeNowIso: string): Card[] {
   const effectiveCurrentIso = resolveReviewClock(currentIso, runtimeNowIso);
-  return cards.filter((card) => isReviewReadyDueAt(card.dueAt, effectiveCurrentIso)).sort(compareDueCards);
+  return cards.filter((card) => isReviewReadyCard(card, effectiveCurrentIso)).sort(compareDueCards);
 }
 
 export function mergeDeckCards(existingCards: Card[], loadedCards: Card[]): Card[] {
@@ -361,7 +370,7 @@ export function applyDueReview(
   let targetIndex = -1;
   for (let index = 0; index < cards.length; index += 1) {
     const candidate = cards[index];
-    if (candidate.id !== cardId || !isReviewReadyDueAt(candidate.dueAt, effectiveCurrentIso)) {
+    if (candidate.id !== cardId || !isReviewReadyCard(candidate, effectiveCurrentIso)) {
       continue;
     }
     if (targetIndex === -1 || compareDueCards(candidate, cards[targetIndex]) < 0) {
@@ -399,7 +408,7 @@ export function applyReviewToDeckState(
 
 export function hasDueCard(cards: Card[], cardId: string, currentIso: string): boolean {
   const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
-  return cards.some((card) => card.id === cardId && isReviewReadyDueAt(card.dueAt, effectiveCurrentIso));
+  return cards.some((card) => card.id === cardId && isReviewReadyCard(card, effectiveCurrentIso));
 }
 
 export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: string): string {

@@ -66,6 +66,28 @@ describe('applyDueReview', () => {
     expect(Date.parse(result.cards[0].dueAt)).toBeGreaterThan(Date.parse(result.cards[0].updatedAt));
   });
 
+  it('reviews pathologically future timelines to recover corrupted schedules', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const futureCorrupted = {
+        ...createNewCard('gamma-future-corrupted', 'third', NOW),
+        state: 'review' as const,
+        updatedAt: '2026-02-24T12:00:01.000Z',
+        dueAt: '2026-02-25T12:00:01.000Z',
+      };
+
+      const result = applyDueReview([futureCorrupted], futureCorrupted.id, 3, NOW);
+
+      expect(result.reviewed).toBe(true);
+      expect(result.cards[0]).not.toBe(futureCorrupted);
+      expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(Date.parse(result.cards[0].dueAt)).toBeGreaterThan(Date.parse(result.cards[0].updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('prioritizes malformed dueAt duplicates for immediate schedule repair', () => {
     const validDue = {
       ...createNewCard('valid-duplicate-due', 'first', NOW),
@@ -589,6 +611,26 @@ describe('collectDueCards', () => {
 
     expect(dueCards).toHaveLength(2);
   });
+
+  it('keeps pathologically future timelines in the due queue for immediate repair', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const futureCorrupted = {
+        ...createNewCard('future-corrupted-queue', 'repair', NOW),
+        state: 'review' as const,
+        updatedAt: '2026-02-24T12:00:01.000Z',
+        dueAt: '2026-02-25T12:00:01.000Z',
+      };
+
+      const dueCards = collectDueCards([futureCorrupted], NOW, NOW);
+
+      expect(dueCards).toHaveLength(1);
+      expect(dueCards[0].id).toBe(futureCorrupted.id);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
 
 describe('mergeDeckCards', () => {
@@ -883,6 +925,23 @@ describe('hasDueCard', () => {
 
     expect(hasDueCard([malformed], malformed.id, NOW)).toBe(true);
   });
+
+  it('treats pathologically future timelines as due so they can be repaired', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const futureCorrupted = {
+        ...createNewCard('future-corrupted-has-due', 'repair', NOW),
+        state: 'review' as const,
+        updatedAt: '2026-02-24T12:00:01.000Z',
+        dueAt: '2026-02-25T12:00:01.000Z',
+      };
+
+      expect(hasDueCard([futureCorrupted], futureCorrupted.id, NOW)).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
 
 describe('countUpcomingDueCards', () => {
@@ -964,6 +1023,23 @@ describe('hasScheduleRepairNeed', () => {
 
     expect(hasScheduleRepairNeed(malformedDue)).toBe(true);
     expect(hasScheduleRepairNeed(malformedUpdated)).toBe(true);
+  });
+
+  it('flags cards with pathologically future timeline anchors', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const futureCorrupted = {
+        ...createNewCard('repair-future-corrupted', 'test', NOW),
+        state: 'review' as const,
+        updatedAt: '2026-02-24T12:00:01.000Z',
+        dueAt: '2026-02-25T12:00:01.000Z',
+      };
+
+      expect(hasScheduleRepairNeed(futureCorrupted)).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('flags cards with dueAt before updatedAt', () => {
