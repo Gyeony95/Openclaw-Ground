@@ -3412,6 +3412,19 @@ describe('fsrs scheduler', () => {
     expect(goodOverdue.scheduledDays).toBeGreaterThanOrEqual(hardOverdue.scheduledDays);
   });
 
+  it('caps hard review stability growth for heavily overdue reviews', () => {
+    let card = createNewCard('zeta-hard-cap-stability', 'letter', NOW);
+    card = reviewCard(card, 4, NOW).card;
+    card = reviewCard(card, 4, '2026-02-26T12:00:00.000Z').card;
+    card = reviewCard(card, 4, card.dueAt).card;
+
+    const overdueHard = reviewCard(card, 2, addDaysIso(card.dueAt, 14));
+
+    expect(overdueHard.card.state).toBe('review');
+    expect(overdueHard.card.stability).toBeLessThanOrEqual(card.stability * 1.2);
+    expect(overdueHard.card.stability).toBeGreaterThanOrEqual(card.stability);
+  });
+
   it('caps pathological far-future review schedules before stability math', () => {
     const card = createNewCard('schedule-cap', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;

@@ -21,6 +21,7 @@ const FSRS_DECAY = -0.5;
 const FSRS_FACTOR = 19 / 81;
 const ON_TIME_TOLERANCE_DAYS = MINUTE_IN_DAYS;
 const HARD_RATING_LATE_TOLERANCE_DAYS = 15 * MINUTE_IN_DAYS;
+const HARD_REVIEW_STABILITY_GROWTH_CAP = 1.2;
 const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_CREATE_TIME_OFFSET_MS = 20 * 365 * DAY_MS;
@@ -1131,7 +1132,7 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
   const previousStability = effectivePreviousStability(stabilitySeed, previousScheduledDays, phase);
 
   const nextDifficulty = nextDifficultyForPhase(previousDifficulty, currentState, normalizedRating);
-  const nextStability = updateStability(
+  const nextStabilityRaw = updateStability(
     previousStability,
     previousDifficulty,
     normalizedRating,
@@ -1139,6 +1140,10 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
     phase,
     previousScheduledDays,
   );
+  const nextStability =
+    phase === 'review' && normalizedRating === 2
+      ? Math.min(nextStabilityRaw, previousStability * HARD_REVIEW_STABILITY_GROWTH_CAP)
+      : nextStabilityRaw;
 
   let nextScheduledDays: number;
 

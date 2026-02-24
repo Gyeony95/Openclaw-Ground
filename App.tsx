@@ -694,7 +694,7 @@ export default function App() {
       <View style={styles.backgroundOrbA} />
       <View style={styles.backgroundOrbB} />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
         style={styles.safe}
       >
