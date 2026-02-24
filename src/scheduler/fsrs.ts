@@ -286,6 +286,7 @@ function normalizeTimeline(
     normalizedState !== 'review' &&
     rawDueAtIsValid &&
     !dueNotAfterUpdatedAt &&
+    !dueBelowStateFloor &&
     Number.isFinite(dueDaysFromUpdated) &&
     dueDaysFromUpdated <= maxStateScheduleDays * NON_REVIEW_OUTLIER_MULTIPLIER;
   const reviewStabilityOutlierWindowDays = Math.max(

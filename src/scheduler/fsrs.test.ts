@@ -2998,4 +2998,23 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeLessThanOrEqual(8);
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
+
+  it('keeps sub-floor relearning due repairs on minute-scale instead of promoting to day-like schedules', () => {
+    const relearning = {
+      ...createNewCard('relearning-subfloor-repair', 'definition', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 5 / 1440),
+      reps: 5,
+      lapses: 2,
+      stability: 0.8,
+      difficulty: 5.5,
+    };
+
+    const reviewed = reviewCard(relearning, 3, relearning.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBe(0.5);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
 });
