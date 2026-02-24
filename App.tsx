@@ -1680,11 +1680,11 @@ const styles = StyleSheet.create({
   },
   queueProgressMeta: {
     color: colors.subInk,
-    fontSize: 10,
+    fontSize: 11,
+    lineHeight: 16,
     fontWeight: '600',
     letterSpacing: 0.25,
     fontVariant: ['tabular-nums'],
-    textTransform: 'uppercase',
   },
   queueProgressTrack: {
     height: 8,

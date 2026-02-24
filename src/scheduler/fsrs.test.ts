@@ -271,6 +271,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(NOW, 10 / 1440));
   });
 
+  it('parses punctuation-corrupted relearning state labels and keeps relearning hard-step cadence', () => {
+    const runtimeCard = {
+      ...createNewCard('punctuation-relearning-state', 'state inference', NOW),
+      state: '  relearn!!  ',
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10 / 1440),
+      reps: 0,
+      lapses: 0,
+      stability: 0.5,
+      difficulty: 5,
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 2, addDaysIso(NOW, 10 / 1440)).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.dueAt).toBe(addDaysIso(addDaysIso(NOW, 10 / 1440), 15 / 1440));
+  });
+
   it('infers relearning from sub-day retry windows when lapse count is corrupted but review history exists', () => {
     const runtimeCard = {
       ...createNewCard('relearning-inference-history', 'state inference', NOW),

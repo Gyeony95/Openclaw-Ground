@@ -351,6 +351,38 @@ describe('deck repository', () => {
     expect(deck.cards[1].state).toBe('learning');
   });
 
+  it('normalizes persisted state aliases that include punctuation', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'state-alias-punctuation-review',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: ' review. ',
+          },
+          {
+            id: 'state-alias-punctuation-relearn',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: ' relearn!! ',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(2);
+    expect(deck.cards[0].state).toBe('review');
+    expect(deck.cards[1].state).toBe('relearning');
+  });
+
   it('computes due and state counts', () => {
     const stats = computeDeckStats(
       [
@@ -1736,6 +1768,19 @@ describe('deck repository', () => {
           stability: 0.5,
           difficulty: 5,
         },
+        {
+          id: 'state-save-3',
+          word: 'gamma',
+          meaning: 'third',
+          dueAt: '2026-02-23T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: ' relearn!! ' as unknown as 'review',
+          reps: 0,
+          lapses: 0,
+          stability: 0.5,
+          difficulty: 5,
+        },
       ],
       lastReviewedAt: undefined,
     });
@@ -1744,9 +1789,10 @@ describe('deck repository', () => {
     const savedDeck = JSON.parse(rawSavedDeck) as {
       cards: Array<{ id: string; state: string }>;
     };
-    expect(savedDeck.cards).toHaveLength(2);
+    expect(savedDeck.cards).toHaveLength(3);
     expect(savedDeck.cards.find((card) => card.id === 'state-save-1')?.state).toBe('review');
     expect(savedDeck.cards.find((card) => card.id === 'state-save-2')?.state).toBe('learning');
+    expect(savedDeck.cards.find((card) => card.id === 'state-save-3')?.state).toBe('relearning');
   });
 
   it('repairs pathologically-future review dueAt values before persisting deck data', async () => {

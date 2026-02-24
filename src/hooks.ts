@@ -184,6 +184,16 @@ function normalizeReviewState(value: unknown): Card['state'] | null {
   if (folded === 'relearning' || folded === 'relearn') {
     return 'relearning';
   }
+  const alphaFolded = normalized.replace(/[^a-z]+/g, '');
+  if (alphaFolded === 'review') {
+    return 'review';
+  }
+  if (alphaFolded === 'learning' || alphaFolded === 'learn') {
+    return 'learning';
+  }
+  if (alphaFolded === 'relearning' || alphaFolded === 'relearn') {
+    return 'relearning';
+  }
   return null;
 }
 
