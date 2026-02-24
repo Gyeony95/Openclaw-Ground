@@ -307,6 +307,13 @@ export default function App() {
   );
   const correctQuizOption = useMemo(() => quizOptions.find((option) => option.isCorrect), [quizOptions]);
   const canUseMultipleChoice = quizOptions.length === 4;
+  const missingQuizOptions = Math.max(0, 4 - quizOptions.length);
+  const multipleChoiceRequirementLabel =
+    missingQuizOptions === 0
+      ? null
+      : `Need ${missingQuizOptions.toLocaleString()} more distinct ${
+          missingQuizOptions === 1 ? 'card meaning' : 'card meanings'
+        } for multiple-choice mode.`;
   const hasQuizSelection = hasValidQuizSelection(selectedQuizOptionId, quizOptions);
   const quizSelectionIsCorrect = selectedQuizOption?.isCorrect ?? false;
   const ratingIntervalLabels = useMemo(
@@ -879,7 +886,7 @@ export default function App() {
                             ? 'Disabled while the current review is being recorded'
                             : canUseMultipleChoice
                               ? 'Switches to objective multiple-choice quiz mode'
-                              : 'Need at least four distinct card meanings'
+                              : multipleChoiceRequirementLabel ?? 'Need at least four distinct card meanings'
                         }
                         accessibilityState={{ selected: studyMode === 'multiple-choice', disabled: isReviewBusy || !canUseMultipleChoice }}
                       >
@@ -988,7 +995,9 @@ export default function App() {
                         </View>
                         <Text style={styles.answerActionsLabel}>Choose the correct meaning</Text>
                         {!canUseMultipleChoice ? (
-                          <Text style={styles.revealHint}>Add more distinct cards to enable multiple-choice mode.</Text>
+                          <Text style={styles.revealHint}>
+                            {multipleChoiceRequirementLabel ?? 'Add more distinct cards to enable multiple-choice mode.'}
+                          </Text>
                         ) : (
                           <View
                             style={styles.quizOptionList}

@@ -62,8 +62,25 @@ describe('quiz distractors', () => {
     expect(first).toHaveLength(4);
     expect(first.filter((option) => option.isCorrect)).toHaveLength(1);
     expect(first.filter((option) => !option.isCorrect)).toHaveLength(3);
+    expect(new Set(first.map((option) => option.id)).size).toBe(first.length);
     expect(first.map((option) => option.id)).toEqual(second.map((option) => option.id));
     expect(first.map((option) => option.id)).not.toEqual(third.map((option) => option.id));
+  });
+
+  it('keeps option IDs unique when distractors contain duplicate card IDs', () => {
+    const duplicateIdDeck = [
+      createCard('t1', 'anchor', 'to fix firmly in place'),
+      createCard('dup', 'pin', 'to fasten with a pin'),
+      createCard('dup', 'tack', 'to attach lightly'),
+      createCard('dup', 'clip', 'to hold together'),
+      createCard('x1', 'bind', 'to tie tightly'),
+    ];
+
+    const options = composeQuizOptions(duplicateIdDeck[0], duplicateIdDeck, 'dup-seed');
+
+    expect(options).toHaveLength(4);
+    expect(new Set(options.map((option) => option.id)).size).toBe(options.length);
+    expect(options.filter((option) => option.cardId === 'dup')).toHaveLength(3);
   });
 
   it('accepts only selections that still exist in the current option set', () => {

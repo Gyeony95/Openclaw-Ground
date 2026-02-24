@@ -278,15 +278,16 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
 
 export function composeQuizOptions(target: Card, deckCards: Card[], seed: string, distractorCount = 3): QuizOption[] {
   const distractors = generateDistractors(target, deckCards, distractorCount);
+  const optionIdBase = `${seed}:${target.id}:${target.updatedAt}`;
   const options: QuizOption[] = [
     {
-      id: `${target.id}:correct`,
+      id: `${target.id}:correct:${hashString(`${optionIdBase}:correct`).toString(36)}`,
       cardId: target.id,
       text: target.meaning,
       isCorrect: true,
     },
-    ...distractors.map((card) => ({
-      id: `${card.id}:distractor`,
+    ...distractors.map((card, index) => ({
+      id: `${card.id}:distractor:${index}:${hashString(`${optionIdBase}:distractor:${card.id}:${card.meaning}:${index}`).toString(36)}`,
       cardId: card.id,
       text: card.meaning,
       isCorrect: false,
