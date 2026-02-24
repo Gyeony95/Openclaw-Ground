@@ -157,13 +157,25 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     return null;
   }
 
-  const normalizedCreatedAt = toCanonicalIso(createdAt);
-  const updatedAt = isValidIso(raw.updatedAt) ? raw.updatedAt : createdAt;
+  const normalizeWallSafeTimestamp = (candidateIso: string): number => {
+    const candidateMs = Date.parse(candidateIso);
+    if (!Number.isFinite(candidateMs)) {
+      return wallClockMs;
+    }
+    if (candidateMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+      return wallClockMs;
+    }
+    return candidateMs;
+  };
+
+  const normalizedCreatedMs = normalizeWallSafeTimestamp(createdAt);
+  const normalizedCreatedAt = new Date(normalizedCreatedMs).toISOString();
+  const updatedAt = isValidIso(raw.updatedAt) ? raw.updatedAt : normalizedCreatedAt;
   const dueIsValid = isValidIso(raw.dueAt);
   const dueAt = dueIsValid ? raw.dueAt : updatedAt;
   const normalizedStability = clamp(asFiniteNumber(raw.stability) ?? 0.5, STABILITY_MIN, STABILITY_MAX);
   const createdMs = Date.parse(normalizedCreatedAt);
-  const updatedMs = Date.parse(updatedAt);
+  const updatedMs = normalizeWallSafeTimestamp(updatedAt);
   const dueMs = Date.parse(dueAt);
   const normalizedUpdatedMs = Math.max(updatedMs, createdMs);
   const normalizedUpdatedAt = new Date(normalizedUpdatedMs).toISOString();
