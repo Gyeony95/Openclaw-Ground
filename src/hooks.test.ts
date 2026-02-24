@@ -876,6 +876,21 @@ describe('collectDueCards', () => {
     expect(nowDue[0].id).toBe(nearFuture.id);
   });
 
+  it('does not surface cards early when rendered clock is materially ahead of runtime', () => {
+    const dueSoon = {
+      ...createNewCard('queue-material-future-render', 'clock', NOW),
+      dueAt: '2026-02-23T12:03:00.000Z',
+    };
+
+    const dueCards = collectDueCards(
+      [dueSoon],
+      '2026-02-23T12:05:00.000Z',
+      '2026-02-23T12:00:00.000Z',
+    );
+
+    expect(dueCards).toHaveLength(0);
+  });
+
   it('collects due cards even when malformed ids are present', () => {
     const malformedIdDue = {
       ...createNewCard('malformed-id-due', 'repair', NOW),
@@ -1953,6 +1968,12 @@ describe('resolveReviewClock', () => {
   it('keeps rendered clock when runtime clock moves backward', () => {
     expect(resolveReviewClock('2026-02-23T12:00:10.000Z', '2026-02-23T12:00:00.000Z')).toBe(
       '2026-02-23T12:00:10.000Z',
+    );
+  });
+
+  it('falls back to runtime clock when rendered clock is materially ahead', () => {
+    expect(resolveReviewClock('2026-02-23T12:05:00.000Z', '2026-02-23T12:00:00.000Z')).toBe(
+      '2026-02-23T12:00:00.000Z',
     );
   });
 

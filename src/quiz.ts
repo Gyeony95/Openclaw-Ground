@@ -1,5 +1,7 @@
 import { Card, Rating } from './types';
 import { parseRuntimeRatingValue } from './utils/rating';
+import { normalizeBoundedText } from './utils/text';
+import { MEANING_MAX_LENGTH } from './scheduler/constants';
 
 export interface QuizOption {
   id: string;
@@ -17,10 +19,7 @@ function normalizeId(value: unknown, fallback: string): string {
 }
 
 function normalizeOptionText(value: unknown): string {
-  if (typeof value !== 'string') {
-    return '[invalid meaning]';
-  }
-  const normalized = value.replace(/\s+/g, ' ').trim();
+  const normalized = normalizeBoundedText(value, MEANING_MAX_LENGTH);
   return normalized.length > 0 ? normalized : '[invalid meaning]';
 }
 

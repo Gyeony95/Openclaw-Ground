@@ -92,6 +92,22 @@ describe('quiz distractors', () => {
     expect(options.some((option) => /\n|\t/.test(option.text))).toBe(false);
   });
 
+  it('caps quiz option text length and strips zero-width characters from malformed meanings', () => {
+    const malformedDeck = [
+      createCard('target', 'anchor', '\u200B clean  meaning \u200C'),
+      createCard('c2', 'pin', ` ${'\u200Bx'.repeat(260)} `),
+      createCard('c3', 'clip', 'to hold together'),
+      createCard('c4', 'bind', 'to tie tightly'),
+      createCard('c5', 'moor', 'to secure a boat with ropes'),
+    ];
+
+    const options = composeQuizOptions(malformedDeck[0], malformedDeck, 'text-cap-seed');
+
+    expect(options).toHaveLength(4);
+    expect(options.some((option) => option.text.includes('\u200B'))).toBe(false);
+    expect(options.every((option) => option.text.length <= 180)).toBe(true);
+  });
+
   it('keeps option IDs unique when distractors contain duplicate card IDs', () => {
     const duplicateIdDeck = [
       createCard('t1', 'anchor', 'to fix firmly in place'),
