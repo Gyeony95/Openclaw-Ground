@@ -553,7 +553,7 @@ export default function App() {
     if (showAddSuccess && (word.length > 0 || meaning.length > 0 || notes.length > 0)) {
       setShowAddSuccess(false);
     }
-  }, [meaning.length, notes.length, showAddSuccess, word.length]);
+  }, [meaning, notes, showAddSuccess, word]);
 
   useEffect(() => {
     if (addActionError === null) {

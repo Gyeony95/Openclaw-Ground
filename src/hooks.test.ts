@@ -367,6 +367,28 @@ describe('applyDueReview', () => {
     expect(result.cards[0]).toBe(nearBoundary);
   });
 
+  it('uses runtime clock when rendered review clock is stale beyond tolerance', () => {
+    const staleClockDue = {
+      ...createNewCard('stale-render-clock-review', 'safe', NOW),
+      dueAt: '2026-02-23T12:01:00.000Z',
+      updatedAt: NOW,
+      state: 'review' as const,
+    };
+
+    const result = applyDueReview(
+      [staleClockDue],
+      staleClockDue.id,
+      3,
+      '2026-02-23T12:00:00.000Z',
+      '2026-02-23T12:02:30.000Z',
+    );
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).not.toBe(staleClockDue);
+    expect(result.cards[0].updatedAt).toBe('2026-02-23T12:02:30.000Z');
+    expect(result.reviewedAt).toBe('2026-02-23T12:02:30.000Z');
+  });
+
   it('does not review early when rendered clock is ahead of runtime', () => {
     const nearBoundary = {
       ...createNewCard('no-early-review-clock', 'safe', NOW),

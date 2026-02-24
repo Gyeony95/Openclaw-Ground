@@ -329,6 +329,11 @@ function resolveActionClock(currentIso: string, runtimeNowIso: string): string {
     return canonicalRuntimeIso ?? canonicalCurrentIso;
   }
 
+  if (Number.isFinite(runtimeMs) && runtimeMs - currentMs > MAX_UI_FUTURE_SKEW_MS) {
+    // Keep review eligibility aligned with runtime once UI clock drift exceeds tolerance.
+    return canonicalRuntimeIso ?? canonicalCurrentIso;
+  }
+
   return canonicalCurrentIso;
 }
 
