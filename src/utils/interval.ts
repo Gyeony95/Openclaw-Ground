@@ -12,20 +12,20 @@ export function formatIntervalLabel(days: number): string {
     return '<1m';
   }
   if (days < HOUR_IN_DAYS) {
-    return `${Math.max(1, Math.floor(days * 1440))}m`;
+    return `${Math.max(1, Math.round(days * 1440))}m`;
   }
   if (days < 1) {
-    return `${Math.max(1, Math.floor(days * 24))}h`;
+    return `${Math.max(1, Math.round(days * 24))}h`;
   }
   if (days < WEEK_IN_DAYS) {
-    return `${Math.max(1, Math.floor(days))}d`;
+    return `${Math.max(1, Math.round(days))}d`;
   }
   if (days < 60) {
-    return `${Math.max(1, Math.floor(days / WEEK_IN_DAYS))}w`;
+    return `${Math.max(1, Math.round(days / WEEK_IN_DAYS))}w`;
   }
   if (days >= YEAR_IN_DAYS) {
-    return `${Math.max(1, Math.floor(days / YEAR_IN_DAYS))}y`;
+    return `${Math.max(1, Math.round(days / YEAR_IN_DAYS))}y`;
   }
 
-  return `${Math.max(1, Math.floor(days / 30))}mo`;
+  return `${Math.max(1, Math.round(days / 30))}mo`;
 }

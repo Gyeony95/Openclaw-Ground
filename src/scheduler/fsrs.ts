@@ -1211,7 +1211,9 @@ function previewMaximumIntervalByRating(state: ReviewState): RatingIntervalPrevi
     return {
       1: RELEARNING_SCHEDULE_FLOOR_DAYS,
       2: 15 * MINUTE_IN_DAYS,
-      3: REVIEW_SCHEDULE_FLOOR_DAYS,
+      // Keep preview ceilings aligned with graduation behavior. Relearning cards
+      // can surface day-like schedules via imports before phase normalization.
+      3: 1,
       4: 1,
     };
   }

@@ -14,18 +14,18 @@ describe('formatIntervalLabel', () => {
 
   it('formats week-scale intervals', () => {
     expect(formatIntervalLabel(8)).toBe('1w');
-    expect(formatIntervalLabel(20)).toBe('2w');
+    expect(formatIntervalLabel(20)).toBe('3w');
   });
 
-  it('formats long intervals in months without overstating', () => {
+  it('formats long intervals in months', () => {
     expect(formatIntervalLabel(61)).toBe('2mo');
-    expect(formatIntervalLabel(89)).toBe('2mo');
+    expect(formatIntervalLabel(89)).toBe('3mo');
   });
 
-  it('formats very long intervals in years without overstating', () => {
+  it('formats very long intervals in years', () => {
     expect(formatIntervalLabel(365)).toBe('1y');
     expect(formatIntervalLabel(730)).toBe('2y');
-    expect(formatIntervalLabel(364)).toBe('12mo');
+    expect(formatIntervalLabel(364)).toBe('1y');
   });
 
   it('guards invalid values', () => {
@@ -33,9 +33,9 @@ describe('formatIntervalLabel', () => {
     expect(formatIntervalLabel(-1)).toBe('<1m');
   });
 
-  it('floors near-boundary labels to avoid overstating next interval', () => {
-    expect(formatIntervalLabel(59.9 / 1440)).toBe('59m');
-    expect(formatIntervalLabel(23.9 / 24)).toBe('23h');
-    expect(formatIntervalLabel(6.9)).toBe('6d');
+  it('rounds near-boundary labels to better reflect scheduled intervals', () => {
+    expect(formatIntervalLabel(59.6 / 1440)).toBe('60m');
+    expect(formatIntervalLabel(23.6 / 24)).toBe('24h');
+    expect(formatIntervalLabel(6.6)).toBe('7d');
   });
 });
