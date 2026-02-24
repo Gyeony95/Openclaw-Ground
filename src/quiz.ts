@@ -253,6 +253,15 @@ interface RankedCandidate {
   score: number;
 }
 
+function isSameCardIdentity(target: Card, candidate: Card): boolean {
+  return (
+    candidate === target ||
+    (candidate.id === target.id &&
+      candidate.word === target.word &&
+      candidate.meaning === target.meaning)
+  );
+}
+
 function readCardText(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
@@ -303,10 +312,7 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
       continue;
     }
     const candidateMeaningRaw = readCardText(card.meaning);
-    const sameCardIdentity =
-      card === target ||
-      (card.id === target.id && card.word === target.word && card.meaning === target.meaning);
-    if (sameCardIdentity) {
+    if (isSameCardIdentity(target, card)) {
       continue;
     }
     const candidateMeaning = normalizeText(candidateMeaningRaw);
@@ -347,7 +353,7 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
       if (!card || typeof card !== 'object') {
         continue;
       }
-      if (card.id === target.id) {
+      if (isSameCardIdentity(target, card)) {
         continue;
       }
       const normalized = normalizeText(readCardText(card.meaning));

@@ -1228,11 +1228,18 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
       }
       return Math.max(floor, candidate);
     };
+    const previewForRating = (rating: Rating): number => {
+      try {
+        return reviewNormalizedCard(previewCard, previewIso, rating).scheduledDays;
+      } catch {
+        return previewFloor[rating];
+      }
+    };
     const preview = {
-      1: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 1).scheduledDays, previewFloor[1]),
-      2: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 2).scheduledDays, previewFloor[2]),
-      3: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 3).scheduledDays, previewFloor[3]),
-      4: ensureFiniteFloor(reviewNormalizedCard(previewCard, previewIso, 4).scheduledDays, previewFloor[4]),
+      1: ensureFiniteFloor(previewForRating(1), previewFloor[1]),
+      2: ensureFiniteFloor(previewForRating(2), previewFloor[2]),
+      3: ensureFiniteFloor(previewForRating(3), previewFloor[3]),
+      4: ensureFiniteFloor(previewForRating(4), previewFloor[4]),
     };
     return ensureOrderedPreview(preview);
   } catch {

@@ -3045,6 +3045,34 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back per rating when one preview interval computation throws', () => {
+    const base = {
+      ...createNewCard('chi-preview-partial-fallback', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 3),
+      stability: 3,
+      difficulty: 5.2,
+      reps: 12,
+      lapses: 1,
+    };
+    const powSpy = jest.spyOn(Math, 'pow');
+    powSpy.mockImplementationOnce(() => {
+      throw new Error('preview computation fault');
+    });
+
+    try {
+      const preview = previewIntervals(base, addDaysIso(NOW, 3));
+
+      expect(preview[1]).toBe(10 / 1440);
+      expect(preview[2]).toBeGreaterThan(0.5);
+      expect(preview[3]).toBeGreaterThan(preview[2]);
+      expect(preview[4]).toBeGreaterThan(preview[3]);
+    } finally {
+      powSpy.mockRestore();
+    }
+  });
+
   it('keeps half-day review preview intervals from inflating to one day', () => {
     const base = createNewCard('chi-halfday-preview', 'letter', NOW);
     const halfDayReviewCard = {

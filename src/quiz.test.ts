@@ -199,6 +199,22 @@ describe('quiz distractors', () => {
     expect(new Set(distractors.map((card) => card.meaning.toLowerCase())).size).toBe(3);
   });
 
+  it('keeps duplicate-id cards eligible during backfill when target identity differs', () => {
+    const fallbackDeck = [
+      createCard('dup-target', 'anchor', 'to fix firmly in place'),
+      createCard('dup-target', 'moor', 'to secure a boat with ropes'),
+      createCard('x1', 'pin', 'to fix firmly in place'),
+      createCard('x2', 'tack', 'to fix firmly in place'),
+      createCard('x3', 'clip', 'to hold together'),
+    ];
+
+    const distractors = generateDistractors(fallbackDeck[0], fallbackDeck, 3);
+
+    expect(distractors).toHaveLength(3);
+    expect(distractors.some((card) => card.word === 'moor')).toBe(true);
+    expect(distractors.every((card) => card.meaning !== fallbackDeck[0].meaning)).toBe(true);
+  });
+
   it('composes options safely when deck cards contain malformed ids or blank meanings', () => {
     const malformedDeck = [
       createCard('target', 'anchor', 'to fix firmly in place'),
