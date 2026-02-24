@@ -473,7 +473,7 @@ export default function App() {
   const isWideLayout = width >= 980;
   const isCompactLayout = width < 380;
   const isReviewBusy = pendingReviewCardId !== null;
-  const modeSwitchLocked = isReviewBusy || quizSelectionLocked;
+  const modeSwitchLocked = isReviewBusy;
   const quizOptionsLocked = isReviewBusy;
   const isFormEditable = !loading && !isAddBusy;
   const flashcardVisibility = useMemo(
@@ -1001,9 +1001,7 @@ export default function App() {
                         accessibilityHint={
                           isReviewBusy
                             ? 'Disabled while the current review is being recorded'
-                            : quizSelectionLocked
-                              ? 'Complete the locked quiz attempt first'
-                              : 'Switches to flashcard mode'
+                            : 'Switches to flashcard mode'
                         }
                         accessibilityState={{ selected: studyMode === 'flashcard', disabled: modeSwitchLocked }}
                       >
@@ -1018,12 +1016,12 @@ export default function App() {
                       </Pressable>
                       <Pressable
                         onPress={() => handleSelectStudyMode('multiple-choice')}
-                        disabled={modeSwitchLocked || !canUseMultipleChoice}
+                        disabled={modeSwitchLocked || quizSelectionLocked || !canUseMultipleChoice}
                         style={({ pressed }) => [
                           styles.studyModeToggleBtn,
                           studyMode === 'multiple-choice' && styles.studyModeToggleBtnActive,
-                          (modeSwitchLocked || !canUseMultipleChoice) && styles.studyModeToggleBtnDisabled,
-                          pressed && !modeSwitchLocked && canUseMultipleChoice && styles.ghostBtnPressed,
+                          (modeSwitchLocked || quizSelectionLocked || !canUseMultipleChoice) && styles.studyModeToggleBtnDisabled,
+                          pressed && !modeSwitchLocked && !quizSelectionLocked && canUseMultipleChoice && styles.ghostBtnPressed,
                         ]}
                         accessibilityRole="button"
                         accessibilityLabel="Multiple-choice mode"
@@ -1038,7 +1036,7 @@ export default function App() {
                         }
                         accessibilityState={{
                           selected: studyMode === 'multiple-choice',
-                          disabled: modeSwitchLocked || !canUseMultipleChoice,
+                          disabled: modeSwitchLocked || quizSelectionLocked || !canUseMultipleChoice,
                         }}
                       >
                         <Text

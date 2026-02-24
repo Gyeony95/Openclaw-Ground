@@ -1260,10 +1260,11 @@ describe('fsrs scheduler', () => {
       const systemTime = '2026-02-23T12:34:56.000Z';
       jest.setSystemTime(new Date(systemTime));
       const card = createNewCard('salted-id', 'format', NOW);
-      const [timestampPart, saltPart, sequencePart] = card.id.split('-');
+      const [timestampPart, saltPart, entropyPart, sequencePart] = card.id.split('-');
 
       expect(timestampPart).toBe(String(Date.parse(NOW)));
       expect(saltPart).toBe(Date.parse(systemTime).toString(36));
+      expect(entropyPart.length).toBeGreaterThan(0);
       expect(sequencePart.length).toBeGreaterThan(0);
     } finally {
       jest.useRealTimers();
