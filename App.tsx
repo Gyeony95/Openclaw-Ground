@@ -252,19 +252,20 @@ export default function App() {
     : nextUpcomingCard
       ? `Next ${formatDueLabel(nextUpcomingCard.dueAt, clockIso)}`
       : 'No upcoming card';
+  const scheduleRepairCount = useMemo(() => countScheduleRepairCards(cards), [cards]);
   const queueLabelTone = queueTone({
     dueAt: dueCard?.dueAt,
     clockIso,
     loading,
     hasDueCard: Boolean(dueCard),
     needsRepair: dueNeedsRepair,
+    hasPendingRepairs: scheduleRepairCount > 0,
   });
   const queueShareLabel = loading
     ? '--'
     : formatQueueShareLabel(dueQueueCount, stats.total);
   const queueProgressPercent = loading || stats.total === 0 ? 0 : clampPercent((dueQueueCount / stats.total) * 100);
   const queueProgressWidth = `${queueProgressPercent}%`;
-  const scheduleRepairCount = useMemo(() => countScheduleRepairCards(cards), [cards]);
   const queueLoadStatus = queueLoadStatusLabel(queueProgressPercent, scheduleRepairCount, stats.total);
   const dueWithinDay = useMemo(() => {
     return countUpcomingDueCards(cards, clockIso, 24);

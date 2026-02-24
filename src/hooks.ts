@@ -232,13 +232,14 @@ function maxScheduleMsBeforeRepair(state: Card['state'], stability: unknown): nu
 }
 
 export function hasScheduleRepairNeed(
-  card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & Partial<Pick<Card, 'stability' | 'reps'>>,
+  card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & Partial<Pick<Card, 'stability' | 'reps' | 'lapses'>>,
 ): boolean {
   const dueAt = safeReadString(() => card.dueAt);
   const updatedAt = safeReadString(() => card.updatedAt);
   const stateValue = safeReadUnknown(() => card.state);
   const stabilityValue = safeReadUnknown(() => card.stability);
   const repsValue = safeReadUnknown(() => card.reps);
+  const lapsesValue = safeReadUnknown(() => card.lapses);
   const dueMs = parseTimeOrNaN(dueAt);
   const updatedMs = parseTimeOrNaN(updatedAt);
   const wallClockMs = safeNowMs();
@@ -280,10 +281,15 @@ export function hasScheduleRepairNeed(
     return true;
   }
   const reps = normalizeNonNegativeCounter(repsValue);
+  const lapsesRawMissing = lapsesValue === undefined || lapsesValue === null;
+  const lapses = lapsesRawMissing ? 0 : normalizeNonNegativeCounter(lapsesValue);
   if (reps === null) {
     return true;
   }
-  return reps > 0;
+  if (lapses === null) {
+    return true;
+  }
+  return reps > 0 || lapses > 0;
 }
 
 function isReviewReadyCard(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & Partial<Pick<Card, 'stability' | 'reps'>>, currentIso: string): boolean {

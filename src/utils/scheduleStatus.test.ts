@@ -29,6 +29,19 @@ describe('scheduleStatus', () => {
       expect(tone).toBe(colors.success);
     });
 
+    it('shows warning tone when queue is clear but schedule repairs are pending', () => {
+      const tone = queueTone({
+        dueAt: undefined,
+        clockIso: NOW,
+        loading: false,
+        hasDueCard: false,
+        needsRepair: false,
+        hasPendingRepairs: true,
+      });
+
+      expect(tone).toBe(colors.warn);
+    });
+
     it('uses primary tone for cards that are due now within the one-minute window', () => {
       const tone = queueTone({
         dueAt: '2026-02-24T12:00:30.000Z',

@@ -7,6 +7,7 @@ export interface QueueToneInput {
   loading: boolean;
   hasDueCard: boolean;
   needsRepair: boolean;
+  hasPendingRepairs?: boolean;
 }
 
 export interface DueUrgencyInput {
@@ -21,9 +22,13 @@ export function queueTone({
   loading,
   hasDueCard,
   needsRepair,
+  hasPendingRepairs = false,
 }: QueueToneInput): string {
   if (loading) {
     return colors.subInk;
+  }
+  if (hasPendingRepairs) {
+    return colors.warn;
   }
   if (!hasDueCard) {
     return colors.success;
