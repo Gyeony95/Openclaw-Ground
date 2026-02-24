@@ -399,9 +399,10 @@ function normalizeTimeline(
   );
   const earliestAnchorMs = anchorCandidates.length > 0 ? Math.min(...anchorCandidates) : fallbackMs;
   const latestAnchorMs = anchorCandidates.length > 0 ? Math.max(...anchorCandidates) : fallbackMs;
-  const createdMsCandidate = Date.parse(createdAt);
+  let createdMsCandidate = Date.parse(createdAt);
   if (Number.isFinite(createdMsCandidate) && createdMsCandidate - earliestAnchorMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
     createdAt = toSafeIso(earliestAnchorMs);
+    createdMsCandidate = Date.parse(createdAt);
   }
   if (
     Number.isFinite(createdMsCandidate) &&

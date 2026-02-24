@@ -1235,7 +1235,7 @@ export default function App() {
                                       showIncorrect && styles.quizOptionTextIncorrect,
                                     ]}
                                   >
-                                    <Text style={styles.quizOptionLabel}>{optionLetter}.</Text>
+                                    <Text style={styles.quizOptionLabel}>{optionLetter}. </Text>
                                     {optionPrefix}
                                     {option.text}
                                   </Text>

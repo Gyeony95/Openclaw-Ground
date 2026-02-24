@@ -4266,6 +4266,25 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('recomputes createdAt bounds after future-skew repair so historical window clamping still applies', () => {
+    const corrupted = {
+      ...createNewCard('created-window-repair', 'letter', NOW),
+      createdAt: '2100-01-01T00:00:00.000Z',
+      updatedAt: '2000-01-01T00:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+      state: 'review' as const,
+      reps: 8,
+      lapses: 1,
+      stability: 6,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(corrupted, 3, '2026-02-24T12:00:00.000Z').card;
+
+    expect(reviewed.createdAt).toBe('2006-03-01T12:00:00.000Z');
+    expect(Date.parse(reviewed.createdAt)).toBeLessThanOrEqual(Date.parse(reviewed.updatedAt));
+  });
+
   it('repairs review cards with dueAt at-or-before updatedAt using a short fallback schedule', () => {
     const corrupted = {
       ...reviewCard(createNewCard('due-repair', 'definition', NOW), 4, NOW).card,
