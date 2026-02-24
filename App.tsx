@@ -247,6 +247,7 @@ export default function App() {
   const dueCardStateConfig = dueCard ? stateConfig(dueCard.state) : null;
   const dueCardUrgency = dueUrgency(dueCard?.dueAt, clockIso);
   const ratingIntervals = useMemo(() => (dueCard ? previewIntervals(dueCard, clockIso) : null), [dueCard, clockIso]);
+  const dueCardRevealKey = dueCard ? `${dueCard.id}:${dueCard.updatedAt}:${dueCard.dueAt}` : 'none';
   const ratingIntervalLabels = useMemo(
     () =>
       ratingIntervals
@@ -304,7 +305,7 @@ export default function App() {
 
   useEffect(() => {
     setShowMeaning(false);
-  }, [dueCard?.id]);
+  }, [dueCardRevealKey]);
 
   useEffect(() => {
     if (pendingReviewCardId === null) {

@@ -47,6 +47,29 @@ describe('fsrs scheduler', () => {
     expect(card.dueAt).toBe(historicalNow);
   });
 
+  it('keeps very old historical creation timestamps for imported decks', () => {
+    const historicalNow = '1990-06-15T00:00:00.000Z';
+    const card = createNewCard('legacy', 'imported', historicalNow);
+
+    expect(card.createdAt).toBe(historicalNow);
+    expect(card.updatedAt).toBe(historicalNow);
+    expect(card.dueAt).toBe(historicalNow);
+  });
+
+  it('falls back to runtime wall clock when creation timestamp is pathologically far future', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const card = createNewCard('future-now', 'timestamp', '2060-01-01T00:00:00.000Z');
+
+      expect(card.createdAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.dueAt).toBe('2026-02-23T14:30:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('falls back to runtime wall clock when creation timestamp input is invalid', () => {
     jest.useFakeTimers();
     try {
