@@ -387,9 +387,20 @@ function normalizeTimeline(
     Number.isFinite(value),
   );
   const earliestAnchorMs = anchorCandidates.length > 0 ? Math.min(...anchorCandidates) : fallbackMs;
+  const latestAnchorMs = anchorCandidates.length > 0 ? Math.max(...anchorCandidates) : fallbackMs;
   const createdMsCandidate = Date.parse(createdAt);
   if (Number.isFinite(createdMsCandidate) && createdMsCandidate - earliestAnchorMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
     createdAt = toSafeIso(earliestAnchorMs);
+  }
+  if (
+    Number.isFinite(createdMsCandidate) &&
+    Number.isFinite(latestAnchorMs) &&
+    latestAnchorMs - createdMsCandidate > MAX_CREATE_TIME_OFFSET_MS
+  ) {
+    // Keep persisted creation timestamps within the same bounded historical window
+    // used for runtime imports, while preserving monotonicity against timeline anchors.
+    const boundedHistoricalFloorMs = Math.max(earliestAnchorMs, latestAnchorMs - MAX_CREATE_TIME_OFFSET_MS);
+    createdAt = toSafeIso(boundedHistoricalFloorMs);
   }
   const normalizedCreatedMs = Date.parse(createdAt);
   createdAt = toSafeIso(Number.isFinite(normalizedCreatedMs) ? normalizedCreatedMs : fallbackMs);

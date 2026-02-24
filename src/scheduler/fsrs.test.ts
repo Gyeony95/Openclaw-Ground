@@ -1075,6 +1075,33 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('repairs pathologically stale createdAt values against active review timelines', () => {
+    const twentyYearsMs = 20 * 365 * 24 * 60 * 60 * 1000;
+    const staleCreated = '1980-01-01T00:00:00.000Z';
+    const updatedAt = '2026-02-23T12:00:00.000Z';
+    const dueAt = addDaysIso(updatedAt, 2);
+    const card = {
+      ...createNewCard('stale-created-at', 'timeline repair', NOW),
+      state: 'review' as const,
+      createdAt: staleCreated,
+      updatedAt,
+      dueAt,
+      stability: 2,
+      reps: 8,
+      lapses: 1,
+    };
+
+    const reviewed = reviewCard(card, 3, addDaysIso(updatedAt, 1));
+    const createdMs = Date.parse(reviewed.card.createdAt);
+    const updatedMs = Date.parse(reviewed.card.updatedAt);
+    const staleCreatedMs = Date.parse(staleCreated);
+
+    expect(reviewed.card.createdAt).not.toBe(staleCreated);
+    expect(createdMs).toBeLessThanOrEqual(updatedMs);
+    expect(updatedMs - createdMs).toBeLessThanOrEqual(twentyYearsMs);
+    expect(createdMs).toBeGreaterThan(staleCreatedMs);
+  });
+
   it('normalizes oversized card text fields while reviewing existing cards', () => {
     const card = {
       ...createNewCard('phi-text', 'letter', NOW),
