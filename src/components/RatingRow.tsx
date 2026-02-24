@@ -21,6 +21,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
   const isCompact = width < 320;
   const isNarrow = width < 380;
   const isWide = width >= 520;
+  const isDisabled = disabled || busy;
 
   return (
     <View style={styles.row}>
@@ -30,28 +31,28 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
           <Pressable
             key={item.rating}
             onPress={() => onRate(item.rating)}
-            disabled={disabled}
+            disabled={isDisabled}
             hitSlop={6}
-            android_ripple={disabled ? undefined : { color: `${item.tone}20` }}
+            android_ripple={isDisabled ? undefined : { color: `${item.tone}20` }}
             style={({ pressed }) => [
               styles.button,
               isNarrow ? styles.buttonNarrow : null,
               isCompact ? styles.buttonCompact : null,
               isWide ? styles.buttonWide : null,
-              disabled
+              isDisabled
                 ? styles.buttonDisabledSurface
                 : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
-              pressed && !disabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
-              disabled && styles.buttonDisabled,
+              pressed && !isDisabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
+              isDisabled && styles.buttonDisabled,
             ]}
             accessibilityRole="button"
             accessibilityLabel={`Rate ${item.text}. Next ${interval}.`}
-            accessibilityHint={disabled ? 'Wait for the current review to finish' : `Schedules next review ${interval}`}
-            accessibilityState={{ disabled, busy }}
+            accessibilityHint={isDisabled ? 'Wait for the current review to finish' : `Schedules next review ${interval}`}
+            accessibilityState={{ disabled: isDisabled, busy }}
           >
-            <Text style={[styles.buttonText, { color: disabled ? colors.subInk : item.tone }]}>{item.text}</Text>
+            <Text style={[styles.buttonText, { color: isDisabled ? colors.subInk : item.tone }]}>{item.text}</Text>
             <Text
-              style={[styles.hint, styles.hintCentered, { color: disabled ? colors.subInk : item.tone }]}
+              style={[styles.hint, styles.hintCentered, { color: isDisabled ? colors.subInk : item.tone }]}
               numberOfLines={2}
               adjustsFontSizeToFit
               minimumFontScale={0.8}

@@ -254,6 +254,26 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('keeps valid dueAt as a timeline anchor when runtime wall clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const repaired = reviewCard(
+      {
+        ...createNewCard('nan-timeline-anchor', 'safe', NOW),
+        createdAt: 'not-a-date',
+        updatedAt: 'also-not-a-date',
+        dueAt: NOW,
+        state: 'learning' as const,
+      },
+      3,
+      NOW,
+    );
+    nowSpy.mockRestore();
+
+    expect(repaired.card.createdAt).toBe(NOW);
+    expect(repaired.card.updatedAt).toBe(NOW);
+    expect(repaired.card.state).toBe('review');
+  });
+
   it('collapses internal whitespace in word and meaning when creating cards', () => {
     const card = createNewCard('  new   york  ', '  very   large   city  ', NOW);
 
