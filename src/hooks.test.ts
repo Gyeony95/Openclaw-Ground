@@ -294,6 +294,24 @@ describe('applyDueReview', () => {
     expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:00.000Z');
   });
 
+  it('keeps valid provided review clocks deterministic instead of advancing to runtime', () => {
+    const nearBoundary = {
+      ...createNewCard('deterministic-valid-review-clock', 'safe', NOW),
+      dueAt: '2026-02-23T12:00:20.000Z',
+    };
+
+    const result = applyDueReview(
+      [nearBoundary],
+      nearBoundary.id,
+      3,
+      '2026-02-23T12:00:00.000Z',
+      '2026-02-23T12:00:30.000Z',
+    );
+
+    expect(result.reviewed).toBe(false);
+    expect(result.cards[0]).toBe(nearBoundary);
+  });
+
   it('uses runtime wall-safe clock when provided review clock is pathologically far future', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(NOW));
@@ -1206,6 +1224,17 @@ describe('hasDueCard', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('keeps valid provided clocks deterministic for due checks instead of advancing to runtime', () => {
+    const nearBoundary = {
+      ...createNewCard('deterministic-valid-due-clock', 'safe', NOW),
+      dueAt: '2026-02-23T12:00:20.000Z',
+    };
+
+    expect(hasDueCard([nearBoundary], nearBoundary.id, '2026-02-23T12:00:00.000Z', '2026-02-23T12:00:30.000Z')).toBe(
+      false,
+    );
   });
 
   it('ignores pathologically future rendered clocks and falls back to runtime for due checks', () => {

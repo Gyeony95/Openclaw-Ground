@@ -446,12 +446,15 @@ export function applyDueReview(
   cardId: string,
   rating: Rating,
   currentIso: string,
+  runtimeNowIso = nowIso(),
 ): { cards: Card[]; reviewed: boolean; reviewedAt?: string } {
   const normalizedCardId = normalizeCardIdInput(cardId);
   if (!normalizedCardId) {
     return { cards, reviewed: false };
   }
-  const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
+  const effectiveCurrentIso = isValidIso(currentIso)
+    ? toCanonicalIso(currentIso)
+    : resolveReviewClock(currentIso, runtimeNowIso);
   let targetIndex = -1;
   for (let index = 0; index < cards.length; index += 1) {
     const candidate = cards[index];
@@ -491,8 +494,9 @@ export function applyReviewToDeckState(
   cardId: string,
   rating: Rating,
   currentIso: string,
+  runtimeNowIso = nowIso(),
 ): { deckState: { cards: Card[]; lastReviewedAt?: string }; reviewed: boolean } {
-  const next = applyDueReview(deckState.cards, cardId, rating, currentIso);
+  const next = applyDueReview(deckState.cards, cardId, rating, currentIso, runtimeNowIso);
   if (!next.reviewed) {
     return { deckState, reviewed: false };
   }
@@ -505,12 +509,14 @@ export function applyReviewToDeckState(
   };
 }
 
-export function hasDueCard(cards: Card[], cardId: string, currentIso: string): boolean {
+export function hasDueCard(cards: Card[], cardId: string, currentIso: string, runtimeNowIso = nowIso()): boolean {
   const normalizedCardId = normalizeCardIdInput(cardId);
   if (!normalizedCardId) {
     return false;
   }
-  const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
+  const effectiveCurrentIso = isValidIso(currentIso)
+    ? toCanonicalIso(currentIso)
+    : resolveReviewClock(currentIso, runtimeNowIso);
   return cards.some(
     (card) =>
       isRuntimeCard(card) &&
@@ -726,8 +732,9 @@ export function useDeck() {
   }, [clockIso]);
 
   const reviewDueCard = useCallback((cardId: string, rating: Rating): boolean => {
-    const current = resolveReviewClock(clockIso, nowIso());
-    const next = applyReviewToDeckState(deckStateRef.current, cardId, rating, current);
+    const runtimeNow = nowIso();
+    const current = resolveReviewClock(clockIso, runtimeNow);
+    const next = applyReviewToDeckState(deckStateRef.current, cardId, rating, current, runtimeNow);
     if (!next.reviewed) {
       return false;
     }
