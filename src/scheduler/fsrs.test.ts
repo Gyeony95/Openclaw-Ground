@@ -3905,4 +3905,70 @@ describe('fsrs scheduler', () => {
     expect(good.scheduledDays).toBeGreaterThanOrEqual(hard.scheduledDays);
     expect(easy.scheduledDays).toBeGreaterThanOrEqual(good.scheduledDays);
   });
+
+  it('snapshots runtime timeline accessors once during review scheduling', () => {
+    const runtimeCard = {
+      ...createNewCard('runtime-snapshot-review', 'definition', NOW),
+      state: 'review' as const,
+      reps: 8,
+      lapses: 1,
+      stability: 4,
+      difficulty: 5,
+    } as Card;
+
+    let updatedReads = 0;
+    let dueReads = 0;
+    Object.defineProperty(runtimeCard, 'updatedAt', {
+      configurable: true,
+      get() {
+        updatedReads += 1;
+        return NOW;
+      },
+    });
+    Object.defineProperty(runtimeCard, 'dueAt', {
+      configurable: true,
+      get() {
+        dueReads += 1;
+        return addDaysIso(NOW, 4);
+      },
+    });
+
+    reviewCard(runtimeCard, 3, addDaysIso(NOW, 4));
+
+    expect(updatedReads).toBe(1);
+    expect(dueReads).toBe(1);
+  });
+
+  it('snapshots runtime timeline accessors once during interval preview generation', () => {
+    const runtimeCard = {
+      ...createNewCard('runtime-snapshot-preview', 'definition', NOW),
+      state: 'review' as const,
+      reps: 8,
+      lapses: 1,
+      stability: 4,
+      difficulty: 5,
+    } as Card;
+
+    let updatedReads = 0;
+    let dueReads = 0;
+    Object.defineProperty(runtimeCard, 'updatedAt', {
+      configurable: true,
+      get() {
+        updatedReads += 1;
+        return NOW;
+      },
+    });
+    Object.defineProperty(runtimeCard, 'dueAt', {
+      configurable: true,
+      get() {
+        dueReads += 1;
+        return addDaysIso(NOW, 4);
+      },
+    });
+
+    previewIntervals(runtimeCard, addDaysIso(NOW, 4));
+
+    expect(updatedReads).toBe(1);
+    expect(dueReads).toBe(1);
+  });
 });

@@ -1043,6 +1043,24 @@ function normalizeCardText(
   };
 }
 
+function snapshotSchedulingCard(card: Card): Card {
+  // Snapshot runtime-backed properties once so normalization and scheduling stay deterministic.
+  return {
+    id: card.id,
+    word: card.word,
+    meaning: card.meaning,
+    notes: card.notes,
+    createdAt: card.createdAt,
+    updatedAt: card.updatedAt,
+    dueAt: card.dueAt,
+    state: card.state,
+    reps: card.reps,
+    lapses: card.lapses,
+    stability: card.stability,
+    difficulty: card.difficulty,
+  };
+}
+
 function normalizeWordValue(word: string): string {
   return normalizeBoundedText(word, WORD_MAX_LENGTH);
 }
@@ -1059,31 +1077,32 @@ function normalizeSchedulingCard(
   card: Card,
   requestedNowIso: string,
 ): { card: Card; currentIso: string } {
-  const { createdAt, currentIso, updatedAt, dueAt, dueNeedsRepair } = normalizeTimeline(card, requestedNowIso);
-  const normalizedText = normalizeCardText(card);
+  const snapshot = snapshotSchedulingCard(card);
+  const { createdAt, currentIso, updatedAt, dueAt, dueNeedsRepair } = normalizeTimeline(snapshot, requestedNowIso);
+  const normalizedText = normalizeCardText(snapshot);
   const normalizedState = inferStateFromCard({
-    state: card.state,
-    reps: card.reps,
-    lapses: card.lapses,
-    stability: card.stability,
+    state: snapshot.state,
+    reps: snapshot.reps,
+    lapses: snapshot.lapses,
+    stability: snapshot.stability,
     updatedAt,
     dueAt,
   });
   const normalizedScheduledDays = normalizeScheduledDays(daysBetween(updatedAt, dueAt), normalizedState);
-  const parsedDifficulty = parseRuntimeFiniteNumber(card.difficulty);
+  const parsedDifficulty = parseRuntimeFiniteNumber(snapshot.difficulty);
   const normalizedDifficulty = clampFinite(
-    parsedDifficulty ?? card.difficulty,
+    parsedDifficulty ?? snapshot.difficulty,
     DIFFICULTY_MIN,
     DIFFICULTY_MAX,
     DIFFICULTY_MEAN_REVERSION,
   );
-  const parsedStability = parseRuntimeFiniteNumber(card.stability);
+  const parsedStability = parseRuntimeFiniteNumber(snapshot.stability);
   const normalizedStabilityFallback =
     normalizedState === 'learning' ? 0.5 : normalizedScheduledDays;
   // If due anchors were repaired, prefer schedule-derived stability to avoid
   // amplifying corrupted historical stability into runaway intervals.
   const stabilityInput =
-    dueNeedsRepair && normalizedState !== 'learning' ? normalizedScheduledDays : parsedStability ?? card.stability;
+    dueNeedsRepair && normalizedState !== 'learning' ? normalizedScheduledDays : parsedStability ?? snapshot.stability;
   const normalizedStabilityBase = clampFinite(
     stabilityInput,
     STABILITY_MIN,
@@ -1099,13 +1118,13 @@ function normalizeSchedulingCard(
     STABILITY_MAX,
     normalizedStabilityFallback,
   );
-  const normalizedReps = normalizeCounter(card.reps);
-  const normalizedLapses = normalizeCounter(card.lapses);
+  const normalizedReps = normalizeCounter(snapshot.reps);
+  const normalizedLapses = normalizeCounter(snapshot.lapses);
 
   return {
     currentIso,
     card: {
-      ...card,
+      ...snapshot,
       ...normalizedText,
       createdAt,
       updatedAt,

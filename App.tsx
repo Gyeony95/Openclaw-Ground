@@ -681,11 +681,13 @@ export default function App() {
     if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice') {
       return;
     }
-    const nextSelectionId = resolveLockedQuizSelection(quizOptions, selectedQuizOptionId, optionId);
-    if (!nextSelectionId || !hasValidQuizSelection(nextSelectionId, quizOptions)) {
-      return;
-    }
-    setSelectedQuizOptionId(nextSelectionId);
+    setSelectedQuizOptionId((currentSelectedOptionId) => {
+      const nextSelectionId = resolveLockedQuizSelection(quizOptions, currentSelectedOptionId, optionId);
+      if (!nextSelectionId || !hasValidQuizSelection(nextSelectionId, quizOptions)) {
+        return currentSelectedOptionId;
+      }
+      return nextSelectionId;
+    });
     setReviewActionError(null);
   }
 
