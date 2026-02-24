@@ -222,6 +222,8 @@ function scoreDistractor(target: Card, candidate: Card): number {
 export function generateDistractors(target: Card, deckCards: Card[], distractorCount = 3): Card[] {
   const targetMeaning = normalizeText(target.meaning);
   const ranked: RankedCandidate[] = [];
+  const seenNormalizedMeanings = new Set<string>();
+  const selected: Card[] = [];
 
   for (const card of deckCards) {
     if (card.id === target.id) {
@@ -241,18 +243,37 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
     return left.card.id.localeCompare(right.card.id);
   });
 
-  const uniqueByMeaning = new Map<string, Card>();
   for (const candidate of ranked) {
     const normalized = normalizeText(candidate.card.meaning);
-    if (!uniqueByMeaning.has(normalized)) {
-      uniqueByMeaning.set(normalized, candidate.card);
+    if (!seenNormalizedMeanings.has(normalized)) {
+      seenNormalizedMeanings.add(normalized);
+      selected.push(candidate.card);
     }
-    if (uniqueByMeaning.size >= distractorCount) {
+    if (selected.length >= distractorCount) {
       break;
     }
   }
 
-  return [...uniqueByMeaning.values()];
+  // Backfill with any remaining unique meanings so objective quiz mode is available
+  // even when similarity ranking cannot produce enough distinct distractors.
+  if (selected.length < distractorCount) {
+    for (const card of deckCards) {
+      if (card.id === target.id) {
+        continue;
+      }
+      const normalized = normalizeText(card.meaning);
+      if (!normalized || normalized === targetMeaning || seenNormalizedMeanings.has(normalized)) {
+        continue;
+      }
+      seenNormalizedMeanings.add(normalized);
+      selected.push(card);
+      if (selected.length >= distractorCount) {
+        break;
+      }
+    }
+  }
+
+  return selected;
 }
 
 export function composeQuizOptions(target: Card, deckCards: Card[], seed: string, distractorCount = 3): QuizOption[] {

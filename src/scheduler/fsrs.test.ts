@@ -3017,4 +3017,34 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBe(0.5);
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
+
+  it('keeps preview floors phase-safe for review and relearning cards with malformed timeline fields', () => {
+    const reviewCardWithMalformedTimeline = {
+      ...createNewCard('preview-review-floor', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: 'not-a-time',
+      dueAt: 'not-a-time',
+      stability: Number.NaN,
+      difficulty: Number.NaN,
+    };
+    const relearningCardWithMalformedTimeline = {
+      ...createNewCard('preview-relearning-floor', 'definition', NOW),
+      state: 'relearning' as const,
+      updatedAt: 'not-a-time',
+      dueAt: 'not-a-time',
+      stability: Number.NaN,
+      difficulty: Number.NaN,
+    };
+
+    const reviewPreview = previewIntervals(reviewCardWithMalformedTimeline, NOW);
+    const relearningPreview = previewIntervals(relearningCardWithMalformedTimeline, NOW);
+
+    expect(reviewPreview[1]).toBeGreaterThanOrEqual(10 / 1440);
+    expect(reviewPreview[2]).toBeGreaterThanOrEqual(0.5);
+    expect(reviewPreview[4]).toBeGreaterThanOrEqual(reviewPreview[3]);
+    expect(relearningPreview[1]).toBeGreaterThanOrEqual(10 / 1440);
+    expect(relearningPreview[2]).toBeGreaterThanOrEqual(15 / 1440);
+    expect(relearningPreview[3]).toBeGreaterThanOrEqual(0.5);
+    expect(relearningPreview[4]).toBeGreaterThanOrEqual(1);
+  });
 });

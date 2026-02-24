@@ -83,4 +83,20 @@ describe('quiz distractors', () => {
     expect(typeof removedId).toBe('string');
     expect(hasValidQuizSelection(removedId ?? null, second)).toBe(false);
   });
+
+  it('backfills distractors from remaining unique meanings when top-ranked candidates collapse', () => {
+    const fallbackDeck = [
+      createCard('t1', 'light', 'to make bright'),
+      createCard('t2', 'ignite', 'to make bright'),
+      createCard('t3', 'spark', 'to make bright'),
+      createCard('t4', 'glow', 'to emit light softly'),
+      createCard('t5', 'shine', 'to reflect light'),
+      createCard('t6', 'blink', 'to close and open the eyes quickly'),
+    ];
+
+    const distractors = generateDistractors(fallbackDeck[0], fallbackDeck, 3);
+
+    expect(distractors).toHaveLength(3);
+    expect(new Set(distractors.map((card) => card.meaning.toLowerCase())).size).toBe(3);
+  });
 });

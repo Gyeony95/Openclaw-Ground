@@ -777,6 +777,31 @@ function ensureOrderedPreview(intervals: RatingIntervalPreview): RatingIntervalP
   };
 }
 
+function previewMinimumIntervalByRating(state: ReviewState): RatingIntervalPreview {
+  if (state === 'review') {
+    return {
+      1: RELEARNING_SCHEDULE_FLOOR_DAYS,
+      2: REVIEW_SCHEDULE_FLOOR_DAYS,
+      3: REVIEW_SCHEDULE_FLOOR_DAYS,
+      4: REVIEW_SCHEDULE_FLOOR_DAYS,
+    };
+  }
+  if (state === 'relearning') {
+    return {
+      1: RELEARNING_SCHEDULE_FLOOR_DAYS,
+      2: 15 * MINUTE_IN_DAYS,
+      3: REVIEW_SCHEDULE_FLOOR_DAYS,
+      4: 1,
+    };
+  }
+  return {
+    1: MINUTE_IN_DAYS,
+    2: 5 * MINUTE_IN_DAYS,
+    3: REVIEW_SCHEDULE_FLOOR_DAYS,
+    4: 1,
+  };
+}
+
 function normalizeCardText(
   card: Pick<Card, 'word' | 'meaning' | 'notes'>,
 ): Pick<Card, 'word' | 'meaning' | 'notes'> {
@@ -957,11 +982,12 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
   const normalized = normalizeSchedulingCard(card, nowIso);
   const previewCard = normalized.card;
   const previewIso = normalized.currentIso;
+  const previewFloor = previewMinimumIntervalByRating(previewCard.state);
   const preview = {
-    1: reviewCard(previewCard, 1, previewIso).scheduledDays,
-    2: reviewCard(previewCard, 2, previewIso).scheduledDays,
-    3: reviewCard(previewCard, 3, previewIso).scheduledDays,
-    4: reviewCard(previewCard, 4, previewIso).scheduledDays,
+    1: Math.max(previewFloor[1], reviewCard(previewCard, 1, previewIso).scheduledDays),
+    2: Math.max(previewFloor[2], reviewCard(previewCard, 2, previewIso).scheduledDays),
+    3: Math.max(previewFloor[3], reviewCard(previewCard, 3, previewIso).scheduledDays),
+    4: Math.max(previewFloor[4], reviewCard(previewCard, 4, previewIso).scheduledDays),
   };
 
   return ensureOrderedPreview(preview);
