@@ -367,6 +367,24 @@ describe('applyDueReview', () => {
     expect(result.cards[0]).toBe(nearBoundary);
   });
 
+  it('does not review early when rendered clock is ahead of runtime', () => {
+    const nearBoundary = {
+      ...createNewCard('no-early-review-clock', 'safe', NOW),
+      dueAt: '2026-02-23T12:00:30.000Z',
+    };
+
+    const result = applyDueReview(
+      [nearBoundary],
+      nearBoundary.id,
+      3,
+      '2026-02-23T12:01:00.000Z',
+      '2026-02-23T12:00:00.000Z',
+    );
+
+    expect(result.reviewed).toBe(false);
+    expect(result.cards[0]).toBe(nearBoundary);
+  });
+
   it('uses runtime wall-safe clock when provided review clock is pathologically far future', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(NOW));
@@ -1312,6 +1330,17 @@ describe('hasDueCard', () => {
     };
 
     expect(hasDueCard([nearBoundary], nearBoundary.id, '2026-02-23T12:00:00.000Z', '2026-02-23T12:00:30.000Z')).toBe(
+      false,
+    );
+  });
+
+  it('does not treat cards as due early when rendered clock is ahead of runtime', () => {
+    const nearBoundary = {
+      ...createNewCard('deterministic-no-early-due-clock', 'safe', NOW),
+      dueAt: '2026-02-23T12:00:30.000Z',
+    };
+
+    expect(hasDueCard([nearBoundary], nearBoundary.id, '2026-02-23T12:01:00.000Z', '2026-02-23T12:00:00.000Z')).toBe(
       false,
     );
   });

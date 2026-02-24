@@ -313,6 +313,8 @@ function resolveActionClock(currentIso: string, runtimeNowIso: string): string {
   const currentMs = Date.parse(currentIso);
   const runtimeMs = parseTimeOrNaN(runtimeNowIso);
   const wallClockMs = safeNowMs();
+  const canonicalCurrentIso = toCanonicalIso(currentIso);
+  const canonicalRuntimeIso = Number.isFinite(runtimeMs) ? toCanonicalIso(runtimeNowIso) : undefined;
   const currentTooFarFromRuntime =
     Number.isFinite(runtimeMs) && Math.abs(currentMs - runtimeMs) > MAX_CLOCK_SKEW_MS;
   const currentTooFarFromWall =
@@ -322,7 +324,12 @@ function resolveActionClock(currentIso: string, runtimeNowIso: string): string {
     return resolveReviewClock(currentIso, runtimeNowIso);
   }
 
-  return toCanonicalIso(currentIso);
+  if (Number.isFinite(runtimeMs) && currentMs > runtimeMs) {
+    // Prevent early reviews when rendered UI clocks run ahead of runtime.
+    return canonicalRuntimeIso ?? canonicalCurrentIso;
+  }
+
+  return canonicalCurrentIso;
 }
 
 function pickFreshestCard(existing: Card, loaded: Card): Card {
