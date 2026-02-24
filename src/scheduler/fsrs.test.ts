@@ -1570,6 +1570,30 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.state).toBe('review');
   });
 
+  it('trusts explicit valid review timestamps when runtime wall clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    try {
+      const corrupted = {
+        ...createNewCard('sigma-nan-wallclock-review', 'letter', NOW),
+        state: 'review' as const,
+        updatedAt: '2030-01-01T00:00:00.000Z',
+        dueAt: '2030-01-02T00:00:00.000Z',
+        stability: 8,
+        difficulty: 4,
+        reps: 12,
+        lapses: 1,
+      };
+
+      const reviewed = reviewCard(corrupted, 3, '2026-02-24T12:00:00.000Z');
+
+      expect(reviewed.card.updatedAt).toBe('2026-02-24T12:00:00.000Z');
+      expect(Date.parse(reviewed.card.createdAt)).toBeLessThanOrEqual(Date.parse(reviewed.card.updatedAt));
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it('repairs collapsed review due dates using stability rather than half-day fallback', () => {
     const mature = {
       ...createNewCard('rho-collapsed-due', 'letter', NOW),

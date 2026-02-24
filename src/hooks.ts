@@ -45,6 +45,13 @@ function isValidCardId(id: unknown): id is string {
   return typeof id === 'string' && id.trim().length > 0;
 }
 
+function normalizeCardIdInput(id: unknown): string | null {
+  if (!isValidCardId(id)) {
+    return null;
+  }
+  return id.trim();
+}
+
 function parseTimeOrNaN(iso: string): number {
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
@@ -370,14 +377,15 @@ export function applyDueReview(
   rating: Rating,
   currentIso: string,
 ): { cards: Card[]; reviewed: boolean; reviewedAt?: string } {
-  if (!isValidCardId(cardId)) {
+  const normalizedCardId = normalizeCardIdInput(cardId);
+  if (!normalizedCardId) {
     return { cards, reviewed: false };
   }
   const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
   let targetIndex = -1;
   for (let index = 0; index < cards.length; index += 1) {
     const candidate = cards[index];
-    if (candidate.id !== cardId || !isReviewReadyCard(candidate, effectiveCurrentIso)) {
+    if (candidate.id !== normalizedCardId || !isReviewReadyCard(candidate, effectiveCurrentIso)) {
       continue;
     }
     if (targetIndex === -1 || compareDueCards(candidate, cards[targetIndex]) < 0) {
@@ -414,11 +422,12 @@ export function applyReviewToDeckState(
 }
 
 export function hasDueCard(cards: Card[], cardId: string, currentIso: string): boolean {
-  if (!isValidCardId(cardId)) {
+  const normalizedCardId = normalizeCardIdInput(cardId);
+  if (!normalizedCardId) {
     return false;
   }
   const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
-  return cards.some((card) => card.id === cardId && isReviewReadyCard(card, effectiveCurrentIso));
+  return cards.some((card) => card.id === normalizedCardId && isReviewReadyCard(card, effectiveCurrentIso));
 }
 
 export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: string): string {

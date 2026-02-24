@@ -151,6 +151,12 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
       return fallback;
     }
 
+    if (!Number.isFinite(wallClockMs) && requestedValid) {
+      // Without a reliable wall clock, trust explicit caller review timestamps
+      // so corrupted future card timelines do not pin scheduling indefinitely.
+      return toCanonicalIso(candidate, fallback);
+    }
+
     // Only roll backward when the card timestamp itself looks corrupted far into the future.
     if (Number.isFinite(wallClockMs) && fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
       // Guard against stale review timestamps when recovering from corrupted future card timelines.
