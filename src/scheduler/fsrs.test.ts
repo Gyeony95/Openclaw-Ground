@@ -548,6 +548,38 @@ describe('fsrs scheduler', () => {
     });
   });
 
+  it('uses a wall-safe preview clock when runtime dueAt access is corrupted and caller preview clock is invalid', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-25T12:00:00.000Z'));
+      const corruptedReview = {
+        ...createNewCard('preview-invalid-now-fallback', 'safe', NOW),
+        state: 'review' as const,
+        updatedAt: NOW,
+        reps: 0,
+        lapses: 0,
+        stability: 4,
+        difficulty: 5,
+      };
+      Object.defineProperty(corruptedReview, 'dueAt', {
+        get() {
+          throw new Error('bad runtime dueAt');
+        },
+      });
+
+      const intervals = previewIntervals(corruptedReview, 'bad-preview-clock');
+
+      expect(intervals).toEqual({
+        1: 10 / 1440,
+        2: 0.5,
+        3: 0.5,
+        4: 0.5,
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('infers review fallback intervals when state access is corrupted during preview recovery', () => {
     const corruptedPreviewState = {
       ...createNewCard('preview-corrupted-state-fallback', 'safe', NOW),

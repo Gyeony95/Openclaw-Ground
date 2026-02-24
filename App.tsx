@@ -655,6 +655,9 @@ export default function App() {
     if (studyMode === 'multiple-choice' && !hasQuizSelection) {
       return;
     }
+    if (forceAgainForQuizSelection && rating !== 1) {
+      return;
+    }
     if (!dueCard || pendingReviewCardKey !== null || reviewLockRef.current) {
       return;
     }

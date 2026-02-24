@@ -287,6 +287,15 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
   return toCanonicalIso(candidate, fallback);
 }
 
+function resolvePreviewIso(requestedNowIso: string): string {
+  const wallClockIso = toSafeIso(safeNowMs());
+  const normalizedRequestedNowIso = normalizeIsoInput(requestedNowIso);
+  if (!normalizedRequestedNowIso || !isValidIso(normalizedRequestedNowIso)) {
+    return wallClockIso;
+  }
+  return toCanonicalIso(normalizedRequestedNowIso, wallClockIso);
+}
+
 function normalizeRating(input: Rating, currentState: ReviewState): Rating {
   // Runtime ratings can arrive with small floating-point drift
   // (e.g. from serialized UI state). Treat near-integers as integers.
@@ -1371,18 +1380,19 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
 }
 
 export function previewIntervals(card: Card, nowIso: string): RatingIntervalPreview {
+  const previewNowIso = resolvePreviewIso(nowIso);
   const fallbackState = inferStateFromCard({
     state: safeReadString(() => card.state, 'learning'),
     reps: safeReadCounter(() => card.reps, 0),
     lapses: safeReadCounter(() => card.lapses, 0),
     stability: safeReadNumber(() => card.stability, STABILITY_MIN),
-    updatedAt: safeReadString(() => card.updatedAt, nowIso),
-    dueAt: safeReadString(() => card.dueAt, nowIso),
+    updatedAt: safeReadString(() => card.updatedAt, previewNowIso),
+    dueAt: safeReadString(() => card.dueAt, previewNowIso),
   });
   const fallbackFloor = previewMinimumIntervalByRating(fallbackState);
   const fallbackPreview = ensureOrderedPreview(fallbackFloor, fallbackFloor);
   try {
-    const normalized = normalizeSchedulingCard(card, nowIso);
+    const normalized = normalizeSchedulingCard(card, previewNowIso);
     const previewCard = normalized.card;
     const previewIso = normalized.currentIso;
     const previewFloor = previewMinimumIntervalByRating(previewCard.state);
