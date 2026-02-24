@@ -597,9 +597,26 @@ describe('hasDueCard', () => {
     expect(hasDueCard([due, future], future.id, NOW)).toBe(false);
   });
 
-  it('returns false for invalid runtime clocks', () => {
-    const due = createNewCard('invalid-clock', 'test', NOW);
-    expect(hasDueCard([due], due.id, 'bad-clock')).toBe(false);
+  it('falls back to runtime wall clock when the provided clock is invalid', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const due = createNewCard('invalid-clock', 'test', NOW);
+      expect(hasDueCard([due], due.id, 'bad-clock')).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('ignores pathologically future rendered clocks and falls back to runtime for due checks', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const future = { ...createNewCard('future-clock', 'test', NOW), dueAt: '2026-02-24T12:00:00.000Z' };
+      expect(hasDueCard([future], future.id, '2099-01-01T00:00:00.000Z')).toBe(false);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
 

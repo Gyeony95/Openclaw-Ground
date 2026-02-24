@@ -166,6 +166,7 @@ export default function App() {
   const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
   const [isAddBusy, setIsAddBusy] = useState(false);
   const [addAttempted, setAddAttempted] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [entryAnim] = useState(() => new Animated.Value(0));
   const scrollRef = useRef<ScrollView>(null);
   const wordInputRef = useRef<TextInput>(null);
@@ -387,6 +388,7 @@ export default function App() {
     if (loading || addLockRef.current) {
       return;
     }
+    setActionError(null);
     const trimmedWord = word.trim();
     const trimmedMeaning = meaning.trim();
     const trimmedNotes = notes.trim();
@@ -410,6 +412,7 @@ export default function App() {
     } catch {
       addLockRef.current = false;
       setIsAddBusy(false);
+      setActionError('Unable to add this card right now.');
       return;
     }
     meaningInputRef.current?.blur();
@@ -441,6 +444,7 @@ export default function App() {
     if (!dueCard || pendingReviewCardId !== null || reviewLockRef.current) {
       return;
     }
+    setActionError(null);
     Keyboard.dismiss();
     reviewLockRef.current = true;
     let reviewed = false;
@@ -449,6 +453,7 @@ export default function App() {
     } catch {
       setPendingReviewCardId(null);
       reviewLockRef.current = false;
+      setActionError('Unable to record this review right now.');
       return;
     }
     if (reviewed) {
@@ -749,6 +754,11 @@ export default function App() {
                             </Text>
                           </View>
                         ) : null}
+                        {actionError ? (
+                          <Text style={styles.actionError} accessibilityLiveRegion="polite">
+                            {actionError}
+                          </Text>
+                        ) : null}
                       </View>
                     )}
                   </View>
@@ -851,6 +861,11 @@ export default function App() {
                 <Text style={[styles.addHint, { color: addHintTone }]} accessibilityLiveRegion="polite">
                   {addFormHint}
                 </Text>
+                {actionError ? (
+                  <Text style={styles.actionError} accessibilityLiveRegion="polite">
+                    {actionError}
+                  </Text>
+                ) : null}
               </View>
             </Animated.View>
           </View>
@@ -1357,6 +1372,12 @@ const styles = StyleSheet.create({
     color: colors.subInk,
     fontSize: 12,
     fontWeight: '600',
+  },
+  actionError: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.danger,
   },
   primaryBtn: {
     borderRadius: radii.md,

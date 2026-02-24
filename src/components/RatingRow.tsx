@@ -49,7 +49,14 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
             accessibilityState={{ disabled }}
           >
             <Text style={[styles.buttonText, { color: disabled ? colors.subInk : item.tone }]}>{item.text}</Text>
-            <Text style={[styles.hint, { color: disabled ? colors.subInk : item.tone }]}>{interval}</Text>
+            <Text
+              style={[styles.hint, { color: disabled ? colors.subInk : item.tone }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+            >
+              {interval}
+            </Text>
           </Pressable>
         );
       })}

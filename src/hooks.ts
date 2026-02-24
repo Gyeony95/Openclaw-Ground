@@ -228,7 +228,8 @@ export function applyReviewToDeckState(
 }
 
 export function hasDueCard(cards: Card[], cardId: string, currentIso: string): boolean {
-  return cards.some((card) => card.id === cardId && isDue(card.dueAt, currentIso));
+  const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
+  return cards.some((card) => card.id === cardId && isDue(card.dueAt, effectiveCurrentIso));
 }
 
 export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: string): string {
