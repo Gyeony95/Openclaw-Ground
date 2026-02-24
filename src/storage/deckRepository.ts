@@ -231,7 +231,11 @@ function normalizeCard(raw: Partial<Card>): Card | null {
   }
   const reviewScheduleCapDays = Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, normalizedStability * 6, 30);
   if (state === 'review' && scheduleDays > reviewScheduleCapDays) {
-    const repairedReviewDays = Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, normalizedStability);
+    const repairedReviewDays = clamp(
+      normalizedStability,
+      REVIEW_SCHEDULE_FLOOR_DAYS,
+      REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
+    );
     normalizedDueMs = normalizedUpdatedMs + repairedReviewDays * DAY_MS;
     scheduleDays = repairedReviewDays;
   }

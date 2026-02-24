@@ -82,6 +82,35 @@ describe('deck repository', () => {
     expect(deck.cards[0].state).toBe('review');
   });
 
+  it('caps repaired far-future review due dates to a safe fallback window for extreme stability values', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'review-future-capped',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2036-04-01T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            stability: 200,
+            difficulty: 5,
+            reps: 30,
+            lapses: 2,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-03-01T00:00:00.000Z');
+    expect(deck.cards[0].stability).toBe(200);
+    expect(deck.cards[0].state).toBe('review');
+  });
+
   it('keeps repaired review schedules at or above the half-day floor for low-stability cards', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

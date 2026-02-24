@@ -606,7 +606,13 @@ export default function App() {
                       <Text style={styles.queueProgressLabel}>Queue load</Text>
                       <Text style={styles.queueProgressValue}>{queueProgressPercent}%</Text>
                     </View>
-                    <View style={styles.queueProgressTrack}>
+                    <View
+                      style={styles.queueProgressTrack}
+                      accessible
+                      accessibilityRole="progressbar"
+                      accessibilityLabel="Queue load"
+                      accessibilityValue={{ min: 0, max: 100, now: queueProgressPercent }}
+                    >
                       <View style={[styles.queueProgressFill, { width: queueProgressWidth }]} />
                     </View>
                   </View>

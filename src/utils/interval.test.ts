@@ -21,6 +21,12 @@ describe('formatIntervalLabel', () => {
     expect(formatIntervalLabel(89)).toBe('2mo');
   });
 
+  it('formats very long intervals in years without overstating', () => {
+    expect(formatIntervalLabel(365)).toBe('1y');
+    expect(formatIntervalLabel(730)).toBe('2y');
+    expect(formatIntervalLabel(364)).toBe('12mo');
+  });
+
   it('guards invalid values', () => {
     expect(formatIntervalLabel(Number.NaN)).toBe('<1m');
     expect(formatIntervalLabel(-1)).toBe('<1m');
