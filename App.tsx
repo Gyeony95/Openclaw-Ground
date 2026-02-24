@@ -244,6 +244,7 @@ export default function App() {
     : formatQueueShareLabel(dueQueueCount, stats.total);
   const queueProgressPercent = loading || stats.total === 0 ? 0 : clampPercent((dueQueueCount / stats.total) * 100);
   const queueProgressWidth = `${queueProgressPercent}%`;
+  const scheduleRepairCount = useMemo(() => countScheduleRepairCards(cards), [cards]);
   const dueWithinDay = useMemo(() => {
     return countUpcomingDueCards(cards, clockIso, 24);
   }, [cards, clockIso]);
@@ -286,7 +287,6 @@ export default function App() {
   const overdueNow = useMemo(() => {
     return countOverdueCards(cards, clockIso);
   }, [cards, clockIso]);
-  const scheduleRepairCount = useMemo(() => countScheduleRepairCards(cards), [cards]);
   const overdueQueueLabel = loading
     ? '--'
     : overdueNow === 0

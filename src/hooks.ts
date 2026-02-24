@@ -471,7 +471,13 @@ export function applyDueReview(
     return { cards, reviewed: false };
   }
 
-  const reviewed = reviewCard(targetCard, rating, effectiveCurrentIso).card;
+  let reviewed: Card;
+  try {
+    reviewed = reviewCard(targetCard, rating, effectiveCurrentIso).card;
+  } catch {
+    // Keep the queue stable when runtime-corrupted cards throw during scheduling.
+    return { cards, reviewed: false };
+  }
   const nextCards = [...cards];
   nextCards[targetIndex] = reviewed;
   return { cards: nextCards, reviewed: true, reviewedAt: reviewed.updatedAt };

@@ -64,6 +64,22 @@ describe('applyDueReview', () => {
     expect(result.cards[2].reps).toBe(due.reps + 1);
   });
 
+  it('does not crash when a due card throws during scheduler normalization', () => {
+    const throwingCard = createNewCard('throwing-difficulty', 'safe', NOW);
+    Object.defineProperty(throwingCard, 'difficulty', {
+      get() {
+        throw new Error('bad runtime difficulty');
+      },
+    });
+    const cards = [throwingCard];
+
+    const result = applyDueReview(cards, throwingCard.id, 3, NOW);
+
+    expect(result.reviewed).toBe(false);
+    expect(result.cards).toBe(cards);
+    expect(result.cards[0]).toBe(throwingCard);
+  });
+
   it('reviews cards with malformed dueAt to recover corrupted schedules', () => {
     const malformed = {
       ...createNewCard('gamma-broken-due', 'third', NOW),
