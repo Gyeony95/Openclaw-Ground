@@ -613,7 +613,7 @@ export default function App() {
   }
 
   function handleSelectQuizOption(optionId: string) {
-    if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice' || hasQuizSelection) {
+    if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice') {
       return;
     }
     setSelectedQuizOptionId(optionId);
@@ -1028,20 +1028,20 @@ export default function App() {
                                 <Pressable
                                   key={option.id}
                                   onPress={() => handleSelectQuizOption(option.id)}
-                                  disabled={isReviewBusy || hasQuizSelection}
+                                  disabled={isReviewBusy}
                                   style={({ pressed }) => [
                                     styles.quizOptionBtn,
                                     isSelected && styles.quizOptionBtnSelected,
                                     showCorrect && styles.quizOptionBtnCorrect,
                                     showIncorrect && styles.quizOptionBtnIncorrect,
-                                    pressed && !isReviewBusy && !hasQuizSelection && styles.ghostBtnPressed,
+                                    pressed && !isReviewBusy && styles.ghostBtnPressed,
                                   ]}
                                   accessibilityRole="radio"
                                   accessibilityLabel={option.text}
                                   accessibilityState={{
                                     selected: isSelected,
                                     checked: isSelected,
-                                    disabled: isReviewBusy || hasQuizSelection,
+                                    disabled: isReviewBusy,
                                   }}
                                 >
                                   <Text

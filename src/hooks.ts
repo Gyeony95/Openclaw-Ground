@@ -144,7 +144,9 @@ export function hasScheduleRepairNeed(
     return true;
   }
   if (Number.isFinite(wallClockMs)) {
-    if (dueMs - wallClockMs > MAX_CLOCK_SKEW_MS || updatedMs - wallClockMs > MAX_CLOCK_SKEW_MS) {
+    // `dueAt` can legitimately be far in the future for mature review cards.
+    // Only treat timeline anchors as corrupted when `updatedAt` itself is future-skewed.
+    if (updatedMs - wallClockMs > MAX_CLOCK_SKEW_MS) {
       return true;
     }
   }

@@ -631,6 +631,26 @@ describe('collectDueCards', () => {
       jest.useRealTimers();
     }
   });
+
+  it('does not force legitimately future review schedules into the due queue', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const stableFutureReview = {
+        ...createNewCard('future-review-not-due', 'queue', NOW),
+        state: 'review' as const,
+        updatedAt: '2026-02-23T12:00:00.000Z',
+        dueAt: '2026-02-26T12:00:00.000Z',
+        stability: 6,
+      };
+
+      const dueCards = collectDueCards([stableFutureReview], NOW, NOW);
+
+      expect(dueCards).toHaveLength(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
 
 describe('mergeDeckCards', () => {
@@ -1037,6 +1057,24 @@ describe('hasScheduleRepairNeed', () => {
       };
 
       expect(hasScheduleRepairNeed(futureCorrupted)).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('does not flag healthy review cards only because dueAt is days ahead', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const healthyFutureReview = {
+        ...createNewCard('repair-future-healthy', 'test', NOW),
+        state: 'review' as const,
+        updatedAt: '2026-02-23T12:00:00.000Z',
+        dueAt: '2026-02-26T12:00:00.000Z',
+        stability: 6,
+      };
+
+      expect(hasScheduleRepairNeed(healthyFutureReview)).toBe(false);
     } finally {
       jest.useRealTimers();
     }
