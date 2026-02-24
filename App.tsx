@@ -408,7 +408,7 @@ export default function App() {
     () => !loading && !isAddBusy && trimmedWordLength > 0 && trimmedMeaningLength > 0,
     [isAddBusy, loading, trimmedWordLength, trimmedMeaningLength],
   );
-  const addButtonLabel = isAddBusy ? 'Adding...' : showAddSuccess ? 'Added' : 'Add card';
+  const addButtonLabel = isAddBusy ? 'Adding...' : showAddSuccess ? 'Added' : canAdd ? 'Add card' : 'Fill required fields';
   const addFormHint = loading
     ? 'Loading deck...'
     : isAddBusy
@@ -684,7 +684,7 @@ export default function App() {
     setSelectedQuizOptionId((currentSelectedOptionId) => {
       const nextSelectionId = resolveLockedQuizSelection(quizOptions, currentSelectedOptionId, optionId);
       if (!nextSelectionId || !hasValidQuizSelection(nextSelectionId, quizOptions)) {
-        return currentSelectedOptionId;
+        return null;
       }
       return nextSelectionId;
     });

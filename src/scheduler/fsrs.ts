@@ -540,11 +540,14 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
     return 'learning';
   }
 
-  // When schedule anchors collapse to zero (e.g. dueAt==updatedAt), fall back to
-  // stability only for cards that have review history, so brand-new cards do not
-  // get promoted to review due to default stability seeds.
-  if (reps > 0 && normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS) {
-    return 'review';
+  // When schedule anchors collapse to zero (e.g. dueAt==updatedAt), use review
+  // history to avoid treating previously-reviewed cards as fresh learning cards.
+  const hasReviewHistory = reps > 0 || lapses > 0;
+  if (hasReviewHistory) {
+    if (normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+      return 'review';
+    }
+    return 'relearning';
   }
   return 'learning';
 }

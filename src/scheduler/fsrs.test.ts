@@ -262,6 +262,46 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(addDaysIso(NOW, 10 / 1440), 15 / 1440));
   });
 
+  it('infers relearning from collapsed timelines when review history exists and stability is sub-day', () => {
+    const runtimeCard = {
+      ...createNewCard('relearning-collapsed-history', 'state inference', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: '4',
+      lapses: '1',
+      stability: '0.2',
+      difficulty: '6.2',
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 2, NOW).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.reps).toBe(5);
+    expect(reviewed.lapses).toBe(1);
+    expect(reviewed.dueAt).toBe(addDaysIso(NOW, 15 / 1440));
+  });
+
+  it('keeps collapsed zero-history timelines in learning when stability is sub-day', () => {
+    const runtimeCard = {
+      ...createNewCard('learning-collapsed-no-history', 'state inference', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: '0',
+      lapses: '0',
+      stability: '0.2',
+      difficulty: '6.2',
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 2, NOW).card;
+
+    expect(reviewed.state).toBe('learning');
+    expect(reviewed.reps).toBe(1);
+    expect(reviewed.lapses).toBe(0);
+    expect(reviewed.dueAt).toBe(addDaysIso(NOW, 5 / 1440));
+  });
+
   it('coerces numeric-string review fields without changing FSRS scheduling outputs', () => {
     const reviewedAt = addDaysIso(NOW, 4);
     const numericCard = {
