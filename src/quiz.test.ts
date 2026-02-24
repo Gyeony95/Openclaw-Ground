@@ -236,6 +236,18 @@ describe('quiz distractors', () => {
     expect(attemptedChange).toBe(firstId);
   });
 
+  it('preserves the exact locked option id when trimmed collisions exist', () => {
+    const options = [
+      { id: 'dup-option', cardId: 'c1', text: 'exact', isCorrect: true },
+      { id: ' dup-option ', cardId: 'c2', text: 'trim-collision', isCorrect: false },
+    ];
+
+    const locked = resolveLockedQuizSelection(options, ' dup-option ', 'dup-option');
+
+    expect(locked).toBe(' dup-option ');
+    expect(findQuizOptionById(options, locked)?.cardId).toBe('c2');
+  });
+
   it('returns null when both current and requested quiz selections are invalid', () => {
     const options = composeQuizOptions(target, deck, 'seed-1');
 

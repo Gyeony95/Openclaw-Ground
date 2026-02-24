@@ -95,7 +95,7 @@ function isRuntimeCard(value: unknown): value is Card {
   const updatedAt = safeReadUnknown(() => candidate.updatedAt);
   const dueAt = safeReadUnknown(() => candidate.dueAt);
   return (
-    typeof id === 'string' &&
+    isValidCardId(id) &&
     typeof createdAt === 'string' &&
     typeof updatedAt === 'string' &&
     typeof dueAt === 'string'

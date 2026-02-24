@@ -141,7 +141,7 @@ export function RatingRow({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 8,
+    gap: 10,
   },
   row: {
     flexDirection: 'row',
@@ -219,6 +219,7 @@ const styles = StyleSheet.create({
   },
   lockedHint: {
     fontSize: 11,
+    lineHeight: 15,
     color: colors.subInk,
     fontWeight: '600',
     letterSpacing: 0.2,
@@ -226,7 +227,8 @@ const styles = StyleSheet.create({
   busyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
+    paddingVertical: 2,
   },
   hint: {
     fontSize: 12,

@@ -61,10 +61,10 @@ export function resolveLockedQuizSelection(
 ): string | null {
   const current = findQuizOptionById(options, currentSelectedOptionId);
   if (current) {
-    return current.id.trim();
+    return current.id;
   }
   const requested = findQuizOptionById(options, requestedOptionId);
-  return requested ? requested.id.trim() : null;
+  return requested ? requested.id : null;
 }
 
 export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {

@@ -982,7 +982,7 @@ describe('collectDueCards', () => {
     expect(dueCards).toHaveLength(0);
   });
 
-  it('collects due cards even when malformed ids are present', () => {
+  it('skips due cards with malformed ids so the review queue remains actionable', () => {
     const malformedIdDue = {
       ...createNewCard('malformed-id-due', 'repair', NOW),
       id: undefined as unknown as string,
@@ -995,7 +995,8 @@ describe('collectDueCards', () => {
 
     const dueCards = collectDueCards([validDue, malformedIdDue], NOW, NOW);
 
-    expect(dueCards).toHaveLength(2);
+    expect(dueCards).toHaveLength(1);
+    expect(dueCards[0].id).toBe(validDue.id);
   });
 
   it('ignores non-card runtime entries instead of throwing during queue collection', () => {
@@ -2170,6 +2171,16 @@ describe('countScheduleRepairCards', () => {
     const cards = [healthy, null, { id: 'partial' }] as unknown as Card[];
 
     expect(countScheduleRepairCards(cards)).toBe(2);
+  });
+
+  it('counts blank-id cards as repair-needed because they cannot be reviewed safely', () => {
+    const healthy = createNewCard('repair-count-blank-id-healthy', 'test', NOW);
+    const blankId = {
+      ...createNewCard('repair-count-blank-id-bad', 'test', NOW),
+      id: '   ',
+    };
+
+    expect(countScheduleRepairCards([healthy, blankId])).toBe(1);
   });
 
   it('does not count saturated max-date review schedules as repair-needed', () => {
