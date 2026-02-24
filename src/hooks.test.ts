@@ -716,6 +716,30 @@ describe('compareDueCards', () => {
     expect(() => [valid, malformed].sort(compareDueCards)).not.toThrow();
   });
 
+  it('does not throw when dueAt/updatedAt accessors throw during sort', () => {
+    const base = createNewCard('queue-getter-throw', 'ordering', NOW);
+    const throwing = { ...base, id: 'throwing-getter' };
+    Object.defineProperty(throwing, 'dueAt', {
+      get() {
+        throw new Error('bad runtime dueAt getter');
+      },
+    });
+    Object.defineProperty(throwing, 'updatedAt', {
+      get() {
+        throw new Error('bad runtime updatedAt getter');
+      },
+    });
+    const valid = {
+      ...base,
+      id: 'valid-getter',
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+
+    expect(() => [valid, throwing].sort(compareDueCards)).not.toThrow();
+  });
+
   it('normalizes whitespace around ids before id tie-break sorting', () => {
     const base = createNewCard('queue-id-trim', 'ordering', NOW);
     const spaced = {
@@ -1395,6 +1419,18 @@ describe('countUpcomingDueCards', () => {
     const upcoming = { ...createNewCard('upcoming-window-3', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
 
     expect(countUpcomingDueCards([upcoming], NOW, Number.MAX_VALUE)).toBe(1);
+  });
+
+  it('excludes cards that are flagged for schedule repair from upcoming workload counts', () => {
+    const malformedSchedule = {
+      ...createNewCard('upcoming-repair-needed', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: '2026-02-23T18:00:00.000Z',
+      stability: 0.2,
+    };
+
+    expect(countUpcomingDueCards([malformedSchedule], NOW)).toBe(0);
   });
 });
 

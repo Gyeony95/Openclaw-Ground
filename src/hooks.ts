@@ -30,6 +30,23 @@ const LEARNING_MAX_SCHEDULE_MS = DAY_MS;
 const RELEARNING_MAX_SCHEDULE_MS = 2 * DAY_MS;
 const MAX_UPCOMING_HOURS = 24 * 365 * 20;
 
+function safeReadUnknown(read: () => unknown): unknown {
+  try {
+    return read();
+  } catch {
+    return undefined;
+  }
+}
+
+function safeReadString(read: () => unknown, fallback = ''): string {
+  try {
+    const value = read();
+    return typeof value === 'string' ? value : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function parseTimeOrRepairPriority(iso: string): number {
   const parsed = parseTimeOrNaN(iso);
   // Invalid timeline anchors should be prioritized for immediate repair.
@@ -73,11 +90,15 @@ function isRuntimeCard(value: unknown): value is Card {
     return false;
   }
   const candidate = value as Partial<Card>;
+  const id = safeReadUnknown(() => candidate.id);
+  const createdAt = safeReadUnknown(() => candidate.createdAt);
+  const updatedAt = safeReadUnknown(() => candidate.updatedAt);
+  const dueAt = safeReadUnknown(() => candidate.dueAt);
   return (
-    typeof candidate.id === 'string' &&
-    typeof candidate.createdAt === 'string' &&
-    typeof candidate.updatedAt === 'string' &&
-    typeof candidate.dueAt === 'string'
+    typeof id === 'string' &&
+    typeof createdAt === 'string' &&
+    typeof updatedAt === 'string' &&
+    typeof dueAt === 'string'
   );
 }
 
@@ -201,10 +222,15 @@ function maxScheduleMsBeforeRepair(state: Card['state'], stability: unknown): nu
 export function hasScheduleRepairNeed(
   card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & Partial<Pick<Card, 'stability' | 'reps'>>,
 ): boolean {
-  const dueMs = parseTimeOrNaN(card.dueAt);
-  const updatedMs = parseTimeOrNaN(card.updatedAt);
+  const dueAt = safeReadString(() => card.dueAt);
+  const updatedAt = safeReadString(() => card.updatedAt);
+  const stateValue = safeReadUnknown(() => card.state);
+  const stabilityValue = safeReadUnknown(() => card.stability);
+  const repsValue = safeReadUnknown(() => card.reps);
+  const dueMs = parseTimeOrNaN(dueAt);
+  const updatedMs = parseTimeOrNaN(updatedAt);
   const wallClockMs = safeNowMs();
-  const state = normalizeReviewState(card.state);
+  const state = normalizeReviewState(stateValue);
   if (!Number.isFinite(dueMs) || !Number.isFinite(updatedMs)) {
     return true;
   }
@@ -226,13 +252,13 @@ export function hasScheduleRepairNeed(
     if (scheduleMs < minScheduleMsForState(state)) {
       return true;
     }
-    return scheduleMs > maxScheduleMsBeforeRepair(state, card.stability);
+    return scheduleMs > maxScheduleMsBeforeRepair(state, stabilityValue);
   }
   // Brand-new learning cards are legitimately due at creation time; persisted learning cards should move forward.
   if (state !== 'learning') {
     return true;
   }
-  const reps = normalizeNonNegativeCounter(card.reps);
+  const reps = normalizeNonNegativeCounter(repsValue);
   if (reps === null) {
     return true;
   }
@@ -369,7 +395,10 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
     if (!isRuntimeCard(card)) {
       return false;
     }
-    const dueMs = parseDueAtOrNaN(card.dueAt);
+    if (hasScheduleRepairNeed(card)) {
+      return false;
+    }
+    const dueMs = parseDueAtOrNaN(safeReadString(() => card.dueAt));
     // "Upcoming" should represent future workload, excluding cards already due now.
     return Number.isFinite(dueMs) && dueMs > nowMs && dueMs <= cutoffMs;
   }).length;
@@ -400,12 +429,12 @@ export function countScheduleRepairCards(cards: Card[]): number {
 }
 
 export function compareDueCards(a: Card, b: Card): number {
-  const aDueAt = typeof a?.dueAt === 'string' ? a.dueAt : '';
-  const bDueAt = typeof b?.dueAt === 'string' ? b.dueAt : '';
-  const aUpdatedAt = typeof a?.updatedAt === 'string' ? a.updatedAt : '';
-  const bUpdatedAt = typeof b?.updatedAt === 'string' ? b.updatedAt : '';
-  const aCreatedAt = typeof a?.createdAt === 'string' ? a.createdAt : '';
-  const bCreatedAt = typeof b?.createdAt === 'string' ? b.createdAt : '';
+  const aDueAt = safeReadString(() => a?.dueAt);
+  const bDueAt = safeReadString(() => b?.dueAt);
+  const aUpdatedAt = safeReadString(() => a?.updatedAt);
+  const bUpdatedAt = safeReadString(() => b?.updatedAt);
+  const aCreatedAt = safeReadString(() => a?.createdAt);
+  const bCreatedAt = safeReadString(() => b?.createdAt);
   const dueDelta = parseDueTimeForSort(aDueAt) - parseDueTimeForSort(bDueAt);
   if (dueDelta !== 0) {
     return dueDelta;
@@ -418,7 +447,9 @@ export function compareDueCards(a: Card, b: Card): number {
   if (createdDelta !== 0) {
     return createdDelta;
   }
-  return normalizeCardIdForSort(a?.id).localeCompare(normalizeCardIdForSort(b?.id));
+  const aId = safeReadUnknown(() => a?.id);
+  const bId = safeReadUnknown(() => b?.id);
+  return normalizeCardIdForSort(aId).localeCompare(normalizeCardIdForSort(bId));
 }
 
 export function collectDueCards(cards: Card[], currentIso: string, runtimeNowIso: string): Card[] {
