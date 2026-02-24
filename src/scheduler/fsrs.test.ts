@@ -903,6 +903,32 @@ describe('fsrs scheduler', () => {
     expect(card.dueAt).toBe(card.createdAt);
   });
 
+  it('ignores pathological future create timestamps and falls back to wall clock time', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-24T00:00:00.000Z'));
+    try {
+      const card = createNewCard('tau-future-clamp', 'letter', '2099-01-01T00:00:00.000Z');
+
+      expect(card.createdAt).toBe('2026-02-24T00:00:00.000Z');
+      expect(card.updatedAt).toBe(card.createdAt);
+      expect(card.dueAt).toBe(card.createdAt);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('keeps minor future create timestamps that are within allowed clock skew', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-24T00:00:00.000Z'));
+    try {
+      const card = createNewCard('tau-future-small', 'letter', '2026-02-24T06:00:00.000Z');
+
+      expect(card.createdAt).toBe('2026-02-24T06:00:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('normalizes valid create timestamps into canonical ISO format', () => {
     const card = createNewCard('tau-canonical', 'letter', '2026-02-23T12:00:00Z');
 

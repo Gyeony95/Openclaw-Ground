@@ -703,8 +703,14 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
 }
 
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
-  const createdAtInput = isValidIso(nowIso) ? nowIso : currentNowIso();
-  const createdAt = new Date(Date.parse(createdAtInput)).toISOString();
+  const wallClockIso = currentNowIso();
+  const wallClockMs = Date.parse(wallClockIso);
+  const requestedCreatedMs = isValidIso(nowIso) ? Date.parse(nowIso) : Number.NaN;
+  const safeCreatedMs =
+    Number.isFinite(requestedCreatedMs) && requestedCreatedMs - wallClockMs <= MAX_MONOTONIC_CLOCK_SKEW_MS
+      ? requestedCreatedMs
+      : wallClockMs;
+  const createdAt = new Date(safeCreatedMs).toISOString();
   const trimmedWord = normalizeWordValue(word);
   const trimmedMeaning = normalizeMeaningValue(meaning);
   const trimmedNotes = normalizeNotesValue(notes);

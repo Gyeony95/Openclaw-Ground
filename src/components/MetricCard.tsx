@@ -17,7 +17,9 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
         <View style={[styles.dot, { backgroundColor: accent }]} />
         <Text style={styles.label}>{label}</Text>
       </View>
-      <Text style={styles.value}>{displayValue}</Text>
+      <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72}>
+        {displayValue}
+      </Text>
     </View>
   );
 }

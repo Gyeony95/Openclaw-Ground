@@ -17,7 +17,7 @@ const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: 
 
 export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRowProps) {
   const { width } = useWindowDimensions();
-  const isCompact = width < 360;
+  const isCompact = width < 320;
 
   return (
     <View style={styles.row}>
@@ -28,7 +28,7 @@ export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRo
             key={item.rating}
             onPress={() => onRate(item.rating)}
             disabled={disabled}
-            hitSlop={4}
+            hitSlop={6}
             android_ripple={{ color: `${item.tone}20` }}
             style={({ pressed }) => [
               styles.button,
