@@ -91,6 +91,10 @@ function trimmedLength(value: string, max: number): number {
   return value.trim().slice(0, max).length;
 }
 
+function cappedLength(value: string, max: number): number {
+  return value.slice(0, max).length;
+}
+
 function formatQueueShareLabel(dueNow: number, total: number): string {
   const dueLabel = dueNow === 1 ? 'due card' : 'due cards';
   const totalLabel = total === 1 ? 'card' : 'cards';
@@ -259,9 +263,9 @@ export default function App() {
 
   const trimmedWordLength = trimmedLength(word, WORD_MAX_LENGTH);
   const trimmedMeaningLength = trimmedLength(meaning, MEANING_MAX_LENGTH);
-  const wordLength = trimmedWordLength;
-  const meaningLength = trimmedMeaningLength;
-  const notesLength = trimmedLength(notes, NOTES_MAX_LENGTH);
+  const wordLength = cappedLength(word, WORD_MAX_LENGTH);
+  const meaningLength = cappedLength(meaning, MEANING_MAX_LENGTH);
+  const notesLength = cappedLength(notes, NOTES_MAX_LENGTH);
   const missingWord = trimmedWordLength === 0;
   const missingMeaning = trimmedMeaningLength === 0;
   const canAdd = useMemo(

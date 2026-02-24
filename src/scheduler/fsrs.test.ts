@@ -162,6 +162,44 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
+  it('anchors malformed low review stability to the existing schedule for early good reviews', () => {
+    const inconsistent = {
+      ...createNewCard('stability-anchor-good', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10),
+      stability: 0.1,
+      difficulty: 6,
+      reps: 12,
+      lapses: 1,
+    };
+    const earlyIso = addDaysIso(NOW, 5);
+
+    const reviewed = reviewCard(inconsistent, 3, earlyIso);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(4);
+  });
+
+  it('anchors malformed low review stability to the existing schedule for early easy reviews', () => {
+    const inconsistent = {
+      ...createNewCard('stability-anchor-easy', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10),
+      stability: 0.1,
+      difficulty: 6,
+      reps: 12,
+      lapses: 1,
+    };
+    const earlyIso = addDaysIso(NOW, 5);
+
+    const reviewed = reviewCard(inconsistent, 4, earlyIso);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(5);
+  });
+
   it('uses an intermediate hard step before graduating learning cards', () => {
     const card = createNewCard('learning-hard-step', 'definition', NOW);
     const hard = reviewCard(card, 2, NOW);

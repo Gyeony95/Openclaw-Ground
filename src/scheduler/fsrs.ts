@@ -501,6 +501,26 @@ function updateStability(
   return clampFinite(Math.max(previous + 0.1, previous * growth), STABILITY_MIN, STABILITY_MAX, previous);
 }
 
+function effectivePreviousStability(
+  prevStability: number,
+  scheduledDays: number,
+  phase: SchedulerPhase,
+): number {
+  const scheduleFallback =
+    phase === 'review' || phase === 'relearning'
+      ? clampFinite(scheduledDays, STABILITY_MIN, STABILITY_MAX, 0.5)
+      : 0.5;
+  const normalized = clampFinite(prevStability, STABILITY_MIN, STABILITY_MAX, scheduleFallback);
+  if (phase !== 'review' && phase !== 'relearning') {
+    return normalized;
+  }
+
+  const scheduleAnchor = clampFinite(scheduledDays, STABILITY_MIN, STABILITY_MAX, scheduleFallback);
+  // If persisted stability is unrealistically low for an established schedule, anchor it toward the schedule.
+  const scheduleScaledFloor = clamp(scheduleAnchor * 0.6, STABILITY_MIN, STABILITY_MAX);
+  return Math.max(normalized, scheduleScaledFloor);
+}
+
 function reviewDesiredRetention(rating: Rating): number {
   if (rating === 2) {
     return 0.95;
@@ -656,11 +676,18 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
   const state = nextState(currentState, normalizedRating);
   const phase = currentState;
   const lapseIncrement = shouldCountLapse(currentState, normalizedRating) ? 1 : 0;
-
-  const nextDifficulty = nextDifficultyForPhase(card.difficulty, currentState, normalizedRating);
-  const nextStability = updateStability(
-    card.stability,
+  const previousDifficulty = clampFinite(
     card.difficulty,
+    DIFFICULTY_MIN,
+    DIFFICULTY_MAX,
+    DIFFICULTY_MEAN_REVERSION,
+  );
+  const previousStability = effectivePreviousStability(card.stability, previousScheduledDays, phase);
+
+  const nextDifficulty = nextDifficultyForPhase(previousDifficulty, currentState, normalizedRating);
+  const nextStability = updateStability(
+    previousStability,
+    previousDifficulty,
     normalizedRating,
     elapsedDays,
     phase,
@@ -677,8 +704,8 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
     nextScheduledDays = graduationIntervalDays(normalizedRating);
   } else {
     const intervals = orderedReviewIntervals(
-      card.stability,
-      card.difficulty,
+      previousStability,
+      previousDifficulty,
       elapsedDays,
       previousScheduledDays,
       phase,
