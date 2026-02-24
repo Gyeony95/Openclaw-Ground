@@ -418,6 +418,26 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(NOW, 5 / 1440));
   });
 
+  it('keeps collapsed explicit review timelines in review when maturity is clear from stability', () => {
+    const runtimeCard = {
+      ...createNewCard('review-collapsed-no-history-mature-stability', 'state inference', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: 0,
+      lapses: 0,
+      stability: 2.2,
+      difficulty: 5.6,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 3, NOW).card;
+
+    expect(reviewed.state).toBe('review');
+    expect(reviewed.reps).toBe(1);
+    expect(reviewed.lapses).toBe(0);
+    expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+  });
+
   it('recovers explicit learning cards with review history from collapsed sub-day timelines into relearning', () => {
     const runtimeCard = {
       ...createNewCard('learning-collapsed-history-relearning', 'state inference', NOW),

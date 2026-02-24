@@ -249,6 +249,40 @@ describe('applyDueReview', () => {
     expect(result.cards[1]).toBe(second);
   });
 
+  it('keeps duplicate selection deterministic when all due sort keys tie', () => {
+    const first = {
+      ...createNewCard('zeta-identical-tie', 'sixth', NOW),
+      id: 'identical-due-tie',
+      dueAt: '2026-02-23T12:00:00.000Z',
+      updatedAt: '2026-02-23T11:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+      state: 'review' as const,
+      reps: 2,
+      lapses: 1,
+      stability: 2,
+      difficulty: 5,
+    };
+    const second = {
+      ...createNewCard('eta-identical-tie', 'seventh', NOW),
+      id: first.id,
+      dueAt: first.dueAt,
+      updatedAt: first.updatedAt,
+      createdAt: first.createdAt,
+      state: first.state,
+      reps: first.reps,
+      lapses: first.lapses,
+      stability: first.stability,
+      difficulty: first.difficulty,
+    };
+
+    const result = applyDueReview([first, second], first.id, 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).not.toBe(first);
+    expect(result.cards[0].reps).toBe(first.reps + 1);
+    expect(result.cards[1]).toBe(second);
+  });
+
   it('prioritizes duplicate cards with malformed updatedAt for immediate timeline repair', () => {
     const valid = {
       ...createNewCard('zeta-malformed-updated', 'sixth', NOW),

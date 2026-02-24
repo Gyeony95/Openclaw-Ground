@@ -684,7 +684,14 @@ export function applyDueReview(
   if (candidateIndices.length === 0) {
     return { cards, reviewed: false };
   }
-  candidateIndices.sort((a, b) => compareDueCards(cards[a], cards[b]));
+  candidateIndices.sort((a, b) => {
+    const priority = compareDueCards(cards[a], cards[b]);
+    if (priority !== 0) {
+      return priority;
+    }
+    // Keep duplicate selection deterministic across runtimes when all sort keys tie.
+    return a - b;
+  });
 
   for (const targetIndex of candidateIndices) {
     const targetCard = cards[targetIndex];

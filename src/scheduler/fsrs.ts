@@ -629,9 +629,10 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
       if (scheduledDays > 0) {
         return hasReviewHistory ? 'relearning' : 'learning';
       }
-      if (hasReviewHistory) {
+      if (hasReviewHistory || normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS) {
         // Keep explicit review cards in review phase when timelines collapse to zero.
         // Collapsed anchors are repaired separately; phase demotion here can over-penalize mature cards.
+        // Also preserve mature imported cards when review counters are missing/corrupted.
         return 'review';
       }
       return 'learning';
