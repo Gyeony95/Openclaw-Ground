@@ -164,6 +164,29 @@ describe('deck repository', () => {
     expect(deck.cards[0].notes).toHaveLength(240);
   });
 
+  it('collapses internal whitespace in persisted word and meaning fields', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'collapsed-spacing',
+            word: '  new    york ',
+            meaning: ' very   large   city ',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'learning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].word).toBe('new york');
+    expect(deck.cards[0].meaning).toBe('very large city');
+  });
+
   it('computes due and state counts', () => {
     const stats = computeDeckStats(
       [

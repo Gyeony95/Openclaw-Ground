@@ -208,6 +208,20 @@ describe('fsrs scheduler', () => {
     expect(first.id).not.toBe(second.id);
   });
 
+  it('does not depend on Math.random for card id uniqueness', () => {
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.123456789);
+    try {
+      const first = createNewCard('alpha-id-deterministic-1', 'first', NOW);
+      const second = createNewCard('alpha-id-deterministic-2', 'second', NOW);
+
+      expect(first.id).not.toBe(second.id);
+      expect(first.id.startsWith('1771848000000-')).toBe(true);
+      expect(second.id.startsWith('1771848000000-')).toBe(true);
+    } finally {
+      randomSpy.mockRestore();
+    }
+  });
+
   it('schedules short relearning interval on failure', () => {
     const card = createNewCard('echo', 'sound', NOW);
     const firstReview = reviewCard(card, 3, NOW).card;

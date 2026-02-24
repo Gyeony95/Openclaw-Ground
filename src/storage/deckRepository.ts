@@ -147,8 +147,10 @@ function pickFreshestDuplicate(existing: Card, incoming: Card): Card {
 
 function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode = 'sanitize'): Card | null {
   const id = typeof raw.id === 'string' ? raw.id.trim() : '';
-  const wordValue = typeof raw.word === 'string' ? raw.word.trim().slice(0, WORD_MAX_LENGTH) : '';
-  const meaningValue = typeof raw.meaning === 'string' ? raw.meaning.trim().slice(0, MEANING_MAX_LENGTH) : '';
+  const wordValue =
+    typeof raw.word === 'string' ? raw.word.trim().replace(/\s+/g, ' ').slice(0, WORD_MAX_LENGTH) : '';
+  const meaningValue =
+    typeof raw.meaning === 'string' ? raw.meaning.trim().replace(/\s+/g, ' ').slice(0, MEANING_MAX_LENGTH) : '';
   const notesValue = typeof raw.notes === 'string' ? raw.notes.trim().slice(0, NOTES_MAX_LENGTH) : '';
   const state = normalizeState(raw.state);
   if (
