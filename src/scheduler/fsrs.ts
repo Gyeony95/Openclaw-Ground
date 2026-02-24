@@ -628,6 +628,11 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
     if (!hasReviewHistory) {
       return parsedState;
     }
+    if (scheduledDays <= 0) {
+      // Collapsed schedule anchors (dueAt == updatedAt) on cards with review
+      // history should not fall back to fresh-learning semantics.
+      return normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS ? 'review' : 'relearning';
+    }
     if (scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
       return 'review';
     }

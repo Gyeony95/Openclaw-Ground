@@ -418,6 +418,46 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(NOW, 5 / 1440));
   });
 
+  it('recovers explicit learning cards with review history from collapsed sub-day timelines into relearning', () => {
+    const runtimeCard = {
+      ...createNewCard('learning-collapsed-history-relearning', 'state inference', NOW),
+      state: 'learning' as const,
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 0.2,
+      difficulty: 6.2,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 2, NOW).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.reps).toBe(7);
+    expect(reviewed.lapses).toBe(1);
+    expect(reviewed.dueAt).toBe(addDaysIso(NOW, 15 / 1440));
+  });
+
+  it('recovers explicit learning cards with review history from collapsed mature timelines into review lapse flow', () => {
+    const runtimeCard = {
+      ...createNewCard('learning-collapsed-history-review', 'state inference', NOW),
+      state: 'learning' as const,
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: 9,
+      lapses: 2,
+      stability: 2.5,
+      difficulty: 5.7,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 1, NOW).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.reps).toBe(10);
+    expect(reviewed.lapses).toBe(3);
+    expect(reviewed.dueAt).toBe(addDaysIso(NOW, 10 / 1440));
+  });
+
   it('recovers corrupted learning state when review history and day-like schedule are present', () => {
     const runtimeCard = {
       ...createNewCard('corrupted-learning-with-history', 'state inference', NOW),

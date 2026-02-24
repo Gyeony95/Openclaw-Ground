@@ -780,6 +780,18 @@ export default function App() {
                 <Text style={styles.heroTag} numberOfLines={1} ellipsizeMode="tail">
                   {nextUpcomingLabel}
                 </Text>
+                {!loading && scheduleRepairCount > 0 ? (
+                  <Text
+                    style={[
+                      styles.heroTag,
+                      { color: colors.warn, borderColor: `${colors.warn}55`, backgroundColor: `${colors.warn}14` },
+                    ]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {scheduleRepairCount.toLocaleString()} {scheduleRepairCount === 1 ? 'repair pending' : 'repairs pending'}
+                  </Text>
+                ) : null}
               </View>
               <View style={styles.metaLine}>
                 <Text style={styles.subMeta} numberOfLines={1} ellipsizeMode="tail">
