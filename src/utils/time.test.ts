@@ -1,4 +1,4 @@
-import { addDaysIso, daysBetween, isDue, nowIso } from './time';
+import { addDaysIso, daysBetween, isDue, isIsoDateTime, nowIso } from './time';
 
 describe('time utils', () => {
   it('adds days in iso format', () => {
@@ -58,5 +58,13 @@ describe('time utils', () => {
     nowSpy.mockRestore();
 
     expect(current).toBe('1970-01-01T00:00:00.000Z');
+  });
+
+  it('accepts strict ISO timestamps and rejects loose date-time strings', () => {
+    expect(isIsoDateTime('2026-02-24T08:15:30.000Z')).toBe(true);
+    expect(isIsoDateTime('2026-02-24T08:15:30Z')).toBe(true);
+    expect(isIsoDateTime('+275760-09-13T00:00:00.000Z')).toBe(true);
+    expect(isIsoDateTime('2026-02-24 08:15:30Z')).toBe(false);
+    expect(isIsoDateTime('Tue, 24 Feb 2026 08:15:30 GMT')).toBe(false);
   });
 });

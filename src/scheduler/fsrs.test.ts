@@ -126,6 +126,20 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back to runtime wall clock when creation timestamp is a loose non-ISO date string', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const card = createNewCard('loose-now', 'timestamp', '2026-02-23 14:00:00Z');
+
+      expect(card.createdAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.dueAt).toBe('2026-02-23T14:30:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('falls back to epoch timestamps when runtime clock is non-finite during card creation', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const card = createNewCard('nan-clock', 'safe', 'not-a-date');

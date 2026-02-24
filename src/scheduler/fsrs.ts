@@ -1,5 +1,5 @@
 import { Card, Rating, ReviewState } from '../types';
-import { addDaysIso, daysBetween, nowIso as currentNowIso } from '../utils/time';
+import { addDaysIso, daysBetween, isIsoDateTime, nowIso as currentNowIso } from '../utils/time';
 import { normalizeBoundedText, normalizeOptionalBoundedText } from '../utils/text';
 import { parseRuntimeRatingValue } from '../utils/rating';
 import {
@@ -81,7 +81,7 @@ function clampFinite(value: number, min: number, max: number, fallback: number):
 }
 
 function isValidIso(value: string): boolean {
-  return Number.isFinite(Date.parse(value));
+  return isIsoDateTime(value);
 }
 
 function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): string {

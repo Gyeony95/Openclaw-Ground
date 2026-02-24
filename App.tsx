@@ -335,8 +335,8 @@ export default function App() {
       4: 'Locked',
     };
   }, [forceAgainForQuizSelection, ratingIntervalLabels]);
-  const quickRatingPreviewLabel = ratingIntervalLabels
-    ? `Again ${ratingIntervalLabels[1]} · Hard ${ratingIntervalLabels[2]} · Good ${ratingIntervalLabels[3]} · Easy ${ratingIntervalLabels[4]}`
+  const quickRatingPreviewLabel = visibleRatingIntervalLabels
+    ? `Again ${visibleRatingIntervalLabels[1]} · Hard ${visibleRatingIntervalLabels[2]} · Good ${visibleRatingIntervalLabels[3]} · Easy ${visibleRatingIntervalLabels[4]}`
     : null;
   const lastReviewedLabel = reviewedAtLabel(lastReviewedAt);
 
