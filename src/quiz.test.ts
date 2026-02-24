@@ -1,4 +1,4 @@
-import { Card } from './types';
+import { Card, Rating } from './types';
 import {
   composeQuizOptions,
   generateDistractors,
@@ -130,5 +130,12 @@ describe('quiz distractors', () => {
     expect(resolveMultipleChoiceRating(2, true)).toBe(2);
     expect(resolveMultipleChoiceRating(3, true)).toBe(3);
     expect(resolveMultipleChoiceRating(4, true)).toBe(4);
+  });
+
+  it('normalizes malformed correct-selection ratings to neutral Good', () => {
+    expect(resolveMultipleChoiceRating(Number.NaN as Rating, true)).toBe(3);
+    expect(resolveMultipleChoiceRating(2.5 as Rating, true)).toBe(3);
+    expect(resolveMultipleChoiceRating(0 as Rating, true)).toBe(3);
+    expect(resolveMultipleChoiceRating(9 as Rating, true)).toBe(3);
   });
 });

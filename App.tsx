@@ -106,17 +106,6 @@ function trimmedLength(value: string, max: number): number {
   return normalizeBoundedText(value, max).length;
 }
 
-function inputLength(value: string, max: number): number {
-  if (!Number.isFinite(max)) {
-    return 0;
-  }
-  const safeMax = Math.max(0, Math.floor(max));
-  if (typeof value !== 'string') {
-    return 0;
-  }
-  return Math.min(safeMax, value.length);
-}
-
 function formatQueueShareLabel(dueNow: number, total: number): string {
   if (total <= 0) {
     return 'No cards yet';
@@ -340,9 +329,9 @@ export default function App() {
   const normalizedWord = normalizeBoundedText(word, WORD_MAX_LENGTH);
   const normalizedMeaning = normalizeBoundedText(meaning, MEANING_MAX_LENGTH);
   const normalizedNotes = normalizeBoundedText(notes, NOTES_MAX_LENGTH);
-  const wordLength = inputLength(word, WORD_MAX_LENGTH);
-  const meaningLength = inputLength(meaning, MEANING_MAX_LENGTH);
-  const notesLength = inputLength(notes, NOTES_MAX_LENGTH);
+  const wordLength = normalizedWord.length;
+  const meaningLength = normalizedMeaning.length;
+  const notesLength = normalizedNotes.length;
   const missingWord = trimmedWordLength === 0;
   const missingMeaning = trimmedMeaningLength === 0;
   const canAdd = useMemo(

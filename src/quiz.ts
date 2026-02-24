@@ -16,6 +16,16 @@ export function hasValidQuizSelection(selectedOptionId: string | null, options: 
 
 export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {
   if (selectionIsCorrect) {
+    if (
+      typeof requestedRating !== 'number' ||
+      !Number.isFinite(requestedRating) ||
+      !Number.isInteger(requestedRating) ||
+      requestedRating < 1 ||
+      requestedRating > 4
+    ) {
+      // Runtime-corrupted quiz ratings should resolve to a neutral review signal.
+      return 3;
+    }
     return requestedRating;
   }
   // In objective quiz mode, incorrect recognition should always log as a failed recall.
