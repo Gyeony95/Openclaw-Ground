@@ -365,6 +365,22 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(7);
   });
 
+  it('infers relearning phase for malformed states when schedule is in short-step retry range', () => {
+    const relearningWithMalformedState = {
+      ...createNewCard('malformed-state-relearning-infer', 'state fallback', NOW),
+      state: 'unknown_state' as unknown as 'learning',
+      reps: 12,
+      stability: 7,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 15 / 1440),
+    };
+
+    const reviewed = reviewCard(relearningWithMalformedState, 2, relearningWithMalformedState.dueAt);
+
+    expect(reviewed.card.state).toBe('relearning');
+    expect(reviewed.scheduledDays).toBeCloseTo(15 / 1440, 10);
+  });
+
   it('normalizes createdAt to never exceed updatedAt when recovering from future-corrupted timelines', () => {
     jest.useFakeTimers();
     try {

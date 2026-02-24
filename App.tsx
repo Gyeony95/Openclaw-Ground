@@ -118,6 +118,14 @@ function formatQueueShareLabel(dueNow: number, total: number): string {
     return 'No cards yet';
   }
   const boundedDueNow = Math.min(total, Math.max(0, dueNow));
+  if (boundedDueNow === 0) {
+    const totalLabel = total === 1 ? 'card' : 'cards';
+    return `Queue clear · ${total.toLocaleString()} ${totalLabel}`;
+  }
+  if (boundedDueNow === total) {
+    const totalLabel = total === 1 ? 'card' : 'cards';
+    return `All ${total.toLocaleString()} ${totalLabel} due`;
+  }
   const dueLabel = boundedDueNow === 1 ? 'due card' : 'due cards';
   const totalLabel = total === 1 ? 'card' : 'cards';
   return `${boundedDueNow.toLocaleString()} ${dueLabel} / ${total.toLocaleString()} ${totalLabel}`;
