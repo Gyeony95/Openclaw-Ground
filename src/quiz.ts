@@ -1,4 +1,5 @@
 import { Card, Rating } from './types';
+import { parseRuntimeRatingValue } from './utils/rating';
 
 export interface QuizOption {
   id: string;
@@ -37,12 +38,7 @@ export function hasValidQuizSelection(selectedOptionId: string | null, options: 
 export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {
   if (selectionIsCorrect) {
     const integerTolerance = 1e-9;
-    const parsedRequestedRating =
-      typeof requestedRating === 'number'
-        ? requestedRating
-        : typeof requestedRating === 'string'
-          ? Number(requestedRating.trim())
-          : Number.NaN;
+    const parsedRequestedRating = parseRuntimeRatingValue(requestedRating);
     const roundedRating = Math.round(parsedRequestedRating);
 
     if (

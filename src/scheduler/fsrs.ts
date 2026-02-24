@@ -1,6 +1,7 @@
 import { Card, Rating, ReviewState } from '../types';
 import { addDaysIso, daysBetween, nowIso as currentNowIso } from '../utils/time';
 import { normalizeBoundedText, normalizeOptionalBoundedText } from '../utils/text';
+import { parseRuntimeRatingValue } from '../utils/rating';
 import {
   DIFFICULTY_MAX,
   DIFFICULTY_MEAN_REVERSION,
@@ -180,12 +181,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
 
 function normalizeRating(input: Rating, currentState: ReviewState): Rating {
   const integerTolerance = 1e-9;
-  const parsedInput =
-    typeof input === 'number'
-      ? input
-      : typeof input === 'string'
-        ? Number(input.trim())
-        : Number.NaN;
+  const parsedInput = parseRuntimeRatingValue(input);
 
   if (!Number.isFinite(parsedInput)) {
     // Runtime-corrupted ratings should be safe by phase:

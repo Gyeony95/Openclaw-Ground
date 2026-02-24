@@ -11,8 +11,8 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const { width } = useWindowDimensions();
   const isNarrow = width < 360;
   const hasValue = Number.isFinite(value);
-  const displayValue = hasValue ? value.toLocaleString() : '--';
-  const accessibilityValue = hasValue ? displayValue : 'unavailable';
+  const displayValue = hasValue ? value.toLocaleString() : 'Loading';
+  const accessibilityValue = hasValue ? displayValue : 'loading';
 
   return (
     <View

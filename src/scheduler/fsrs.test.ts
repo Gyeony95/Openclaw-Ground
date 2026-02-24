@@ -2102,6 +2102,21 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeLessThanOrEqual(neutral.scheduledDays);
   });
 
+  it('treats non-decimal string ratings as safe fallbacks', () => {
+    const learning = createNewCard('eta-string-non-decimal-learning', 'letter', NOW);
+    const learningReviewed = reviewCard(learning, '0x4' as unknown as Rating, NOW);
+
+    expect(learningReviewed.card.state).toBe('learning');
+    expect(learningReviewed.scheduledDays).toBeLessThan(0.002);
+
+    const reviewBase = reviewCard(createNewCard('eta-string-non-decimal-review', 'letter', NOW), 4, NOW).card;
+    const reviewReviewed = reviewCard(reviewBase, '4e0' as unknown as Rating, reviewBase.dueAt);
+    const neutral = reviewCard(reviewBase, 3, reviewBase.dueAt);
+
+    expect(reviewReviewed.card.state).toBe('review');
+    expect(reviewReviewed.scheduledDays).toBe(neutral.scheduledDays);
+  });
+
   it('treats non-finite runtime ratings as Again to avoid accidental promotion', () => {
     const base = createNewCard('eta-3', 'letter', NOW);
     const reviewed = reviewCard(base, Number.NaN as unknown as Rating, NOW);
