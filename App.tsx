@@ -395,7 +395,7 @@ export default function App() {
       return;
     }
     setAddActionError(null);
-  }, [addActionError, word, meaning, notes]);
+  }, [word, meaning, notes]);
 
   useEffect(() => {
     if (loading || dueCard || !isFormEditable) {

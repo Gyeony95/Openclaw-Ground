@@ -62,6 +62,29 @@ describe('applyDueReview', () => {
     expect(Date.parse(result.cards[0].dueAt)).toBeGreaterThan(Date.parse(result.cards[0].updatedAt));
   });
 
+  it('prioritizes malformed dueAt duplicates for immediate schedule repair', () => {
+    const validDue = {
+      ...createNewCard('valid-duplicate-due', 'first', NOW),
+      id: 'duplicate-corrupted',
+      dueAt: '2026-02-23T12:30:00.000Z',
+    };
+    const malformedDue = {
+      ...createNewCard('broken-duplicate-due', 'second', NOW),
+      id: 'duplicate-corrupted',
+      dueAt: 'not-a-date',
+      state: 'review' as const,
+      updatedAt: NOW,
+    };
+
+    const result = applyDueReview([validDue, malformedDue], validDue.id, 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).toBe(validDue);
+    expect(result.cards[1]).not.toBe(malformedDue);
+    expect(result.cards[1].updatedAt).toBe(NOW);
+    expect(Number.isFinite(Date.parse(result.cards[1].dueAt))).toBe(true);
+  });
+
   it('returns a new card object only for the reviewed target', () => {
     const due = createNewCard('delta', 'fourth', NOW);
     const secondDue = createNewCard('epsilon', 'fifth', NOW);
@@ -403,6 +426,28 @@ describe('compareDueCards', () => {
     const orderedIds = [...cards].sort(compareDueCards).map((card) => card.id);
 
     expect(orderedIds).toEqual(['a', 'd', 'b', 'c']);
+  });
+
+  it('sorts malformed dueAt cards ahead of valid due cards for queue repair', () => {
+    const base = createNewCard('queue-repair', 'ordering', NOW);
+    const malformed = {
+      ...base,
+      id: 'malformed',
+      dueAt: 'bad-due',
+      updatedAt: '2026-02-23T11:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+    const valid = {
+      ...base,
+      id: 'valid',
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+
+    const orderedIds = [valid, malformed].sort(compareDueCards).map((card) => card.id);
+
+    expect(orderedIds).toEqual(['malformed', 'valid']);
   });
 });
 

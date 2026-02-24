@@ -14,6 +14,12 @@ function parseTimeOrMax(iso: string): number {
   return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
 }
 
+function parseDueTimeForSort(iso: string): number {
+  const parsed = Date.parse(iso);
+  // Invalid schedules are actionable repair targets, so keep them at the front of due queues.
+  return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
+}
+
 function parseTimeOrNaN(iso: string): number {
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
@@ -154,7 +160,7 @@ export function countOverdueCards(cards: Card[], currentIso: string): number {
 }
 
 export function compareDueCards(a: Card, b: Card): number {
-  const dueDelta = parseTimeOrMax(a.dueAt) - parseTimeOrMax(b.dueAt);
+  const dueDelta = parseDueTimeForSort(a.dueAt) - parseDueTimeForSort(b.dueAt);
   if (dueDelta !== 0) {
     return dueDelta;
   }
