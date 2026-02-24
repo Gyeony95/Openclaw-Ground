@@ -43,14 +43,28 @@ function parseDueAtOrNaN(dueAt: unknown): number {
   return parseTimeOrNaN(dueAt);
 }
 
-export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt'>): boolean {
+function normalizeReviewState(value: unknown): Card['state'] {
+  if (value === 'review' || value === 'relearning' || value === 'learning') {
+    return value;
+  }
+  return 'learning';
+}
+
+export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'>): boolean {
   const dueMs = parseTimeOrNaN(card.dueAt);
   const updatedMs = parseTimeOrNaN(card.updatedAt);
   if (!Number.isFinite(dueMs) || !Number.isFinite(updatedMs)) {
     return true;
   }
-  // Schedules at-or-before the last review timestamp are timeline corruption targets.
-  return dueMs <= updatedMs;
+  if (dueMs < updatedMs) {
+    return true;
+  }
+  if (dueMs > updatedMs) {
+    return false;
+  }
+  const state = normalizeReviewState(card.state);
+  // Learning cards are legitimately due at creation time; review/relearning cards should always move forward.
+  return state !== 'learning';
 }
 
 function isReviewReadyDueAt(dueAt: unknown, currentIso: string): boolean {

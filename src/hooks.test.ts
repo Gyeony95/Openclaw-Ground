@@ -930,14 +930,36 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(malformedUpdated)).toBe(true);
   });
 
-  it('flags cards with dueAt at-or-before updatedAt', () => {
+  it('flags cards with dueAt before updatedAt', () => {
     const broken = {
       ...createNewCard('repair-due-before-updated', 'test', NOW),
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T11:59:59.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(broken)).toBe(true);
+  });
+
+  it('does not flag learning cards due exactly at updatedAt', () => {
+    const learningDueNow = {
+      ...createNewCard('repair-learning-due-now', 'test', NOW),
+      state: 'learning' as const,
       updatedAt: '2026-02-23T12:00:00.000Z',
       dueAt: '2026-02-23T12:00:00.000Z',
     };
 
-    expect(hasScheduleRepairNeed(broken)).toBe(true);
+    expect(hasScheduleRepairNeed(learningDueNow)).toBe(false);
+  });
+
+  it('flags review cards due exactly at updatedAt', () => {
+    const reviewDueNow = {
+      ...createNewCard('repair-review-due-now', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(reviewDueNow)).toBe(true);
   });
 
   it('does not flag healthy schedules', () => {
@@ -967,6 +989,23 @@ describe('countScheduleRepairCards', () => {
     };
 
     expect(countScheduleRepairCards([malformedDue, malformedUpdated, dueBeforeUpdated, healthy])).toBe(3);
+  });
+
+  it('does not count learning cards that are due immediately at creation', () => {
+    const learningDueNow = {
+      ...createNewCard('repair-count-learning-now', 'test', NOW),
+      state: 'learning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+    };
+    const reviewDueNow = {
+      ...createNewCard('repair-count-review-now', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+    };
+
+    expect(countScheduleRepairCards([learningDueNow, reviewDueNow])).toBe(1);
   });
 });
 
