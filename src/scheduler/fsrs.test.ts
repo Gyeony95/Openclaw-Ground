@@ -212,6 +212,20 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('normalizes runtime clock salt segments for fractional wall-clock values in generated card IDs', () => {
+    const fractionalNow = Date.parse(NOW) + 0.75;
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(fractionalNow);
+    try {
+      const card = createNewCard('fractional-clock-id', 'safe', NOW);
+      const [, saltPart] = card.id.split('-');
+
+      expect(saltPart.includes('.')).toBe(false);
+      expect(saltPart).toBe(Math.trunc(fractionalNow).toString(36));
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it('keeps explicit valid creation timestamps when runtime clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const card = createNewCard('nan-clock-valid-now', 'safe', NOW);

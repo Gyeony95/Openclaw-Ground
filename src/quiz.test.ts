@@ -62,6 +62,18 @@ describe('quiz distractors', () => {
     expect(distractors.some((item) => item.meaning === target.meaning)).toBe(false);
   });
 
+  it('returns no distractors when requested count is zero or negative', () => {
+    expect(generateDistractors(target, deck, 0)).toEqual([]);
+    expect(generateDistractors(target, deck, -2)).toEqual([]);
+  });
+
+  it('floors non-integer distractor counts to keep option generation deterministic', () => {
+    const distractors = generateDistractors(target, deck, 2.9);
+
+    expect(distractors).toHaveLength(2);
+    expect(distractors.map((item) => item.id)).toEqual(['c2', 'c3']);
+  });
+
   it('composes deterministic options with one correct answer and three distractors', () => {
     const first = composeQuizOptions(target, deck, 'seed-1');
     const second = composeQuizOptions(target, deck, 'seed-1');
@@ -73,6 +85,14 @@ describe('quiz distractors', () => {
     expect(new Set(first.map((option) => option.id)).size).toBe(first.length);
     expect(first.map((option) => option.id)).toEqual(second.map((option) => option.id));
     expect(first.map((option) => option.id)).not.toEqual(third.map((option) => option.id));
+  });
+
+  it('composes a single-option quiz when distractor count is zero', () => {
+    const options = composeQuizOptions(target, deck, 'seed-zero', 0);
+
+    expect(options).toHaveLength(1);
+    expect(options[0].isCorrect).toBe(true);
+    expect(options[0].text).toBe(target.meaning);
   });
 
   it('normalizes quiz option text by trimming and collapsing internal whitespace', () => {

@@ -99,6 +99,13 @@ function idEntropySalt(): string {
   return '0';
 }
 
+function clockToken(ms: number): string {
+  if (!Number.isFinite(ms)) {
+    return '0';
+  }
+  return Math.trunc(Math.abs(ms)).toString(36);
+}
+
 function toSafeIso(ms: number): string {
   const safeMs = Number.isFinite(ms)
     ? Math.min(MAX_DATE_MS, Math.max(MIN_DATE_MS, ms))
@@ -1355,7 +1362,7 @@ export function createNewCard(word: string, meaning: string, nowIso: string, not
   cardIdSequence = cardIdSequence >= COUNTER_MAX ? 1 : cardIdSequence + 1;
   const uniqueSuffix = cardIdSequence.toString(36);
   const runtimeSaltMs = safeNowMs();
-  const runtimeSalt = Number.isFinite(runtimeSaltMs) ? runtimeSaltMs.toString(36) : '0';
+  const runtimeSalt = clockToken(runtimeSaltMs);
   const entropySalt = idEntropySalt();
   const idAnchor = Number.isFinite(createdAtMs) ? createdAtMs : safeCreatedMs;
 

@@ -305,6 +305,11 @@ function scoreDistractor(
 }
 
 export function generateDistractors(target: Card, deckCards: Card[], distractorCount = 3): Card[] {
+  const normalizedDistractorCount =
+    Number.isFinite(distractorCount) && distractorCount > 0 ? Math.floor(distractorCount) : 0;
+  if (normalizedDistractorCount === 0) {
+    return [];
+  }
   const targetMeaningRaw = readCardText(target?.meaning);
   const targetWordRaw = readCardText(target?.word);
   const targetMeaning = normalizeText(targetMeaningRaw);
@@ -349,14 +354,14 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
       seenNormalizedMeanings.add(normalized);
       selected.push(candidate.card);
     }
-    if (selected.length >= distractorCount) {
+    if (selected.length >= normalizedDistractorCount) {
       break;
     }
   }
 
   // Backfill with any remaining unique meanings so objective quiz mode is available
   // even when similarity ranking cannot produce enough distinct distractors.
-  if (selected.length < distractorCount) {
+  if (selected.length < normalizedDistractorCount) {
     for (const card of deckCards) {
       if (!card || typeof card !== 'object') {
         continue;
@@ -373,7 +378,7 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
       }
       seenNormalizedMeanings.add(normalized);
       selected.push(card);
-      if (selected.length >= distractorCount) {
+      if (selected.length >= normalizedDistractorCount) {
         break;
       }
     }

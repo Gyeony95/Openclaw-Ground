@@ -348,12 +348,12 @@ export default function App() {
   const canUseMultipleChoice = quizOptions.length === 4 && hasValidMeaningForMultipleChoice;
   const missingQuizOptions = Math.max(0, 4 - quizOptions.length);
   const multipleChoiceRequirementLabel =
-    missingQuizOptions > 0
-      ? `Need ${missingQuizOptions.toLocaleString()} more distinct ${
-          missingQuizOptions === 1 ? 'card meaning' : 'card meanings'
-        } for multiple-choice mode.`
-      : !hasValidMeaningForMultipleChoice
-        ? 'Current card meaning is malformed. Use flashcard mode for this review.'
+    !hasValidMeaningForMultipleChoice
+      ? 'Current card meaning is malformed. Use flashcard mode for this review.'
+      : missingQuizOptions > 0
+        ? `Need ${missingQuizOptions.toLocaleString()} more distinct ${
+            missingQuizOptions === 1 ? 'card meaning' : 'card meanings'
+          } for multiple-choice mode.`
         : null;
   const normalizedSelectedQuizOption = useMemo(
     () => findQuizOptionById(quizOptions, selectedQuizOptionId),
