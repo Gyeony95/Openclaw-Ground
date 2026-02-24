@@ -872,8 +872,9 @@ function dayLikePreserveScheduleFloorDays(scheduledDays: number): number {
   if (!Number.isFinite(scheduledDays)) {
     return 1;
   }
-  // Preserve existing day-like cadence on on-time recalls instead of shrinking by rounding.
-  return Math.max(1, Math.ceil(Math.max(1, scheduledDays - ON_TIME_TOLERANCE_DAYS)));
+  // Preserve day-like cadence without inflating fractional imported schedules (e.g. 1.2d -> 2d).
+  // The tiny tolerance keeps whole-day schedules stable against runtime clock drift.
+  return Math.max(1, Math.floor(Math.max(1, scheduledDays + ON_TIME_TOLERANCE_DAYS)));
 }
 
 function updateDifficulty(prevDifficulty: number, rating: Rating): number {

@@ -4146,6 +4146,26 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeLessThanOrEqual(1);
   });
 
+  it('does not inflate imported 1.2-day hard reviews to the next full-day bucket', () => {
+    const updatedAt = '2026-02-23T12:00:00.000Z';
+    const imported = {
+      ...createNewCard('fractional-import-hard-floor', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt,
+      dueAt: addDaysIso(updatedAt, 1.2),
+      stability: 1.2,
+      difficulty: 5,
+      reps: 9,
+      lapses: 1,
+    };
+
+    const reviewed = reviewCard(imported, 2, imported.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(1.2);
+  });
+
   it('keeps slightly-late one-day hard reviews from inflating to two days', () => {
     const updatedAt = '2026-02-23T12:00:00.000Z';
     const card = {
