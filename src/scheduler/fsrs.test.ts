@@ -38,6 +38,15 @@ describe('fsrs scheduler', () => {
     expect(card.notes).toBeUndefined();
   });
 
+  it('keeps valid historical creation timestamps instead of forcing wall clock', () => {
+    const historicalNow = '2020-01-01T00:00:00.000Z';
+    const card = createNewCard('historical', 'timestamp', historicalNow);
+
+    expect(card.createdAt).toBe(historicalNow);
+    expect(card.updatedAt).toBe(historicalNow);
+    expect(card.dueAt).toBe(historicalNow);
+  });
+
   it('normalizes oversized card text fields while reviewing existing cards', () => {
     const card = {
       ...createNewCard('phi-text', 'letter', NOW),

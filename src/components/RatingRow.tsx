@@ -17,7 +17,7 @@ const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: 
 
 export function RatingRow({ onRate, intervalLabels, disabled = false }: RatingRowProps) {
   const { width } = useWindowDimensions();
-  const isCompact = width < 320;
+  const isCompact = width < 300;
 
   return (
     <View style={styles.row}>

@@ -145,7 +145,7 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     dueCandidate &&
     Number.isFinite(dueCandidateMs) &&
     Number.isFinite(wallClockMs) &&
-    Math.abs(dueCandidateMs - wallClockMs) <= MAX_MONOTONIC_CLOCK_SKEW_MS
+    dueCandidateMs - wallClockMs <= MAX_MONOTONIC_CLOCK_SKEW_MS
       ? dueCandidate
       : null;
   const createdAt = isValidIso(raw.createdAt)
@@ -162,7 +162,7 @@ function normalizeCard(raw: Partial<Card>): Card | null {
     if (!Number.isFinite(candidateMs)) {
       return wallClockMs;
     }
-    if (Math.abs(candidateMs - wallClockMs) > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+    if (candidateMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
       return wallClockMs;
     }
     return candidateMs;

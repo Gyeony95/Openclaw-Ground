@@ -365,6 +365,56 @@ describe('deck repository', () => {
     expect(deck.cards).toHaveLength(0);
   });
 
+  it('preserves valid historical timestamps while loading persisted cards', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'historical-card',
+            word: 'archive',
+            meaning: 'old entry',
+            dueAt: '2020-01-05T00:00:00.000Z',
+            createdAt: '2020-01-01T00:00:00.000Z',
+            updatedAt: '2020-01-02T00:00:00.000Z',
+            state: 'review',
+            stability: 3,
+            difficulty: 5,
+            reps: 20,
+            lapses: 2,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].createdAt).toBe('2020-01-01T00:00:00.000Z');
+    expect(deck.cards[0].updatedAt).toBe('2020-01-02T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2020-01-05T00:00:00.000Z');
+  });
+
+  it('uses historical dueAt as a valid anchor when createdAt and updatedAt are missing', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'historical-due-anchor',
+            word: 'anchor',
+            meaning: 'fallback source',
+            dueAt: '2020-01-05T00:00:00.000Z',
+            state: 'learning',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].createdAt).toBe('2020-01-05T00:00:00.000Z');
+    expect(deck.cards[0].updatedAt).toBe('2020-01-05T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2020-01-05T00:01:00.000Z');
+  });
+
   it('clamps persisted future-skewed updatedAt to wall clock to keep cards reviewable', async () => {
     jest.useFakeTimers();
     try {
