@@ -20,8 +20,8 @@ function normalizeOptionText(value: unknown): string {
   if (typeof value !== 'string') {
     return '[invalid meaning]';
   }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : '[invalid meaning]';
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  return normalized.length > 0 ? normalized : '[invalid meaning]';
 }
 
 export function hasValidQuizSelection(selectedOptionId: string | null, options: QuizOption[]): boolean {

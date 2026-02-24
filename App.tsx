@@ -45,6 +45,7 @@ import { isIsoDateTime } from './src/utils/time';
 import { Rating, ReviewState } from './src/types';
 
 type StudyMode = 'flashcard' | 'multiple-choice';
+const INVALID_MEANING_PLACEHOLDER = '[invalid meaning]';
 
 function clampPercent(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -299,7 +300,7 @@ export default function App() {
       : `${scheduleRepairCount.toLocaleString()} schedule ${scheduleRepairCount === 1 ? 'repair' : 'repairs'}`;
   const dueCardWord = dueCard ? normalizeBoundedText(dueCard.word, WORD_MAX_LENGTH) || '[invalid word]' : '[no card]';
   const dueCardMeaning = dueCard
-    ? normalizeBoundedText(dueCard.meaning, MEANING_MAX_LENGTH) || '[invalid meaning]'
+    ? normalizeBoundedText(dueCard.meaning, MEANING_MAX_LENGTH) || INVALID_MEANING_PLACEHOLDER
     : '[no answer]';
   const dueCardNotes = dueCard ? normalizeBoundedText(dueCard.notes ?? '', NOTES_MAX_LENGTH) : '';
   const exactDueLabel = dueNeedsRepair ? 'Needs schedule repair' : exactDateLabel(dueCard?.dueAt);
@@ -339,14 +340,20 @@ export default function App() {
   const correctQuizOption = useMemo(() => quizOptions.find((option) => option.isCorrect), [quizOptions]);
   const correctQuizOptionText =
     normalizeBoundedText(correctQuizOption?.text ?? '', MEANING_MAX_LENGTH) || '[answer unavailable]';
-  const canUseMultipleChoice = quizOptions.length === 4;
+  const hasValidMeaningForMultipleChoice =
+    dueCardMeaning !== INVALID_MEANING_PLACEHOLDER &&
+    correctQuizOptionText !== INVALID_MEANING_PLACEHOLDER &&
+    correctQuizOptionText !== '[answer unavailable]';
+  const canUseMultipleChoice = quizOptions.length === 4 && hasValidMeaningForMultipleChoice;
   const missingQuizOptions = Math.max(0, 4 - quizOptions.length);
   const multipleChoiceRequirementLabel =
-    missingQuizOptions === 0
-      ? null
-      : `Need ${missingQuizOptions.toLocaleString()} more distinct ${
+    missingQuizOptions > 0
+      ? `Need ${missingQuizOptions.toLocaleString()} more distinct ${
           missingQuizOptions === 1 ? 'card meaning' : 'card meanings'
-        } for multiple-choice mode.`;
+        } for multiple-choice mode.`
+      : !hasValidMeaningForMultipleChoice
+        ? 'Current card meaning is malformed. Use flashcard mode for this review.'
+        : null;
   const normalizedSelectedQuizOption = useMemo(
     () => findQuizOptionById(quizOptions, selectedQuizOptionId),
     [quizOptions, selectedQuizOptionId],

@@ -75,6 +75,23 @@ describe('quiz distractors', () => {
     expect(first.map((option) => option.id)).not.toEqual(third.map((option) => option.id));
   });
 
+  it('normalizes quiz option text by trimming and collapsing internal whitespace', () => {
+    const messyDeck = [
+      createCard('target', 'anchor', '  to   fix \n firmly   in place  '),
+      createCard('c2', 'pin', '  to   fasten   with \n a pin '),
+      createCard('c3', 'clip', 'to   hold\t together'),
+      createCard('c4', 'bind', 'to tie   tightly'),
+      createCard('c5', 'moor', 'to secure \n a boat with ropes'),
+    ];
+
+    const options = composeQuizOptions(messyDeck[0], messyDeck, 'whitespace-seed');
+
+    expect(options).toHaveLength(4);
+    expect(options.every((option) => option.text === option.text.trim())).toBe(true);
+    expect(options.some((option) => /\s{2,}/.test(option.text))).toBe(false);
+    expect(options.some((option) => /\n|\t/.test(option.text))).toBe(false);
+  });
+
   it('keeps option IDs unique when distractors contain duplicate card IDs', () => {
     const duplicateIdDeck = [
       createCard('t1', 'anchor', 'to fix firmly in place'),
