@@ -83,6 +83,35 @@ describe('deck repository', () => {
     expect(deck.cards[0].difficulty).toBe(7.2);
   });
 
+  it('coerces scientific-notation scheduler fields when loading persisted cards', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'scientific-numbers',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-24T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            reps: '5e0',
+            lapses: '2e0',
+            stability: '3.5e0',
+            difficulty: '7.2e0',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].reps).toBe(5);
+    expect(deck.cards[0].lapses).toBe(2);
+    expect(deck.cards[0].stability).toBe(3.5);
+    expect(deck.cards[0].difficulty).toBe(7.2);
+  });
+
   it('repairs persisted far-future review due dates using card stability', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

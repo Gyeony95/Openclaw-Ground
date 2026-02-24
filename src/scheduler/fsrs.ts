@@ -512,7 +512,8 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
   if (scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS) {
     // Only infer relearning from sub-day retry windows.
     // Day-like intervals are classified as review cadence by the branch above.
-    return lapses > 0 ? 'relearning' : 'learning';
+    const hasReviewHistory = reps > 0 || lapses > 0;
+    return hasReviewHistory ? 'relearning' : 'learning';
   }
 
   if (scheduledDays > 0) {

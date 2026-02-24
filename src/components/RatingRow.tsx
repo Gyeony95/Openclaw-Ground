@@ -48,6 +48,7 @@ export function RatingRow({
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(() => new Set(disabledRatings), [disabledRatings]);
   const hasLockedRatings = disabledRatings.length > 0;
+  const lockReasonHint = lockedHint ?? 'Some ratings are locked for this review.';
 
   return (
     <View style={styles.container}>
@@ -58,7 +59,7 @@ export function RatingRow({
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
           const contentTone = isRatingLocked ? item.tone : ratingDisabled ? colors.subInk : item.tone;
           const accessibilityLabel = isRatingLocked
-            ? `Rate ${item.text}. Locked. ${lockedHint ?? 'Rating is currently unavailable.'}`
+            ? `Rate ${item.text}. Locked. ${lockReasonHint}`
             : ratingDisabled
               ? `Rate ${item.text}. Unavailable.`
               : `Rate ${item.text}. Next interval ${interval}.`;
@@ -93,10 +94,10 @@ export function RatingRow({
                 busy
                   ? 'Saving current review, rating buttons are temporarily disabled'
                   : isRatingLocked
-                    ? lockedHint ?? 'Rating is currently unavailable'
+                    ? lockReasonHint
                     : ratingDisabled
                       ? 'Rating is currently unavailable'
-                    : `Schedules next review ${interval}`
+                      : `Schedules next review ${interval}`
               }
               accessibilityState={{ disabled: ratingDisabled, busy: busy || undefined }}
             >
@@ -128,9 +129,9 @@ export function RatingRow({
           Recording review...
         </Text>
       ) : null}
-      {hasLockedRatings && lockedHint && !busy ? (
+      {hasLockedRatings && !busy ? (
         <Text style={styles.lockedHint} accessibilityLiveRegion="polite">
-          {lockedHint}
+          {lockReasonHint}
         </Text>
       ) : null}
     </View>

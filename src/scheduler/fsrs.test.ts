@@ -216,6 +216,26 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(NOW, 10 / 1440));
   });
 
+  it('infers relearning from sub-day retry windows when lapse count is corrupted but review history exists', () => {
+    const runtimeCard = {
+      ...createNewCard('relearning-inference-history', 'state inference', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10 / 1440),
+      reps: '2',
+      lapses: '0',
+      stability: '0.2',
+      difficulty: '6.2',
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 2, addDaysIso(NOW, 10 / 1440)).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.reps).toBe(3);
+    expect(reviewed.lapses).toBe(0);
+    expect(reviewed.dueAt).toBe(addDaysIso(addDaysIso(NOW, 10 / 1440), 15 / 1440));
+  });
+
   it('coerces numeric-string review fields without changing FSRS scheduling outputs', () => {
     const reviewedAt = addDaysIso(NOW, 4);
     const numericCard = {
