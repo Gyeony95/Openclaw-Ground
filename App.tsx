@@ -1081,6 +1081,11 @@ export default function App() {
                           disabled={isReviewBusy}
                           busy={isReviewBusy}
                           disabledRatings={disabledRatingsInQuizMode}
+                          lockedHint={
+                            forceAgainForQuizSelection
+                              ? 'Incorrect multiple-choice selection locks this rating. Use Again to record failed recall.'
+                              : undefined
+                          }
                         />
                         {studyMode === 'flashcard' ? (
                           <Text style={styles.flipBackHint}>Tap card to flip back to word</Text>

@@ -158,6 +158,10 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     if (!Number.isFinite(wallClockMs) && requestedValid) {
       // Without a reliable wall clock, trust explicit caller review timestamps
       // so corrupted future card timelines do not pin scheduling indefinitely.
+      // Keep a long-horizon guard to avoid accepting implausibly old rollbacks.
+      if (skewMs > MAX_CREATE_TIME_OFFSET_MS) {
+        return fallback;
+      }
       return toCanonicalIso(candidate, fallback);
     }
 

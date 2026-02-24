@@ -364,6 +364,25 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('ignores pathologically far-past review timestamps when runtime clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const baseUpdatedAt = NOW;
+    const reviewed = reviewCard(
+      {
+        ...createNewCard('nan-review-past-clamp', 'safe', NOW),
+        state: 'review' as const,
+        dueAt: addDaysIso(NOW, 1),
+        updatedAt: baseUpdatedAt,
+      },
+      3,
+      '1900-01-01T00:00:00.000Z',
+    );
+    nowSpy.mockRestore();
+
+    expect(reviewed.card.updatedAt).toBe(baseUpdatedAt);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('recovers pathologically stale card timelines when a wall-safe review timestamp is provided', () => {
     jest.useFakeTimers();
     try {

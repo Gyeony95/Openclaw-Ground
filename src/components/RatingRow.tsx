@@ -9,6 +9,7 @@ interface RatingRowProps {
   disabled?: boolean;
   busy?: boolean;
   disabledRatings?: Rating[];
+  lockedHint?: string;
 }
 
 const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: string }> = [
@@ -37,6 +38,7 @@ export function RatingRow({
   disabled = false,
   busy = false,
   disabledRatings = [],
+  lockedHint,
 }: RatingRowProps) {
   const { width } = useWindowDimensions();
   const isCompact = width < 320;
@@ -90,8 +92,10 @@ export function RatingRow({
               accessibilityHint={
                 busy
                   ? 'Saving current review, rating buttons are temporarily disabled'
-                  : ratingDisabled
-                    ? 'Rating is currently unavailable'
+                  : isRatingLocked
+                    ? lockedHint ?? 'Rating is currently unavailable'
+                    : ratingDisabled
+                      ? 'Rating is currently unavailable'
                     : `Schedules next review ${interval}`
               }
               accessibilityState={{ disabled: ratingDisabled, busy: busy || undefined }}
