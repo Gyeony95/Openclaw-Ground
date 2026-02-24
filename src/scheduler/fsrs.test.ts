@@ -1441,6 +1441,39 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('keeps rollback scheduling anchored to dueAt cadence instead of inflating from stale high stability', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date(NOW));
+      const futureUpdatedAt = addDaysIso(NOW, 2);
+      const shortDueAt = addDaysIso(futureUpdatedAt, 1);
+      const highStabilityCard = {
+        ...createNewCard('rollback-high-stability', 'definition', NOW),
+        state: 'review' as const,
+        updatedAt: futureUpdatedAt,
+        dueAt: shortDueAt,
+        stability: 30,
+        difficulty: 5,
+        reps: 8,
+        lapses: 1,
+      };
+      const shortCadenceBaseline = {
+        ...highStabilityCard,
+        id: 'rollback-short-baseline',
+        stability: 1,
+      };
+
+      const rolledBack = reviewCard(highStabilityCard, 3, NOW);
+      const baseline = reviewCard(shortCadenceBaseline, 3, NOW);
+
+      expect(rolledBack.card.updatedAt).toBe(NOW);
+      expect(rolledBack.scheduledDays).toBe(baseline.scheduledDays);
+      expect(rolledBack.card.stability).toBeCloseTo(baseline.card.stability, 6);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('keeps valid dueAt as a timeline anchor when runtime wall clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const repaired = reviewCard(

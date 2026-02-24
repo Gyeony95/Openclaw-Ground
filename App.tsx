@@ -68,7 +68,14 @@ function formatIsoStamp(iso?: string): string | null {
     return null;
   }
   try {
-    const stamp = new Date(iso).toLocaleString([], {
+    const stampDate = new Date(iso);
+    if (!Number.isFinite(stampDate.getTime())) {
+      return null;
+    }
+    const currentYear = new Date().getFullYear();
+    const includeYear = stampDate.getFullYear() !== currentYear;
+    const stamp = stampDate.toLocaleString([], {
+      year: includeYear ? 'numeric' : undefined,
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
