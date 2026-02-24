@@ -885,6 +885,27 @@ describe('collectDueCards', () => {
     expect(dueCards[1].id).toBe(valid.id);
   });
 
+  it('skips cards whose runtime display accessors throw so review UI stays render-safe', () => {
+    const safeDue = {
+      ...createNewCard('collect-due-runtime-safe', 'queue', NOW),
+      dueAt: '2026-02-23T11:30:00.000Z',
+    };
+    const throwingWordDue = {
+      ...createNewCard('collect-due-throw-word', 'queue', NOW),
+      dueAt: '2026-02-23T11:20:00.000Z',
+    };
+    Object.defineProperty(throwingWordDue, 'word', {
+      get() {
+        throw new Error('bad runtime word');
+      },
+    });
+
+    const dueCards = collectDueCards([throwingWordDue, safeDue], NOW, NOW);
+
+    expect(dueCards).toHaveLength(1);
+    expect(dueCards[0].id).toBe(safeDue.id);
+  });
+
   it('does not surface saturated max-date review cards as due repairs', () => {
     const saturatedReview = {
       ...createNewCard('max-date-queue', 'boundary', NOW),
@@ -2225,6 +2246,18 @@ describe('countScheduleRepairCards', () => {
     const cards = [healthy, null, { id: 'partial' }] as unknown as Card[];
 
     expect(countScheduleRepairCards(cards)).toBe(2);
+  });
+
+  it('counts cards with throwing runtime display accessors as repair-needed', () => {
+    const healthy = createNewCard('repair-count-throwing-accessor-healthy', 'test', NOW);
+    const throwingWord = createNewCard('repair-count-throwing-accessor-bad', 'test', NOW);
+    Object.defineProperty(throwingWord, 'word', {
+      get() {
+        throw new Error('bad runtime word');
+      },
+    });
+
+    expect(countScheduleRepairCards([healthy, throwingWord])).toBe(1);
   });
 
   it('counts blank-id cards as repair-needed because they cannot be reviewed safely', () => {

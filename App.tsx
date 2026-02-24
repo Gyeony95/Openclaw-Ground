@@ -186,6 +186,7 @@ export default function App() {
   const [selectedQuizOptionId, setSelectedQuizOptionId] = useState<string | null>(null);
   const [pendingReviewCardKey, setPendingReviewCardKey] = useState<string | null>(null);
   const [isAddBusy, setIsAddBusy] = useState(false);
+  const [isAddLocked, setIsAddLocked] = useState(false);
   const [addAttempted, setAddAttempted] = useState(false);
   const [showAddSuccess, setShowAddSuccess] = useState(false);
   const [addActionError, setAddActionError] = useState<string | null>(null);
@@ -422,12 +423,12 @@ export default function App() {
   const missingWord = trimmedWordLength === 0;
   const missingMeaning = trimmedMeaningLength === 0;
   const canAttemptAdd = useMemo(
-    () => !loading && !isAddBusy,
-    [isAddBusy, loading],
+    () => !loading && !isAddBusy && !isAddLocked,
+    [isAddBusy, isAddLocked, loading],
   );
   const canAdd = useMemo(
-    () => !loading && !isAddBusy && trimmedWordLength > 0 && trimmedMeaningLength > 0,
-    [isAddBusy, loading, trimmedWordLength, trimmedMeaningLength],
+    () => !loading && !isAddBusy && !isAddLocked && trimmedWordLength > 0 && trimmedMeaningLength > 0,
+    [isAddBusy, isAddLocked, loading, trimmedWordLength, trimmedMeaningLength],
   );
   const addButtonLabel = isAddBusy ? 'Adding...' : showAddSuccess ? 'Added' : canAdd ? 'Add card' : 'Fill required fields';
   const addFormHint = loading
@@ -610,12 +611,14 @@ export default function App() {
     setAddAttempted(false);
     Keyboard.dismiss();
     addLockRef.current = true;
+    setIsAddLocked(true);
     setIsAddBusy(true);
     const shouldReturnToWordInput = !dueCard;
     try {
       addCard(normalizedWord, normalizedMeaning, normalizedNotes || undefined);
     } catch {
       addLockRef.current = false;
+      setIsAddLocked(false);
       setIsAddBusy(false);
       setAddActionError('Unable to add this card right now.');
       return;
@@ -643,6 +646,7 @@ export default function App() {
     }
     addUnlockTimerRef.current = setTimeout(() => {
       addLockRef.current = false;
+      setIsAddLocked(false);
       setIsAddBusy(false);
       if (shouldReturnToWordInput) {
         requestAnimationFrame(() => {

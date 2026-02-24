@@ -91,11 +91,17 @@ function isRuntimeCard(value: unknown): value is Card {
   }
   const candidate = value as Partial<Card>;
   const id = safeReadUnknown(() => candidate.id);
+  const word = safeReadUnknown(() => candidate.word);
+  const meaning = safeReadUnknown(() => candidate.meaning);
+  const state = safeReadUnknown(() => candidate.state);
   const createdAt = safeReadUnknown(() => candidate.createdAt);
   const updatedAt = safeReadUnknown(() => candidate.updatedAt);
   const dueAt = safeReadUnknown(() => candidate.dueAt);
   return (
     isValidCardId(id) &&
+    typeof word === 'string' &&
+    typeof meaning === 'string' &&
+    typeof state === 'string' &&
     typeof createdAt === 'string' &&
     typeof updatedAt === 'string' &&
     typeof dueAt === 'string'
