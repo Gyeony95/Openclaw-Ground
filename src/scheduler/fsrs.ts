@@ -70,6 +70,14 @@ function safeReadNumber(read: () => unknown, fallback: number): number {
   }
 }
 
+function safeReadCounter(read: () => unknown, fallback: number): number {
+  try {
+    return normalizeCounter(read());
+  } catch {
+    return fallback;
+  }
+}
+
 function safeNowMs(): number {
   const runtimeNow = Date.now();
   if (Number.isFinite(runtimeNow)) {
@@ -1300,8 +1308,8 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
 export function previewIntervals(card: Card, nowIso: string): RatingIntervalPreview {
   const fallbackState = inferStateFromCard({
     state: safeReadString(() => card.state, 'learning'),
-    reps: safeReadNumber(() => card.reps, 0),
-    lapses: safeReadNumber(() => card.lapses, 0),
+    reps: safeReadCounter(() => card.reps, 0),
+    lapses: safeReadCounter(() => card.lapses, 0),
     stability: safeReadNumber(() => card.stability, STABILITY_MIN),
     updatedAt: safeReadString(() => card.updatedAt, nowIso),
     dueAt: safeReadString(() => card.dueAt, nowIso),

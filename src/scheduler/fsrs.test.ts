@@ -560,6 +560,32 @@ describe('fsrs scheduler', () => {
     });
   });
 
+  it('treats infinite review-history counters as valid history in preview fallback inference', () => {
+    const corruptedPreviewState = {
+      ...createNewCard('preview-infinite-counter-fallback', 'safe', NOW),
+      state: 'unknown_state' as unknown as 'learning',
+      reps: 'Infinity',
+      lapses: '0',
+      stability: '0.1',
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 3),
+    };
+    Object.defineProperty(corruptedPreviewState, 'difficulty', {
+      get() {
+        throw new Error('bad runtime difficulty');
+      },
+    });
+
+    const intervals = previewIntervals(corruptedPreviewState as unknown as Card, NOW);
+
+    expect(intervals).toEqual({
+      1: 10 / 1440,
+      2: 0.5,
+      3: 0.5,
+      4: 0.5,
+    });
+  });
+
   it('infers review preview floors from day-like schedules when runtime state is malformed', () => {
     const malformedState = {
       ...createNewCard('preview-malformed-state-review-floor', 'safe', NOW),
