@@ -47,6 +47,10 @@ export function findQuizOptionById(
   if (normalizedSelectedId.length === 0) {
     return undefined;
   }
+  const exactMatch = options.find((option) => typeof option?.id === 'string' && option.id === selectedOptionId);
+  if (exactMatch) {
+    return exactMatch;
+  }
   return options.find((option) => typeof option?.id === 'string' && option.id.trim() === normalizedSelectedId);
 }
 

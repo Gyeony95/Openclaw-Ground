@@ -1075,11 +1075,18 @@ function graduationIntervalDays(rating: Rating): number {
   return rating === 4 ? 1 : 0.5;
 }
 
-function ensureOrderedPreview(intervals: RatingIntervalPreview): RatingIntervalPreview {
-  const again = clampFinite(intervals[1], MINUTE_IN_DAYS, STABILITY_MAX, MINUTE_IN_DAYS);
-  const hardBase = clampFinite(intervals[2], MINUTE_IN_DAYS, STABILITY_MAX, again);
-  const goodBase = clampFinite(intervals[3], MINUTE_IN_DAYS, STABILITY_MAX, hardBase);
-  const easyBase = clampFinite(intervals[4], MINUTE_IN_DAYS, STABILITY_MAX, goodBase);
+function ensureOrderedPreview(
+  intervals: RatingIntervalPreview,
+  minimums: Partial<RatingIntervalPreview> = {},
+): RatingIntervalPreview {
+  const againFloor = clampFinite(minimums[1] ?? MINUTE_IN_DAYS, MINUTE_IN_DAYS, STABILITY_MAX, MINUTE_IN_DAYS);
+  const hardFloor = clampFinite(minimums[2] ?? againFloor, againFloor, STABILITY_MAX, againFloor);
+  const goodFloor = clampFinite(minimums[3] ?? hardFloor, hardFloor, STABILITY_MAX, hardFloor);
+  const easyFloor = clampFinite(minimums[4] ?? goodFloor, goodFloor, STABILITY_MAX, goodFloor);
+  const again = clampFinite(intervals[1], againFloor, STABILITY_MAX, againFloor);
+  const hardBase = clampFinite(intervals[2], hardFloor, STABILITY_MAX, Math.max(hardFloor, again));
+  const goodBase = clampFinite(intervals[3], goodFloor, STABILITY_MAX, Math.max(goodFloor, hardBase));
+  const easyBase = clampFinite(intervals[4], easyFloor, STABILITY_MAX, Math.max(easyFloor, goodBase));
   const hard = Math.max(hardBase, again);
   const good = Math.max(goodBase, hard);
   const easy = Math.max(easyBase, good);
@@ -1372,7 +1379,8 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
     updatedAt: safeReadString(() => card.updatedAt, nowIso),
     dueAt: safeReadString(() => card.dueAt, nowIso),
   });
-  const fallbackPreview = ensureOrderedPreview(previewMinimumIntervalByRating(fallbackState));
+  const fallbackFloor = previewMinimumIntervalByRating(fallbackState);
+  const fallbackPreview = ensureOrderedPreview(fallbackFloor, fallbackFloor);
   try {
     const normalized = normalizeSchedulingCard(card, nowIso);
     const previewCard = normalized.card;
@@ -1398,7 +1406,7 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
       3: ensureFiniteWithinBounds(previewForRating(3), previewFloor[3], previewCeiling[3]),
       4: ensureFiniteWithinBounds(previewForRating(4), previewFloor[4], previewCeiling[4]),
     };
-    return ensureOrderedPreview(preview);
+    return ensureOrderedPreview(preview, previewFloor);
   } catch {
     // Keep interval previews available for UI/analytics when runtime card accessors are corrupted.
     return fallbackPreview;

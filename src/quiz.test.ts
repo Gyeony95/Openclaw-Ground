@@ -204,6 +204,18 @@ describe('quiz distractors', () => {
     expect(selected?.isCorrect).toBe(true);
   });
 
+  it('prefers exact option-id matches before normalized fallback to avoid ambiguous runtime collisions', () => {
+    const options = [
+      { id: 'dup-option', cardId: 'c1', text: 'exact', isCorrect: true },
+      { id: ' dup-option ', cardId: 'c2', text: 'trim-collision', isCorrect: false },
+    ];
+
+    const selected = findQuizOptionById(options, 'dup-option');
+
+    expect(selected?.id).toBe('dup-option');
+    expect(selected?.cardId).toBe('c1');
+  });
+
   it('returns undefined for malformed or missing selected option ids', () => {
     const options = composeQuizOptions(target, deck, 'seed-1');
 

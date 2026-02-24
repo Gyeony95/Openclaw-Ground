@@ -1187,7 +1187,7 @@ export default function App() {
                                 : 'Select this meaning';
                               return (
                                 <Pressable
-                                  key={option.id}
+                                  key={`${option.id}:${index}`}
                                   onPress={() => handleSelectQuizOption(option.id)}
                                   disabled={quizOptionLocked}
                                   style={({ pressed }) => [
