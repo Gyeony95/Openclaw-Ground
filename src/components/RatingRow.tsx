@@ -110,10 +110,14 @@ export function RatingRow({
               }
               accessibilityState={{ disabled: ratingDisabled, busy: busy || undefined }}
             >
-              <Text style={[styles.buttonText, { color: contentTone }]} numberOfLines={1}>
+              <Text style={[styles.buttonText, { color: contentTone }]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
                 {item.text}
               </Text>
-              {isRatingLocked ? <Text style={[styles.lockedLabel, { color: lockTone }]}>Locked</Text> : null}
+              {isRatingLocked ? (
+                <Text style={[styles.lockedLabel, { color: lockTone }]} maxFontSizeMultiplier={1.2}>
+                  Locked
+                </Text>
+              ) : null}
               <View style={styles.intervalMeta}>
                 <Text style={[styles.hintLabel, { color: contentTone }]} numberOfLines={1} maxFontSizeMultiplier={1.3}>
                   Next

@@ -931,7 +931,7 @@ describe('fsrs scheduler', () => {
     }
   });
 
-  it('anchors stale preview clocks to the card timeline instead of wall-clock fallback', () => {
+  it('anchors stale-but-plausible preview clocks to the card timeline instead of wall-clock fallback', () => {
     jest.useFakeTimers();
     try {
       const wallSafeNow = '2026-02-25T12:00:00.000Z';
@@ -948,11 +948,36 @@ describe('fsrs scheduler', () => {
       };
 
       const expected = previewIntervals(reviewCardBase, reviewCardBase.updatedAt);
-      const staleSkewed = previewIntervals(reviewCardBase, '1980-01-01T00:00:00.000Z');
+      const staleSkewed = previewIntervals(reviewCardBase, '2010-01-01T00:00:00.000Z');
       const wallSafePreview = previewIntervals(reviewCardBase, wallSafeNow);
 
       expect(staleSkewed).toEqual(expected);
       expect(staleSkewed).not.toEqual(wallSafePreview);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('falls back to wall-safe preview clock when caller preview clock is pathologically stale', () => {
+    jest.useFakeTimers();
+    try {
+      const wallSafeNow = '2026-02-25T12:00:00.000Z';
+      jest.setSystemTime(new Date(wallSafeNow));
+      const reviewCardBase = {
+        ...createNewCard('preview-pathologically-stale-clock-fallback', 'safe', NOW),
+        state: 'review' as const,
+        updatedAt: NOW,
+        dueAt: addDaysIso(NOW, 3),
+        reps: 6,
+        lapses: 1,
+        stability: 3,
+        difficulty: 5.5,
+      };
+
+      const expected = previewIntervals(reviewCardBase, wallSafeNow);
+      const staleSkewed = previewIntervals(reviewCardBase, '1980-01-01T00:00:00.000Z');
+
+      expect(staleSkewed).toEqual(expected);
     } finally {
       jest.useRealTimers();
     }
