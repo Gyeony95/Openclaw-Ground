@@ -5,6 +5,7 @@ import {
   generateDistractors,
   hasValidQuizSelection,
   inferPartOfSpeech,
+  isStudyModeSwitchLocked,
   normalizedTokenOverlap,
   resolveLockedQuizSelection,
   resolveMultipleChoiceRating,
@@ -367,5 +368,30 @@ describe('quiz distractors', () => {
   it('accepts near-integer correct-selection ratings and normalizes them', () => {
     expect(resolveMultipleChoiceRating((2 + Number.EPSILON) as Rating, true)).toBe(2);
     expect(resolveMultipleChoiceRating((4 - Number.EPSILON) as Rating, true)).toBe(4);
+  });
+
+  it('accepts small floating-point drift in correct-selection ratings', () => {
+    expect(resolveMultipleChoiceRating(2.0000004 as Rating, true)).toBe(2);
+    expect(resolveMultipleChoiceRating(3.9999996 as Rating, true)).toBe(4);
+  });
+
+  it('keeps larger fractional drift as neutral Good for correct selections', () => {
+    expect(resolveMultipleChoiceRating(2.0002 as Rating, true)).toBe(3);
+    expect(resolveMultipleChoiceRating(3.999 as Rating, true)).toBe(3);
+  });
+
+  it('locks mode switching while review is busy regardless of mode', () => {
+    expect(isStudyModeSwitchLocked('flashcard', false, true)).toBe(true);
+    expect(isStudyModeSwitchLocked('multiple-choice', false, true)).toBe(true);
+  });
+
+  it('locks study mode switching after a multiple-choice answer is selected', () => {
+    expect(isStudyModeSwitchLocked('multiple-choice', true, false)).toBe(true);
+  });
+
+  it('does not lock study mode switching for flashcard mode with no active review', () => {
+    expect(isStudyModeSwitchLocked('flashcard', true, false)).toBe(false);
+    expect(isStudyModeSwitchLocked('flashcard', false, false)).toBe(false);
+    expect(isStudyModeSwitchLocked('multiple-choice', false, false)).toBe(false);
   });
 });

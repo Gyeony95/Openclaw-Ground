@@ -11,6 +11,9 @@ export interface QuizOption {
 }
 
 const INVALID_MEANING_PLACEHOLDER = '[invalid meaning]';
+const RATING_INTEGER_TOLERANCE = 1e-6;
+
+export type StudyMode = 'flashcard' | 'multiple-choice';
 
 function normalizeId(value: unknown, fallback: string): string {
   if (typeof value !== 'string') {
@@ -62,13 +65,12 @@ export function resolveLockedQuizSelection(
 
 export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {
   if (selectionIsCorrect) {
-    const integerTolerance = 1e-9;
     const parsedRequestedRating = parseRuntimeRatingValue(requestedRating);
     const roundedRating = Math.round(parsedRequestedRating);
 
     if (
       !Number.isFinite(parsedRequestedRating) ||
-      Math.abs(parsedRequestedRating - roundedRating) > integerTolerance ||
+      Math.abs(parsedRequestedRating - roundedRating) > RATING_INTEGER_TOLERANCE ||
       roundedRating < 1 ||
       roundedRating > 4
     ) {
@@ -79,6 +81,15 @@ export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIs
   }
   // In objective quiz mode, incorrect recognition should always log as a failed recall.
   return 1;
+}
+
+export function isStudyModeSwitchLocked(currentMode: StudyMode, hasQuizSelection: boolean, reviewBusy: boolean): boolean {
+  if (reviewBusy) {
+    return true;
+  }
+  // Once an answer is picked in objective mode, keep the mode fixed until the review is rated
+  // so failed recognition cannot bypass the forced-again FSRS mapping.
+  return currentMode === 'multiple-choice' && hasQuizSelection;
 }
 
 type PosTag = 'noun' | 'verb' | 'adjective' | 'adverb' | 'other';

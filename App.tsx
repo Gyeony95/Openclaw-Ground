@@ -33,6 +33,8 @@ import {
   composeQuizOptions,
   findQuizOptionById,
   hasValidQuizSelection,
+  isStudyModeSwitchLocked,
+  StudyMode,
   resolveLockedQuizSelection,
   resolveMultipleChoiceRating,
 } from './src/quiz';
@@ -44,7 +46,6 @@ import { normalizeBoundedText } from './src/utils/text';
 import { isIsoDateTime } from './src/utils/time';
 import { Rating, ReviewState } from './src/types';
 
-type StudyMode = 'flashcard' | 'multiple-choice';
 const INVALID_MEANING_PLACEHOLDER = '[invalid meaning]';
 
 function clampPercent(value: number): number {
@@ -473,7 +474,7 @@ export default function App() {
   const isWideLayout = width >= 980;
   const isCompactLayout = width < 380;
   const isReviewBusy = pendingReviewCardKey !== null;
-  const modeSwitchLocked = isReviewBusy;
+  const modeSwitchLocked = isStudyModeSwitchLocked(studyMode, hasQuizSelection, isReviewBusy);
   const quizOptionsLocked = isReviewBusy;
   const isFormEditable = !loading && !isAddBusy;
   const flashcardVisibility = useMemo(
@@ -1002,6 +1003,8 @@ export default function App() {
                         accessibilityHint={
                           isReviewBusy
                             ? 'Disabled while the current review is being recorded'
+                            : quizSelectionLocked
+                              ? 'Complete the locked quiz attempt first'
                             : 'Switches to flashcard mode'
                         }
                         accessibilityState={{ selected: studyMode === 'flashcard', disabled: modeSwitchLocked }}
