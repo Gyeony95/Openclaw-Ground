@@ -252,7 +252,16 @@ export function hasScheduleRepairNeed(
     if (scheduleMs < minScheduleMsForState(state)) {
       return true;
     }
-    return scheduleMs > maxScheduleMsBeforeRepair(state, stabilityValue);
+    if (scheduleMs > maxScheduleMsBeforeRepair(state, stabilityValue)) {
+      return true;
+    }
+    const reps = normalizeNonNegativeCounter(repsValue);
+    if (state === 'learning' && reps !== null && reps > 0 && scheduleMs >= REVIEW_MIN_SCHEDULE_MS) {
+      // Learning steps with review history should remain short; day-like intervals indicate
+      // persisted phase drift and should be repaired before queueing.
+      return true;
+    }
+    return false;
   }
   // Brand-new learning cards are legitimately due at creation time; persisted learning cards should move forward.
   if (state !== 'learning') {

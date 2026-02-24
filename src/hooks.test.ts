@@ -1684,6 +1684,30 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(learningAtFloor)).toBe(false);
   });
 
+  it('flags learning cards with review history when intervals drift into day-like windows', () => {
+    const driftedLearning = {
+      ...createNewCard('repair-learning-drifted-daylike', 'test', NOW),
+      state: 'learning' as const,
+      reps: 3,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T00:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(driftedLearning)).toBe(true);
+  });
+
+  it('keeps zero-history learning cards with sub-day schedules outside repair flow', () => {
+    const freshLearning = {
+      ...createNewCard('repair-learning-fresh-subday', 'test', NOW),
+      state: 'learning' as const,
+      reps: 0,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T00:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(freshLearning)).toBe(false);
+  });
+
   it('flags cards with unknown state values for scheduler repair', () => {
     const unknownState = {
       ...createNewCard('repair-unknown-state', 'test', NOW),

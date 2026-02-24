@@ -509,21 +509,35 @@ function parseState(input: unknown): ReviewState | undefined {
 }
 
 function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stability' | 'updatedAt' | 'dueAt'>): ReviewState {
+  const scheduledDays = normalizeElapsedDays(daysBetween(card.updatedAt, card.dueAt));
+  const reps = normalizeCounter(card.reps);
+  const lapses = normalizeCounter(card.lapses);
+  const hasReviewHistory = reps > 0 || lapses > 0;
   const parsedState = parseState(card.state);
   if (parsedState) {
+    if (parsedState !== 'learning') {
+      return parsedState;
+    }
+    // Recover corrupted persisted "learning" states for cards that clearly
+    // have review history and schedule anchors from later phases.
+    if (!hasReviewHistory) {
+      return parsedState;
+    }
+    if (scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+      return 'review';
+    }
+    if (scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS) {
+      return 'relearning';
+    }
     return parsedState;
   }
 
-  const scheduledDays = normalizeElapsedDays(daysBetween(card.updatedAt, card.dueAt));
   const normalizedStability = clampFinite(
     parseRuntimeFiniteNumber(card.stability) ?? card.stability,
     STABILITY_MIN,
     STABILITY_MAX,
     STABILITY_MIN,
   );
-  const reps = normalizeCounter(card.reps);
-  const lapses = normalizeCounter(card.lapses);
-  const hasReviewHistory = reps > 0 || lapses > 0;
 
   // Prefer schedule-based inference so short-step cards are not accidentally
   // promoted by stale/corrupted stability values.

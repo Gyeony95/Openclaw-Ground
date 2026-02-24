@@ -302,6 +302,26 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(NOW, 5 / 1440));
   });
 
+  it('recovers corrupted learning state when review history and day-like schedule are present', () => {
+    const runtimeCard = {
+      ...createNewCard('corrupted-learning-with-history', 'state inference', NOW),
+      state: 'learning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 2),
+      reps: 7,
+      lapses: 1,
+      stability: 6,
+      difficulty: 5.5,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 3, addDaysIso(NOW, 2)).card;
+
+    expect(reviewed.state).toBe('review');
+    expect(reviewed.reps).toBe(8);
+    expect(reviewed.lapses).toBe(1);
+    expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+  });
+
   it('coerces numeric-string review fields without changing FSRS scheduling outputs', () => {
     const reviewedAt = addDaysIso(NOW, 4);
     const numericCard = {
