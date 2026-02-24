@@ -27,5 +27,8 @@ export function formatIntervalLabel(days: number): string {
     return `${Math.max(1, Math.round(days / YEAR_IN_DAYS))}y`;
   }
 
+  if (days >= YEAR_IN_DAYS - 1) {
+    return `${Math.max(1, Math.round(days / YEAR_IN_DAYS))}y`;
+  }
   return `${Math.max(1, Math.round(days / 30))}mo`;
 }

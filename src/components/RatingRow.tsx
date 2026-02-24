@@ -64,11 +64,13 @@ export function RatingRow({
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
           const contentTone = ratingDisabled ? colors.subInk : item.tone;
           const lockTone = isRatingLocked ? item.tone : contentTone;
-          const accessibilityLabel = isRatingLocked
-            ? `Rate ${item.text}. Locked. ${lockReasonHint}`
-            : ratingDisabled
-              ? `Rate ${item.text}. Unavailable.`
-              : `Rate ${item.text}. Next interval ${interval}.`;
+          const accessibilityLabel = busy
+            ? `Rate ${item.text}. Saving in progress.`
+            : isRatingLocked
+              ? `Rate ${item.text}. Locked. ${lockReasonHint}`
+              : ratingDisabled
+                ? `Rate ${item.text}. Unavailable.`
+                : `Rate ${item.text}. Next interval ${interval}.`;
           return (
             <Pressable
               key={item.rating}

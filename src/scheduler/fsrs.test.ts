@@ -790,6 +790,31 @@ describe('fsrs scheduler', () => {
     });
   });
 
+  it('keeps preview intervals aligned with actual review scheduling for each rating', () => {
+    const matured = {
+      ...createNewCard('preview-alignment', 'scheduler consistency', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 5),
+      reps: 9,
+      lapses: 2,
+      stability: 5,
+      difficulty: 5.4,
+    };
+    const reviewIso = matured.dueAt;
+    const preview = previewIntervals(matured, reviewIso);
+
+    const ratedAgain = reviewCard(matured, 1, reviewIso);
+    const ratedHard = reviewCard(matured, 2, reviewIso);
+    const ratedGood = reviewCard(matured, 3, reviewIso);
+    const ratedEasy = reviewCard(matured, 4, reviewIso);
+
+    expect(preview[1]).toBe(ratedAgain.scheduledDays);
+    expect(preview[2]).toBe(ratedHard.scheduledDays);
+    expect(preview[3]).toBe(ratedGood.scheduledDays);
+    expect(preview[4]).toBe(ratedEasy.scheduledDays);
+  });
+
   it('preserves review-phase floor intervals when preview falls back for corrupted runtime card data', () => {
     const corruptedReview = {
       ...createNewCard('preview-corrupted-review', 'safe', NOW),

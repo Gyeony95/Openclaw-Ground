@@ -26,6 +26,7 @@ describe('formatIntervalLabel', () => {
     expect(formatIntervalLabel(365)).toBe('1y');
     expect(formatIntervalLabel(730)).toBe('2y');
     expect(formatIntervalLabel(364)).toBe('1y');
+    expect(formatIntervalLabel(363)).toBe('12mo');
   });
 
   it('guards invalid values', () => {
