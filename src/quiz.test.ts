@@ -5,6 +5,7 @@ import {
   hasValidQuizSelection,
   inferPartOfSpeech,
   normalizedTokenOverlap,
+  resolveMultipleChoiceRating,
 } from './quiz';
 
 const NOW = '2026-02-24T12:00:00.000Z';
@@ -115,5 +116,19 @@ describe('quiz distractors', () => {
 
     expect(distractors).toHaveLength(3);
     expect(new Set(distractors.map((card) => card.meaning.toLowerCase())).size).toBe(3);
+  });
+
+  it('forces incorrect multiple-choice selections to Again for FSRS consistency', () => {
+    expect(resolveMultipleChoiceRating(4, false)).toBe(1);
+    expect(resolveMultipleChoiceRating(3, false)).toBe(1);
+    expect(resolveMultipleChoiceRating(2, false)).toBe(1);
+    expect(resolveMultipleChoiceRating(1, false)).toBe(1);
+  });
+
+  it('keeps requested rating when multiple-choice selection is correct', () => {
+    expect(resolveMultipleChoiceRating(1, true)).toBe(1);
+    expect(resolveMultipleChoiceRating(2, true)).toBe(2);
+    expect(resolveMultipleChoiceRating(3, true)).toBe(3);
+    expect(resolveMultipleChoiceRating(4, true)).toBe(4);
   });
 });

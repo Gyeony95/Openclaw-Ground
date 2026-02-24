@@ -7,6 +7,7 @@ interface RatingRowProps {
   intervalLabels?: Partial<Record<Rating, string>>;
   disabled?: boolean;
   busy?: boolean;
+  disabledRatings?: Rating[];
 }
 
 const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: string }> = [
@@ -29,7 +30,13 @@ function resolveIntervalLabel(
   return normalized.length > 0 ? normalized : fallbackHint;
 }
 
-export function RatingRow({ onRate, intervalLabels, disabled = false, busy = false }: RatingRowProps) {
+export function RatingRow({
+  onRate,
+  intervalLabels,
+  disabled = false,
+  busy = false,
+  disabledRatings = [],
+}: RatingRowProps) {
   const { width } = useWindowDimensions();
   const isCompact = width < 320;
   const isNarrow = width < 380;
@@ -50,44 +57,45 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
       <View style={styles.row}>
         {labels.map((item) => {
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
+          const ratingDisabled = isDisabled || disabledRatings.includes(item.rating);
           return (
             <Pressable
               key={item.rating}
               onPress={() => onRate(item.rating)}
-              disabled={isDisabled}
+              disabled={ratingDisabled}
               hitSlop={6}
-              android_ripple={isDisabled ? undefined : { color: `${item.tone}20` }}
+              android_ripple={ratingDisabled ? undefined : { color: `${item.tone}20` }}
               style={({ pressed }) => [
                 styles.button,
                 isNarrow ? styles.buttonNarrow : null,
                 isCompact ? styles.buttonCompact : null,
                 isWide ? styles.buttonWide : null,
                 busy ? styles.buttonBusy : null,
-                isDisabled
+                ratingDisabled
                   ? styles.buttonDisabledSurface
                   : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
-                pressed && !isDisabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
-                isDisabled && styles.buttonDisabled,
+                pressed && !ratingDisabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
+                ratingDisabled && styles.buttonDisabled,
               ]}
               accessibilityRole="button"
               accessibilityLabel={`Rate ${item.text}. Next ${interval}.`}
               accessibilityHint={
                 busy
                   ? 'Saving current review, rating buttons are temporarily disabled'
-                  : isDisabled
+                  : ratingDisabled
                     ? 'Rating is currently unavailable'
                     : `Schedules next review ${interval}`
               }
-              accessibilityState={{ disabled: isDisabled, busy }}
+              accessibilityState={{ disabled: ratingDisabled, busy }}
             >
-              <Text style={[styles.buttonText, { color: isDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
+              <Text style={[styles.buttonText, { color: ratingDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
                 {item.text}
               </Text>
-              <Text style={[styles.hintLabel, { color: isDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
+              <Text style={[styles.hintLabel, { color: ratingDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
                 Next
               </Text>
               <Text
-                style={[styles.hint, styles.hintCentered, { color: isDisabled ? colors.subInk : item.tone }]}
+                style={[styles.hint, styles.hintCentered, { color: ratingDisabled ? colors.subInk : item.tone }]}
                 numberOfLines={intervalLineCount}
                 adjustsFontSizeToFit
                 minimumFontScale={0.8}

@@ -29,7 +29,7 @@ import {
 } from './src/hooks';
 import { previewIntervals } from './src/scheduler/fsrs';
 import { FlashcardSide, flipFlashcardSide, getFlashcardVisibility } from './src/flashcard';
-import { composeQuizOptions, hasValidQuizSelection } from './src/quiz';
+import { composeQuizOptions, hasValidQuizSelection, resolveMultipleChoiceRating } from './src/quiz';
 import { colors, radii } from './src/theme';
 import { formatDueLabel } from './src/utils/due';
 import { formatIntervalLabel } from './src/utils/interval';
@@ -316,6 +316,8 @@ export default function App() {
         } for multiple-choice mode.`;
   const hasQuizSelection = hasValidQuizSelection(selectedQuizOptionId, quizOptions);
   const quizSelectionIsCorrect = selectedQuizOption?.isCorrect ?? false;
+  const forceAgainForQuizSelection = studyMode === 'multiple-choice' && hasQuizSelection && !quizSelectionIsCorrect;
+  const disabledRatingsInQuizMode = forceAgainForQuizSelection ? ([2, 3, 4] as Rating[]) : [];
   const ratingIntervalLabels = useMemo(
     () =>
       ratingIntervals
@@ -572,9 +574,13 @@ export default function App() {
     setReviewActionError(null);
     Keyboard.dismiss();
     reviewLockRef.current = true;
+    const resolvedRating =
+      studyMode === 'multiple-choice'
+        ? resolveMultipleChoiceRating(rating, quizSelectionIsCorrect)
+        : rating;
     let reviewed = false;
     try {
-      reviewed = reviewDueCard(dueCard.id, rating);
+      reviewed = reviewDueCard(dueCard.id, resolvedRating);
     } catch {
       setPendingReviewCardId(null);
       reviewLockRef.current = false;
@@ -1051,7 +1057,7 @@ export default function App() {
                           <Text style={[styles.quizFeedback, { color: quizSelectionIsCorrect ? colors.success : colors.danger }]}>
                             {quizSelectionIsCorrect
                               ? 'Correct. Selection locked. Rate how easy this felt.'
-                              : `Incorrect. Selection locked. Correct answer: ${correctQuizOption.text}`}
+                              : `Incorrect. Selection locked. Correct answer: ${correctQuizOption.text}. This review will be recorded as Again.`}
                           </Text>
                         ) : (
                           <Text style={styles.revealHint}>Select one option to unlock FSRS rating buttons.</Text>
@@ -1067,9 +1073,12 @@ export default function App() {
                           intervalLabels={ratingIntervalLabels}
                           disabled={isReviewBusy}
                           busy={isReviewBusy}
+                          disabledRatings={disabledRatingsInQuizMode}
                         />
                         {studyMode === 'flashcard' ? (
                           <Text style={styles.flipBackHint}>Tap card to flip back to word</Text>
+                        ) : forceAgainForQuizSelection ? (
+                          <Text style={styles.flipBackHint}>Incorrect selection recorded as Again for FSRS consistency.</Text>
                         ) : (
                           <Text style={styles.flipBackHint}>Rate confidence after checking the answer.</Text>
                         )}

@@ -1,4 +1,4 @@
-import { Card } from './types';
+import { Card, Rating } from './types';
 
 export interface QuizOption {
   id: string;
@@ -12,6 +12,14 @@ export function hasValidQuizSelection(selectedOptionId: string | null, options: 
     return false;
   }
   return options.some((option) => option.id === selectedOptionId);
+}
+
+export function resolveMultipleChoiceRating(requestedRating: Rating, selectionIsCorrect: boolean): Rating {
+  if (selectionIsCorrect) {
+    return requestedRating;
+  }
+  // In objective quiz mode, incorrect recognition should always log as a failed recall.
+  return 1;
 }
 
 type PosTag = 'noun' | 'verb' | 'adjective' | 'adverb' | 'other';
