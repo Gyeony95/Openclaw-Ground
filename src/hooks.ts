@@ -56,6 +56,10 @@ function normalizeCardIdForMatch(id: unknown): string | null {
   return normalizeCardIdInput(id);
 }
 
+function normalizeCardIdForMerge(id: unknown): string | null {
+  return normalizeCardIdInput(id);
+}
+
 function parseTimeOrNaN(iso: string): number {
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
@@ -345,25 +349,32 @@ export function mergeDeckCards(existingCards: Card[], loadedCards: Card[]): Card
 
   const mergedById = new Map<string, Card>();
   const order: string[] = [];
+  let fallbackMergeSequence = 0;
+  const fallbackMergeKey = (source: 'existing' | 'loaded'): string => {
+    fallbackMergeSequence += 1;
+    return `__merge_${source}_${fallbackMergeSequence}`;
+  };
 
   for (const existing of existingCards) {
-    const current = mergedById.get(existing.id);
+    const mergeKey = normalizeCardIdForMerge(existing.id) ?? fallbackMergeKey('existing');
+    const current = mergedById.get(mergeKey);
     if (!current) {
-      mergedById.set(existing.id, existing);
-      order.push(existing.id);
+      mergedById.set(mergeKey, existing);
+      order.push(mergeKey);
       continue;
     }
-    mergedById.set(existing.id, pickFreshestCard(current, existing));
+    mergedById.set(mergeKey, pickFreshestCard(current, existing));
   }
 
   for (const loaded of loadedCards) {
-    const current = mergedById.get(loaded.id);
+    const mergeKey = normalizeCardIdForMerge(loaded.id) ?? fallbackMergeKey('loaded');
+    const current = mergedById.get(mergeKey);
     if (!current) {
-      mergedById.set(loaded.id, loaded);
-      order.push(loaded.id);
+      mergedById.set(mergeKey, loaded);
+      order.push(mergeKey);
       continue;
     }
-    mergedById.set(loaded.id, pickFreshestCard(current, loaded));
+    mergedById.set(mergeKey, pickFreshestCard(current, loaded));
   }
 
   return order.map((id) => mergedById.get(id)).filter((card): card is Card => card !== undefined);

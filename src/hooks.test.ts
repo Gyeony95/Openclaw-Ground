@@ -820,6 +820,49 @@ describe('mergeDeckCards', () => {
     expect(merged[0].reps).toBe(2);
   });
 
+  it('deduplicates loaded cards when IDs differ only by surrounding whitespace', () => {
+    const local = {
+      ...createNewCard('trim-merge-local', 'local', NOW),
+      id: 'trim-merge-id',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 2,
+    };
+    const loaded = {
+      ...createNewCard('trim-merge-loaded', 'loaded', NOW),
+      id: '  trim-merge-id  ',
+      updatedAt: '2026-02-23T11:00:00.000Z',
+      dueAt: '2026-02-24T11:00:00.000Z',
+      reps: 3,
+    };
+
+    const merged = mergeDeckCards([local], [loaded]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].id).toBe('  trim-merge-id  ');
+    expect(merged[0].meaning).toBe('loaded');
+    expect(merged[0].updatedAt).toBe('2026-02-23T11:00:00.000Z');
+  });
+
+  it('keeps malformed blank IDs distinct so unrelated cards are not merged together', () => {
+    const malformedA = {
+      ...createNewCard('blank-id-a', 'alpha', NOW),
+      id: '   ',
+      word: 'A',
+    };
+    const malformedB = {
+      ...createNewCard('blank-id-b', 'beta', NOW),
+      id: '\t',
+      word: 'B',
+    };
+
+    const merged = mergeDeckCards([malformedA], [malformedB]);
+
+    expect(merged).toHaveLength(2);
+    expect(merged[0].word).toBe('A');
+    expect(merged[1].word).toBe('B');
+  });
+
   it('prefers higher reps over later dueAt when updatedAt ties', () => {
     const local = {
       ...createNewCard('tie-reps-local', 'local', NOW),

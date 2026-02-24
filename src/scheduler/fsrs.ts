@@ -219,7 +219,12 @@ function normalizeTimeline(
   dueAt: string;
   dueNeedsRepair: boolean;
 } {
-  const fallbackMs = safeNowMs();
+  const wallClockMs = safeNowMs();
+  const requestedNowMs = isValidIso(requestedNowIso) ? Date.parse(requestedNowIso) : Number.NaN;
+  const requestedNowLooksWallSafe =
+    Number.isFinite(requestedNowMs) &&
+    (!Number.isFinite(wallClockMs) || Math.abs(requestedNowMs - wallClockMs) <= MAX_CREATE_TIME_OFFSET_MS);
+  const fallbackMs = requestedNowLooksWallSafe ? requestedNowMs : wallClockMs;
   const fallback = toSafeIso(fallbackMs);
   const dueMs = isValidIso(card.dueAt) ? Date.parse(card.dueAt) : Number.NaN;
   const updatedMsCandidate = isValidIso(card.updatedAt) ? Date.parse(card.updatedAt) : Number.NaN;
@@ -347,7 +352,6 @@ function normalizeTimeline(
   const dueAt = toSafeIso(Math.max(safeDueAnchorMs, updatedAtMs));
   const resolvedCurrentIso = resolveReviewIso(updatedAt, requestedNowIso);
   const resolvedCurrentMs = Date.parse(resolvedCurrentIso);
-  const wallClockMs = safeNowMs();
   const updatedAtLooksCorruptedFuture =
     Number.isFinite(updatedAtMs) &&
     Number.isFinite(wallClockMs) &&

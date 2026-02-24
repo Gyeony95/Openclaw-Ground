@@ -456,6 +456,27 @@ describe('fsrs scheduler', () => {
     expect(repaired.card.state).toBe('review');
   });
 
+  it('uses the requested review timestamp as timeline fallback when runtime wall clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const reviewAt = addDaysIso(NOW, 2);
+    const repaired = reviewCard(
+      {
+        ...createNewCard('nan-timeline-requested-fallback', 'safe', NOW),
+        createdAt: 'not-a-date',
+        updatedAt: 'not-a-date',
+        dueAt: 'not-a-date',
+        state: 'review' as const,
+      },
+      3,
+      reviewAt,
+    );
+    nowSpy.mockRestore();
+
+    expect(repaired.card.createdAt).toBe(reviewAt);
+    expect(repaired.card.updatedAt).toBe(reviewAt);
+    expect(Date.parse(repaired.card.dueAt)).toBeGreaterThan(Date.parse(repaired.card.updatedAt));
+  });
+
   it('collapses internal whitespace in word and meaning when creating cards', () => {
     const card = createNewCard('  new   york  ', '  very   large   city  ', NOW);
 

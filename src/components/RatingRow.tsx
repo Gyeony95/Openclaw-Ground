@@ -60,6 +60,7 @@ export function RatingRow({
         {labels.map((item) => {
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
+          const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
           return (
             <Pressable
               key={item.rating}
@@ -98,6 +99,7 @@ export function RatingRow({
               <Text style={[styles.buttonText, { color: ratingDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
                 {item.text}
               </Text>
+              {isRatingLocked ? <Text style={styles.lockedLabel}>Locked</Text> : null}
               <Text style={[styles.hintLabel, { color: ratingDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
                 Next
               </Text>
@@ -184,6 +186,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     fontWeight: '700',
     textTransform: 'uppercase',
+  },
+  lockedLabel: {
+    fontSize: 9.5,
+    letterSpacing: 0.5,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    color: colors.subInk,
   },
   hint: {
     fontSize: 11.5,
