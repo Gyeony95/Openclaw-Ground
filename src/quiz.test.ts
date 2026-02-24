@@ -1,5 +1,11 @@
 import { Card } from './types';
-import { composeQuizOptions, generateDistractors, inferPartOfSpeech, normalizedTokenOverlap } from './quiz';
+import {
+  composeQuizOptions,
+  generateDistractors,
+  hasValidQuizSelection,
+  inferPartOfSpeech,
+  normalizedTokenOverlap,
+} from './quiz';
 
 const NOW = '2026-02-24T12:00:00.000Z';
 
@@ -58,5 +64,23 @@ describe('quiz distractors', () => {
     expect(first.filter((option) => !option.isCorrect)).toHaveLength(3);
     expect(first.map((option) => option.id)).toEqual(second.map((option) => option.id));
     expect(first.map((option) => option.id)).not.toEqual(third.map((option) => option.id));
+  });
+
+  it('accepts only selections that still exist in the current option set', () => {
+    const options = composeQuizOptions(target, deck, 'seed-1');
+    const selectedId = options[0].id;
+
+    expect(hasValidQuizSelection(selectedId, options)).toBe(true);
+    expect(hasValidQuizSelection('missing-option-id', options)).toBe(false);
+    expect(hasValidQuizSelection(null, options)).toBe(false);
+  });
+
+  it('invalidates stale selection ids when options are regenerated with a different seed', () => {
+    const first = composeQuizOptions(target, deck, 'seed-1');
+    const second = composeQuizOptions(target, deck, 'seed-2');
+    const removedId = first.find((option) => !second.some((candidate) => candidate.id === option.id))?.id;
+
+    expect(typeof removedId).toBe('string');
+    expect(hasValidQuizSelection(removedId ?? null, second)).toBe(false);
   });
 });

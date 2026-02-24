@@ -29,7 +29,7 @@ import {
 } from './src/hooks';
 import { previewIntervals } from './src/scheduler/fsrs';
 import { FlashcardSide, flipFlashcardSide, getFlashcardVisibility } from './src/flashcard';
-import { composeQuizOptions } from './src/quiz';
+import { composeQuizOptions, hasValidQuizSelection } from './src/quiz';
 import { colors, radii } from './src/theme';
 import { formatDueLabel } from './src/utils/due';
 import { formatIntervalLabel } from './src/utils/interval';
@@ -330,7 +330,7 @@ export default function App() {
   );
   const correctQuizOption = useMemo(() => quizOptions.find((option) => option.isCorrect), [quizOptions]);
   const canUseMultipleChoice = quizOptions.length === 4;
-  const hasQuizSelection = selectedQuizOptionId !== null;
+  const hasQuizSelection = hasValidQuizSelection(selectedQuizOptionId, quizOptions);
   const quizSelectionIsCorrect = selectedQuizOption?.isCorrect ?? false;
   const ratingIntervalLabels = useMemo(
     () =>
@@ -412,6 +412,15 @@ export default function App() {
       setStudyMode('flashcard');
     }
   }, [canUseMultipleChoice, studyMode]);
+
+  useEffect(() => {
+    if (!selectedQuizOptionId) {
+      return;
+    }
+    if (!hasValidQuizSelection(selectedQuizOptionId, quizOptions)) {
+      setSelectedQuizOptionId(null);
+    }
+  }, [quizOptions, selectedQuizOptionId]);
 
   useEffect(() => {
     if (pendingReviewCardId === null) {

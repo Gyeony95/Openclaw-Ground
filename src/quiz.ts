@@ -7,6 +7,13 @@ export interface QuizOption {
   isCorrect: boolean;
 }
 
+export function hasValidQuizSelection(selectedOptionId: string | null, options: QuizOption[]): boolean {
+  if (!selectedOptionId) {
+    return false;
+  }
+  return options.some((option) => option.id === selectedOptionId);
+}
+
 type PosTag = 'noun' | 'verb' | 'adjective' | 'adverb' | 'other';
 
 const STOP_WORDS = new Set([
