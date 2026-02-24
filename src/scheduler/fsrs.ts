@@ -1190,9 +1190,9 @@ function previewMinimumIntervalByRating(state: ReviewState): RatingIntervalPrevi
     return {
       1: RELEARNING_SCHEDULE_FLOOR_DAYS,
       2: 15 * MINUTE_IN_DAYS,
-      // Relearning "Good" can legitimately graduate to a one-day cadence
-      // when the incoming relearning schedule is already day-like.
-      3: 1,
+      // Relearning "Good" can graduate from short-step retries to either a half-day
+      // or one-day review cadence depending on the incoming relearning schedule.
+      3: REVIEW_SCHEDULE_FLOOR_DAYS,
       4: 1,
     };
   }

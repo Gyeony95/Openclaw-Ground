@@ -1412,11 +1412,11 @@ export default function App() {
                     !canAdd && canAttemptAdd && styles.primaryBtnInactive,
                   ]}
                   onPress={handleAddCard}
-                  disabled={!canAttemptAdd}
+                  disabled={!canAttemptAdd || !canAdd}
                   accessibilityRole="button"
                   accessibilityLabel={`Add card. ${addButtonLabel}.`}
                   accessibilityHint={canAdd ? 'Adds this word to your study deck' : addFormHint}
-                  accessibilityState={{ disabled: !canAttemptAdd, busy: isAddBusy }}
+                  accessibilityState={{ disabled: !canAttemptAdd || !canAdd, busy: isAddBusy }}
                 >
                   <View style={styles.primaryBtnContent}>
                     {isAddBusy ? <ActivityIndicator size="small" color="#fff" /> : null}

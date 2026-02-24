@@ -4947,6 +4947,24 @@ describe('fsrs scheduler', () => {
     expect(preview[4]).toBe(1);
   });
 
+  it('keeps relearning good previews at half-day for minute-scale relearning schedules', () => {
+    const relearningMinuteScale = {
+      ...createNewCard('preview-relearning-minute-good', 'definition', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10 / 1440),
+      reps: 6,
+      lapses: 2,
+      stability: 0.2,
+      difficulty: 5,
+    };
+
+    const preview = previewIntervals(relearningMinuteScale, NOW);
+
+    expect(preview[2]).toBeLessThanOrEqual(preview[3]);
+    expect(preview[3]).toBe(0.5);
+  });
+
   it('caps review stability to the review outlier window after hard ratings on short schedules', () => {
     const shortScheduleReview = {
       ...createNewCard('review-stability-cap-hard', 'definition', NOW),
