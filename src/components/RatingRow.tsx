@@ -142,6 +142,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   row: {
     flexDirection: 'row',
@@ -162,7 +168,7 @@ const styles = StyleSheet.create({
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
-    gap: 6,
+    gap: 7,
   },
   buttonCompact: {
     flexBasis: '100%',
@@ -208,10 +214,11 @@ const styles = StyleSheet.create({
     color: colors.subInk,
   },
   hint: {
-    fontSize: 11.5,
+    fontSize: 12,
     letterSpacing: 0.35,
-    fontWeight: '800',
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
+    lineHeight: 16,
   },
   hintCentered: {
     textAlign: 'center',

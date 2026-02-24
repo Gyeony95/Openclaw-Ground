@@ -13,6 +13,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const hasValue = Number.isFinite(value);
   const displayValue = hasValue ? value.toLocaleString() : 'Loading...';
   const accessibilityValue = hasValue ? displayValue : 'loading';
+  const statusLabel = hasValue ? 'Live' : 'Syncing';
 
   return (
     <View
@@ -27,6 +28,9 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
         <Text style={styles.label} numberOfLines={2} ellipsizeMode="tail">
           {label}
         </Text>
+        <View style={[styles.badge, !hasValue && styles.badgeMuted]}>
+          <Text style={styles.badgeText}>{statusLabel}</Text>
+        </View>
       </View>
       <Text
         style={[styles.value, isNarrow && styles.valueNarrow, !hasValue && styles.valueUnavailable]}
@@ -72,9 +76,28 @@ const styles = StyleSheet.create({
   },
   head: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 7,
     minHeight: 24,
+  },
+  badge: {
+    marginLeft: 'auto',
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+  },
+  badgeMuted: {
+    opacity: 0.85,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    color: colors.subInk,
   },
   dot: {
     width: 8,

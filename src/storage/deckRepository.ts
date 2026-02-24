@@ -9,7 +9,7 @@ import {
   WORD_MAX_LENGTH,
 } from '../scheduler/constants';
 import { Card, Deck, DeckStats, ReviewState } from '../types';
-import { isDue, nowIso } from '../utils/time';
+import { isDue, isIsoDateTime, nowIso } from '../utils/time';
 import { normalizeBoundedText } from '../utils/text';
 
 const KEY = 'word_memorizer.deck.v1';
@@ -88,7 +88,7 @@ function normalizeState(state: unknown): ReviewState {
 }
 
 function isValidIso(value: unknown): value is string {
-  return typeof value === 'string' && Number.isFinite(Date.parse(value));
+  return isIsoDateTime(value);
 }
 
 function toCanonicalIso(iso: string): string {

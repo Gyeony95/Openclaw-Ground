@@ -216,7 +216,12 @@ export default function App() {
     : formatQueueShareLabel(dueQueueCount, stats.total);
   const queueProgressPercent = loading || stats.total === 0 ? 0 : clampPercent((dueQueueCount / stats.total) * 100);
   const queueProgressWidth = `${queueProgressPercent}%`;
-  const queueProgressMeta = loading ? '--' : queueShareLabel;
+  const dueWithinDay = useMemo(() => {
+    return countUpcomingDueCards(cards, clockIso, 24);
+  }, [cards, clockIso]);
+  const queueProgressMeta = loading
+    ? '--'
+    : `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due in 24h`;
   const queueProgressTone = loading
     ? colors.primary
     : queueProgressPercent >= 80
@@ -246,9 +251,6 @@ export default function App() {
     : dueCard
       ? formatRemainingQueueLabel(Math.max(0, dueQueueCount - 1))
       : 'No cards remaining';
-  const dueWithinDay = useMemo(() => {
-    return countUpcomingDueCards(cards, clockIso, 24);
-  }, [cards, clockIso]);
   const overdueNow = useMemo(() => {
     return countOverdueCards(cards, clockIso);
   }, [cards, clockIso]);

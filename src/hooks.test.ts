@@ -552,6 +552,28 @@ describe('compareDueCards', () => {
     expect(orderedIds).toEqual(['malformed', 'valid']);
   });
 
+  it('treats loose non-ISO dueAt values as malformed for queue repair priority', () => {
+    const base = createNewCard('queue-repair-loose-iso', 'ordering', NOW);
+    const looseDue = {
+      ...base,
+      id: 'loose-due',
+      dueAt: '2026-02-23 11:30:00Z',
+      updatedAt: '2026-02-23T11:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+    const valid = {
+      ...base,
+      id: 'valid-due',
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+
+    const orderedIds = [valid, looseDue].sort(compareDueCards).map((card) => card.id);
+
+    expect(orderedIds).toEqual(['loose-due', 'valid-due']);
+  });
+
   it('sorts malformed updatedAt/createdAt cards first when dueAt ties to prioritize repair', () => {
     const base = createNewCard('queue-repair-tie', 'ordering', NOW);
     const malformedTimeline = {
@@ -651,6 +673,28 @@ describe('collectDueCards', () => {
 
     expect(dueCards).toHaveLength(2);
     expect(dueCards[0].id).toBe(malformed.id);
+    expect(dueCards[1].id).toBe(valid.id);
+  });
+
+  it('keeps loose non-ISO dueAt cards in front for immediate repair', () => {
+    const looseDue = {
+      ...createNewCard('loose-iso-queue', 'repair', NOW),
+      dueAt: '2026-02-23 11:30:00Z',
+      updatedAt: '2026-02-23T11:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+      state: 'review' as const,
+    };
+    const valid = {
+      ...createNewCard('valid-iso-queue', 'repair', NOW),
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+
+    const dueCards = collectDueCards([valid, looseDue], NOW, NOW);
+
+    expect(dueCards).toHaveLength(2);
+    expect(dueCards[0].id).toBe(looseDue.id);
     expect(dueCards[1].id).toBe(valid.id);
   });
 

@@ -25,13 +25,13 @@ const REVIEW_STABILITY_OUTLIER_FLOOR_DAYS = 120;
 const MAX_UPCOMING_HOURS = 24 * 365 * 20;
 
 function parseTimeOrRepairPriority(iso: string): number {
-  const parsed = Date.parse(iso);
+  const parsed = parseTimeOrNaN(iso);
   // Invalid timeline anchors should be prioritized for immediate repair.
   return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
 }
 
 function parseDueTimeForSort(iso: string): number {
-  const parsed = Date.parse(iso);
+  const parsed = parseTimeOrNaN(iso);
   // Invalid schedules are actionable repair targets, so keep them at the front of due queues.
   return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
 }

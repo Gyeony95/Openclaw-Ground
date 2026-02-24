@@ -900,6 +900,18 @@ describe('deck repository', () => {
     expect(deck.lastReviewedAt).toBe('2026-02-23T12:00:00.000Z');
   });
 
+  it('rejects loose non-ISO lastReviewedAt while loading', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [],
+        lastReviewedAt: '2026-02-23 12:00:00Z',
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.lastReviewedAt).toBeUndefined();
+  });
+
   it('normalizes timestamp ordering to keep updated/due at or after createdAt', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
@@ -1490,6 +1502,19 @@ describe('deck repository', () => {
     const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
     const savedDeck = JSON.parse(rawSavedDeck) as { lastReviewedAt?: string };
     expect(savedDeck.lastReviewedAt).toBe('2026-02-23T12:00:00.000Z');
+  });
+
+  it('drops loose non-ISO lastReviewedAt when persisting', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [],
+      lastReviewedAt: '2026-02-23 12:00:00Z',
+    });
+
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as { lastReviewedAt?: string };
+    expect(savedDeck.lastReviewedAt).toBeUndefined();
   });
 
   it('trims oversized text fields before persisting deck data', async () => {
