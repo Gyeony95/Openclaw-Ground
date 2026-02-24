@@ -20,6 +20,8 @@ const KEY = 'word_memorizer.deck.v1';
 const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const COUNTER_MAX = Number.MAX_SAFE_INTEGER;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MIN_DATE_MS = -8640000000000000;
+const MAX_DATE_MS = 8640000000000000;
 const MAX_HISTORICAL_TIMESTAMP_AGE_MS = 20 * 365 * DAY_MS;
 const MAX_ANCHOR_DISTANCE_FROM_WALL_MS = MAX_HISTORICAL_TIMESTAMP_AGE_MS;
 const LEARNING_SCHEDULE_FALLBACK_DAYS = MINUTE_IN_DAYS;
@@ -116,6 +118,16 @@ function isValidIso(value: unknown): value is string {
 
 function toCanonicalIso(iso: string): string {
   return new Date(Date.parse(iso)).toISOString();
+}
+
+function toSafeIso(ms: number, fallbackMs = 0): string {
+  const safeFallbackMs = Number.isFinite(fallbackMs)
+    ? Math.min(MAX_DATE_MS, Math.max(MIN_DATE_MS, fallbackMs))
+    : 0;
+  const safeMs = Number.isFinite(ms)
+    ? Math.min(MAX_DATE_MS, Math.max(MIN_DATE_MS, ms))
+    : safeFallbackMs;
+  return new Date(safeMs).toISOString();
 }
 
 function isDueOrInvalid(dueAt: string, currentIso: string): boolean {
@@ -249,7 +261,7 @@ function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode
   };
 
   const normalizedCreatedMs = normalizeWallSafeTimestamp(createdAt);
-  const normalizedCreatedAt = new Date(normalizedCreatedMs).toISOString();
+  const normalizedCreatedAt = toSafeIso(normalizedCreatedMs, wallClockMs);
   const updatedAt = isValidIso(raw.updatedAt) ? raw.updatedAt : normalizedCreatedAt;
   const dueIsValid = isValidIso(raw.dueAt);
   const dueAt = dueIsValid ? raw.dueAt : updatedAt;
@@ -258,7 +270,7 @@ function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode
   const updatedMs = normalizeWallSafeTimestamp(updatedAt);
   const dueMs = Date.parse(dueAt);
   const normalizedUpdatedMs = Math.max(updatedMs, createdMs);
-  const normalizedUpdatedAt = new Date(normalizedUpdatedMs).toISOString();
+  const normalizedUpdatedAt = toSafeIso(normalizedUpdatedMs, normalizedCreatedMs);
   let normalizedDueMs = Math.max(dueMs, normalizedUpdatedMs);
   let scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
   if (scheduleDays <= 0) {
@@ -329,7 +341,7 @@ function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode
     normalizedDueMs = normalizedUpdatedMs + repairedReviewDays * DAY_MS;
     scheduleDays = repairedReviewDays;
   }
-  const normalizedDueAt = new Date(normalizedDueMs).toISOString();
+  const normalizedDueAt = toSafeIso(normalizedDueMs, normalizedUpdatedMs);
 
   return {
     id,

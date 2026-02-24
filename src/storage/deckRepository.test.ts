@@ -1826,4 +1826,70 @@ describe('deck repository', () => {
 
     expect(scheduleDays).toBe(120);
   });
+
+  it('clamps overflowed repaired dueAt timestamps when loading cards near the max supported date', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('+275760-09-13T00:00:00.000Z'));
+    try {
+      mockedStorage.getItem.mockResolvedValueOnce(
+        JSON.stringify({
+          cards: [
+            {
+              id: 'max-date-load-clamp',
+              word: 'omega',
+              meaning: 'last',
+              dueAt: '+275760-09-13T00:00:00.000Z',
+              createdAt: '+275760-09-13T00:00:00.000Z',
+              updatedAt: '+275760-09-13T00:00:00.000Z',
+              state: 'learning',
+              reps: 2,
+              lapses: 0,
+              stability: 1,
+              difficulty: 5,
+            },
+          ],
+        }),
+      );
+
+      const deck = await loadDeck();
+      expect(deck.cards).toHaveLength(1);
+      expect(deck.cards[0].updatedAt).toBe('+275760-09-13T00:00:00.000Z');
+      expect(deck.cards[0].dueAt).toBe('+275760-09-13T00:00:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('clamps overflowed repaired dueAt timestamps when saving cards near the max supported date', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('+275760-09-13T00:00:00.000Z'));
+    mockedStorage.setItem.mockResolvedValueOnce();
+    try {
+      await saveDeck({
+        cards: [
+          {
+            id: 'max-date-save-clamp',
+            word: 'omega',
+            meaning: 'last',
+            dueAt: '+275760-09-13T00:00:00.000Z',
+            createdAt: '+275760-09-13T00:00:00.000Z',
+            updatedAt: '+275760-09-13T00:00:00.000Z',
+            state: 'learning',
+            reps: 2,
+            lapses: 0,
+            stability: 1,
+            difficulty: 5,
+          },
+        ],
+      });
+
+      const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+      const savedDeck = JSON.parse(rawSavedDeck) as { cards: Array<{ updatedAt: string; dueAt: string }> };
+      expect(savedDeck.cards).toHaveLength(1);
+      expect(savedDeck.cards[0].updatedAt).toBe('+275760-09-13T00:00:00.000Z');
+      expect(savedDeck.cards[0].dueAt).toBe('+275760-09-13T00:00:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Rating } from '../types';
 import { colors, radii } from '../theme';
 
@@ -123,9 +123,10 @@ export function RatingRow({
         })}
       </View>
       {busy ? (
-        <Text style={styles.lockedHint} accessibilityLiveRegion="polite">
-          Recording review...
-        </Text>
+        <View style={styles.busyRow} accessibilityLiveRegion="polite">
+          <ActivityIndicator size="small" color={colors.subInk} />
+          <Text style={styles.lockedHint}>Recording review...</Text>
+        </View>
       ) : null}
       {hasLockedRatings && !busy ? (
         <Text style={styles.lockedHint} accessibilityLiveRegion="polite">
@@ -219,6 +220,11 @@ const styles = StyleSheet.create({
     color: colors.subInk,
     fontWeight: '600',
     letterSpacing: 0.2,
+  },
+  busyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   hint: {
     fontSize: 12,
