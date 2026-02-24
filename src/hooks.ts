@@ -3,7 +3,7 @@ import { createNewCard, reviewCard } from './scheduler/fsrs';
 import { MEANING_MAX_LENGTH, NOTES_MAX_LENGTH, STABILITY_MAX, STABILITY_MIN, WORD_MAX_LENGTH } from './scheduler/constants';
 import { computeDeckStats, loadDeck, saveDeck } from './storage/deckRepository';
 import { Card, DeckStats, Rating } from './types';
-import { isDue, nowIso } from './utils/time';
+import { isDue, isIsoDateTime, nowIso } from './utils/time';
 import { normalizeBoundedText } from './utils/text';
 
 const CLOCK_REFRESH_MS = 15000;
@@ -63,8 +63,10 @@ function normalizeCardIdForMerge(id: unknown): string | null {
 }
 
 function parseTimeOrNaN(iso: string): number {
-  const parsed = Date.parse(iso);
-  return Number.isFinite(parsed) ? parsed : Number.NaN;
+  if (!isIsoDateTime(iso)) {
+    return Number.NaN;
+  }
+  return Date.parse(iso);
 }
 
 function safeNowMs(): number {
@@ -229,7 +231,7 @@ function normalizeMergeCounter(value: number): number {
 }
 
 function isValidIso(value?: string): value is string {
-  return typeof value === 'string' && Number.isFinite(Date.parse(value));
+  return isIsoDateTime(value);
 }
 
 function toCanonicalIso(value: string): string {

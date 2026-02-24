@@ -35,6 +35,7 @@ import { formatDueLabel } from './src/utils/due';
 import { formatIntervalLabel } from './src/utils/interval';
 import { dueUrgency, queueTone } from './src/utils/scheduleStatus';
 import { normalizeBoundedText } from './src/utils/text';
+import { isIsoDateTime } from './src/utils/time';
 import { Rating, ReviewState } from './src/types';
 
 type StudyMode = 'flashcard' | 'multiple-choice';
@@ -134,7 +135,7 @@ function formatRemainingQueueLabel(remaining: number): string {
 }
 
 function hasValidIso(value?: string): boolean {
-  return typeof value === 'string' && Number.isFinite(Date.parse(value));
+  return isIsoDateTime(value);
 }
 
 export default function App() {
@@ -1089,6 +1090,10 @@ export default function App() {
                             {quizSelectionIsCorrect
                               ? 'Correct. Selection locked. Rate how easy this felt.'
                               : `Incorrect. Selection locked. Correct answer: ${correctQuizOption.text}. This review will be recorded as Again.`}
+                          </Text>
+                        ) : !canUseMultipleChoice ? (
+                          <Text style={styles.revealHint}>
+                            {multipleChoiceRequirementLabel ?? 'Need at least four distinct card meanings.'}
                           </Text>
                         ) : (
                           <Text style={styles.revealHint}>Select one option to unlock FSRS rating buttons.</Text>

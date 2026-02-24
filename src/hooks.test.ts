@@ -1184,6 +1184,18 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(malformedUpdated)).toBe(true);
   });
 
+  it('flags cards with loose non-ISO dueAt timestamps for scheduler repair', () => {
+    const looseDue = {
+      ...createNewCard('repair-loose-due', 'test', NOW),
+      dueAt: '2026-02-23 12:05:00Z',
+      updatedAt: NOW,
+      state: 'review' as const,
+      stability: 2,
+    };
+
+    expect(hasScheduleRepairNeed(looseDue)).toBe(true);
+  });
+
   it('flags cards with pathologically future timeline anchors', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
@@ -1473,6 +1485,12 @@ describe('selectLatestReviewedAt', () => {
     expect(selectLatestReviewedAt('2026-02-23T12:00:00Z', undefined)).toBe('2026-02-23T12:00:00.000Z');
     expect(selectLatestReviewedAt('2026-02-23T11:00:00Z', '2026-02-23T12:00:00Z')).toBe(
       '2026-02-23T12:00:00.000Z',
+    );
+  });
+
+  it('rejects loose non-ISO timestamp strings', () => {
+    expect(selectLatestReviewedAt('2026-02-23 12:00:00Z', '2026-02-23T11:59:59.000Z')).toBe(
+      '2026-02-23T11:59:59.000Z',
     );
   });
 });

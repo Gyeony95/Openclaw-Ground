@@ -49,11 +49,11 @@ export function queueTone({
 }
 
 export function dueUrgency({ dueAt, clockIso, needsRepair }: DueUrgencyInput): { label: string; tone: string } {
-  if (!dueAt) {
-    return { label: 'Schedule pending', tone: colors.warn };
-  }
   if (needsRepair) {
     return { label: 'Needs repair', tone: colors.warn };
+  }
+  if (!dueAt) {
+    return { label: 'Schedule pending', tone: colors.warn };
   }
   const dueMs = Date.parse(dueAt);
   const nowMs = Date.parse(clockIso);
