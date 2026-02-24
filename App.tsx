@@ -923,7 +923,12 @@ export default function App() {
                       accessible
                       accessibilityRole="progressbar"
                       accessibilityLabel="Queue load"
-                      accessibilityValue={{ min: 0, max: 100, now: queueProgressPercent }}
+                      accessibilityValue={{
+                        min: 0,
+                        max: 100,
+                        now: queueProgressPercent,
+                        text: `${queueLoadStatus}, ${queueProgressPercent}%`,
+                      }}
                     >
                       <View style={[styles.queueProgressFill, { width: queueProgressWidth, backgroundColor: queueProgressTone }]} />
                     </View>

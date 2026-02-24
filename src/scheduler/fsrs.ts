@@ -160,6 +160,14 @@ function normalizeIsoInput(value: unknown): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function normalizeValidIsoInput(value: unknown): string | undefined {
+  const normalized = normalizeIsoInput(value);
+  if (!normalized || !isValidIso(normalized)) {
+    return undefined;
+  }
+  return toCanonicalIso(normalized, normalized);
+}
+
 function parseRuntimeFiniteNumber(value: unknown): number | null {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : null;
@@ -366,8 +374,11 @@ function normalizeTimeline(
     (!Number.isFinite(wallClockMs) || Math.abs(requestedNowMs - wallClockMs) <= MAX_CREATE_TIME_OFFSET_MS);
   const fallbackMs = requestedNowLooksWallSafe ? requestedNowMs : wallClockMs;
   const fallback = toSafeIso(fallbackMs);
-  const dueMs = isValidIso(card.dueAt) ? Date.parse(card.dueAt) : Number.NaN;
-  const updatedMsCandidate = isValidIso(card.updatedAt) ? Date.parse(card.updatedAt) : Number.NaN;
+  const normalizedCreatedAtInput = normalizeValidIsoInput(card.createdAt);
+  const normalizedUpdatedAtInput = normalizeValidIsoInput(card.updatedAt);
+  const normalizedDueAtInput = normalizeValidIsoInput(card.dueAt);
+  const dueMs = normalizedDueAtInput ? Date.parse(normalizedDueAtInput) : Number.NaN;
+  const updatedMsCandidate = normalizedUpdatedAtInput ? Date.parse(normalizedUpdatedAtInput) : Number.NaN;
   const dueLooksLikePlausibleAnchor =
     Number.isFinite(dueMs) &&
     Number.isFinite(fallbackMs) &&
@@ -377,11 +388,11 @@ function normalizeTimeline(
     ((Number.isFinite(updatedMsCandidate) &&
       Math.abs(dueMs - updatedMsCandidate) <= MAX_CREATE_TIME_OFFSET_MS) ||
       dueLooksLikePlausibleAnchor);
-  const safeDueAsCreatedAt = dueLooksLikePlausibleAnchor ? card.dueAt : undefined;
-  let createdAt = isValidIso(card.createdAt)
-    ? card.createdAt
-    : isValidIso(card.updatedAt)
-      ? card.updatedAt
+  const safeDueAsCreatedAt = dueLooksLikePlausibleAnchor ? normalizedDueAtInput : undefined;
+  let createdAt = normalizedCreatedAtInput
+    ? normalizedCreatedAtInput
+    : normalizedUpdatedAtInput
+      ? normalizedUpdatedAtInput
       : safeDueAsCreatedAt ?? fallback;
   const anchorCandidates = [updatedMsCandidate, dueLooksLikeTimelineAnchor ? dueMs : Number.NaN, fallbackMs].filter((value) =>
     Number.isFinite(value),
@@ -404,15 +415,15 @@ function normalizeTimeline(
   }
   const normalizedCreatedMs = Date.parse(createdAt);
   createdAt = toSafeIso(Number.isFinite(normalizedCreatedMs) ? normalizedCreatedMs : fallbackMs);
-  const rawUpdatedAt = isValidIso(card.updatedAt) ? card.updatedAt : createdAt;
+  const rawUpdatedAt = normalizedUpdatedAtInput ?? createdAt;
   const updatedMs = Date.parse(rawUpdatedAt);
   const fallbackUpdatedMs = Date.parse(createdAt);
   const updatedAt = toSafeIso(Number.isFinite(updatedMs) ? updatedMs : fallbackUpdatedMs);
   if (Date.parse(createdAt) > Date.parse(updatedAt)) {
     createdAt = updatedAt;
   }
-  const rawDueAtIsValid = isValidIso(card.dueAt);
-  const rawDueAt = rawDueAtIsValid ? card.dueAt : undefined;
+  const rawDueAtIsValid = Boolean(normalizedDueAtInput);
+  const rawDueAt = normalizedDueAtInput;
   const normalizedState =
     parseState(card.state) ??
     inferStateFromCard({

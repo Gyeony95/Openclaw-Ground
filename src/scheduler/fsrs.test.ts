@@ -4760,4 +4760,55 @@ describe('fsrs scheduler', () => {
     expect(preview[3]).toBeGreaterThanOrEqual(preview[2]);
     expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
   });
+
+  it('treats whitespace-padded persisted review timestamps as valid schedule anchors', () => {
+    const baseCard = {
+      ...createNewCard('trimmed-review-anchors', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -2),
+      dueAt: NOW,
+      reps: 8,
+      lapses: 1,
+      stability: 2,
+      difficulty: 5,
+    };
+    const paddedCard = {
+      ...baseCard,
+      createdAt: `  ${baseCard.createdAt}  `,
+      updatedAt: `  ${baseCard.updatedAt}  `,
+      dueAt: `  ${baseCard.dueAt}  `,
+    } as Card;
+
+    const baseline = reviewCard(baseCard, 3, NOW);
+    const padded = reviewCard(paddedCard, 3, NOW);
+
+    expect(padded.card.state).toBe('review');
+    expect(padded.card.updatedAt).toBe(NOW);
+    expect(padded.scheduledDays).toBe(baseline.scheduledDays);
+    expect(padded.card.dueAt).toBe(baseline.card.dueAt);
+  });
+
+  it('keeps review preview intervals stable when persisted timeline anchors include outer whitespace', () => {
+    const baseCard = {
+      ...createNewCard('trimmed-preview-anchors', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -3),
+      dueAt: NOW,
+      reps: 10,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+    const paddedCard = {
+      ...baseCard,
+      createdAt: `  ${baseCard.createdAt}  `,
+      updatedAt: `  ${baseCard.updatedAt}  `,
+      dueAt: `  ${baseCard.dueAt}  `,
+    } as Card;
+
+    const baseline = previewIntervals(baseCard, NOW);
+    const padded = previewIntervals(paddedCard, NOW);
+
+    expect(padded).toEqual(baseline);
+  });
 });
