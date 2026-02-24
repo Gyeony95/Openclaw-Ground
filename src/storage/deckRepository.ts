@@ -77,6 +77,14 @@ function toCanonicalIso(iso: string): string {
   return new Date(Date.parse(iso)).toISOString();
 }
 
+function isDueOrInvalid(dueAt: string, currentIso: string): boolean {
+  const dueMs = Date.parse(dueAt);
+  if (!Number.isFinite(dueMs)) {
+    return true;
+  }
+  return isDue(dueAt, currentIso);
+}
+
 function parseTimeOrMin(iso: string): number {
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
@@ -326,7 +334,7 @@ export function computeDeckStats(cards: Card[], currentIso = nowIso()): DeckStat
   return cards.reduce<DeckStats>(
     (acc, card) => {
       acc.total += 1;
-      if (isDue(card.dueAt, currentIso)) {
+      if (isDueOrInvalid(card.dueAt, currentIso)) {
         acc.dueNow += 1;
       }
       if (card.state === 'learning') {

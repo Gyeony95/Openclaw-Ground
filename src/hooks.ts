@@ -31,6 +31,17 @@ function parseDueAtOrNaN(dueAt: unknown): number {
   return parseTimeOrNaN(dueAt);
 }
 
+function isReviewReadyDueAt(dueAt: unknown, currentIso: string): boolean {
+  if (typeof dueAt !== 'string') {
+    return true;
+  }
+  const dueMs = parseTimeOrNaN(dueAt);
+  if (!Number.isFinite(dueMs)) {
+    return true;
+  }
+  return isDue(dueAt, currentIso);
+}
+
 function parseTimeOrMin(iso?: string): number {
   if (!iso) {
     return Number.MIN_SAFE_INTEGER;
@@ -191,7 +202,7 @@ export function applyDueReview(
   let targetIndex = -1;
   for (let index = 0; index < cards.length; index += 1) {
     const candidate = cards[index];
-    if (candidate.id !== cardId || !isDue(candidate.dueAt, effectiveCurrentIso)) {
+    if (candidate.id !== cardId || !isReviewReadyDueAt(candidate.dueAt, effectiveCurrentIso)) {
       continue;
     }
     if (targetIndex === -1 || compareDueCards(candidate, cards[targetIndex]) < 0) {
@@ -229,7 +240,7 @@ export function applyReviewToDeckState(
 
 export function hasDueCard(cards: Card[], cardId: string, currentIso: string): boolean {
   const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
-  return cards.some((card) => card.id === cardId && isDue(card.dueAt, effectiveCurrentIso));
+  return cards.some((card) => card.id === cardId && isReviewReadyDueAt(card.dueAt, effectiveCurrentIso));
 }
 
 export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: string): string {
@@ -384,7 +395,9 @@ export function useDeck() {
   }, []);
 
   const dueCards = useMemo(() => {
-    return deckState.cards.filter((card) => isDue(card.dueAt, clockIso)).sort(compareDueCards);
+    return deckState.cards
+      .filter((card) => isReviewReadyDueAt(card.dueAt, clockIso))
+      .sort(compareDueCards);
   }, [deckState.cards, clockIso]);
 
   const addCard = useCallback((word: string, meaning: string, notes?: string) => {

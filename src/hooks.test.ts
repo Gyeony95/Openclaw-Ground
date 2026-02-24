@@ -47,6 +47,21 @@ describe('applyDueReview', () => {
     expect(result.cards[0]).toBe(card);
   });
 
+  it('reviews cards with malformed dueAt to recover corrupted schedules', () => {
+    const malformed = {
+      ...createNewCard('gamma-broken-due', 'third', NOW),
+      dueAt: 'not-a-date',
+      state: 'review' as const,
+      updatedAt: NOW,
+    };
+
+    const result = applyDueReview([malformed], malformed.id, 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).not.toBe(malformed);
+    expect(Date.parse(result.cards[0].dueAt)).toBeGreaterThan(Date.parse(result.cards[0].updatedAt));
+  });
+
   it('returns a new card object only for the reviewed target', () => {
     const due = createNewCard('delta', 'fourth', NOW);
     const secondDue = createNewCard('epsilon', 'fifth', NOW);
@@ -617,6 +632,15 @@ describe('hasDueCard', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('treats malformed dueAt as review-ready so broken cards can be repaired', () => {
+    const malformed = {
+      ...createNewCard('broken-has-due', 'recover', NOW),
+      dueAt: 'bad-due-at',
+    };
+
+    expect(hasDueCard([malformed], malformed.id, NOW)).toBe(true);
   });
 });
 

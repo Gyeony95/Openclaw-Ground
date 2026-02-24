@@ -106,6 +106,10 @@ function formatQueuePositionLabel(position: number, total: number): string {
   return `Card ${position.toLocaleString()} of ${total.toLocaleString()}`;
 }
 
+function hasValidIso(value?: string): boolean {
+  return typeof value === 'string' && Number.isFinite(Date.parse(value));
+}
+
 function queueTone({
   dueAt,
   clockIso,
@@ -198,7 +202,13 @@ export default function App() {
       .sort(compareDueCards)[0];
   }, [cards, clockIso]);
   const retentionBarWidth = `${retentionScore}%`;
-  const queueLabel = loading ? 'Loading' : dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Queue clear';
+  const queueLabel = loading
+    ? 'Loading'
+    : dueCard
+      ? hasValidIso(dueCard.dueAt)
+        ? formatDueLabel(dueCard.dueAt, clockIso)
+        : 'Needs schedule repair'
+      : 'Queue clear';
   const nextUpcomingLabel = loading
     ? '--'
     : nextUpcomingCard
@@ -242,7 +252,11 @@ export default function App() {
       ? 'No overdue cards'
       : `${overdueNow.toLocaleString()} overdue`;
   const exactDueLabel = exactDateLabel(dueCard?.dueAt);
-  const relativeDueLabel = dueCard ? formatDueLabel(dueCard.dueAt, clockIso) : 'Schedule unavailable';
+  const relativeDueLabel = dueCard
+    ? hasValidIso(dueCard.dueAt)
+      ? formatDueLabel(dueCard.dueAt, clockIso)
+      : 'Needs schedule repair'
+    : 'Schedule unavailable';
   const asOf = asOfLabel(clockIso);
   const dueCardStateConfig = dueCard ? stateConfig(dueCard.state) : null;
   const dueCardUrgency = dueUrgency(dueCard?.dueAt, clockIso);

@@ -229,6 +229,35 @@ describe('deck repository', () => {
     });
   });
 
+  it('counts malformed dueAt values as due-now so corrupted cards remain actionable', () => {
+    const stats = computeDeckStats(
+      [
+        {
+          id: 'broken-due',
+          word: 'alpha',
+          meaning: 'first',
+          dueAt: 'not-a-date',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'review',
+          reps: 3,
+          lapses: 1,
+          stability: 1.2,
+          difficulty: 6,
+        },
+      ],
+      '2026-02-23T00:00:00.000Z',
+    );
+
+    expect(stats).toEqual({
+      total: 1,
+      dueNow: 1,
+      learning: 0,
+      review: 1,
+      relearning: 0,
+    });
+  });
+
   it('recovers cards when one of the persisted timestamps is invalid', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
