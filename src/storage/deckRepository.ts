@@ -104,6 +104,9 @@ function isDueOrInvalid(dueAt: string, currentIso: string): boolean {
 }
 
 function parseTimeOrMin(iso: string): number {
+  if (!isIsoDateTime(iso)) {
+    return Number.MIN_SAFE_INTEGER;
+  }
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
 }

@@ -224,7 +224,7 @@ function isReviewReadyCard(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & P
 }
 
 function parseTimeOrMin(iso?: string): number {
-  if (!iso) {
+  if (!iso || !isIsoDateTime(iso)) {
     return Number.MIN_SAFE_INTEGER;
   }
   const parsed = Date.parse(iso);

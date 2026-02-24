@@ -814,6 +814,30 @@ describe('mergeDeckCards', () => {
     expect(merged[0].reps).toBe(3);
   });
 
+  it('does not treat loose non-ISO updatedAt values as fresher duplicates', () => {
+    const local = {
+      ...createNewCard('strict-iso-local', 'keep-local', NOW),
+      id: 'strict-iso-dup',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 2,
+    };
+    const loadedLooseIso = {
+      ...createNewCard('strict-iso-loaded', 'drop-loose-updated', NOW),
+      id: 'strict-iso-dup',
+      updatedAt: '2026-02-23 11:00:00Z',
+      dueAt: '2026-02-24T11:00:00.000Z',
+      reps: 9,
+    };
+
+    const merged = mergeDeckCards([local], [loadedLooseIso]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].meaning).toBe('keep-local');
+    expect(merged[0].updatedAt).toBe('2026-02-23T10:00:00.000Z');
+    expect(merged[0].reps).toBe(2);
+  });
+
   it('keeps in-memory duplicate when timestamps are tied', () => {
     const local = {
       ...createNewCard('tie', 'local', NOW),

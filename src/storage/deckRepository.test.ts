@@ -1121,6 +1121,45 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
   });
 
+  it('ignores loose non-ISO updatedAt when deduplicating persisted cards', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'dup-loose-updated',
+            word: 'alpha',
+            meaning: 'keep-valid-updated',
+            dueAt: '2026-02-24T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-23T00:00:00.000Z',
+            state: 'review',
+            reps: 2,
+            lapses: 0,
+          },
+          {
+            id: 'dup-loose-updated',
+            word: 'beta',
+            meaning: 'drop-loose-updated',
+            dueAt: '2026-02-25T00:00:00.000Z',
+            createdAt: '2026-02-21T00:00:00.000Z',
+            updatedAt: '2026-02-23 01:00:00Z',
+            state: 'review',
+            reps: 8,
+            lapses: 1,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].id).toBe('dup-loose-updated');
+    expect(deck.cards[0].meaning).toBe('keep-valid-updated');
+    expect(deck.cards[0].updatedAt).toBe('2026-02-23T00:00:00.000Z');
+    expect(deck.cards[0].reps).toBe(2);
+  });
+
   it('prefers earlier dueAt when duplicate cards are otherwise tied', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

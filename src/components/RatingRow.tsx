@@ -85,6 +85,7 @@ export function RatingRow({
                 ratingDisabled
                   ? styles.buttonDisabledSurface
                   : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
+                isRatingLocked ? styles.buttonLocked : null,
                 pressed && !ratingDisabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
                 ratingDisabled && styles.buttonDisabled,
               ]}
@@ -193,6 +194,10 @@ const styles = StyleSheet.create({
   buttonDisabledSurface: {
     borderColor: colors.border,
     backgroundColor: colors.surfaceAlt,
+  },
+  buttonLocked: {
+    borderStyle: 'dashed',
+    opacity: 0.82,
   },
   buttonText: {
     fontSize: 12.5,
