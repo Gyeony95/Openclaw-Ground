@@ -1443,6 +1443,30 @@ describe('hasScheduleRepairNeed', () => {
 
     expect(hasScheduleRepairNeed(plausibleReview)).toBe(false);
   });
+
+  it('flags long review schedules when stability is malformed', () => {
+    const malformedStabilityReview = {
+      ...createNewCard('repair-review-malformed-stability-long', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-03-05T12:00:00.000Z',
+      stability: Number.NaN,
+    };
+
+    expect(hasScheduleRepairNeed(malformedStabilityReview)).toBe(true);
+  });
+
+  it('keeps short review schedules with malformed stability within conservative fallback window', () => {
+    const shortMalformedStabilityReview = {
+      ...createNewCard('repair-review-malformed-stability-short', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-03-01T12:00:00.000Z',
+      stability: Number.NaN,
+    };
+
+    expect(hasScheduleRepairNeed(shortMalformedStabilityReview)).toBe(false);
+  });
 });
 
 describe('countScheduleRepairCards', () => {

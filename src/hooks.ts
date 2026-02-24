@@ -129,9 +129,9 @@ function minScheduleMsForState(state: Card['state']): number {
   return LEARNING_MIN_SCHEDULE_MS;
 }
 
-function normalizedReviewStabilityDays(stability: unknown): number {
+function normalizedReviewStabilityDays(stability: unknown): number | null {
   if (typeof stability !== 'number' || !Number.isFinite(stability) || stability <= 0) {
-    return REVIEW_MIN_SCHEDULE_MS / DAY_MS;
+    return null;
   }
   return clamp(stability, STABILITY_MIN, STABILITY_MAX);
 }
@@ -145,6 +145,11 @@ function maxScheduleMsBeforeRepair(state: Card['state'], stability: unknown): nu
   }
 
   const normalizedStabilityDays = normalizedReviewStabilityDays(stability);
+  if (normalizedStabilityDays === null) {
+    // Unknown review stability should be repaired conservatively instead of
+    // allowing long hidden intervals that may never be reviewed.
+    return REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS * DAY_MS;
+  }
   const stabilityOutlierWindowDays = Math.max(
     REVIEW_MIN_SCHEDULE_MS / DAY_MS,
     normalizedStabilityDays * REVIEW_STABILITY_OUTLIER_MULTIPLIER,

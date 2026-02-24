@@ -394,7 +394,7 @@ export default function App() {
   const isWideLayout = width >= 980;
   const isCompactLayout = width < 380;
   const isReviewBusy = pendingReviewCardId !== null;
-  const quizOptionsLocked = isReviewBusy || hasQuizSelection;
+  const quizOptionsLocked = isReviewBusy;
   const isFormEditable = !loading && !isAddBusy;
   const flashcardVisibility = useMemo(
     () => getFlashcardVisibility(flashcardSide, Boolean(dueCard?.notes?.trim())),
@@ -632,7 +632,7 @@ export default function App() {
   }
 
   function handleSelectQuizOption(optionId: string) {
-    if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice' || hasQuizSelection) {
+    if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice') {
       return;
     }
     if (!hasValidQuizSelection(optionId, quizOptions)) {
