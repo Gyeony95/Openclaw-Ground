@@ -183,6 +183,7 @@ export default function App() {
   const previousHadDueCardRef = useRef(false);
 
   const dueCard = dueCards[0];
+  const dueQueueCount = dueCards.length;
   const retentionScore = useMemo(() => {
     if (stats.total === 0) {
       return 0;
@@ -222,8 +223,8 @@ export default function App() {
   });
   const queueShareLabel = loading
     ? '--'
-    : formatQueueShareLabel(stats.dueNow, stats.total);
-  const queueProgressPercent = loading || stats.total === 0 ? 0 : clampPercent((stats.dueNow / stats.total) * 100);
+    : formatQueueShareLabel(dueQueueCount, stats.total);
+  const queueProgressPercent = loading || stats.total === 0 ? 0 : clampPercent((dueQueueCount / stats.total) * 100);
   const queueProgressWidth = `${queueProgressPercent}%`;
   const queueProgressTone = loading
     ? colors.primary
@@ -235,7 +236,7 @@ export default function App() {
   const reviewQueueLabel = loading
     ? '--'
     : dueCard
-      ? formatReviewQueueLabel(stats.dueNow)
+      ? formatReviewQueueLabel(dueQueueCount)
       : queueShareLabel;
   const followUpQueueLabel = loading
     ? '--'
@@ -245,7 +246,7 @@ export default function App() {
   const queuePositionLabel = loading
     ? '--'
     : dueCard
-      ? formatQueuePositionLabel(1, Math.max(1, stats.dueNow))
+      ? formatQueuePositionLabel(1, Math.max(1, dueQueueCount))
       : 'Queue empty';
   const dueWithinDay = useMemo(() => {
     return countUpcomingDueCards(cards, clockIso, 24);

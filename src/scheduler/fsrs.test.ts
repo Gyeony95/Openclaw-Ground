@@ -118,6 +118,16 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back to epoch timestamps when runtime clock is non-finite during card creation', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const card = createNewCard('nan-clock', 'safe', 'not-a-date');
+    nowSpy.mockRestore();
+
+    expect(card.createdAt).toBe('1970-01-01T00:00:00.000Z');
+    expect(card.updatedAt).toBe('1970-01-01T00:00:00.000Z');
+    expect(card.dueAt).toBe('1970-01-01T00:00:00.000Z');
+  });
+
   it('falls back to runtime wall clock when creation timestamp is pathologically far past', () => {
     jest.useFakeTimers();
     try {

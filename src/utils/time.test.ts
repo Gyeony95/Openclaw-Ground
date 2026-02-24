@@ -1,4 +1,4 @@
-import { addDaysIso, daysBetween, isDue } from './time';
+import { addDaysIso, daysBetween, isDue, nowIso } from './time';
 
 describe('time utils', () => {
   it('adds days in iso format', () => {
@@ -20,5 +20,21 @@ describe('time utils', () => {
 
   it('falls back to zero-day offset for non-finite addDays inputs', () => {
     expect(addDaysIso('2026-02-23T00:00:00.000Z', Number.NaN)).toBe('2026-02-23T00:00:00.000Z');
+  });
+
+  it('returns canonical runtime timestamps from nowIso', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-24T08:15:30.000Z'));
+    const current = nowIso();
+    nowSpy.mockRestore();
+
+    expect(current).toBe('2026-02-24T08:15:30.000Z');
+  });
+
+  it('falls back to epoch when runtime clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const current = nowIso();
+    nowSpy.mockRestore();
+
+    expect(current).toBe('1970-01-01T00:00:00.000Z');
   });
 });

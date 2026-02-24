@@ -1,4 +1,5 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
+const EPOCH_ISO = '1970-01-01T00:00:00.000Z';
 
 function parseIso(iso: string): number | null {
   const parsed = Date.parse(iso);
@@ -6,7 +7,12 @@ function parseIso(iso: string): number | null {
 }
 
 export function nowIso(): string {
-  return new Date().toISOString();
+  const runtimeNow = Date.now();
+  if (!Number.isFinite(runtimeNow)) {
+    return EPOCH_ISO;
+  }
+  const runtimeIso = new Date(runtimeNow).toISOString();
+  return Number.isFinite(Date.parse(runtimeIso)) ? runtimeIso : EPOCH_ISO;
 }
 
 export function addDaysIso(iso: string, days: number): string {
