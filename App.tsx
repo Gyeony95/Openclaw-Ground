@@ -663,7 +663,7 @@ export default function App() {
 
             <View style={styles.metrics}>
               <View style={isCompactLayout ? styles.metricCardCompact : null}>
-                <MetricCard label="Due now" value={loading ? Number.NaN : stats.dueNow} accent={colors.primary} />
+                <MetricCard label="Due now" value={loading ? Number.NaN : dueQueueCount} accent={colors.primary} />
               </View>
               <View style={isCompactLayout ? styles.metricCardCompact : null}>
                 <MetricCard label="Overdue" value={loading ? Number.NaN : overdueNow} accent={colors.danger} />

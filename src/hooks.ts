@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createNewCard, reviewCard } from './scheduler/fsrs';
 import { MEANING_MAX_LENGTH, NOTES_MAX_LENGTH, STABILITY_MAX, STABILITY_MIN, WORD_MAX_LENGTH } from './scheduler/constants';
 import { computeDeckStats, loadDeck, saveDeck } from './storage/deckRepository';
-import { Card, Rating } from './types';
+import { Card, DeckStats, Rating } from './types';
 import { isDue, nowIso } from './utils/time';
 import { normalizeBoundedText } from './utils/text';
 
@@ -494,6 +494,16 @@ export function resolveDeckClockTick(previousClockIso: string, runtimeNowIso: st
   return resolveNextUiClock(previousClockIso, runtimeNowIso);
 }
 
+export function alignDueNowStatWithQueue(stats: DeckStats, dueCards: Card[]): DeckStats {
+  if (stats.dueNow === dueCards.length) {
+    return stats;
+  }
+  return {
+    ...stats,
+    dueNow: dueCards.length,
+  };
+}
+
 export function useDeck() {
   const [deckState, setDeckState] = useState<{ cards: Card[]; lastReviewedAt?: string }>({ cards: [] });
   const [loading, setLoading] = useState(true);
@@ -617,7 +627,10 @@ export function useDeck() {
     return true;
   }, [clockIso]);
 
-  const stats = useMemo(() => computeDeckStats(deckState.cards, effectiveClockIso), [deckState.cards, effectiveClockIso]);
+  const stats = useMemo(
+    () => alignDueNowStatWithQueue(computeDeckStats(deckState.cards, effectiveClockIso), dueCards),
+    [deckState.cards, dueCards, effectiveClockIso],
+  );
 
   return {
     loading,

@@ -950,7 +950,7 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
 export function previewIntervals(card: Card, nowIso: string): RatingIntervalPreview {
   const normalized = normalizeSchedulingCard(card, nowIso);
   const previewCard = normalized.card;
-  const previewIso = resolveReviewIso(previewCard.updatedAt, normalized.currentIso);
+  const previewIso = normalized.currentIso;
   const preview = {
     1: reviewCard(previewCard, 1, previewIso).scheduledDays,
     2: reviewCard(previewCard, 2, previewIso).scheduledDays,

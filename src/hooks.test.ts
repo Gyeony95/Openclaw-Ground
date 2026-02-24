@@ -1,4 +1,5 @@
 import {
+  alignDueNowStatWithQueue,
   applyReviewToDeckState,
   applyDueReview,
   collectDueCards,
@@ -1586,5 +1587,47 @@ describe('resolveDeckClockTick', () => {
     nowSpy.mockRestore();
 
     expect(resolved).toBe('2026-02-23T12:00:00.000Z');
+  });
+});
+
+describe('alignDueNowStatWithQueue', () => {
+  it('keeps dueNow aligned with the actual due queue length', () => {
+    const stats = {
+      total: 4,
+      dueNow: 1,
+      learning: 1,
+      review: 2,
+      relearning: 1,
+    };
+    const dueCards = [
+      createNewCard('due-a', 'a', NOW),
+      createNewCard('due-b', 'b', NOW),
+      createNewCard('due-c', 'c', NOW),
+    ];
+
+    const aligned = alignDueNowStatWithQueue(stats, dueCards);
+
+    expect(aligned).toEqual({
+      ...stats,
+      dueNow: 3,
+    });
+  });
+
+  it('reuses the original stats object when dueNow is already aligned', () => {
+    const stats = {
+      total: 2,
+      dueNow: 2,
+      learning: 1,
+      review: 1,
+      relearning: 0,
+    };
+    const dueCards = [
+      createNewCard('due-x', 'x', NOW),
+      createNewCard('due-y', 'y', NOW),
+    ];
+
+    const aligned = alignDueNowStatWithQueue(stats, dueCards);
+
+    expect(aligned).toBe(stats);
   });
 });
