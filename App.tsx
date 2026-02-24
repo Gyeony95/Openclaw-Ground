@@ -1132,7 +1132,7 @@ export default function App() {
                   editable={isFormEditable}
                   accessibilityLabel="Meaning input"
                   onSubmitEditing={() => {
-                    if (notes.trim().length === 0) {
+                    if (normalizedNotes.length === 0) {
                       handleAddCard();
                       return;
                     }

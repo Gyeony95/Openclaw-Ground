@@ -951,6 +951,18 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(learningDueNow)).toBe(false);
   });
 
+  it('flags previously reviewed learning cards due exactly at updatedAt', () => {
+    const staleLearningDueNow = {
+      ...createNewCard('repair-learning-due-now-stale', 'test', NOW),
+      state: 'learning' as const,
+      reps: 3,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(staleLearningDueNow)).toBe(true);
+  });
+
   it('flags review cards due exactly at updatedAt', () => {
     const reviewDueNow = {
       ...createNewCard('repair-review-due-now', 'test', NOW),

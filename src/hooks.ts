@@ -113,7 +113,9 @@ function maxScheduleMsBeforeRepair(state: Card['state'], stability: unknown): nu
   return maxReviewDays * DAY_MS;
 }
 
-export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & Partial<Pick<Card, 'stability'>>): boolean {
+export function hasScheduleRepairNeed(
+  card: Pick<Card, 'dueAt' | 'updatedAt' | 'state'> & Partial<Pick<Card, 'stability' | 'reps'>>,
+): boolean {
   const dueMs = parseTimeOrNaN(card.dueAt);
   const updatedMs = parseTimeOrNaN(card.updatedAt);
   const state = normalizeReviewState(card.state);
@@ -133,8 +135,12 @@ export function hasScheduleRepairNeed(card: Pick<Card, 'dueAt' | 'updatedAt' | '
     }
     return scheduleMs > maxScheduleMsBeforeRepair(state, card.stability);
   }
-  // Learning cards are legitimately due at creation time; review/relearning cards should always move forward.
-  return state !== 'learning';
+  // Brand-new learning cards are legitimately due at creation time; persisted learning cards should move forward.
+  if (state !== 'learning') {
+    return true;
+  }
+  const reps = typeof card.reps === 'number' && Number.isFinite(card.reps) ? Math.max(0, Math.floor(card.reps)) : 0;
+  return reps > 0;
 }
 
 function isReviewReadyDueAt(dueAt: unknown, currentIso: string): boolean {
