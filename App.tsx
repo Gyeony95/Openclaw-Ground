@@ -457,6 +457,8 @@ export default function App() {
   useEffect(() => {
     if (studyMode === 'multiple-choice' && !canUseMultipleChoice) {
       setStudyMode('flashcard');
+      setSelectedQuizOptionId(null);
+      setFlashcardSide('front');
     }
   }, [canUseMultipleChoice, studyMode]);
 

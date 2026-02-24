@@ -523,16 +523,19 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
   );
   const reps = normalizeCounter(card.reps);
   const lapses = normalizeCounter(card.lapses);
+  const hasReviewHistory = reps > 0 || lapses > 0;
 
   // Prefer schedule-based inference so short-step cards are not accidentally
   // promoted by stale/corrupted stability values.
   if (scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+    if (!hasReviewHistory && normalizedStability < REVIEW_SCHEDULE_FLOOR_DAYS) {
+      return 'learning';
+    }
     return 'review';
   }
   if (scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS) {
     // Only infer relearning from sub-day retry windows.
     // Day-like intervals are classified as review cadence by the branch above.
-    const hasReviewHistory = reps > 0 || lapses > 0;
     return hasReviewHistory ? 'relearning' : 'learning';
   }
 
@@ -542,7 +545,6 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
 
   // When schedule anchors collapse to zero (e.g. dueAt==updatedAt), use review
   // history to avoid treating previously-reviewed cards as fresh learning cards.
-  const hasReviewHistory = reps > 0 || lapses > 0;
   if (hasReviewHistory) {
     if (normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS) {
       return 'review';

@@ -713,6 +713,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
+  it('keeps zero-history malformed-state cards in learning when stability is sub-review and schedule is day-like', () => {
+    const zeroHistoryMalformedState = {
+      ...createNewCard('malformed-state-zero-history-learning', 'state fallback', NOW),
+      state: 'unknown_state' as unknown as 'learning',
+      reps: 0,
+      lapses: 0,
+      stability: 0.2,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1),
+    };
+
+    const reviewed = reviewCard(zeroHistoryMalformedState, 1, zeroHistoryMalformedState.dueAt);
+
+    expect(reviewed.card.state).toBe('learning');
+    expect(reviewed.card.lapses).toBe(0);
+    expect(reviewed.scheduledDays).toBeCloseTo(1 / 1440, 10);
+  });
+
   it('keeps malformed-state short-step cards in learning instead of forcing review lapses from stale stability', () => {
     const shortStepMalformedState = {
       ...createNewCard('malformed-state-short-step-learning', 'state fallback', NOW),
