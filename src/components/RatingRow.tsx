@@ -78,7 +78,8 @@ export function RatingRow({
                 onRate(item.rating);
               }}
               disabled={ratingDisabled}
-              hitSlop={6}
+              hitSlop={8}
+              pressRetentionOffset={12}
               android_ripple={ratingDisabled ? undefined : { color: `${item.tone}20` }}
               style={({ pressed }) => [
                 styles.button,

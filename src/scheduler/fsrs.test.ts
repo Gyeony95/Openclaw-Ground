@@ -4924,8 +4924,27 @@ describe('fsrs scheduler', () => {
 
     expect(relearningPreview[1]).toBeLessThanOrEqual(10 / 1440);
     expect(relearningPreview[2]).toBeLessThanOrEqual(15 / 1440);
-    expect(relearningPreview[3]).toBeLessThanOrEqual(0.5);
+    expect(relearningPreview[3]).toBeLessThanOrEqual(1);
     expect(relearningPreview[4]).toBeLessThanOrEqual(1);
+  });
+
+  it('allows relearning good previews to reach one day for day-like relearning schedules', () => {
+    const relearningDayLike = {
+      ...createNewCard('preview-relearning-daylike-good', 'definition', NOW),
+      state: 'relearning' as const,
+      updatedAt: addDaysIso(NOW, -1),
+      dueAt: NOW,
+      reps: 6,
+      lapses: 2,
+      stability: 1.2,
+      difficulty: 5,
+    };
+
+    const preview = previewIntervals(relearningDayLike, NOW);
+
+    expect(preview[2]).toBeLessThanOrEqual(preview[3]);
+    expect(preview[3]).toBe(1);
+    expect(preview[4]).toBe(1);
   });
 
   it('caps review stability to the review outlier window after hard ratings on short schedules', () => {
