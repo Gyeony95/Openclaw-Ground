@@ -694,6 +694,22 @@ describe('resolveReviewClock', () => {
 
     expect(reviewedAt).toBe('2026-02-23T12:34:56.000Z');
   });
+
+  it('falls back to wall clock when only runtime clock is valid but pathologically far behind', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const reviewedAt = resolveReviewClock('bad-rendered-time', '2026-02-20T00:00:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(reviewedAt).toBe('2026-02-23T12:34:56.000Z');
+  });
+
+  it('falls back to wall clock when runtime is pathologically behind and rendered time is pathologically stale', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const reviewedAt = resolveReviewClock('2026-02-20T00:00:00.000Z', '2026-02-19T00:00:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(reviewedAt).toBe('2026-02-23T12:34:56.000Z');
+  });
 });
 
 describe('resolveNextUiClock', () => {

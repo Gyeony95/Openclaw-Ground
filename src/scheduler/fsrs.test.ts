@@ -903,11 +903,47 @@ describe('fsrs scheduler', () => {
     expect(card.dueAt).toBe(card.createdAt);
   });
 
+  it('keeps card creation resilient when wall-clock ISO parsing is unexpectedly invalid', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-24T00:00:00.000Z'));
+    const nativeParse = Date.parse.bind(Date);
+    const parseSpy = jest.spyOn(Date, 'parse').mockImplementation((value: string) => {
+      if (value === '2026-02-24T00:00:00.000Z') {
+        return Number.NaN;
+      }
+      return nativeParse(value);
+    });
+    try {
+      const card = createNewCard('tau-parse-fallback', 'letter', '2026-02-23T12:00:00.000Z');
+
+      expect(card.createdAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(card.updatedAt).toBe(card.createdAt);
+      expect(card.dueAt).toBe(card.createdAt);
+    } finally {
+      parseSpy.mockRestore();
+      jest.useRealTimers();
+    }
+  });
+
   it('ignores pathological future create timestamps and falls back to wall clock time', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-02-24T00:00:00.000Z'));
     try {
       const card = createNewCard('tau-future-clamp', 'letter', '2099-01-01T00:00:00.000Z');
+
+      expect(card.createdAt).toBe('2026-02-24T00:00:00.000Z');
+      expect(card.updatedAt).toBe(card.createdAt);
+      expect(card.dueAt).toBe(card.createdAt);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('ignores pathological past create timestamps and falls back to wall clock time', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-24T00:00:00.000Z'));
+    try {
+      const card = createNewCard('tau-past-clamp', 'letter', '2000-01-01T00:00:00.000Z');
 
       expect(card.createdAt).toBe('2026-02-24T00:00:00.000Z');
       expect(card.updatedAt).toBe(card.createdAt);
@@ -924,6 +960,20 @@ describe('fsrs scheduler', () => {
       const card = createNewCard('tau-future-small', 'letter', '2026-02-24T06:00:00.000Z');
 
       expect(card.createdAt).toBe('2026-02-24T06:00:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('keeps minor past create timestamps that are within allowed clock skew', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-24T00:00:00.000Z'));
+    try {
+      const card = createNewCard('tau-past-small', 'letter', '2026-02-23T18:00:00.000Z');
+
+      expect(card.createdAt).toBe('2026-02-23T18:00:00.000Z');
+      expect(card.updatedAt).toBe(card.createdAt);
+      expect(card.dueAt).toBe(card.createdAt);
     } finally {
       jest.useRealTimers();
     }

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { colors, radii } from '../theme';
 
 interface MetricCardProps {
@@ -8,16 +8,23 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ label, value, accent = colors.primary }: MetricCardProps) {
+  const { width } = useWindowDimensions();
+  const isNarrow = width < 360;
   const displayValue = Number.isFinite(value) ? value.toLocaleString() : '--';
 
   return (
-    <View style={styles.card} accessible accessibilityLabel={`${label}: ${displayValue}`}>
+    <View style={[styles.card, isNarrow && styles.cardNarrow]} accessible accessibilityLabel={`${label}: ${displayValue}`}>
       <View style={[styles.topBorder, { backgroundColor: accent }]} />
       <View style={styles.head}>
         <View style={[styles.dot, { backgroundColor: accent }]} />
         <Text style={styles.label}>{label}</Text>
       </View>
-      <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72}>
+      <Text
+        style={[styles.value, isNarrow && styles.valueNarrow]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.72}
+      >
         {displayValue}
       </Text>
     </View>
@@ -43,6 +50,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: 'hidden',
   },
+  cardNarrow: {
+    flexBasis: '100%',
+    minHeight: 100,
+  },
   topBorder: {
     position: 'absolute',
     top: 0,
@@ -67,6 +78,9 @@ const styles = StyleSheet.create({
     color: colors.ink,
     letterSpacing: -0.4,
     fontVariant: ['tabular-nums'],
+  },
+  valueNarrow: {
+    fontSize: 26,
   },
   label: {
     fontSize: 10,

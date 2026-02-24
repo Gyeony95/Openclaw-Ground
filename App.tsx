@@ -598,11 +598,15 @@ export default function App() {
                 ) : null}
                 {!loading && dueCard ? (
                   <View
-                    style={[styles.reviewCard, isReviewBusy && styles.reviewCardBusy]}
+                    style={[
+                      styles.reviewCard,
+                      { borderColor: `${dueCardUrgency.tone}66` },
+                      isReviewBusy && styles.reviewCardBusy,
+                    ]}
                     accessible
                     accessibilityLabel={`Review card ${dueCard.word}. ${dueCardStateConfig?.label ?? 'Learning'}. ${relativeDueLabel}.`}
                   >
-                    <View style={styles.reviewTimeline}>
+                    <View style={[styles.reviewTimeline, { borderColor: `${dueCardUrgency.tone}44` }]}>
                       <Text style={styles.reviewTimelineLabel}>Scheduled for</Text>
                       <Text style={styles.reviewTimelineValue} numberOfLines={1}>
                         {exactDueLabel}

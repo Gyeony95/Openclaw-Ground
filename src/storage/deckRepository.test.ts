@@ -397,6 +397,38 @@ describe('deck repository', () => {
     }
   });
 
+  it('clamps persisted past-skewed updatedAt to wall clock to keep cards reviewable', async () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      mockedStorage.getItem.mockResolvedValueOnce(
+        JSON.stringify({
+          cards: [
+            {
+              id: 'past-updated-at',
+              word: 'alpha',
+              meaning: 'first',
+              dueAt: '2000-01-02T00:00:00.000Z',
+              createdAt: '2000-01-01T00:00:00.000Z',
+              updatedAt: '2000-01-01T00:00:00.000Z',
+              state: 'review',
+              stability: 2,
+              difficulty: 5,
+            },
+          ],
+        }),
+      );
+
+      const deck = await loadDeck();
+
+      expect(deck.cards).toHaveLength(1);
+      expect(deck.cards[0].updatedAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(Date.parse(deck.cards[0].dueAt)).toBeGreaterThan(Date.parse(deck.cards[0].updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('ignores non-array cards payloads safely', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

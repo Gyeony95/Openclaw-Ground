@@ -39,6 +39,22 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+function safeNowMs(): number {
+  const parsed = Date.parse(currentNowIso());
+  if (Number.isFinite(parsed)) {
+    return parsed;
+  }
+  const runtimeNow = Date.now();
+  if (Number.isFinite(runtimeNow)) {
+    return runtimeNow;
+  }
+  return 0;
+}
+
+function toSafeIso(ms: number): string {
+  return new Date(Number.isFinite(ms) ? ms : 0).toISOString();
+}
+
 function clampFinite(value: number, min: number, max: number, fallback: number): number {
   if (!Number.isFinite(value)) {
     return clamp(fallback, min, max);
@@ -53,8 +69,8 @@ function isValidIso(value: string): boolean {
 function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): string {
   const fallback = isValidIso(cardUpdatedAt) ? cardUpdatedAt : currentNowIso();
   const requestedValid = isValidIso(requestedNowIso);
-  const wallClockIso = currentNowIso();
-  const wallClockMs = Date.parse(wallClockIso);
+  const wallClockMs = safeNowMs();
+  const wallClockIso = toSafeIso(wallClockMs);
   const fallbackMs = Date.parse(fallback);
   if (
     !requestedValid &&
@@ -126,8 +142,8 @@ function normalizeTimeline(
   updatedAt: string;
   dueAt: string;
 } {
-  const fallback = currentNowIso();
-  const fallbackMs = Date.parse(fallback);
+  const fallbackMs = safeNowMs();
+  const fallback = toSafeIso(fallbackMs);
   const dueMs = isValidIso(card.dueAt) ? Date.parse(card.dueAt) : Number.NaN;
   const safeDueAsCreatedAt =
     Number.isFinite(dueMs) && Number.isFinite(fallbackMs) && dueMs - fallbackMs <= MAX_MONOTONIC_CLOCK_SKEW_MS
@@ -145,14 +161,14 @@ function normalizeTimeline(
   const earliestAnchorMs = anchorCandidates.length > 0 ? Math.min(...anchorCandidates) : fallbackMs;
   const createdMsCandidate = Date.parse(createdAt);
   if (Number.isFinite(createdMsCandidate) && createdMsCandidate - earliestAnchorMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
-    createdAt = new Date(earliestAnchorMs).toISOString();
+    createdAt = toSafeIso(earliestAnchorMs);
   }
   const normalizedCreatedMs = Date.parse(createdAt);
-  createdAt = new Date(Number.isFinite(normalizedCreatedMs) ? normalizedCreatedMs : fallbackMs).toISOString();
+  createdAt = toSafeIso(Number.isFinite(normalizedCreatedMs) ? normalizedCreatedMs : fallbackMs);
   const rawUpdatedAt = isValidIso(card.updatedAt) ? card.updatedAt : createdAt;
   const updatedMs = Date.parse(rawUpdatedAt);
   const fallbackUpdatedMs = Date.parse(createdAt);
-  const updatedAt = new Date(Number.isFinite(updatedMs) ? updatedMs : fallbackUpdatedMs).toISOString();
+  const updatedAt = toSafeIso(Number.isFinite(updatedMs) ? updatedMs : fallbackUpdatedMs);
   if (Date.parse(createdAt) > Date.parse(updatedAt)) {
     createdAt = updatedAt;
   }
@@ -231,10 +247,10 @@ function normalizeTimeline(
     : Number.isFinite(fallbackDueMs)
       ? fallbackDueMs
       : updatedAtMs;
-  const dueAt = new Date(Math.max(safeDueAnchorMs, updatedAtMs)).toISOString();
+  const dueAt = toSafeIso(Math.max(safeDueAnchorMs, updatedAtMs));
   const resolvedCurrentIso = resolveReviewIso(updatedAt, requestedNowIso);
   const resolvedCurrentMs = Date.parse(resolvedCurrentIso);
-  const wallClockMs = Date.parse(currentNowIso());
+  const wallClockMs = safeNowMs();
   const updatedAtLooksCorruptedFuture =
     Number.isFinite(updatedAtMs) &&
     Number.isFinite(wallClockMs) &&
@@ -252,8 +268,8 @@ function normalizeTimeline(
         : fallbackMs;
   const currentIso =
     updatedAtLooksCorruptedFuture && recoveryWantsRollback && Number.isFinite(resolvedCurrentMs)
-      ? new Date(resolvedCurrentMs).toISOString()
-      : new Date(monotonicMs).toISOString();
+      ? toSafeIso(resolvedCurrentMs)
+      : toSafeIso(monotonicMs);
 
   return { createdAt, currentIso, updatedAt, dueAt };
 }
@@ -703,14 +719,14 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
 }
 
 export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
-  const wallClockIso = currentNowIso();
-  const wallClockMs = Date.parse(wallClockIso);
+  const wallClockMs = safeNowMs();
   const requestedCreatedMs = isValidIso(nowIso) ? Date.parse(nowIso) : Number.NaN;
+  const requestedSkewMs = requestedCreatedMs - wallClockMs;
   const safeCreatedMs =
-    Number.isFinite(requestedCreatedMs) && requestedCreatedMs - wallClockMs <= MAX_MONOTONIC_CLOCK_SKEW_MS
+    Number.isFinite(requestedCreatedMs) && Math.abs(requestedSkewMs) <= MAX_MONOTONIC_CLOCK_SKEW_MS
       ? requestedCreatedMs
       : wallClockMs;
-  const createdAt = new Date(safeCreatedMs).toISOString();
+  const createdAt = toSafeIso(safeCreatedMs);
   const trimmedWord = normalizeWordValue(word);
   const trimmedMeaning = normalizeMeaningValue(meaning);
   const trimmedNotes = normalizeNotesValue(notes);
