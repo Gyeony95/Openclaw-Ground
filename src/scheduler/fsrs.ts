@@ -391,6 +391,18 @@ function scheduleFallbackForState(state: ReviewState): number {
   return MINUTE_IN_DAYS;
 }
 
+function rollbackScheduleFallbackForState(state: ReviewState, stability: number): number {
+  if (state !== 'review') {
+    return scheduleFallbackForState(state);
+  }
+  // Keep rollback repairs conservative while preserving mature review context.
+  return clamp(
+    normalizeScheduledDays(stability, 'review'),
+    REVIEW_SCHEDULE_FLOOR_DAYS,
+    RELEARNING_MAX_SCHEDULE_DAYS,
+  );
+}
+
 function maxScheduleDaysForState(state: ReviewState): number {
   if (state === 'relearning') {
     return RELEARNING_MAX_SCHEDULE_DAYS;
@@ -823,7 +835,7 @@ export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewRe
     updatedAtMs - currentMs > MAX_MONOTONIC_CLOCK_SKEW_MS;
   const scheduleAnchorUpdatedAt = timelineRolledBack ? currentIso : updatedAt;
   const scheduleAnchorDueAt = timelineRolledBack
-    ? addDaysIso(currentIso, scheduleFallbackForState(currentState))
+    ? addDaysIso(currentIso, rollbackScheduleFallbackForState(currentState, baseCard.stability))
     : dueAt;
   const elapsedDays = normalizeElapsedDays(daysBetween(scheduleAnchorUpdatedAt, currentIso));
   const scheduledDays = daysBetween(scheduleAnchorUpdatedAt, scheduleAnchorDueAt);

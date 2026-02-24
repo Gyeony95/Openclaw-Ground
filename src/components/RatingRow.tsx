@@ -38,52 +38,74 @@ export function RatingRow({ onRate, intervalLabels, disabled = false, busy = fal
   const isDisabled = disabled || busy;
 
   return (
-    <View style={styles.row}>
-      {labels.map((item) => {
-        const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
-        return (
-          <Pressable
-            key={item.rating}
-            onPress={() => onRate(item.rating)}
-            disabled={isDisabled}
-            hitSlop={6}
-            android_ripple={isDisabled ? undefined : { color: `${item.tone}20` }}
-            style={({ pressed }) => [
-              styles.button,
-              isNarrow ? styles.buttonNarrow : null,
-              isCompact ? styles.buttonCompact : null,
-              isWide ? styles.buttonWide : null,
-              busy ? styles.buttonBusy : null,
-              isDisabled
-                ? styles.buttonDisabledSurface
-                : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
-              pressed && !isDisabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
-              isDisabled && styles.buttonDisabled,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={`Rate ${item.text}. Next ${interval}.`}
-            accessibilityHint={isDisabled ? 'Wait for the current review to finish' : `Schedules next review ${interval}`}
-            accessibilityState={{ disabled: isDisabled, busy }}
-          >
-            <Text style={[styles.buttonText, { color: isDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
-              {item.text}
-            </Text>
-            <Text
-              style={[styles.hint, styles.hintCentered, { color: isDisabled ? colors.subInk : item.tone }]}
-              numberOfLines={intervalLineCount}
-              adjustsFontSizeToFit
-              minimumFontScale={0.8}
+    <View style={styles.container}>
+      {busy ? (
+        <Text style={styles.busyLabel}>
+          Saving review...
+        </Text>
+      ) : null}
+      <View style={styles.row}>
+        {labels.map((item) => {
+          const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
+          return (
+            <Pressable
+              key={item.rating}
+              onPress={() => onRate(item.rating)}
+              disabled={isDisabled}
+              hitSlop={6}
+              android_ripple={isDisabled ? undefined : { color: `${item.tone}20` }}
+              style={({ pressed }) => [
+                styles.button,
+                isNarrow ? styles.buttonNarrow : null,
+                isCompact ? styles.buttonCompact : null,
+                isWide ? styles.buttonWide : null,
+                busy ? styles.buttonBusy : null,
+                isDisabled
+                  ? styles.buttonDisabledSurface
+                  : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
+                pressed && !isDisabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
+                isDisabled && styles.buttonDisabled,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={`Rate ${item.text}. Next ${interval}.`}
+              accessibilityHint={
+                busy
+                  ? 'Saving current review, rating buttons are temporarily disabled'
+                  : isDisabled
+                    ? 'Rating is currently unavailable'
+                    : `Schedules next review ${interval}`
+              }
+              accessibilityState={{ disabled: isDisabled, busy }}
             >
-              {interval}
-            </Text>
-          </Pressable>
-        );
-      })}
+              <Text style={[styles.buttonText, { color: isDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
+                {item.text}
+              </Text>
+              <Text
+                style={[styles.hint, styles.hintCentered, { color: isDisabled ? colors.subInk : item.tone }]}
+                numberOfLines={intervalLineCount}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+              >
+                {interval}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    gap: 8,
+  },
+  busyLabel: {
+    fontSize: 12,
+    color: colors.subInk,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',

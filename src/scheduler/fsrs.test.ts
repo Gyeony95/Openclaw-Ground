@@ -250,6 +250,30 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('keeps rollback schedule anchors stability-aware for hard review retries', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const futureCorrupted = {
+        ...createNewCard('future-corrupted-hard-anchor', 'timeline', NOW),
+        state: 'review' as const,
+        updatedAt: '2030-01-01T00:00:00.000Z',
+        dueAt: '2030-05-01T00:00:00.000Z',
+        stability: 5,
+        difficulty: 5,
+      };
+
+      const reviewed = reviewCard(futureCorrupted, 2, 'not-a-date');
+
+      expect(reviewed.card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(reviewed.card.state).toBe('review');
+      expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+      expect(reviewed.scheduledDays).toBeLessThanOrEqual(2);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('normalizes folded relearning state aliases before applying ratings', () => {
     const foldedRelearning = {
       ...createNewCard('folded-relearning', 'state alias', NOW),
