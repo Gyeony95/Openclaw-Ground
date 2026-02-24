@@ -340,8 +340,11 @@ function normalizeState(input: unknown): ReviewState {
   }
   if (typeof input === 'string') {
     const normalized = input.trim().toLowerCase();
-    if (normalized === 'review' || normalized === 'relearning') {
+    if (normalized === 'review' || normalized === 'relearning' || normalized === 'learning') {
       return normalized;
+    }
+    if (normalized === 'relearn' || normalized === 're-learn') {
+      return 'relearning';
     }
   }
   return 'learning';

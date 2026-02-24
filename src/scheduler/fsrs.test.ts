@@ -502,6 +502,20 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
+  it('normalizes relearn aliases to relearning at runtime', () => {
+    const relearnAliasCard = {
+      ...createNewCard('runtime-state-relearn', 'letter', NOW),
+      state: ' ReLearn ' as unknown as 'relearning',
+      dueAt: NOW,
+      updatedAt: NOW,
+    };
+
+    const reviewed = reviewCard(relearnAliasCard, 3, NOW);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(0.5);
+  });
+
   it('anchors malformed low review stability to the existing schedule for early good reviews', () => {
     const inconsistent = {
       ...createNewCard('stability-anchor-good', 'definition', NOW),

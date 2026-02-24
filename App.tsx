@@ -294,6 +294,13 @@ export default function App() {
       : 'Needs schedule repair'
     : 'Schedule unavailable';
   const asOf = asOfLabel(clockIso);
+  const emptyQueueTitle =
+    scheduleRepairCount > 0
+      ? `No cards due. ${scheduleRepairCount.toLocaleString()} schedule ${
+          scheduleRepairCount === 1 ? 'repair' : 'repairs'
+        } pending.`
+      : 'No cards due. Add new words below.';
+  const emptyQueueActionLabel = scheduleRepairCount > 0 ? 'Review repair queue' : 'Start adding words';
   const dueCardStateConfig = dueCard ? stateConfig(dueCard.state) : null;
   const dueCardUrgency = dueUrgency(dueCard?.dueAt, clockIso);
   const ratingIntervals = useMemo(() => (dueCard ? previewIntervals(dueCard, clockIso) : null), [dueCard, clockIso]);
@@ -736,7 +743,7 @@ export default function App() {
                 ) : null}
                 {!loading && !dueCard ? (
                   <View style={styles.emptyQueue}>
-                    <Text style={styles.info}>No cards due. Add new words below.</Text>
+                    <Text style={styles.info}>{emptyQueueTitle}</Text>
                     {nextUpcomingCard ? (
                       <Text style={styles.emptyQueueMeta}>
                         Next card {formatDueLabel(nextUpcomingCard.dueAt, clockIso)} at{' '}
@@ -758,7 +765,7 @@ export default function App() {
                       accessibilityHint="Scrolls to the add form and focuses the word input"
                       accessibilityState={{ disabled: !isFormEditable }}
                     >
-                      <Text style={styles.emptyQueueActionText}>Start adding words</Text>
+                      <Text style={styles.emptyQueueActionText}>{emptyQueueActionLabel}</Text>
                     </Pressable>
                   </View>
                 ) : null}

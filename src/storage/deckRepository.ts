@@ -67,6 +67,9 @@ function normalizeState(state: unknown): ReviewState {
   }
   if (typeof state === 'string') {
     const normalized = state.trim().toLowerCase();
+    if (normalized === 'relearn' || normalized === 're-learn') {
+      return 'relearning';
+    }
     if (isValidState(normalized)) {
       return normalized;
     }
