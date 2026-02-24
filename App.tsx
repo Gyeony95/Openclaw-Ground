@@ -179,6 +179,7 @@ export default function App() {
   const [pendingReviewCardId, setPendingReviewCardId] = useState<string | null>(null);
   const [isAddBusy, setIsAddBusy] = useState(false);
   const [addAttempted, setAddAttempted] = useState(false);
+  const [showAddSuccess, setShowAddSuccess] = useState(false);
   const [addActionError, setAddActionError] = useState<string | null>(null);
   const [reviewActionError, setReviewActionError] = useState<string | null>(null);
   const [entryAnim] = useState(() => new Animated.Value(0));
@@ -189,6 +190,7 @@ export default function App() {
   const reviewLockRef = useRef(false);
   const addLockRef = useRef(false);
   const addUnlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const addSuccessTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousHadDueCardRef = useRef(false);
 
   const dueCard = dueCards[0];
@@ -327,6 +329,8 @@ export default function App() {
     ? 'Loading deck...'
     : isAddBusy
       ? 'Adding card...'
+      : showAddSuccess
+        ? 'Card added'
       : canAdd
         ? 'Ready to add'
         : missingWord && missingMeaning
@@ -336,6 +340,8 @@ export default function App() {
             : 'Meaning is required';
   const addHintTone = loading
     ? colors.subInk
+    : showAddSuccess
+      ? colors.success
     : canAdd
       ? colors.success
       : addAttempted
@@ -391,6 +397,9 @@ export default function App() {
       if (addUnlockTimerRef.current) {
         clearTimeout(addUnlockTimerRef.current);
       }
+      if (addSuccessTimerRef.current) {
+        clearTimeout(addSuccessTimerRef.current);
+      }
     };
   }, []);
 
@@ -424,6 +433,12 @@ export default function App() {
       setAddAttempted(false);
     }
   }, [addAttempted, missingMeaning, missingWord]);
+
+  useEffect(() => {
+    if (showAddSuccess && (word.length > 0 || meaning.length > 0 || notes.length > 0)) {
+      setShowAddSuccess(false);
+    }
+  }, [meaning.length, notes.length, showAddSuccess, word.length]);
 
   useEffect(() => {
     if (addActionError === null) {
@@ -483,6 +498,14 @@ export default function App() {
     setWord('');
     setMeaning('');
     setNotes('');
+    setShowAddSuccess(true);
+    if (addSuccessTimerRef.current) {
+      clearTimeout(addSuccessTimerRef.current);
+    }
+    addSuccessTimerRef.current = setTimeout(() => {
+      setShowAddSuccess(false);
+      addSuccessTimerRef.current = null;
+    }, 1400);
     if (addUnlockTimerRef.current) {
       clearTimeout(addUnlockTimerRef.current);
     }

@@ -352,11 +352,15 @@ export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: stri
   return wallClockIso;
 }
 
+export function resolveDeckClockTick(previousClockIso: string, runtimeNowIso: string): string {
+  return resolveNextUiClock(previousClockIso, runtimeNowIso);
+}
+
 export function useDeck() {
   const [deckState, setDeckState] = useState<{ cards: Card[]; lastReviewedAt?: string }>({ cards: [] });
   const [loading, setLoading] = useState(true);
   const [canPersist, setCanPersist] = useState(false);
-  const [clockIso, setClockIso] = useState(() => nowIso());
+  const [clockIso, setClockIso] = useState(() => resolveDeckClockTick(nowIso(), nowIso()));
   const deckStateRef = useRef(deckState);
   const persistVersionRef = useRef(0);
   const persistInFlightRef = useRef<Promise<void> | null>(null);
@@ -427,7 +431,8 @@ export function useDeck() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setClockIso(nowIso());
+      const runtimeNow = nowIso();
+      setClockIso((previousClockIso) => resolveDeckClockTick(previousClockIso, runtimeNow));
     }, CLOCK_REFRESH_MS);
 
     return () => {

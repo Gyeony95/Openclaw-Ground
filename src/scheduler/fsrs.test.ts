@@ -181,6 +181,23 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('does not let pathologically old dueAt values rewrite valid createdAt history', () => {
+    const validTimeline = {
+      ...createNewCard('old-due-anchor-preserve-created', 'timeline', NOW),
+      createdAt: '2026-02-20T00:00:00.000Z',
+      updatedAt: '2026-02-22T00:00:00.000Z',
+      dueAt: '1900-01-01T00:00:00.000Z',
+      state: 'review' as const,
+      stability: 3,
+    };
+
+    const reviewed = reviewCard(validTimeline, 3, '2026-02-23T14:30:00.000Z');
+
+    expect(reviewed.card.createdAt).toBe('2026-02-20T00:00:00.000Z');
+    expect(reviewed.card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('falls back to runtime wall clock when review time is invalid and card timeline is future-corrupted', () => {
     jest.useFakeTimers();
     try {

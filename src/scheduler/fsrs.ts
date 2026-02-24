@@ -177,18 +177,23 @@ function normalizeTimeline(
   const fallbackMs = safeNowMs();
   const fallback = toSafeIso(fallbackMs);
   const dueMs = isValidIso(card.dueAt) ? Date.parse(card.dueAt) : Number.NaN;
+  const updatedMsCandidate = isValidIso(card.updatedAt) ? Date.parse(card.updatedAt) : Number.NaN;
   const dueLooksLikePlausibleAnchor =
     Number.isFinite(dueMs) &&
     Number.isFinite(fallbackMs) &&
     Math.abs(dueMs - fallbackMs) <= MAX_CREATE_TIME_OFFSET_MS;
+  const dueLooksLikeTimelineAnchor =
+    Number.isFinite(dueMs) &&
+    ((Number.isFinite(updatedMsCandidate) &&
+      Math.abs(dueMs - updatedMsCandidate) <= MAX_CREATE_TIME_OFFSET_MS) ||
+      dueLooksLikePlausibleAnchor);
   const safeDueAsCreatedAt = dueLooksLikePlausibleAnchor ? card.dueAt : undefined;
   let createdAt = isValidIso(card.createdAt)
     ? card.createdAt
     : isValidIso(card.updatedAt)
       ? card.updatedAt
       : safeDueAsCreatedAt ?? fallback;
-  const updatedMsCandidate = isValidIso(card.updatedAt) ? Date.parse(card.updatedAt) : Number.NaN;
-  const anchorCandidates = [updatedMsCandidate, dueMs, fallbackMs].filter((value) =>
+  const anchorCandidates = [updatedMsCandidate, dueLooksLikeTimelineAnchor ? dueMs : Number.NaN, fallbackMs].filter((value) =>
     Number.isFinite(value),
   );
   const earliestAnchorMs = anchorCandidates.length > 0 ? Math.min(...anchorCandidates) : fallbackMs;
