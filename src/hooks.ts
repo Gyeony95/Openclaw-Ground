@@ -284,7 +284,10 @@ export function hasScheduleRepairNeed(
       return true;
     }
     const reps = normalizeNonNegativeCounter(repsValue);
-    if (state === 'learning' && reps !== null && reps > 0 && scheduleMs >= REVIEW_MIN_SCHEDULE_MS) {
+    const lapses = normalizeNonNegativeCounter(lapsesValue);
+    const hasReviewHistoryOrCorruptedCounters =
+      reps === null || lapses === null || reps > 0 || lapses > 0;
+    if (state === 'learning' && hasReviewHistoryOrCorruptedCounters && scheduleMs >= REVIEW_MIN_SCHEDULE_MS) {
       // Learning steps with review history should remain short; day-like intervals indicate
       // persisted phase drift and should be repaired before queueing.
       return true;

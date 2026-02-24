@@ -47,7 +47,7 @@ export function RatingRow({
   const intervalLineCount = isCompact ? 1 : 2;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(() => new Set(disabledRatings), [disabledRatings]);
-  const hasLockedRatings = disabledRatings.length > 0;
+  const hasLockedRatings = !isDisabled && disabledSet.size > 0;
   const lockReasonHint = lockedHint ?? 'Some ratings are locked for this review.';
 
   return (

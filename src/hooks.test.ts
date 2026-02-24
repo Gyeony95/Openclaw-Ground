@@ -1786,6 +1786,44 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(driftedLearning)).toBe(true);
   });
 
+  it('flags learning cards with lapse history when intervals drift into day-like windows', () => {
+    const driftedLearningWithLapses = {
+      ...createNewCard('repair-learning-drifted-daylike-lapses', 'test', NOW),
+      state: 'learning' as const,
+      reps: 0,
+      lapses: 2,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T00:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(driftedLearningWithLapses)).toBe(true);
+  });
+
+  it('flags learning cards with malformed reps when intervals drift into day-like windows', () => {
+    const driftedLearningWithMalformedReps = {
+      ...createNewCard('repair-learning-drifted-daylike-bad-reps', 'test', NOW),
+      state: 'learning' as const,
+      reps: Number.NaN,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T00:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(driftedLearningWithMalformedReps)).toBe(true);
+  });
+
+  it('flags learning cards with malformed lapses when intervals drift into day-like windows', () => {
+    const driftedLearningWithMalformedLapses = {
+      ...createNewCard('repair-learning-drifted-daylike-bad-lapses', 'test', NOW),
+      state: 'learning' as const,
+      reps: 0,
+      lapses: Number.NaN,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T00:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(driftedLearningWithMalformedLapses)).toBe(true);
+  });
+
   it('keeps zero-history learning cards with sub-day schedules outside repair flow', () => {
     const freshLearning = {
       ...createNewCard('repair-learning-fresh-subday', 'test', NOW),
