@@ -3583,4 +3583,28 @@ describe('fsrs scheduler', () => {
     expect(relearningPreview[3]).toBeGreaterThanOrEqual(0.5);
     expect(relearningPreview[4]).toBeGreaterThanOrEqual(1);
   });
+
+  it('keeps review rating intervals ordered for malformed review cards during direct review', () => {
+    const malformedReview = {
+      ...createNewCard('ordered-review-ratings', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: 'not-a-time',
+      dueAt: 'not-a-time',
+      stability: Number.NaN,
+      difficulty: Number.POSITIVE_INFINITY,
+      reps: Number.NEGATIVE_INFINITY,
+      lapses: Number.NaN,
+    };
+
+    const hard = reviewCard(malformedReview, 2, NOW);
+    const good = reviewCard(malformedReview, 3, NOW);
+    const easy = reviewCard(malformedReview, 4, NOW);
+
+    expect(Number.isFinite(hard.scheduledDays)).toBe(true);
+    expect(Number.isFinite(good.scheduledDays)).toBe(true);
+    expect(Number.isFinite(easy.scheduledDays)).toBe(true);
+    expect(hard.scheduledDays).toBeGreaterThanOrEqual(0.5);
+    expect(good.scheduledDays).toBeGreaterThanOrEqual(hard.scheduledDays);
+    expect(easy.scheduledDays).toBeGreaterThanOrEqual(good.scheduledDays);
+  });
 });

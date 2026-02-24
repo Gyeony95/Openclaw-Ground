@@ -288,7 +288,10 @@ export function generateDistractors(target: Card, deckCards: Card[], distractorC
   const selected: Card[] = [];
 
   for (const card of deckCards) {
-    if (card.id === target.id) {
+    const sameCardIdentity =
+      card === target ||
+      (card.id === target.id && card.word === target.word && card.meaning === target.meaning);
+    if (sameCardIdentity) {
       continue;
     }
     const candidateMeaning = normalizeText(card.meaning);

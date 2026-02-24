@@ -901,13 +901,28 @@ function orderedReviewIntervals(
   const goodStability = updateStability(baselineStability, prevDifficulty, 3, elapsedDays, phase, scheduledDays);
   const easyStability = updateStability(baselineStability, prevDifficulty, 4, elapsedDays, phase, scheduledDays);
 
-  const hard = rawReviewIntervalDays(hardStability, 2, elapsedDays, scheduledDays, phase);
-  const good = rawReviewIntervalDays(goodStability, 3, elapsedDays, scheduledDays, phase);
-  const easy = rawReviewIntervalDays(easyStability, 4, elapsedDays, scheduledDays, phase);
+  const hard = clampFinite(
+    rawReviewIntervalDays(hardStability, 2, elapsedDays, scheduledDays, phase),
+    REVIEW_SCHEDULE_FLOOR_DAYS,
+    STABILITY_MAX,
+    REVIEW_SCHEDULE_FLOOR_DAYS,
+  );
+  const good = clampFinite(
+    rawReviewIntervalDays(goodStability, 3, elapsedDays, scheduledDays, phase),
+    REVIEW_SCHEDULE_FLOOR_DAYS,
+    STABILITY_MAX,
+    hard,
+  );
+  const easy = clampFinite(
+    rawReviewIntervalDays(easyStability, 4, elapsedDays, scheduledDays, phase),
+    REVIEW_SCHEDULE_FLOOR_DAYS,
+    STABILITY_MAX,
+    good,
+  );
   return {
     2: hard,
-    3: clamp(Math.max(good, hard), REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX),
-    4: clamp(Math.max(easy, good, hard), REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX),
+    3: clampFinite(Math.max(good, hard), REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX, hard),
+    4: clampFinite(Math.max(easy, good, hard), REVIEW_SCHEDULE_FLOOR_DAYS, STABILITY_MAX, good),
   };
 }
 

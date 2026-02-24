@@ -1100,10 +1100,11 @@ export default function App() {
                             accessibilityRole="radiogroup"
                             accessibilityLabel="Meaning options"
                           >
-                            {quizOptions.map((option) => {
+                            {quizOptions.map((option, index) => {
                               const isSelected = normalizedSelectedQuizOptionId === option.id;
                               const showCorrect = hasQuizSelection && option.isCorrect;
                               const showIncorrect = hasQuizSelection && isSelected && !option.isCorrect;
+                              const optionLetter = String.fromCharCode(65 + index);
                               const optionPrefix = showCorrect ? 'Correct: ' : showIncorrect ? 'Incorrect: ' : '';
                               return (
                                 <Pressable
@@ -1119,7 +1120,7 @@ export default function App() {
                                     pressed && !quizOptionsLocked && !quizSelectionLocked && styles.ghostBtnPressed,
                                   ]}
                                   accessibilityRole="radio"
-                                  accessibilityLabel={option.text}
+                                  accessibilityLabel={`${optionLetter}. ${option.text}`}
                                   accessibilityState={{
                                     selected: isSelected,
                                     checked: isSelected,
@@ -1134,6 +1135,7 @@ export default function App() {
                                       showIncorrect && styles.quizOptionTextIncorrect,
                                     ]}
                                   >
+                                    <Text style={styles.quizOptionLabel}>{optionLetter}.</Text>
                                     {optionPrefix}
                                     {option.text}
                                   </Text>
@@ -1877,6 +1879,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '600',
+  },
+  quizOptionLabel: {
+    fontWeight: '800',
+    color: colors.subInk,
   },
   quizOptionTextSelected: {
     color: colors.primary,

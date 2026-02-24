@@ -91,6 +91,22 @@ describe('quiz distractors', () => {
     expect(options.filter((option) => option.cardId === 'dup')).toHaveLength(3);
   });
 
+  it('keeps duplicate-id cards eligible as distractors when their content differs from the target', () => {
+    const duplicateIdDeck = [
+      createCard('dup-target', 'anchor', 'to fix firmly in place'),
+      createCard('dup-target', 'moor', 'to secure a boat with ropes'),
+      createCard('x1', 'pin', 'to fasten with a pin'),
+      createCard('x2', 'clip', 'to hold together'),
+      createCard('x3', 'bind', 'to tie tightly'),
+    ];
+
+    const distractors = generateDistractors(duplicateIdDeck[0], duplicateIdDeck, 3);
+
+    expect(distractors).toHaveLength(3);
+    expect(distractors.some((card) => card.word === 'moor')).toBe(true);
+    expect(distractors.every((card) => card.meaning !== duplicateIdDeck[0].meaning)).toBe(true);
+  });
+
   it('accepts only selections that still exist in the current option set', () => {
     const options = composeQuizOptions(target, deck, 'seed-1');
     const selectedId = options[0].id;
