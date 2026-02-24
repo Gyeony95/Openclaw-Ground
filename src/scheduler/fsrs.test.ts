@@ -262,6 +262,38 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
   });
 
+  it('keeps review scheduling functional when runtime stability/difficulty accessors throw', () => {
+    const runtimeCard = {
+      ...createNewCard('stability-difficulty-accessor-throw', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1),
+      reps: 3,
+      lapses: 1,
+      stability: 1.5,
+      difficulty: 5,
+    } as Card;
+    Object.defineProperty(runtimeCard, 'stability', {
+      get() {
+        throw new Error('bad runtime stability');
+      },
+    });
+    Object.defineProperty(runtimeCard, 'difficulty', {
+      get() {
+        throw new Error('bad runtime difficulty');
+      },
+    });
+
+    const reviewed = reviewCard(runtimeCard, 3, addDaysIso(NOW, 1)).card;
+
+    expect(reviewed.state).toBe('review');
+    expect(reviewed.reps).toBe(4);
+    expect(reviewed.lapses).toBe(1);
+    expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+    expect(Number.isFinite(reviewed.stability)).toBe(true);
+    expect(Number.isFinite(reviewed.difficulty)).toBe(true);
+  });
+
   it('avoids NaN segments in generated card IDs when runtime clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const card = createNewCard('nan-clock-id', 'safe', NOW);

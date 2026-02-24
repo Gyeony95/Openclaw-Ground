@@ -1259,8 +1259,8 @@ function snapshotSchedulingCard(card: Card): Card {
     state: normalizeState(safeReadString(() => card.state, 'learning')),
     reps: safeReadCounter(() => card.reps, 0),
     lapses: safeReadCounter(() => card.lapses, 0),
-    stability: card.stability,
-    difficulty: card.difficulty,
+    stability: safeReadNumber(() => card.stability, Number.NaN),
+    difficulty: safeReadNumber(() => card.difficulty, Number.NaN),
   };
 }
 
