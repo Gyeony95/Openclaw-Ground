@@ -515,8 +515,13 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
   const hasReviewHistory = reps > 0 || lapses > 0;
   const parsedState = parseState(card.state);
   if (parsedState) {
-    if (parsedState !== 'learning') {
+    if (parsedState === 'review') {
       return parsedState;
+    }
+    if (parsedState === 'relearning') {
+      // Relearning should remain short-step retry cadence; day-like windows indicate
+      // the card already returned to review scheduling and should be normalized.
+      return scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS ? 'review' : parsedState;
     }
     // Recover corrupted persisted "learning" states for cards that clearly
     // have review history and schedule anchors from later phases.

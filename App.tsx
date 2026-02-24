@@ -447,6 +447,7 @@ export default function App() {
   const isWideLayout = width >= 980;
   const isCompactLayout = width < 380;
   const isReviewBusy = pendingReviewCardId !== null;
+  const modeSwitchLocked = isReviewBusy || quizSelectionLocked;
   const quizOptionsLocked = isReviewBusy;
   const isFormEditable = !loading && !isAddBusy;
   const flashcardVisibility = useMemo(
@@ -672,7 +673,7 @@ export default function App() {
   }
 
   function handleSelectStudyMode(mode: StudyMode) {
-    if (isReviewBusy) {
+    if (modeSwitchLocked) {
       return;
     }
     if (mode === 'multiple-choice' && !canUseMultipleChoice) {
@@ -955,16 +956,23 @@ export default function App() {
                     <View style={styles.studyModeToggleRow}>
                       <Pressable
                         onPress={() => handleSelectStudyMode('flashcard')}
-                        disabled={isReviewBusy}
+                        disabled={modeSwitchLocked}
                         style={({ pressed }) => [
                           styles.studyModeToggleBtn,
                           studyMode === 'flashcard' && styles.studyModeToggleBtnActive,
-                          isReviewBusy && styles.studyModeToggleBtnDisabled,
-                          pressed && !isReviewBusy && styles.ghostBtnPressed,
+                          modeSwitchLocked && styles.studyModeToggleBtnDisabled,
+                          pressed && !modeSwitchLocked && styles.ghostBtnPressed,
                         ]}
                         accessibilityRole="button"
                         accessibilityLabel="Flashcard mode"
-                        accessibilityState={{ selected: studyMode === 'flashcard', disabled: isReviewBusy }}
+                        accessibilityHint={
+                          isReviewBusy
+                            ? 'Disabled while the current review is being recorded'
+                            : quizSelectionLocked
+                              ? 'Complete the locked quiz attempt first'
+                              : 'Switches to flashcard mode'
+                        }
+                        accessibilityState={{ selected: studyMode === 'flashcard', disabled: modeSwitchLocked }}
                       >
                         <Text
                           style={[
@@ -977,23 +985,28 @@ export default function App() {
                       </Pressable>
                       <Pressable
                         onPress={() => handleSelectStudyMode('multiple-choice')}
-                        disabled={isReviewBusy || !canUseMultipleChoice}
+                        disabled={modeSwitchLocked || !canUseMultipleChoice}
                         style={({ pressed }) => [
                           styles.studyModeToggleBtn,
                           studyMode === 'multiple-choice' && styles.studyModeToggleBtnActive,
-                          (isReviewBusy || !canUseMultipleChoice) && styles.studyModeToggleBtnDisabled,
-                          pressed && !isReviewBusy && canUseMultipleChoice && styles.ghostBtnPressed,
+                          (modeSwitchLocked || !canUseMultipleChoice) && styles.studyModeToggleBtnDisabled,
+                          pressed && !modeSwitchLocked && canUseMultipleChoice && styles.ghostBtnPressed,
                         ]}
                         accessibilityRole="button"
                         accessibilityLabel="Multiple-choice mode"
                         accessibilityHint={
                           isReviewBusy
                             ? 'Disabled while the current review is being recorded'
+                            : quizSelectionLocked
+                              ? 'Complete the locked quiz attempt first'
                             : canUseMultipleChoice
                               ? 'Switches to objective multiple-choice quiz mode'
                               : multipleChoiceRequirementLabel ?? 'Need at least four distinct card meanings'
                         }
-                        accessibilityState={{ selected: studyMode === 'multiple-choice', disabled: isReviewBusy || !canUseMultipleChoice }}
+                        accessibilityState={{
+                          selected: studyMode === 'multiple-choice',
+                          disabled: modeSwitchLocked || !canUseMultipleChoice,
+                        }}
                       >
                         <Text
                           style={[

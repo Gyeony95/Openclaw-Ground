@@ -322,6 +322,42 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
   });
 
+  it('normalizes persisted relearning cards with day-like schedules back to review phase', () => {
+    const runtimeCard = {
+      ...createNewCard('relearning-daylike-normalize', 'state inference', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1),
+      reps: 4,
+      lapses: 1,
+      stability: 1,
+      difficulty: 5.4,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 2, addDaysIso(NOW, 1)).card;
+
+    expect(reviewed.state).toBe('review');
+    expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+  });
+
+  it('keeps persisted relearning cards in short-step cadence when schedule is sub-day', () => {
+    const runtimeCard = {
+      ...createNewCard('relearning-subday-preserve', 'state inference', NOW),
+      state: 'relearning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 10 / 1440),
+      reps: 4,
+      lapses: 1,
+      stability: 0.2,
+      difficulty: 5.4,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 2, addDaysIso(NOW, 10 / 1440)).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.dueAt).toBe(addDaysIso(addDaysIso(NOW, 10 / 1440), 15 / 1440));
+  });
+
   it('coerces numeric-string review fields without changing FSRS scheduling outputs', () => {
     const reviewedAt = addDaysIso(NOW, 4);
     const numericCard = {
