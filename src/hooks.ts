@@ -20,6 +20,7 @@ const RELEARNING_MAX_SCHEDULE_MS = 2 * DAY_MS;
 const REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS = 7;
 const REVIEW_STABILITY_OUTLIER_MULTIPLIER = 12;
 const REVIEW_STABILITY_OUTLIER_FLOOR_DAYS = 120;
+const MAX_UPCOMING_HOURS = 24 * 365 * 20;
 
 function parseTimeOrRepairPriority(iso: string): number {
   const parsed = Date.parse(iso);
@@ -270,12 +271,9 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
   if (hours <= 0) {
     return 0;
   }
-  const safeHours = hours;
+  const safeHours = Math.min(hours, MAX_UPCOMING_HOURS);
   const windowMs = safeHours * 60 * 60 * 1000;
-  if (!Number.isFinite(windowMs)) {
-    return 0;
-  }
-  const cutoffMs = nowMs + windowMs;
+  const cutoffMs = Number.isFinite(windowMs) ? nowMs + windowMs : Number.POSITIVE_INFINITY;
 
   return cards.filter((card) => {
     const dueMs = parseDueAtOrNaN(card.dueAt);

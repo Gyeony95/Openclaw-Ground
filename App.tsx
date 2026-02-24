@@ -111,6 +111,9 @@ function inputLength(value: string, max: number): number {
 }
 
 function formatQueueShareLabel(dueNow: number, total: number): string {
+  if (total <= 0) {
+    return 'No cards yet';
+  }
   const dueLabel = dueNow === 1 ? 'due card' : 'due cards';
   const totalLabel = total === 1 ? 'card' : 'cards';
   return `${dueNow.toLocaleString()} ${dueLabel} / ${total.toLocaleString()} ${totalLabel}`;
@@ -277,10 +280,17 @@ export default function App() {
     clockIso,
     needsRepair: dueNeedsRepair,
   });
-  const ratingIntervals = useMemo(
-    () => (dueCard && !dueNeedsRepair ? previewIntervals(dueCard, clockIso) : null),
-    [clockIso, dueCard, dueNeedsRepair],
-  );
+  const ratingIntervals = useMemo(() => {
+    if (!dueCard) {
+      return null;
+    }
+    try {
+      return previewIntervals(dueCard, clockIso);
+    } catch {
+      // Keep the review surface interactive even if preview math fails for malformed runtime data.
+      return null;
+    }
+  }, [clockIso, dueCard]);
   const dueCardRevealKey = dueCard ? `${dueCard.id}:${dueCard.updatedAt}:${dueCard.dueAt}` : 'none';
   const quizSeed = dueCard ? `${dueCard.id}:${dueCard.updatedAt}` : 'none';
   const quizOptions = useMemo(() => (dueCard ? composeQuizOptions(dueCard, cards, quizSeed, 3) : []), [cards, dueCard, quizSeed]);
