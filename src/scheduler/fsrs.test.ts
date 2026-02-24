@@ -3953,6 +3953,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeLessThanOrEqual(1.2);
   });
 
+  it('keeps on-time hard reviews on 1.5-day schedules from inflating to two days', () => {
+    const updatedAt = '2026-02-23T12:00:00.000Z';
+    const card = {
+      ...reviewCard(createNewCard('one-point-five-day-hard', 'definition', NOW), 4, NOW).card,
+      state: 'review' as const,
+      updatedAt,
+      dueAt: addDaysIso(updatedAt, 1.5),
+      stability: 1.5,
+      difficulty: 5,
+      reps: 12,
+    };
+
+    const reviewed = reviewCard(card, 2, card.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(1);
+  });
+
   it('keeps slightly-late one-day hard reviews from inflating to two days', () => {
     const updatedAt = '2026-02-23T12:00:00.000Z';
     const card = {

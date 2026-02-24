@@ -9,7 +9,7 @@ export function formatIntervalLabel(days: number): string {
   }
 
   if (days < MINUTE_IN_DAYS) {
-    return '1m';
+    return '<1m';
   }
   if (days < HOUR_IN_DAYS) {
     return `${Math.max(1, Math.floor(days * 1440))}m`;
