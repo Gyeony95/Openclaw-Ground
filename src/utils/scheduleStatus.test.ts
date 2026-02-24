@@ -28,6 +28,30 @@ describe('scheduleStatus', () => {
 
       expect(tone).toBe(colors.success);
     });
+
+    it('uses primary tone for cards that are due now within the one-minute window', () => {
+      const tone = queueTone({
+        dueAt: '2026-02-24T12:00:30.000Z',
+        clockIso: NOW,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(tone).toBe(colors.primary);
+    });
+
+    it('uses danger tone only when the card is materially overdue', () => {
+      const tone = queueTone({
+        dueAt: '2026-02-24T11:58:30.000Z',
+        clockIso: NOW,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(tone).toBe(colors.danger);
+    });
   });
 
   describe('dueUrgency', () => {

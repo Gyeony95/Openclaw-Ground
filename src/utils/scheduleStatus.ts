@@ -36,8 +36,11 @@ export function queueTone({
     return colors.warn;
   }
   const deltaMs = dueMs - nowMs;
-  if (deltaMs <= 60 * 1000) {
+  if (deltaMs < -60 * 1000) {
     return colors.danger;
+  }
+  if (deltaMs <= 60 * 1000) {
+    return colors.primary;
   }
   if (deltaMs <= 60 * 60 * 1000) {
     return colors.warn;

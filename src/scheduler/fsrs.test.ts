@@ -412,6 +412,30 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back to wall clock instead of stale history when review timestamp is future-skewed', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      const reviewed = reviewCard(
+        {
+          ...createNewCard('future-skew-stale-fallback', 'safe', NOW),
+          state: 'review' as const,
+          createdAt: '2026-01-30T00:00:00.000Z',
+          updatedAt: '2026-02-01T00:00:00.000Z',
+          dueAt: '2026-02-03T00:00:00.000Z',
+          stability: 2,
+        },
+        3,
+        '2026-02-24T00:30:00.000Z',
+      );
+
+      expect(reviewed.card.updatedAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('keeps valid dueAt as a timeline anchor when runtime wall clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const repaired = reviewCard(

@@ -131,6 +131,10 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     if (fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
       return wallClockIso;
     }
+    if (wallClockMs - fallbackMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+      // Avoid snapping to stale history when the requested review time is future-skewed.
+      return wallClockIso;
+    }
     return fallback;
   }
   if (
