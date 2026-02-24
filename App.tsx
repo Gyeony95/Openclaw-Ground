@@ -592,6 +592,13 @@ export default function App() {
               <View style={isCompactLayout ? styles.metricCardCompact : null}>
                 <MetricCard label="Total cards" value={loading ? Number.NaN : stats.total} accent={colors.accent} />
               </View>
+              <View style={isCompactLayout ? styles.metricCardCompact : null}>
+                <MetricCard
+                  label="Needs repair"
+                  value={loading ? Number.NaN : scheduleRepairCount}
+                  accent={scheduleRepairCount > 0 ? colors.warn : colors.success}
+                />
+              </View>
             </View>
 
             <Animated.View

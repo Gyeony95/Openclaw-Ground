@@ -16,6 +16,7 @@ const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const COUNTER_MAX = Number.MAX_SAFE_INTEGER;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_HISTORICAL_TIMESTAMP_AGE_MS = 20 * 365 * DAY_MS;
+const MAX_ANCHOR_DISTANCE_FROM_WALL_MS = MAX_HISTORICAL_TIMESTAMP_AGE_MS;
 const MINUTE_IN_DAYS = 1 / 1440;
 const LEARNING_SCHEDULE_FALLBACK_DAYS = MINUTE_IN_DAYS;
 const RELEARNING_SCHEDULE_FALLBACK_DAYS = 10 * MINUTE_IN_DAYS;
@@ -180,7 +181,7 @@ function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode
     dueCandidate &&
     Number.isFinite(dueCandidateMs) &&
     Number.isFinite(wallClockMs) &&
-    dueCandidateMs - wallClockMs <= MAX_MONOTONIC_CLOCK_SKEW_MS
+    Math.abs(dueCandidateMs - wallClockMs) <= MAX_ANCHOR_DISTANCE_FROM_WALL_MS
       ? dueCandidate
       : null;
   const createdAt = isValidIso(raw.createdAt)

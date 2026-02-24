@@ -519,6 +519,35 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2020-01-05T00:01:00.000Z');
   });
 
+  it('uses near-future dueAt as a valid anchor when createdAt and updatedAt are missing', async () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      mockedStorage.getItem.mockResolvedValueOnce(
+        JSON.stringify({
+          cards: [
+            {
+              id: 'future-due-anchor',
+              word: 'anchor',
+              meaning: 'future fallback source',
+              dueAt: '2026-02-24T00:00:00.000Z',
+              state: 'learning',
+            },
+          ],
+        }),
+      );
+
+      const deck = await loadDeck();
+
+      expect(deck.cards).toHaveLength(1);
+      expect(deck.cards[0].createdAt).toBe('2026-02-24T00:00:00.000Z');
+      expect(deck.cards[0].updatedAt).toBe('2026-02-24T00:00:00.000Z');
+      expect(deck.cards[0].dueAt).toBe('2026-02-24T00:01:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('clamps persisted future-skewed updatedAt to wall clock to keep cards reviewable', async () => {
     jest.useFakeTimers();
     try {
