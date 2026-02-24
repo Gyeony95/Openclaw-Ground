@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Rating } from '../types';
 import { colors, radii } from '../theme';
@@ -43,13 +44,14 @@ export function RatingRow({
   const isWide = width >= 520;
   const intervalLineCount = isCompact ? 1 : 2;
   const isDisabled = disabled || busy;
+  const disabledSet = useMemo(() => new Set(disabledRatings), [disabledRatings]);
 
   return (
     <View style={styles.container}>
       {busy ? (
-        <View style={styles.busyRow} accessibilityRole="alert" accessibilityLabel="Saving review">
+        <View style={styles.busyRow} accessibilityRole="alert" accessibilityLabel="Saving review" accessibilityLiveRegion="polite">
           <ActivityIndicator size="small" color={colors.subInk} />
-          <Text style={styles.busyLabel} accessibilityLiveRegion="polite">
+          <Text style={styles.busyLabel}>
             Saving review...
           </Text>
         </View>
@@ -57,7 +59,7 @@ export function RatingRow({
       <View style={styles.row}>
         {labels.map((item) => {
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
-          const ratingDisabled = isDisabled || disabledRatings.includes(item.rating);
+          const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           return (
             <Pressable
               key={item.rating}
@@ -86,7 +88,7 @@ export function RatingRow({
                     ? 'Rating is currently unavailable'
                     : `Schedules next review ${interval}`
               }
-              accessibilityState={{ disabled: ratingDisabled, busy }}
+              accessibilityState={{ disabled: ratingDisabled, busy: busy || undefined }}
             >
               <Text style={[styles.buttonText, { color: ratingDisabled ? colors.subInk : item.tone }]} numberOfLines={1}>
                 {item.text}

@@ -200,6 +200,20 @@ describe('applyDueReview', () => {
     expect(result.cards).toBe(cards);
   });
 
+  it('does nothing when the target card ID is malformed', () => {
+    const due = {
+      ...createNewCard('invalid-target-id', 'eighth', NOW),
+      id: undefined as unknown as string,
+    };
+    const cards = [due];
+
+    const result = applyDueReview(cards, undefined as unknown as string, 3, NOW);
+
+    expect(result.reviewed).toBe(false);
+    expect(result.cards).toBe(cards);
+    expect(result.cards[0]).toBe(due);
+  });
+
   it('falls back to runtime clock when review clock is invalid', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(NOW));
@@ -925,6 +939,16 @@ describe('hasDueCard', () => {
 
     expect(hasDueCard([due, future], due.id, NOW)).toBe(true);
     expect(hasDueCard([due, future], future.id, NOW)).toBe(false);
+  });
+
+  it('returns false when the requested card id is malformed', () => {
+    const malformed = {
+      ...createNewCard('broken-has-due-id', 'recover', NOW),
+      id: undefined as unknown as string,
+      dueAt: 'bad-due-at',
+    };
+
+    expect(hasDueCard([malformed], undefined as unknown as string, NOW)).toBe(false);
   });
 
   it('falls back to runtime wall clock when the provided clock is invalid', () => {

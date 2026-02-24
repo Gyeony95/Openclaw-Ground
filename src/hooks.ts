@@ -41,6 +41,10 @@ function normalizeCardIdForSort(id: unknown): string {
   return id;
 }
 
+function isValidCardId(id: unknown): id is string {
+  return typeof id === 'string' && id.trim().length > 0;
+}
+
 function parseTimeOrNaN(iso: string): number {
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
@@ -366,6 +370,9 @@ export function applyDueReview(
   rating: Rating,
   currentIso: string,
 ): { cards: Card[]; reviewed: boolean; reviewedAt?: string } {
+  if (!isValidCardId(cardId)) {
+    return { cards, reviewed: false };
+  }
   const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
   let targetIndex = -1;
   for (let index = 0; index < cards.length; index += 1) {
@@ -407,6 +414,9 @@ export function applyReviewToDeckState(
 }
 
 export function hasDueCard(cards: Card[], cardId: string, currentIso: string): boolean {
+  if (!isValidCardId(cardId)) {
+    return false;
+  }
   const effectiveCurrentIso = resolveReviewClock(currentIso, nowIso());
   return cards.some((card) => card.id === cardId && isReviewReadyCard(card, effectiveCurrentIso));
 }
