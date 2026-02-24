@@ -466,6 +466,14 @@ function quantizeReviewIntervalDays(intervalDays: number, scheduledDays: number)
   return clamp(Math.round(safeIntervalDays), minReviewInterval, STABILITY_MAX);
 }
 
+function dayLikeScheduleFloorDays(scheduledDays: number): number {
+  if (!Number.isFinite(scheduledDays)) {
+    return 1;
+  }
+  // Imported/manual schedules can be non-integer; never round them down on on-time review floors.
+  return Math.max(1, Math.ceil(scheduledDays - ON_TIME_TOLERANCE_DAYS));
+}
+
 function updateDifficulty(prevDifficulty: number, rating: Rating): number {
   const previous = clampFinite(prevDifficulty, DIFFICULTY_MIN, DIFFICULTY_MAX, DIFFICULTY_MEAN_REVERSION);
   const ratingShift = rating === 4 ? -0.45 : rating === 3 ? -0.1 : rating === 2 ? 0.15 : 0.6;
@@ -572,7 +580,7 @@ function rawReviewIntervalDays(
   const rawInterval = quantizeReviewIntervalDays(baseInterval * ratingScale * timingScale, scheduled);
   // Mild runtime drift (e.g. +minutes on a 1-day card) should not bump floor to the next full day.
   const scheduleFloor = scheduleIsDayLike
-    ? Math.max(1, Math.round(scheduled))
+    ? dayLikeScheduleFloorDays(scheduled)
     : Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, quantizedScheduled);
   let floorFromSchedule = rating === 4 ? scheduleFloor : REVIEW_SCHEDULE_FLOOR_DAYS;
 

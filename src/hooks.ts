@@ -50,6 +50,13 @@ function parseTimeOrMin(iso?: string): number {
   return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
 }
 
+function normalizeMergeCounter(value: number): number {
+  if (!Number.isFinite(value)) {
+    return Number.MIN_SAFE_INTEGER;
+  }
+  return value;
+}
+
 function isValidIso(value?: string): value is string {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
 }
@@ -69,17 +76,21 @@ function pickFreshestCard(existing: Card, loaded: Card): Card {
   }
 
   // When timestamps tie, prefer the card with more completed review activity.
-  if (loaded.reps > existing.reps) {
+  const existingReps = normalizeMergeCounter(existing.reps);
+  const loadedReps = normalizeMergeCounter(loaded.reps);
+  if (loadedReps > existingReps) {
     return loaded;
   }
-  if (loaded.reps < existing.reps) {
+  if (loadedReps < existingReps) {
     return existing;
   }
 
-  if (loaded.lapses > existing.lapses) {
+  const existingLapses = normalizeMergeCounter(existing.lapses);
+  const loadedLapses = normalizeMergeCounter(loaded.lapses);
+  if (loadedLapses > existingLapses) {
     return loaded;
   }
-  if (loaded.lapses < existing.lapses) {
+  if (loadedLapses < existingLapses) {
     return existing;
   }
 

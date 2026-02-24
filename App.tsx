@@ -140,12 +140,12 @@ function queueTone({
 
 function dueUrgency(dueAt: string | undefined, clockIso: string): { label: string; tone: string } {
   if (!dueAt) {
-    return { label: 'Schedule pending', tone: colors.subInk };
+    return { label: 'Schedule pending', tone: colors.warn };
   }
   const dueMs = Date.parse(dueAt);
   const nowMs = Date.parse(clockIso);
   if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
-    return { label: 'Schedule pending', tone: colors.subInk };
+    return { label: 'Needs repair', tone: colors.warn };
   }
   const deltaMs = dueMs - nowMs;
   if (deltaMs <= 60 * 1000 && deltaMs >= -60 * 1000) {
@@ -252,6 +252,7 @@ export default function App() {
       ? 'No overdue cards'
       : `${overdueNow.toLocaleString()} overdue`;
   const exactDueLabel = exactDateLabel(dueCard?.dueAt);
+  const dueNeedsRepair = dueCard ? !hasValidIso(dueCard.dueAt) : false;
   const relativeDueLabel = dueCard
     ? hasValidIso(dueCard.dueAt)
       ? formatDueLabel(dueCard.dueAt, clockIso)
@@ -697,6 +698,9 @@ export default function App() {
                       <Text style={styles.reviewTimelineSubValue} numberOfLines={1}>
                         {relativeDueLabel}
                       </Text>
+                      {dueNeedsRepair ? (
+                        <Text style={styles.reviewTimelineRepair}>Malformed schedule will be repaired on review.</Text>
+                      ) : null}
                       <Text style={styles.reviewTimelineMeta}>{queuePositionLabel}</Text>
                     </View>
                     <View style={styles.reviewHeader}>
@@ -1270,6 +1274,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.7,
+  },
+  reviewTimelineRepair: {
+    color: colors.warn,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.25,
   },
   reviewTimelineMeta: {
     color: colors.subInk,

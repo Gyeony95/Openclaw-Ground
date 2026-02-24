@@ -556,6 +556,42 @@ describe('fsrs scheduler', () => {
     expect(next.scheduledDays).toBeGreaterThanOrEqual(scheduled);
   });
 
+  it('does not round down day-like imported schedules on on-time good reviews', () => {
+    const card = {
+      ...createNewCard('nu-good-irregular-floor', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1.6),
+      stability: 2.2,
+      difficulty: 5,
+      reps: 8,
+      lapses: 1,
+    };
+
+    const next = reviewCard(card, 3, card.dueAt);
+
+    expect(next.card.state).toBe('review');
+    expect(next.scheduledDays).toBeGreaterThanOrEqual(2);
+  });
+
+  it('does not round down day-like imported schedules on on-time hard reviews', () => {
+    const card = {
+      ...createNewCard('nu-hard-irregular-floor', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1.2),
+      stability: 2.1,
+      difficulty: 6,
+      reps: 8,
+      lapses: 1,
+    };
+
+    const next = reviewCard(card, 2, card.dueAt);
+
+    expect(next.card.state).toBe('review');
+    expect(next.scheduledDays).toBeGreaterThanOrEqual(2);
+  });
+
   it('does not inflate on-time hard review intervals beyond the current schedule', () => {
     const card = createNewCard('nu-hard-ontime-cap', 'letter', NOW);
     const first = reviewCard(card, 4, NOW).card;

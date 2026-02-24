@@ -601,6 +601,34 @@ describe('mergeDeckCards', () => {
     expect(merged[0].meaning).toBe('loaded');
     expect(merged[0].createdAt).toBe('2026-02-23T09:30:00.000Z');
   });
+
+  it('prefers finite counters when duplicate cards tie on timestamps and due dates', () => {
+    const local = {
+      ...createNewCard('tie-counter-local', 'local', NOW),
+      id: 'tie-counter',
+      createdAt: '2026-02-23T10:00:00.000Z',
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: Number.NaN,
+      lapses: Number.NaN,
+    };
+    const loaded = {
+      ...createNewCard('tie-counter-loaded', 'loaded', NOW),
+      id: 'tie-counter',
+      createdAt: '2026-02-23T10:00:00.000Z',
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 4,
+      lapses: 1,
+    };
+
+    const merged = mergeDeckCards([local], [loaded]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].meaning).toBe('loaded');
+    expect(merged[0].reps).toBe(4);
+    expect(merged[0].lapses).toBe(1);
+  });
 });
 
 describe('hasDueCard', () => {
