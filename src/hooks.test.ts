@@ -501,6 +501,26 @@ describe('compareDueCards', () => {
 
     expect(orderedIds).toEqual(['malformed-timeline', 'valid-timeline']);
   });
+
+  it('does not throw when malformed ids are encountered during tie-break sorting', () => {
+    const base = createNewCard('queue-id-repair', 'ordering', NOW);
+    const malformed = {
+      ...base,
+      id: null as unknown as string,
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+    const valid = {
+      ...base,
+      id: 'valid-id',
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+
+    expect(() => [valid, malformed].sort(compareDueCards)).not.toThrow();
+  });
 });
 
 describe('collectDueCards', () => {
@@ -552,6 +572,22 @@ describe('collectDueCards', () => {
     expect(notYetDue).toHaveLength(0);
     expect(nowDue).toHaveLength(1);
     expect(nowDue[0].id).toBe(nearFuture.id);
+  });
+
+  it('collects due cards even when malformed ids are present', () => {
+    const malformedIdDue = {
+      ...createNewCard('malformed-id-due', 'repair', NOW),
+      id: undefined as unknown as string,
+      dueAt: NOW,
+    };
+    const validDue = {
+      ...createNewCard('valid-id-due', 'repair', NOW),
+      dueAt: NOW,
+    };
+
+    const dueCards = collectDueCards([validDue, malformedIdDue], NOW, NOW);
+
+    expect(dueCards).toHaveLength(2);
   });
 });
 

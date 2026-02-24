@@ -257,6 +257,7 @@ export default function App() {
     : formatQueueShareLabel(dueQueueCount, stats.total);
   const queueProgressPercent = loading || stats.total === 0 ? 0 : clampPercent((dueQueueCount / stats.total) * 100);
   const queueProgressWidth = `${queueProgressPercent}%`;
+  const queueProgressMeta = loading ? '--' : queueShareLabel;
   const queueProgressTone = loading
     ? colors.primary
     : queueProgressPercent >= 80
@@ -798,6 +799,9 @@ export default function App() {
                     >
                       <View style={[styles.queueProgressFill, { width: queueProgressWidth, backgroundColor: queueProgressTone }]} />
                     </View>
+                    <Text style={styles.queueProgressMeta} numberOfLines={1} ellipsizeMode="tail">
+                      {queueProgressMeta}
+                    </Text>
                   </View>
                 ) : null}
                 {loading ? (
@@ -1485,6 +1489,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
+  },
+  queueProgressMeta: {
+    color: colors.subInk,
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.25,
+    fontVariant: ['tabular-nums'],
+    textTransform: 'uppercase',
   },
   queueProgressTrack: {
     height: 8,

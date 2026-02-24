@@ -33,6 +33,13 @@ function parseDueTimeForSort(iso: string): number {
   return Number.isFinite(parsed) ? parsed : Number.MIN_SAFE_INTEGER;
 }
 
+function normalizeCardIdForSort(id: unknown): string {
+  if (typeof id !== 'string') {
+    return '';
+  }
+  return id;
+}
+
 function parseTimeOrNaN(iso: string): number {
   const parsed = Date.parse(iso);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
@@ -299,7 +306,7 @@ export function compareDueCards(a: Card, b: Card): number {
   if (createdDelta !== 0) {
     return createdDelta;
   }
-  return a.id.localeCompare(b.id);
+  return normalizeCardIdForSort(a.id).localeCompare(normalizeCardIdForSort(b.id));
 }
 
 export function collectDueCards(cards: Card[], currentIso: string, runtimeNowIso: string): Card[] {

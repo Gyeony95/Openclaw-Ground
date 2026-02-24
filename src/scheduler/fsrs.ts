@@ -789,13 +789,21 @@ function normalizeSchedulingCard(
   const { createdAt, currentIso, updatedAt, dueAt } = normalizeTimeline(card, requestedNowIso);
   const normalizedText = normalizeCardText(card);
   const normalizedState = normalizeState(card.state);
+  const normalizedScheduledDays = normalizeScheduledDays(daysBetween(updatedAt, dueAt), normalizedState);
   const normalizedDifficulty = clampFinite(
     card.difficulty,
     DIFFICULTY_MIN,
     DIFFICULTY_MAX,
     DIFFICULTY_MEAN_REVERSION,
   );
-  const normalizedStability = clampFinite(card.stability, STABILITY_MIN, STABILITY_MAX, 0.5);
+  const normalizedStabilityFallback =
+    normalizedState === 'learning' ? 0.5 : normalizedScheduledDays;
+  const normalizedStability = clampFinite(
+    card.stability,
+    STABILITY_MIN,
+    STABILITY_MAX,
+    normalizedStabilityFallback,
+  );
   const normalizedReps = normalizeCounter(card.reps);
   const normalizedLapses = normalizeCounter(card.lapses);
 
