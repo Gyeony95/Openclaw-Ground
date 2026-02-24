@@ -266,6 +266,11 @@ export default function App() {
     : scheduleRepairCount > 0
       ? `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due in next 24h · ${scheduleRepairCount.toLocaleString()} ${scheduleRepairCount === 1 ? 'repair needed' : 'repairs needed'}`
       : `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due in next 24h`;
+  const queueProgressMetaCompact = loading
+    ? '--'
+    : scheduleRepairCount > 0
+      ? `${dueQueueCount.toLocaleString()}/${stats.total.toLocaleString()} due · ${scheduleRepairCount.toLocaleString()} ${scheduleRepairCount === 1 ? 'repair' : 'repairs'}`
+      : `${dueQueueCount.toLocaleString()}/${stats.total.toLocaleString()} due · ${dueWithinDay.toLocaleString()} next 24h`;
   const queueProgressTone = loading
     ? colors.primary
     : scheduleRepairCount > 0
@@ -909,7 +914,7 @@ export default function App() {
                       numberOfLines={isCompactLayout ? 3 : 2}
                       ellipsizeMode="tail"
                     >
-                      {queueProgressMeta}
+                      {isCompactLayout ? queueProgressMetaCompact : queueProgressMeta}
                     </Text>
                   </View>
                 ) : null}

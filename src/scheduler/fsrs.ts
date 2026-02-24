@@ -868,6 +868,14 @@ function dayLikeScheduleFloorDays(scheduledDays: number): number {
   return Math.max(1, quantizeReviewIntervalDays(scheduledDays, scheduledDays));
 }
 
+function dayLikePreserveScheduleFloorDays(scheduledDays: number): number {
+  if (!Number.isFinite(scheduledDays)) {
+    return 1;
+  }
+  // Preserve existing day-like cadence on on-time recalls instead of shrinking by rounding.
+  return Math.max(1, Math.ceil(Math.max(1, scheduledDays - ON_TIME_TOLERANCE_DAYS)));
+}
+
 function updateDifficulty(prevDifficulty: number, rating: Rating): number {
   const previous = clampFinite(prevDifficulty, DIFFICULTY_MIN, DIFFICULTY_MAX, DIFFICULTY_MEAN_REVERSION);
   const ratingShift = rating === 4 ? -0.45 : rating === 3 ? -0.1 : rating === 2 ? 0.15 : 0.6;
@@ -998,11 +1006,12 @@ function rawReviewIntervalDays(
   const scheduleFloor = scheduleIsDayLike
     ? dayLikeScheduleFloorDays(scheduled)
     : Math.max(REVIEW_SCHEDULE_FLOOR_DAYS, quantizedScheduled);
+  const schedulePreserveFloor = scheduleIsDayLike ? dayLikePreserveScheduleFloorDays(scheduled) : scheduleFloor;
   let floorFromSchedule = rating === 4 ? scheduleFloor : REVIEW_SCHEDULE_FLOOR_DAYS;
 
   // Hard recalls should not shrink the schedule when the card was reviewed on-time or later.
   if (phase === 'review' && rating === 2 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {
-    const hardOnTimeFloor = scheduleIsDayLike ? scheduleFloor : REVIEW_SCHEDULE_FLOOR_DAYS;
+    const hardOnTimeFloor = scheduleIsDayLike ? schedulePreserveFloor : REVIEW_SCHEDULE_FLOOR_DAYS;
     floorFromSchedule = Math.max(floorFromSchedule, hardOnTimeFloor);
   }
   if (phase === 'review' && rating === 2 && !scheduleIsDayLike && elapsed + ON_TIME_TOLERANCE_DAYS >= 1) {
@@ -1016,7 +1025,7 @@ function rawReviewIntervalDays(
 
   // Keep "Good" on-time reviews from shrinking the schedule due to rounding/noise.
   if (phase === 'review' && rating === 3 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {
-    floorFromSchedule = Math.max(floorFromSchedule, scheduleFloor);
+    floorFromSchedule = Math.max(floorFromSchedule, schedulePreserveFloor);
   }
 
   const flooredInterval = quantizeReviewIntervalDays(Math.max(rawInterval, floorFromSchedule), scheduled);
@@ -1029,7 +1038,7 @@ function rawReviewIntervalDays(
     const earlyCap = scheduleIsDayLike ? Math.max(1, Math.floor(scheduled)) : REVIEW_SCHEDULE_FLOOR_DAYS;
     const overdueSubDayCap = elapsed + ON_TIME_TOLERANCE_DAYS >= 1 || scheduleIsDayLike ? 1 : REVIEW_SCHEDULE_FLOOR_DAYS;
     const onTimeHardCap = scheduleIsDayLike
-      ? scheduleFloor
+      ? schedulePreserveFloor
       : Math.max(overdueSubDayCap, quantizedScheduled);
     // Keep sub-day review cards on sub-day cadence for "Hard" unless they are already a day late.
     const onTimeOrLateCap = scheduleIsDayLike
