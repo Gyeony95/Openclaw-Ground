@@ -582,16 +582,14 @@ function normalizeTimeline(
       )
     : MINUTE_IN_DAYS;
   const dueAtForStateInference = rawDueAt ?? addDaysIso(updatedAt, fallbackDueDaysForStateInference);
-  const normalizedState =
-    parseState(card.state) ??
-    inferStateFromCard({
-      state: card.state,
-      reps: card.reps,
-      lapses: card.lapses,
-      stability: card.stability,
-      updatedAt,
-      dueAt: dueAtForStateInference,
-    });
+  const normalizedState = inferStateFromCard({
+    state: card.state,
+    reps: card.reps,
+    lapses: card.lapses,
+    stability: card.stability,
+    updatedAt,
+    dueAt: dueAtForStateInference,
+  });
   const reviewFallbackDueDays =
     normalizedState === 'review'
       ? normalizeScheduledDays(card.stability, 'review')

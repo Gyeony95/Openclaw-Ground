@@ -1001,6 +1001,26 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
   });
 
+  it('keeps mature review cadence for legacy learning state with long review schedule', () => {
+    const runtimeCard = {
+      ...createNewCard('legacy-learning-long-review-cadence', 'state inference', NOW),
+      state: 'learning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 30),
+      reps: 14,
+      lapses: 2,
+      stability: 28,
+      difficulty: 4.8,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 3, addDaysIso(NOW, 30));
+    const preview = previewIntervals(runtimeCard, addDaysIso(NOW, 30));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(7);
+    expect(preview[3]).toBeGreaterThanOrEqual(7);
+  });
+
   it('normalizes persisted relearning cards with day-like schedules back to review phase', () => {
     const runtimeCard = {
       ...createNewCard('relearning-daylike-normalize', 'state inference', NOW),

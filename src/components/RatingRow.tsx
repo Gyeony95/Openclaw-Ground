@@ -56,7 +56,7 @@ export function RatingRow({
   const hasLockedRatings = !isDisabled && disabledSet.size > 0;
   const againInterval = resolveIntervalLabel(intervalLabels, 1, labels[0].fallbackHint);
   const lockReasonHint =
-    lockedHint ?? `Incorrect selection locked this step. Use Again (${againInterval}) to continue.`;
+    lockedHint ?? `Incorrect selection locked this step. Choose Again (${againInterval}) to continue.`;
 
   return (
     <View style={styles.container}>
@@ -65,9 +65,9 @@ export function RatingRow({
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
-          const lockedIntervalText = isVeryNarrow ? `Again · ${againInterval}` : `Use Again · ${againInterval}`;
+          const lockedIntervalText = `Again ${againInterval}`;
           const intervalText = isRatingLocked ? lockedIntervalText : interval;
-          const intervalPrefix = isRatingLocked ? 'Locked' : 'Next';
+          const intervalPrefix = isRatingLocked ? 'Use' : 'Next';
           const contentTone = isRatingLocked ? colors.warn : ratingDisabled ? colors.subInk : item.tone;
           const lockTone = isRatingLocked ? colors.warn : contentTone;
           const accessibilityLabel = busy
