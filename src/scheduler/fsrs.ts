@@ -67,6 +67,15 @@ function safeReadString(read: () => unknown, fallback: string): string {
   }
 }
 
+function safeReadUnknown(read: () => unknown, fallback: unknown): unknown {
+  try {
+    const value = read();
+    return value === undefined ? fallback : value;
+  } catch {
+    return fallback;
+  }
+}
+
 function safeReadNumber(read: () => unknown, fallback: number): number {
   try {
     const value = parseRuntimeFiniteNumber(read());
@@ -1412,6 +1421,9 @@ function normalizeSchedulingCard(
   card: Card,
   requestedNowIso: string,
 ): { card: Card; currentIso: string } {
+  const rawReps = safeReadUnknown(() => card.reps, 0);
+  const rawLapses = safeReadUnknown(() => card.lapses, 0);
+  const countersFromLegacyStrings = typeof rawReps === 'string' || typeof rawLapses === 'string';
   const snapshot = snapshotSchedulingCard(card);
   const { createdAt, currentIso, updatedAt, dueAt, dueNeedsRepair } = normalizeTimeline(snapshot, requestedNowIso);
   const normalizedText = normalizeCardText(snapshot);
@@ -1453,7 +1465,11 @@ function normalizeSchedulingCard(
     normalizedStabilityFallback,
   );
   const normalizedReps = normalizeCounter(snapshot.reps);
-  const normalizedLapses = Math.min(normalizeCounter(snapshot.lapses), normalizedReps);
+  const normalizedLapsesRaw = normalizeCounter(snapshot.lapses);
+  const normalizedLapses =
+    countersFromLegacyStrings && normalizedLapsesRaw > normalizedReps
+      ? normalizedLapsesRaw
+      : Math.min(normalizedLapsesRaw, normalizedReps);
 
   return {
     currentIso,
@@ -1583,7 +1599,11 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
       ? currentIso
       : createdAt;
   const nextReps = Math.min(COUNTER_MAX, previousReps + 1);
-  const nextLapses = Math.min(nextReps, Math.min(COUNTER_MAX, previousLapses + lapseIncrement));
+  const nextLapsesRaw = Math.min(COUNTER_MAX, previousLapses + lapseIncrement);
+  const nextLapses =
+    previousLapses > previousReps
+      ? nextLapsesRaw
+      : Math.min(nextReps, nextLapsesRaw);
 
   return {
     scheduledDays: safeScheduledDays,

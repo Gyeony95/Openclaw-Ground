@@ -67,7 +67,7 @@ export function RatingRow({
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
           const lockedIntervalText = `Use Again · ${againInterval}`;
           const intervalText = isRatingLocked ? lockedIntervalText : interval;
-          const intervalPrefix = isRatingLocked ? 'Locked' : 'Next';
+          const intervalPrefix = isRatingLocked ? 'Again' : 'Next';
           const contentTone = ratingDisabled ? colors.subInk : item.tone;
           const lockTone = isRatingLocked ? item.tone : contentTone;
           const accessibilityLabel = busy
@@ -124,7 +124,7 @@ export function RatingRow({
               </Text>
               {isRatingLocked ? (
                 <Text style={[styles.lockedLabel, { color: lockTone }]} maxFontSizeMultiplier={1.2}>
-                  Locked
+                  Again only
                 </Text>
               ) : null}
               <View style={styles.intervalMeta}>
@@ -235,8 +235,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   lockedLabel: {
-    fontSize: 9.5,
-    letterSpacing: 0.5,
+    fontSize: 9,
+    letterSpacing: 0.45,
     fontWeight: '800',
     textTransform: 'uppercase',
     color: colors.subInk,

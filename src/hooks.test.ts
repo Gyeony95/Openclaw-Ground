@@ -152,6 +152,26 @@ describe('applyDueReview', () => {
     expect(Date.parse(result.cards[0].dueAt)).toBeGreaterThan(Date.parse(result.cards[0].updatedAt));
   });
 
+  it('preserves imported legacy lapse history when reviewing string-backed runtime counters', () => {
+    const legacyCounters = {
+      ...createNewCard('legacy-lapses', 'third', NOW),
+      id: 'legacy-lapses-id',
+      state: 'legacy-review-state' as unknown as Card['state'],
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: '2' as unknown as number,
+      lapses: '7' as unknown as number,
+      stability: 3,
+      difficulty: 5,
+    };
+
+    const result = applyDueReview([legacyCounters as unknown as Card], legacyCounters.id, 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0].reps).toBe(3);
+    expect(result.cards[0].lapses).toBe(7);
+  });
+
   it('reviews pathologically future timelines to recover corrupted schedules', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
