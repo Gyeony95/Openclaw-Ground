@@ -1715,6 +1715,39 @@ describe('fsrs scheduler', () => {
     });
   });
 
+  it('preserves day-like Good/Easy preview floors when review interval math fails at runtime', () => {
+    const reviewCardInput = {
+      ...createNewCard('preview-review-daylike-fallback', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1.4),
+      reps: 9,
+      lapses: 2,
+      stability: 1.4,
+      difficulty: 5.3,
+    };
+    const originalPow = Math.pow;
+    const powSpy = jest.spyOn(Math, 'pow').mockImplementation((base: number, exponent: number) => {
+      if (exponent === -2) {
+        throw new Error('preview interval pow failure');
+      }
+      return originalPow(base, exponent);
+    });
+
+    try {
+      const intervals = previewIntervals(reviewCardInput, reviewCardInput.dueAt);
+
+      expect(intervals).toEqual({
+        1: 10 / 1440,
+        2: 1,
+        3: 2,
+        4: 2,
+      });
+    } finally {
+      powSpy.mockRestore();
+    }
+  });
+
   it('keeps interval previews finite and ordered when runtime state/history accessors throw', () => {
     const runtimeCard = {
       ...createNewCard('preview-state-history-accessor-throw', 'safe', NOW),

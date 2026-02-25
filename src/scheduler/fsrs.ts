@@ -1800,6 +1800,10 @@ export function previewIntervals(card: Card, nowIso: string | Date): RatingInter
             quantizeReviewIntervalDays(previewScheduledDays, previewScheduledDays),
           )
         : REVIEW_SCHEDULE_FLOOR_DAYS;
+    const reviewFallbackPreserveFloorDays =
+      previewCard.state === 'review' && previewScheduledDays + ON_TIME_TOLERANCE_DAYS >= 1
+        ? Math.max(reviewFallbackFloorDays, dayLikePreserveScheduleFloorDays(previewScheduledDays))
+        : reviewFallbackFloorDays;
     const ensureFiniteWithinBounds = (candidate: number, floor: number, ceiling: number): number => {
       if (!Number.isFinite(candidate)) {
         return floor;
@@ -1811,7 +1815,10 @@ export function previewIntervals(card: Card, nowIso: string | Date): RatingInter
         return previewFloor[1];
       }
       if (previewCard.state === 'review') {
-        return Math.max(previewFloor[rating], reviewFallbackFloorDays);
+        if (rating === 2) {
+          return Math.max(previewFloor[rating], reviewFallbackFloorDays);
+        }
+        return Math.max(previewFloor[rating], reviewFallbackPreserveFloorDays);
       }
       return previewFloor[rating];
     };

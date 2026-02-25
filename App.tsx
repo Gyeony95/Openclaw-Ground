@@ -500,7 +500,6 @@ export default function App() {
   const isCompactLayout = width < 380;
   const isReviewBusy = pendingReviewCardKey !== null && pendingReviewCardKey === dueCardRevealKey;
   const modeSwitchLocked = isStudyModeSwitchLocked(studyMode, hasQuizSelection, isReviewBusy);
-  const quizOptionsLocked = isReviewBusy;
   const isFormEditable = !loading && !isAddBusy && !isAddLocked;
   const hasDueCardNotes = dueCardNotes.length > 0;
   const flashcardVisibility = useMemo(
@@ -1466,6 +1465,7 @@ export default function App() {
                     focusedInput === 'meaning' && addAttempted && missingMeaning && styles.inputErrorFocused,
                   ]}
                   placeholderTextColor={colors.subInk}
+                  autoCapitalize="none"
                   autoCorrect={false}
                   spellCheck={false}
                   autoComplete="off"
@@ -1502,6 +1502,7 @@ export default function App() {
                   placeholderTextColor={colors.subInk}
                   multiline
                   textAlignVertical="top"
+                  autoCapitalize="none"
                   autoCorrect={false}
                   spellCheck={false}
                   autoComplete="off"
