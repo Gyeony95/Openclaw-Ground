@@ -1,14 +1,35 @@
 export const RATING_INTEGER_TOLERANCE = 1e-4;
 
-export function parseRuntimeRatingValue(input: unknown): number {
-  if (typeof input === 'number') {
-    return Number.isFinite(input) ? input : Number.NaN;
+function unboxRatingInput(input: unknown): unknown {
+  if (input === null || input === undefined) {
+    return input;
   }
-  if (typeof input !== 'string') {
+  if (typeof input === 'object') {
+    try {
+      const valueOf = (input as { valueOf?: () => unknown }).valueOf;
+      if (typeof valueOf === 'function') {
+        const unboxed = valueOf.call(input);
+        if (typeof unboxed === 'number' || typeof unboxed === 'string') {
+          return unboxed;
+        }
+      }
+    } catch {
+      return Number.NaN;
+    }
+  }
+  return input;
+}
+
+export function parseRuntimeRatingValue(input: unknown): number {
+  const normalized = unboxRatingInput(input);
+  if (typeof normalized === 'number') {
+    return Number.isFinite(normalized) ? normalized : Number.NaN;
+  }
+  if (typeof normalized !== 'string') {
     return Number.NaN;
   }
 
-  const trimmed = input.trim();
+  const trimmed = normalized.trim();
   if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(trimmed)) {
     return Number.NaN;
   }

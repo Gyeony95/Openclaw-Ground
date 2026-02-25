@@ -13,12 +13,18 @@ describe('parseRuntimeRatingValue', () => {
     expect(parseRuntimeRatingValue('.5')).toBe(0.5);
   });
 
+  it('accepts boxed numeric runtime values from bridged inputs', () => {
+    expect(parseRuntimeRatingValue(new Number(3))).toBe(3);
+    expect(parseRuntimeRatingValue(new String(' 4 '))).toBe(4);
+  });
+
   it('rejects malformed values', () => {
     expect(parseRuntimeRatingValue('0x4')).toBeNaN();
     expect(parseRuntimeRatingValue('Infinity')).toBeNaN();
     expect(parseRuntimeRatingValue(Number.POSITIVE_INFINITY)).toBeNaN();
     expect(parseRuntimeRatingValue(Number.NEGATIVE_INFINITY)).toBeNaN();
     expect(parseRuntimeRatingValue(Number.NaN)).toBeNaN();
+    expect(parseRuntimeRatingValue(new Number(Number.NaN))).toBeNaN();
     expect(parseRuntimeRatingValue('')).toBeNaN();
     expect(parseRuntimeRatingValue('abc')).toBeNaN();
   });

@@ -5859,4 +5859,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.lapses).toBe(3);
     expect(reviewed.lapses).toBeLessThanOrEqual(reviewed.reps);
   });
+
+  it('accepts boxed numeric ratings so runtime-bridged review events still schedule correctly', () => {
+    const card = {
+      ...createNewCard('boxed-rating', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -2),
+      dueAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 2.5,
+      difficulty: 5,
+    };
+
+    const primitive = reviewCard(card, 3, NOW);
+    const boxed = reviewCard(card, new Number(3) as unknown as Rating, NOW);
+
+    expect(boxed.scheduledDays).toBe(primitive.scheduledDays);
+    expect(boxed.card.state).toBe(primitive.card.state);
+    expect(boxed.card.dueAt).toBe(primitive.card.dueAt);
+    expect(boxed.card.reps).toBe(primitive.card.reps);
+  });
 });

@@ -65,7 +65,7 @@ export function RatingRow({
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
-          const lockedIntervalText = isCompact ? `Again ${againInterval}` : `Use Again (${againInterval})`;
+          const lockedIntervalText = isCompact ? `Again ${againInterval}` : `Use Again · ${againInterval}`;
           const intervalText = isRatingLocked ? lockedIntervalText : interval;
           const intervalPrefix = isRatingLocked ? 'Locked' : 'Next';
           const contentTone = ratingDisabled ? colors.subInk : item.tone;
@@ -258,6 +258,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
     backgroundColor: colors.surfaceAlt,
   },
   hint: {

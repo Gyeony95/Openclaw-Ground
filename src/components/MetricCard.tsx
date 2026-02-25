@@ -15,7 +15,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const normalizedValue = hasValue ? Math.max(0, Math.round(value)) : null;
   const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : '--';
   const accessibilityValue = hasValue ? displayValue : 'loading';
-  const statusLabel = hasValue ? 'Live' : 'Loading';
+  const statusLabel = hasValue ? 'Ready' : 'Loading';
   const statusTone = hasValue ? colors.subInk : colors.warn;
 
   return (
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
     color: colors.subInk,
   },
   dot: {
