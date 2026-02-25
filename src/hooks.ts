@@ -501,7 +501,13 @@ function isReviewReadyCard(
   if (!Number.isFinite(dueMs)) {
     return true;
   }
-  return isDue(card.dueAt, currentIso);
+  const currentMs = parseTimeOrNaN(currentIso);
+  if (!Number.isFinite(currentMs)) {
+    return isDue(card.dueAt, currentIso);
+  }
+  // Keep queue/review eligibility tolerant to sub-second clock jitter so
+  // near-boundary cards don't flicker between due and not-due states.
+  return dueMs - currentMs <= TIMELINE_JITTER_TOLERANCE_MS;
 }
 
 function parseTimeOrMin(iso?: string): number {

@@ -573,6 +573,26 @@ describe('applyDueReview', () => {
     expect(result.reviewedAt).toBe(runtimeClock);
   });
 
+  it('allows review when due timestamp is within sub-second jitter tolerance', () => {
+    const nearBoundary = {
+      ...createNewCard('review-jitter-boundary', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: '2026-02-23T12:00:00.500Z',
+      reps: 2,
+      lapses: 0,
+      stability: 2,
+      difficulty: 5,
+    };
+
+    const result = applyDueReview([nearBoundary], nearBoundary.id, 3, NOW, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).not.toBe(nearBoundary);
+    expect(result.cards[0].reps).toBe(nearBoundary.reps + 1);
+    expect(result.reviewedAt).toBe(NOW);
+  });
+
   it('does not review early when rendered clock is ahead of runtime', () => {
     const nearBoundary = {
       ...createNewCard('no-early-review-clock', 'safe', NOW),
@@ -1208,6 +1228,24 @@ describe('collectDueCards', () => {
     expect(notYetDue).toHaveLength(0);
     expect(nowDue).toHaveLength(1);
     expect(nowDue[0].id).toBe(nearFuture.id);
+  });
+
+  it('treats sub-second due drift as due so queue eligibility does not flicker', () => {
+    const nearBoundary = {
+      ...createNewCard('near-boundary-jitter-queue', 'queue', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: '2026-02-23T12:00:00.500Z',
+      reps: 2,
+      lapses: 0,
+      stability: 2,
+      difficulty: 5,
+    };
+
+    const dueCards = collectDueCards([nearBoundary], NOW, NOW);
+
+    expect(dueCards).toHaveLength(1);
+    expect(dueCards[0].id).toBe(nearBoundary.id);
   });
 
   it('uses runtime time when rendered clock trails slightly so due cards are not delayed', () => {
