@@ -578,6 +578,10 @@ export function countOverdueCards(cards: Card[], currentIso: string): number {
     if (!isRuntimeCard(card)) {
       return false;
     }
+    if (hasScheduleRepairNeed(card)) {
+      // Keep repair-critical cards visible in overdue metrics.
+      return true;
+    }
     const dueMs = parseDueAtOrNaN(card.dueAt);
     if (!Number.isFinite(dueMs)) {
       // Keep malformed schedules visible in overdue metrics so repair work stays prominent.

@@ -1808,6 +1808,21 @@ describe('countOverdueCards', () => {
     expect(countOverdueCards([malformed], NOW)).toBe(1);
   });
 
+  it('counts review cards that need schedule repair even when dueAt is in the future', () => {
+    const futureSkewedReview = {
+      ...createNewCard('overdue-repair-future-skew', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-24T12:00:00.000Z',
+      dueAt: '2026-02-25T12:00:00.000Z',
+      stability: 2,
+      reps: 5,
+      lapses: 1,
+    };
+
+    expect(hasScheduleRepairNeed(futureSkewedReview)).toBe(true);
+    expect(countOverdueCards([futureSkewedReview], NOW)).toBe(1);
+  });
+
   it('ignores non-card runtime entries in overdue metrics', () => {
     const malformedRuntimeEntry = { dueAt: NOW } as unknown as Card;
     const overdue = { ...createNewCard('overdue-real-card', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };

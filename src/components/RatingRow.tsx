@@ -158,12 +158,12 @@ export function RatingRow({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 10,
+    gap: 11,
   },
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 9,
+    gap: 10,
   },
   intervalMeta: {
     alignItems: 'center',
@@ -174,23 +174,23 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingVertical: 13,
     paddingHorizontal: 10,
-    minWidth: 78,
-    minHeight: 94,
+    minWidth: 80,
+    minHeight: 96,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
     gap: 7,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 1,
   },
   buttonCompact: {
     flexBasis: '100%',
   },
   buttonNarrow: {
-    paddingVertical: 11,
+    paddingVertical: 12,
     paddingHorizontal: 8,
   },
   buttonBusy: {
@@ -215,13 +215,13 @@ const styles = StyleSheet.create({
     opacity: 0.94,
   },
   buttonText: {
-    fontSize: 12.5,
+    fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.72,
     textTransform: 'uppercase',
   },
   hintLabel: {
-    fontSize: 10,
+    fontSize: 10.5,
     letterSpacing: 0.6,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -234,8 +234,8 @@ const styles = StyleSheet.create({
     color: colors.subInk,
   },
   lockedHint: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 11.5,
+    lineHeight: 16,
     color: colors.subInk,
     fontWeight: '600',
     letterSpacing: 0.2,
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   hint: {
-    fontSize: 12,
+    fontSize: 12.5,
     letterSpacing: 0.35,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],

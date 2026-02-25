@@ -14,7 +14,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const normalizedValue = hasValue ? Math.max(0, Math.round(value)) : null;
   const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : '--';
   const accessibilityValue = hasValue ? displayValue : 'loading';
-  const statusLabel = hasValue ? 'Live' : 'Loading';
+  const statusLabel = hasValue ? 'Now' : 'Loading';
   const statusTone = hasValue ? colors.subInk : colors.warn;
 
   return (
@@ -65,9 +65,9 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     justifyContent: 'space-between',
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 3,
     overflow: 'hidden',
   },
@@ -84,11 +84,11 @@ const styles = StyleSheet.create({
   },
   accentWash: {
     position: 'absolute',
-    top: 8,
-    right: -24,
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    top: 2,
+    right: -18,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
   },
   head: {
     flexDirection: 'row',
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surfaceAlt,
-    paddingHorizontal: 7,
+    paddingHorizontal: 8,
     paddingVertical: 3,
   },
   badgeMuted: {
@@ -121,20 +121,20 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   value: {
-    fontSize: 29,
+    fontSize: 30,
     fontWeight: '800',
     color: colors.ink,
     letterSpacing: -0.4,
     fontVariant: ['tabular-nums'],
   },
   valueNarrow: {
-    fontSize: 26,
+    fontSize: 27,
   },
   valueUnavailable: {
     color: colors.subInk,
   },
   label: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: '700',
     color: colors.subInk,
     textTransform: 'uppercase',
