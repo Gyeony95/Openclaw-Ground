@@ -18,12 +18,43 @@ export interface DueUrgencyInput {
 }
 
 function parseIsoOrNaN(value?: unknown): number {
+  const fromObjectValue = (input: unknown): string | undefined => {
+    if (!input || typeof input !== 'object') {
+      return undefined;
+    }
+    try {
+      const valueOf = (input as { valueOf?: () => unknown }).valueOf;
+      if (typeof valueOf === 'function') {
+        const unboxed = valueOf.call(input);
+        if (typeof unboxed === 'string') {
+          return unboxed;
+        }
+        if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
+          return new Date(unboxed).toISOString();
+        }
+      }
+    } catch {
+      return undefined;
+    }
+    return undefined;
+  };
   const normalizedInput = (() => {
     if (typeof value === 'string') {
       return value;
     }
     if (value instanceof String) {
       return value.valueOf();
+    }
+    if (value instanceof Number) {
+      const unboxed = value.valueOf();
+      if (!Number.isFinite(unboxed)) {
+        return undefined;
+      }
+      try {
+        return new Date(unboxed).toISOString();
+      } catch {
+        return undefined;
+      }
     }
     if (typeof value === 'number') {
       if (!Number.isFinite(value)) {
@@ -46,7 +77,7 @@ function parseIsoOrNaN(value?: unknown): number {
         return undefined;
       }
     }
-    return undefined;
+    return fromObjectValue(value);
   })();
   if (typeof normalizedInput !== 'string') {
     return Number.NaN;

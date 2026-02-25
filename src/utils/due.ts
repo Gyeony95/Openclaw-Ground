@@ -6,12 +6,43 @@ const MINUTE_MS = 60 * 1000;
 const NOW_THRESHOLD_MS = 60 * 1000;
 
 function parseIso(iso: unknown): number | null {
+  const fromObjectValue = (value: unknown): string | undefined => {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+    try {
+      const valueOf = (value as { valueOf?: () => unknown }).valueOf;
+      if (typeof valueOf === 'function') {
+        const unboxed = valueOf.call(value);
+        if (typeof unboxed === 'string') {
+          return unboxed;
+        }
+        if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
+          return new Date(unboxed).toISOString();
+        }
+      }
+    } catch {
+      return undefined;
+    }
+    return undefined;
+  };
   const normalizedInput = (() => {
     if (typeof iso === 'string') {
       return iso;
     }
     if (iso instanceof String) {
       return iso.valueOf();
+    }
+    if (iso instanceof Number) {
+      const value = iso.valueOf();
+      if (!Number.isFinite(value)) {
+        return undefined;
+      }
+      try {
+        return new Date(value).toISOString();
+      } catch {
+        return undefined;
+      }
     }
     if (typeof iso === 'number') {
       if (!Number.isFinite(iso)) {
@@ -34,7 +65,7 @@ function parseIso(iso: unknown): number | null {
         return undefined;
       }
     }
-    return undefined;
+    return fromObjectValue(iso);
   })();
   if (typeof normalizedInput !== 'string') {
     return null;

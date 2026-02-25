@@ -135,6 +135,34 @@ describe('scheduleStatus', () => {
       expect(numericTone).toBe(colors.danger);
     });
 
+    it('accepts boxed numeric and valueOf-backed timestamps from runtime bridges', () => {
+      const boxedNumericTone = queueTone({
+        dueAt: new Number(Date.parse('2026-02-24T11:58:30.000Z')) as unknown as string,
+        clockIso: new Number(Date.parse(NOW)) as unknown as string,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+      const valueOfTone = queueTone({
+        dueAt: {
+          valueOf() {
+            return Date.parse('2026-02-24T11:58:30.000Z');
+          },
+        } as unknown as string,
+        clockIso: {
+          valueOf() {
+            return NOW;
+          },
+        } as unknown as string,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(boxedNumericTone).toBe(colors.danger);
+      expect(valueOfTone).toBe(colors.danger);
+    });
+
     it('accepts lowercase-z UTC timestamps', () => {
       const tone = queueTone({
         dueAt: '2026-02-24T11:58:30.000z',
@@ -253,6 +281,30 @@ describe('scheduleStatus', () => {
 
       expect(boxed).toEqual({ label: 'Due now', tone: colors.primary });
       expect(numeric).toEqual({ label: 'Due now', tone: colors.primary });
+    });
+
+    it('accepts boxed numeric and valueOf-backed due timestamps from runtime bridges', () => {
+      const boxedNumeric = dueUrgency({
+        dueAt: new Number(Date.parse('2026-02-24T12:00:30.000Z')) as unknown as string,
+        clockIso: new Number(Date.parse(NOW)) as unknown as string,
+        needsRepair: false,
+      });
+      const valueOfBacked = dueUrgency({
+        dueAt: {
+          valueOf() {
+            return Date.parse('2026-02-24T12:00:30.000Z');
+          },
+        } as unknown as string,
+        clockIso: {
+          valueOf() {
+            return NOW;
+          },
+        } as unknown as string,
+        needsRepair: false,
+      });
+
+      expect(boxedNumeric).toEqual({ label: 'Due now', tone: colors.primary });
+      expect(valueOfBacked).toEqual({ label: 'Due now', tone: colors.primary });
     });
 
     it('accepts lowercase-z UTC timestamps', () => {
