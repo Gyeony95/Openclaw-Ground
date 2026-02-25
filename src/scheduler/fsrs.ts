@@ -1449,7 +1449,6 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
     Number.isFinite(updatedAtMs) &&
     Number.isFinite(currentMs) &&
     updatedAtMs - currentMs > MAX_MONOTONIC_CLOCK_SKEW_MS;
-  const scheduleAnchorUpdatedAt = timelineRolledBack ? currentIso : updatedAt;
   const rollbackScheduleFromStability = rollbackScheduleFallbackForState(currentState, baseCard.stability);
   const rollbackScheduleFromDueAnchor = normalizeScheduledDays(daysBetween(updatedAt, dueAt), currentState);
   const rollbackScheduleDays =
@@ -1457,8 +1456,17 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
       // Preserve mature review cadence when recovering from future-skewed timelines.
       ? rollbackScheduleFromStability
       : Math.min(rollbackScheduleFromStability, rollbackScheduleFromDueAnchor);
+  const scheduleAnchorUpdatedAt = timelineRolledBack
+    ? currentState === 'review'
+      // For rollback recovery, keep review cards on an on-time cadence anchor instead of
+      // interpreting them as instant early repeats, which can artificially shrink intervals.
+      ? addDaysIso(currentIso, -rollbackScheduleDays)
+      : currentIso
+    : updatedAt;
   const scheduleAnchorDueAt = timelineRolledBack
-    ? addDaysIso(currentIso, rollbackScheduleDays)
+    ? currentState === 'review'
+      ? currentIso
+      : addDaysIso(currentIso, rollbackScheduleDays)
     : dueAt;
   const elapsedDays = normalizeElapsedDays(daysBetween(scheduleAnchorUpdatedAt, currentIso));
   const scheduledDays = daysBetween(scheduleAnchorUpdatedAt, scheduleAnchorDueAt);
