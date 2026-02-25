@@ -229,7 +229,9 @@ export default function App() {
       ? !dueNeedsRepair && hasValidIso(dueCard.dueAt)
         ? formatDueLabel(dueCard.dueAt, clockIso)
         : 'Needs schedule repair'
-      : 'Queue clear';
+      : scheduleRepairCount > 0
+        ? 'Repair backlog'
+        : 'Queue clear';
   const nextUpcomingLabel = loading
     ? '--'
     : nextUpcomingCard

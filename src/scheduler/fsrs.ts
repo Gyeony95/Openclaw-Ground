@@ -971,6 +971,10 @@ function dayLikePreserveScheduleFloorDays(scheduledDays: number): number {
   if (!Number.isFinite(scheduledDays)) {
     return 1;
   }
+  if (scheduledDays <= 1 + ON_TIME_TOLERANCE_DAYS) {
+    // A one-day cadence with only minute-level timestamp drift should stay on a one-day floor.
+    return 1;
+  }
   // Preserve day-like cadence without shrinking into a lower day bucket on on-time
   // Hard/Good reviews (e.g. 1.1d should preserve at least a 2d floor).
   return Math.max(1, Math.ceil(scheduledDays));
