@@ -762,7 +762,7 @@ export default function App() {
         <ScrollView
           ref={scrollRef}
           contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
           keyboardDismissMode="on-drag"
           contentInsetAdjustmentBehavior="automatic"
           automaticallyAdjustKeyboardInsets

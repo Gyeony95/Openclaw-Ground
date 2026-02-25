@@ -5443,4 +5443,42 @@ describe('fsrs scheduler', () => {
 
     expect(padded).toEqual(baseline);
   });
+
+  it('repairs corrupted counters where lapses exceed reps during review normalization', () => {
+    const corruptedCounters = {
+      ...createNewCard('counter-repair', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -2),
+      dueAt: NOW,
+      reps: 1,
+      lapses: 9,
+      stability: 2,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(corruptedCounters, 3, NOW).card;
+
+    expect(reviewed.reps).toBe(2);
+    expect(reviewed.lapses).toBe(1);
+    expect(reviewed.lapses).toBeLessThanOrEqual(reviewed.reps);
+  });
+
+  it('keeps repaired lapse counters monotonic after additional lapses', () => {
+    const corruptedCounters = {
+      ...createNewCard('counter-repair-lapse', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -2),
+      dueAt: NOW,
+      reps: 2,
+      lapses: 8,
+      stability: 2,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(corruptedCounters, 1, NOW).card;
+
+    expect(reviewed.reps).toBe(3);
+    expect(reviewed.lapses).toBe(3);
+    expect(reviewed.lapses).toBeLessThanOrEqual(reviewed.reps);
+  });
 });
