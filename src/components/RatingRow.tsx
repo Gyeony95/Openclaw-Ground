@@ -47,7 +47,7 @@ export function RatingRow({
   const isVeryNarrow = width < 320;
   const isNarrow = width < 380;
   const isWide = width >= 560;
-  const intervalLineCount = isVeryNarrow ? 1 : 2;
+  const intervalLineCount = 2;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(
     () => new Set(disabledRatings.filter((rating): rating is Rating => validRatings.has(rating))),
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     flexBasis: '100%',
   },
   buttonVeryNarrow: {
-    minHeight: 88,
+    minHeight: 94,
     paddingHorizontal: 6,
   },
   buttonNarrow: {

@@ -65,7 +65,14 @@ describe('time utils', () => {
     expect(isIsoDateTime('2026-02-24T08:15:30.000z')).toBe(true);
     expect(isIsoDateTime('2026-02-24T08:15:30Z')).toBe(true);
     expect(isIsoDateTime('+275760-09-13T00:00:00.000Z')).toBe(true);
+    expect(isIsoDateTime(' 2026-02-24T08:15:30.000Z ')).toBe(true);
     expect(isIsoDateTime('2026-02-24 08:15:30Z')).toBe(false);
     expect(isIsoDateTime('Tue, 24 Feb 2026 08:15:30 GMT')).toBe(false);
+  });
+
+  it('handles whitespace-padded ISO strings in date math and due checks', () => {
+    expect(addDaysIso(' 2026-02-23T00:00:00.000Z ', 2)).toBe('2026-02-25T00:00:00.000Z');
+    expect(daysBetween(' 2026-02-23T00:00:00.000Z ', ' 2026-02-24T12:00:00.000Z ')).toBe(1.5);
+    expect(isDue(' 2026-02-23T00:00:00.000Z ', ' 2026-02-23T00:00:00.000Z ')).toBe(true);
   });
 });

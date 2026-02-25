@@ -25,6 +25,24 @@ describe('fsrs scheduler', () => {
     expect(input).toEqual(snapshot);
   });
 
+  it('accepts whitespace-padded review timestamps and keeps due dates monotonic', () => {
+    const reviewCardInput = {
+      ...createNewCard('trimmed-now', 'whitespace-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+
+    const result = reviewCard(reviewCardInput, 3, `  ${addDaysIso(NOW, 2)}  `).card;
+
+    expect(result.updatedAt).toBe(addDaysIso(NOW, 2));
+    expect(Date.parse(result.dueAt)).toBeGreaterThan(Date.parse(result.updatedAt));
+  });
+
   it('creates new cards with trimmed fields', () => {
     const card = createNewCard('  alpha ', ' first letter  ', NOW, '  note ');
 

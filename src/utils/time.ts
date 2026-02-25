@@ -6,14 +6,19 @@ const MAX_DATE_MS = 8640000000000000;
 const ISO_DATE_TIME_RE = /^[+-]?\d{4,6}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:[Zz]|[+-]\d{2}:\d{2})$/;
 
 export function isIsoDateTime(value: unknown): value is string {
-  return typeof value === 'string' && ISO_DATE_TIME_RE.test(value) && Number.isFinite(Date.parse(value));
+  if (typeof value !== 'string') {
+    return false;
+  }
+  const normalized = value.trim();
+  return ISO_DATE_TIME_RE.test(normalized) && Number.isFinite(Date.parse(normalized));
 }
 
 function parseIso(iso: string): number | null {
-  if (!isIsoDateTime(iso)) {
+  const normalized = iso.trim();
+  if (!isIsoDateTime(normalized)) {
     return null;
   }
-  const parsed = Date.parse(iso);
+  const parsed = Date.parse(normalized);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
