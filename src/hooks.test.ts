@@ -3356,6 +3356,23 @@ describe('resolveReviewClock', () => {
     ).toBe('2026-02-23T12:00:10.000Z');
   });
 
+  it('accepts valueOf Date-backed clocks from runtime bridges', () => {
+    const renderedClock = {
+      valueOf() {
+        return new Date('2026-02-23T12:00:00.000Z');
+      },
+    };
+    const runtimeClock = {
+      valueOf() {
+        return new Date('2026-02-23T12:00:10.000Z');
+      },
+    };
+
+    expect(resolveReviewClock(renderedClock as unknown as string, runtimeClock as unknown as string)).toBe(
+      '2026-02-23T12:00:10.000Z',
+    );
+  });
+
   it('accepts primitive numeric clocks from runtime bridges', () => {
     expect(
       resolveReviewClock(
@@ -3673,6 +3690,24 @@ describe('resolveAddCardClock', () => {
       new String('2026-02-23T12:00:30.000Z') as unknown as string,
       new Date('2026-02-23T12:00:00.000Z') as unknown as string,
     );
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:00:00.000Z');
+  });
+
+  it('accepts valueOf Date-backed add-card clocks from runtime bridges', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
+    const renderedClock = {
+      valueOf() {
+        return new Date('2026-02-23T12:00:30.000Z');
+      },
+    };
+    const runtimeClock = {
+      valueOf() {
+        return new Date('2026-02-23T12:00:00.000Z');
+      },
+    };
+    const resolved = resolveAddCardClock(renderedClock as unknown as string, runtimeClock as unknown as string);
     nowSpy.mockRestore();
 
     expect(resolved).toBe('2026-02-23T12:00:00.000Z');

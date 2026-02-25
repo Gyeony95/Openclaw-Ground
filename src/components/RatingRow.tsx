@@ -98,7 +98,7 @@ export function RatingRow({
               hitSlop={8}
               pressRetentionOffset={12}
               android_ripple={ratingDisabled ? undefined : { color: `${item.tone}20` }}
-              style={({ pressed }) => [
+              style={({ pressed, focused }) => [
                 styles.button,
                 isNarrow ? styles.buttonNarrow : null,
                 isVeryNarrow ? styles.buttonCompact : null,
@@ -113,6 +113,7 @@ export function RatingRow({
                   ? [styles.buttonLocked, { borderColor: `${item.tone}88`, backgroundColor: colors.surfaceAlt }]
                   : null,
                 pressed && !ratingDisabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
+                focused && !ratingDisabled ? styles.buttonFocused : null,
                 ratingDisabled && !isRatingLocked && styles.buttonDisabled,
               ]}
               accessibilityRole="button"
@@ -224,6 +225,12 @@ const styles = StyleSheet.create({
   buttonPressed: {
     transform: [{ translateY: 1 }, { scale: 0.99 }],
     opacity: 0.92,
+  },
+  buttonFocused: {
+    borderWidth: 2,
+    borderColor: colors.focusRing,
+    shadowOpacity: 0.14,
+    elevation: 3,
   },
   buttonDisabled: {
     opacity: 0.82,

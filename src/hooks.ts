@@ -618,6 +618,12 @@ function normalizeIsoInput(value: unknown): string | undefined {
       const valueOf = valueObject.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(value);
+        if (unboxed instanceof Date) {
+          const unboxedDateMs = unboxed.getTime();
+          if (Number.isFinite(unboxedDateMs)) {
+            return toSafeIso(unboxedDateMs);
+          }
+        }
         const normalizedUnboxed = normalizeStringOrNumber(unboxed);
         if (normalizedUnboxed !== undefined) {
           return normalizedUnboxed;
@@ -630,6 +636,12 @@ function normalizeIsoInput(value: unknown): string | undefined {
       const toString = valueObject.toString;
       if (typeof toString === 'function') {
         const stringified = toString.call(value);
+        if (stringified instanceof Date) {
+          const stringifiedDateMs = stringified.getTime();
+          if (Number.isFinite(stringifiedDateMs)) {
+            return toSafeIso(stringifiedDateMs);
+          }
+        }
         const normalizedStringified = normalizeStringOrNumber(stringified);
         if (normalizedStringified !== undefined) {
           return normalizedStringified;
