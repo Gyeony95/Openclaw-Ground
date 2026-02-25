@@ -477,7 +477,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string | Date)
       const candidateFutureSkewMs = candidateMs - wallClockMs;
       const candidatePastOffsetMs = wallClockMs - candidateMs;
       const candidateIsWallSafe =
-        candidateFutureSkewMs < MAX_MONOTONIC_CLOCK_SKEW_MS &&
+        candidateFutureSkewMs <= MAX_MONOTONIC_CLOCK_SKEW_MS &&
         isWithinCreatePastWindow(candidatePastOffsetMs);
       if (fallbackIsPathologicallyStale && candidateIsWallSafe) {
         // Recover stale/corrupted card timelines by accepting a wall-safe review clock.
@@ -495,7 +495,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string | Date)
   if (
     requestedValid &&
     Number.isFinite(wallClockMs) &&
-    candidateMs - wallClockMs >= MAX_MONOTONIC_CLOCK_SKEW_MS
+    candidateMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS
   ) {
     // Ignore pathological future runtime clocks to prevent runaway elapsed intervals.
     if (fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
@@ -574,7 +574,7 @@ function resolvePreviewIso(requestedNowIso: string | Date): string {
   }
   if (
     Number.isFinite(wallClockMs) &&
-    candidateMs - wallClockMs >= MAX_MONOTONIC_CLOCK_SKEW_MS
+    candidateMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS
   ) {
     return wallClockIso;
   }
@@ -636,7 +636,7 @@ function normalizeTimeline(
       : Number.NaN;
   const requestedNowLooksWallSafe =
     Number.isFinite(requestedNowMs) &&
-    (!Number.isFinite(wallClockMs) || Math.abs(requestedNowMs - wallClockMs) < MAX_MONOTONIC_CLOCK_SKEW_MS);
+    (!Number.isFinite(wallClockMs) || Math.abs(requestedNowMs - wallClockMs) <= MAX_MONOTONIC_CLOCK_SKEW_MS);
   const fallbackMs = requestedNowLooksWallSafe ? requestedNowMs : wallClockMs;
   const fallback = toSafeIso(fallbackMs);
   const normalizedCreatedAtInput = normalizeValidIsoInput(card.createdAt);

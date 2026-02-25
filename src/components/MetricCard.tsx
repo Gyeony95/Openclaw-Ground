@@ -12,14 +12,20 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const isNarrow = width < 360;
   const isVeryNarrow = width < 320;
   const hasValue = Number.isFinite(value);
+  const hasPositiveValue = hasValue && value > 0;
   const normalizedValue = hasValue ? Math.max(0, Math.round(value)) : null;
-  const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : '--';
+  const displayValue =
+    normalizedValue !== null
+      ? normalizedValue === 0 && hasPositiveValue
+        ? '<1'
+        : normalizedValue.toLocaleString()
+      : '--';
   const accessibilityValue = hasValue ? displayValue : 'loading';
-  const statusLabel = !hasValue ? 'Loading' : normalizedValue === 0 ? 'Idle' : 'Active';
-  const statusTone = !hasValue ? colors.subInk : normalizedValue === 0 ? colors.subInk : accent;
+  const statusLabel = !hasValue ? 'Loading' : hasPositiveValue ? 'Active' : 'Idle';
+  const statusTone = !hasValue ? colors.subInk : hasPositiveValue ? accent : colors.subInk;
   const statusBadgeSurface = !hasValue
     ? colors.surfaceAlt
-    : normalizedValue === 0
+    : !hasPositiveValue
       ? colors.surfaceAlt
       : `${statusTone}14`;
 

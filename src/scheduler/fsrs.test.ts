@@ -7287,4 +7287,54 @@ describe('fsrs scheduler', () => {
     expect(reviewed.id.length).toBeGreaterThan(0);
     expect(reviewed.reps).toBe(card.reps + 1);
   });
+
+  it('accepts review timestamps exactly at the monotonic skew boundary', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(NOW));
+    try {
+      const boundaryNow = '2026-02-24T00:00:00.000Z';
+      const card = {
+        ...createNewCard('boundary-now-review', 'definition', NOW),
+        state: 'review' as const,
+        updatedAt: addDaysIso(NOW, -2),
+        dueAt: NOW,
+        reps: 6,
+        lapses: 2,
+        stability: 3,
+        difficulty: 5,
+      } as Card;
+
+      const reviewed = reviewCard(card, 3, boundaryNow).card;
+
+      expect(reviewed.updatedAt).toBe(boundaryNow);
+      expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(boundaryNow));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('accepts numeric review timestamps exactly at the monotonic skew boundary', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(NOW));
+    try {
+      const boundaryNow = '2026-02-24T00:00:00.000Z';
+      const card = {
+        ...createNewCard('boundary-now-numeric-review', 'definition', NOW),
+        state: 'review' as const,
+        updatedAt: addDaysIso(NOW, -2),
+        dueAt: NOW,
+        reps: 6,
+        lapses: 2,
+        stability: 3,
+        difficulty: 5,
+      } as Card;
+
+      const reviewed = reviewCard(card, 3, Date.parse(boundaryNow) as unknown as string).card;
+
+      expect(reviewed.updatedAt).toBe(boundaryNow);
+      expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(boundaryNow));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
