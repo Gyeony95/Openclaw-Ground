@@ -50,6 +50,7 @@ const REVIEW_LAPSE_STABILITY_CEILING_DAYS = 1;
 const RELEARNING_LAPSE_STABILITY_CEILING_DAYS = 2;
 const NON_REVIEW_OUTLIER_MULTIPLIER = 6;
 const COUNTER_MAX = Number.MAX_SAFE_INTEGER;
+const COUNTER_INTEGER_TOLERANCE = 1e-6;
 
 let cardIdSequence = 0;
 
@@ -790,7 +791,9 @@ function normalizeCounter(value: unknown): number {
   if (!Number.isFinite(parsed)) {
     return 0;
   }
-  return clamp(Math.floor(parsed), 0, COUNTER_MAX);
+  const rounded = Math.round(parsed);
+  const normalized = Math.abs(parsed - rounded) <= COUNTER_INTEGER_TOLERANCE ? rounded : Math.floor(parsed);
+  return clamp(normalized, 0, COUNTER_MAX);
 }
 
 function scheduleFallbackForState(state: ReviewState): number {

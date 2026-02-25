@@ -30,6 +30,7 @@ const REVIEW_MIN_SCHEDULE_MS = 0.5 * DAY_MS;
 const LEARNING_MAX_SCHEDULE_MS = DAY_MS;
 const RELEARNING_MAX_SCHEDULE_MS = 2 * DAY_MS;
 const MAX_UPCOMING_HOURS = 24 * 365 * 20;
+const COUNTER_INTEGER_TOLERANCE = 1e-6;
 
 function safeReadUnknown(read: () => unknown): unknown {
   try {
@@ -210,7 +211,8 @@ function normalizeNonNegativeCounter(value: unknown): number | null {
   if (parsed < 0) {
     return null;
   }
-  return Math.floor(parsed);
+  const rounded = Math.round(parsed);
+  return Math.abs(parsed - rounded) <= COUNTER_INTEGER_TOLERANCE ? rounded : Math.floor(parsed);
 }
 
 function isWholeNonNegativeCounter(value: unknown): boolean {
@@ -224,7 +226,10 @@ function isWholeNonNegativeCounter(value: unknown): boolean {
     }
   }
   const parsed = parseRuntimeFiniteNumber(value);
-  return parsed !== null && parsed >= 0 && Number.isInteger(parsed);
+  if (parsed === null || parsed < 0) {
+    return false;
+  }
+  return Math.abs(parsed - Math.round(parsed)) <= COUNTER_INTEGER_TOLERANCE;
 }
 
 function normalizeReviewState(value: unknown): Card['state'] | null {
@@ -428,7 +433,8 @@ function normalizeMergeCounter(value: number): number {
   if (value < 0) {
     return Number.MIN_SAFE_INTEGER;
   }
-  return Math.floor(value);
+  const rounded = Math.round(value);
+  return Math.abs(value - rounded) <= COUNTER_INTEGER_TOLERANCE ? rounded : Math.floor(value);
 }
 
 function normalizeIsoInput(value: unknown): string | undefined {

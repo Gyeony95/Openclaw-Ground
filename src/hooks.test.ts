@@ -1547,6 +1547,34 @@ describe('mergeDeckCards', () => {
     expect(merged[0].reps).toBe(1);
     expect(merged[0].lapses).toBe(0);
   });
+
+  it('treats near-integer counters as whole numbers when merge candidates tie', () => {
+    const local = {
+      ...createNewCard('tie-counter-local-near-integer', 'local', NOW),
+      id: 'tie-counter-near-integer',
+      createdAt: '2026-02-23T10:00:00.000Z',
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 2.0000001,
+      lapses: 1.0000001,
+    };
+    const loaded = {
+      ...createNewCard('tie-counter-loaded-near-integer', 'loaded', NOW),
+      id: 'tie-counter-near-integer',
+      createdAt: '2026-02-23T10:00:00.000Z',
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T10:00:00.000Z',
+      reps: 2,
+      lapses: 1,
+    };
+
+    const merged = mergeDeckCards([local], [loaded]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].meaning).toBe('local');
+    expect(merged[0].reps).toBeCloseTo(2.0000001, 6);
+    expect(merged[0].lapses).toBeCloseTo(1.0000001, 6);
+  });
 });
 
 describe('hasDueCard', () => {
@@ -2090,6 +2118,19 @@ describe('hasScheduleRepairNeed', () => {
     };
 
     expect(hasScheduleRepairNeed(fractionalCounterDueNow)).toBe(true);
+  });
+
+  it('does not flag learning cards due at updatedAt when counters are near-integers from runtime drift', () => {
+    const nearIntegerCounterDueNow = {
+      ...createNewCard('repair-learning-due-now-near-integer-counter', 'test', NOW),
+      state: 'learning' as const,
+      reps: 0.0000001,
+      lapses: 0.0000001,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(nearIntegerCounterDueNow)).toBe(false);
   });
 
   it('flags review cards due exactly at updatedAt', () => {

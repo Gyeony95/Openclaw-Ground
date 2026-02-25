@@ -4228,6 +4228,23 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.lapses).toBe(1);
   });
 
+  it('rounds near-integer review counters before incrementing to avoid dropping history on runtime drift', () => {
+    const base = {
+      ...createNewCard('theta-counter-near-integer', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1),
+      reps: 1.9999999,
+      lapses: 0.9999999,
+      stability: 2,
+      difficulty: 5,
+    };
+    const reviewed = reviewCard(base as unknown as Card, 3, addDaysIso(NOW, 1));
+
+    expect(reviewed.card.reps).toBe(3);
+    expect(reviewed.card.lapses).toBe(1);
+  });
+
   it('saturates extremely large counters at Number.MAX_SAFE_INTEGER', () => {
     const base = createNewCard('theta-counter-cap', 'letter', NOW);
     const corrupted = {
