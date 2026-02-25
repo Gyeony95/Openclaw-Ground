@@ -141,6 +141,35 @@ describe('deck repository', () => {
     expect(deck.cards[0].difficulty).toBe(10);
   });
 
+  it('treats inf aliases as saturated numeric values when loading cards', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'infinite-alias-numbers',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-24T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            reps: '+inf',
+            lapses: '-inf',
+            stability: 'inf',
+            difficulty: '+inf',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].reps).toBe(Number.MAX_SAFE_INTEGER);
+    expect(deck.cards[0].lapses).toBe(0);
+    expect(deck.cards[0].stability).toBe(36500);
+    expect(deck.cards[0].difficulty).toBe(10);
+  });
+
   it('treats overflow scientific-notation scheduler strings as saturated numeric values when loading cards', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
@@ -1806,6 +1835,34 @@ describe('deck repository', () => {
           state: 'review',
           reps: Number.POSITIVE_INFINITY,
           lapses: Number.POSITIVE_INFINITY,
+          stability: 1.5,
+          difficulty: 5,
+        },
+      ],
+    });
+
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as { cards: Array<{ reps: number; lapses: number }> };
+    expect(savedDeck.cards).toHaveLength(1);
+    expect(savedDeck.cards[0].reps).toBe(Number.MAX_SAFE_INTEGER);
+    expect(savedDeck.cards[0].lapses).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it('saturates inf-alias counter strings before persisting deck data', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: 'counter-saturation-save-alias',
+          word: 'epsilon',
+          meaning: 'fifth',
+          dueAt: '2026-02-23T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'review',
+          reps: '+inf' as unknown as number,
+          lapses: 'inf' as unknown as number,
           stability: 1.5,
           difficulty: 5,
         },

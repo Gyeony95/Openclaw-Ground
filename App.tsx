@@ -1337,6 +1337,9 @@ export default function App() {
                               : undefined
                           }
                         />
+                        {!visibleRatingIntervalLabels ? (
+                          <Text style={styles.flipBackHint}>Interval preview unavailable. Ratings will still schedule normally.</Text>
+                        ) : null}
                         {studyMode === 'flashcard' ? (
                           <Text style={styles.flipBackHint}>Tap card to flip back to word</Text>
                         ) : forceAgainForQuizSelection ? (
