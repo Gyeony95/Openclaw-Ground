@@ -134,15 +134,63 @@ function compareSortPriority(left: number, right: number): number {
   return left < right ? -1 : 1;
 }
 
-function isValidCardId(id: unknown): id is string {
-  return typeof id === 'string' && id.trim().length > 0;
+function normalizeRuntimeText(value: unknown): string | null {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (value instanceof String) {
+    return value.valueOf();
+  }
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+  const valueObject = value as { valueOf?: () => unknown; toString?: () => unknown };
+  try {
+    const valueOf = valueObject.valueOf;
+    if (typeof valueOf === 'function') {
+      const unboxed = valueOf.call(value);
+      if (typeof unboxed === 'string') {
+        return unboxed;
+      }
+      if (unboxed instanceof String) {
+        return unboxed.valueOf();
+      }
+    }
+  } catch {
+    // Fall through to toString for bridged runtime objects with broken valueOf.
+  }
+  try {
+    const toString = valueObject.toString;
+    if (typeof toString === 'function') {
+      const stringified = toString.call(value);
+      if (typeof stringified === 'string') {
+        return stringified;
+      }
+      if (stringified instanceof String) {
+        return stringified.valueOf();
+      }
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function normalizeNonEmptyRuntimeText(value: unknown): string | null {
+  const normalized = normalizeRuntimeText(value);
+  if (typeof normalized !== 'string') {
+    return null;
+  }
+  const trimmed = normalized.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function isValidCardId(id: unknown): boolean {
+  return normalizeNonEmptyRuntimeText(id) !== null;
 }
 
 function normalizeCardIdInput(id: unknown): string | null {
-  if (!isValidCardId(id)) {
-    return null;
-  }
-  return id.trim();
+  return normalizeNonEmptyRuntimeText(id);
 }
 
 function normalizeCardIdForMatch(id: unknown): string | null {
@@ -158,21 +206,21 @@ function isRuntimeCard(value: unknown): value is Card {
     return false;
   }
   const candidate = value as Partial<Card>;
-  const id = safeReadUnknown(() => candidate.id);
-  const word = safeReadUnknown(() => candidate.word);
-  const meaning = safeReadUnknown(() => candidate.meaning);
-  const state = safeReadUnknown(() => candidate.state);
-  const createdAt = safeReadUnknown(() => candidate.createdAt);
-  const updatedAt = safeReadUnknown(() => candidate.updatedAt);
-  const dueAt = safeReadUnknown(() => candidate.dueAt);
+  const id = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.id));
+  const word = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.word));
+  const meaning = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.meaning));
+  const state = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.state));
+  const createdAt = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.createdAt));
+  const updatedAt = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.updatedAt));
+  const dueAt = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.dueAt));
   return (
-    isValidCardId(id) &&
-    typeof word === 'string' &&
-    typeof meaning === 'string' &&
-    typeof state === 'string' &&
-    typeof createdAt === 'string' &&
-    typeof updatedAt === 'string' &&
-    typeof dueAt === 'string'
+    id !== null &&
+    word !== null &&
+    meaning !== null &&
+    state !== null &&
+    createdAt !== null &&
+    updatedAt !== null &&
+    dueAt !== null
   );
 }
 
@@ -184,19 +232,19 @@ function isRuntimeCardTimelineCandidate(
     return false;
   }
   const candidate = value as Partial<Card>;
-  const id = safeReadUnknown(() => candidate.id);
-  const word = safeReadUnknown(() => candidate.word);
-  const meaning = safeReadUnknown(() => candidate.meaning);
-  const state = safeReadUnknown(() => candidate.state);
-  const createdAt = safeReadUnknown(() => candidate.createdAt);
-  const updatedAt = safeReadUnknown(() => candidate.updatedAt);
+  const id = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.id));
+  const word = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.word));
+  const meaning = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.meaning));
+  const state = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.state));
+  const createdAt = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.createdAt));
+  const updatedAt = normalizeNonEmptyRuntimeText(safeReadUnknown(() => candidate.updatedAt));
   return (
-    isValidCardId(id) &&
-    typeof word === 'string' &&
-    typeof meaning === 'string' &&
-    typeof state === 'string' &&
-    typeof createdAt === 'string' &&
-    typeof updatedAt === 'string'
+    id !== null &&
+    word !== null &&
+    meaning !== null &&
+    state !== null &&
+    createdAt !== null &&
+    updatedAt !== null
   );
 }
 

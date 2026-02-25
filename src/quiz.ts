@@ -472,7 +472,45 @@ function isSameCardIdentity(target: Card, candidate: Card): boolean {
 }
 
 function readCardText(value: unknown): string {
-  return typeof value === 'string' ? value : '';
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (value instanceof String) {
+    return value.valueOf();
+  }
+  if (!value || typeof value !== 'object') {
+    return '';
+  }
+  const valueObject = value as { valueOf?: () => unknown; toString?: () => unknown };
+  try {
+    const valueOf = valueObject.valueOf;
+    if (typeof valueOf === 'function') {
+      const unboxed = valueOf.call(value);
+      if (typeof unboxed === 'string') {
+        return unboxed;
+      }
+      if (unboxed instanceof String) {
+        return unboxed.valueOf();
+      }
+    }
+  } catch {
+    // Fall through to toString for bridged runtime objects with broken valueOf.
+  }
+  try {
+    const toString = valueObject.toString;
+    if (typeof toString === 'function') {
+      const stringified = toString.call(value);
+      if (typeof stringified === 'string') {
+        return stringified;
+      }
+      if (stringified instanceof String) {
+        return stringified.valueOf();
+      }
+    }
+  } catch {
+    return '';
+  }
+  return '';
 }
 
 function safeReadCardText(card: unknown, field: 'id' | 'word' | 'meaning' | 'updatedAt'): string {

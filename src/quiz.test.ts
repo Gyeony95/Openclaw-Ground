@@ -477,6 +477,45 @@ describe('quiz distractors', () => {
     expect(options.every((option) => option.text !== '[invalid meaning]')).toBe(true);
   });
 
+  it('supports boxed and bridged string card fields when composing options', () => {
+    const target = createCard('bridge-target', 'anchor', 'to fix firmly in place');
+    const bridgedDeck = [
+      target,
+      {
+        ...createCard('bridge-1', 'pin', 'to fasten with a pin'),
+        id: new String('bridge-1') as unknown as string,
+        word: {
+          valueOf() {
+            return new String('pin');
+          },
+        } as unknown as string,
+        meaning: {
+          toString() {
+            return new String('to fasten with a pin');
+          },
+        } as unknown as string,
+      },
+      {
+        ...createCard('bridge-2', 'clip', 'to hold together'),
+        meaning: {
+          valueOf() {
+            return new String('to hold together');
+          },
+        } as unknown as string,
+      },
+      {
+        ...createCard('bridge-3', 'bind', 'to tie tightly'),
+        word: new String('bind') as unknown as string,
+      },
+    ] as unknown as Card[];
+
+    const options = composeQuizOptions(target, bridgedDeck, 'bridged-card-fields');
+
+    expect(options).toHaveLength(4);
+    expect(options.filter((option) => option.isCorrect)).toHaveLength(1);
+    expect(options.every((option) => option.text !== '[invalid meaning]')).toBe(true);
+  });
+
   it('does not throw when runtime card meaning getters throw during distractor generation', () => {
     const targetCard = createCard('getter-target', 'anchor', 'to fix firmly in place');
     const throwingMeaningCard = createCard('getter-throw-meaning', 'pin', 'to fasten with a pin');

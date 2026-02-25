@@ -66,6 +66,38 @@ describe('applyDueReview', () => {
     expect(result.cards[2].reps).toBe(due.reps + 1);
   });
 
+  it('reviews due cards with boxed and bridged string timeline fields', () => {
+    const due = createNewCard('boxed-runtime-card', 'bridge-safe', NOW);
+    const bridgedDue = {
+      ...due,
+      id: new String(due.id) as unknown as string,
+      word: new String(due.word) as unknown as string,
+      meaning: {
+        valueOf() {
+          return new String(due.meaning);
+        },
+      } as unknown as string,
+      state: {
+        toString() {
+          return new String(due.state);
+        },
+      } as unknown as string,
+      createdAt: new String(due.createdAt) as unknown as string,
+      updatedAt: {
+        valueOf() {
+          return new String(due.updatedAt);
+        },
+      } as unknown as string,
+      dueAt: new String(due.dueAt) as unknown as string,
+    };
+
+    const result = applyDueReview([bridgedDue as unknown as Card], due.id, 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0]).not.toBe(bridgedDue);
+    expect(result.cards[0].reps).toBe(due.reps + 1);
+  });
+
   it('does not crash when a due card throws during scheduler normalization', () => {
     const throwingCard = createNewCard('throwing-difficulty', 'safe', NOW);
     Object.defineProperty(throwingCard, 'difficulty', {
