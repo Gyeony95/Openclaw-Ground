@@ -2008,6 +2008,12 @@ describe('countOverdueCards', () => {
     ).toBe(1);
   });
 
+  it('falls back to a valid runtime clock when the rendered clock is invalid', () => {
+    const overdue = { ...createNewCard('overdue-runtime-fallback', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };
+
+    expect(countOverdueCards([overdue], 'bad-clock', NOW)).toBe(1);
+  });
+
   it('returns zero for invalid runtime clocks', () => {
     const overdue = { ...createNewCard('overdue-invalid-clock', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };
     expect(countOverdueCards([overdue], 'bad-clock')).toBe(0);

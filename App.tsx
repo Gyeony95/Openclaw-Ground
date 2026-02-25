@@ -982,6 +982,8 @@ export default function App() {
                       style={[styles.queueProgressMeta, { color: queueProgressMetaTone }]}
                       numberOfLines={isCompactLayout ? 3 : 2}
                       ellipsizeMode="tail"
+                      accessibilityRole="status"
+                      accessibilityLiveRegion="polite"
                     >
                       {isCompactLayout ? queueProgressMetaCompact : queueProgressMeta}
                     </Text>
@@ -1482,7 +1484,11 @@ export default function App() {
                     <Text style={styles.primaryBtnText}>{addButtonLabel}</Text>
                   </View>
                 </Pressable>
-                <Text style={[styles.addHint, { color: addHintTone }]} accessibilityLiveRegion="polite">
+                <Text
+                  style={[styles.addHint, { color: addHintTone }]}
+                  accessibilityRole="status"
+                  accessibilityLiveRegion="polite"
+                >
                   {addFormHint}
                 </Text>
                 {addActionError ? (

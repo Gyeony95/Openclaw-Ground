@@ -673,7 +673,9 @@ export function findNextUpcomingCard(cards: Card[], currentIso: string, runtimeN
 export function countOverdueCards(cards: Card[], currentIso: string, runtimeNowIso = nowIso()): number {
   const effectiveCurrentIso = isValidIso(currentIso)
     ? resolveQueueClock(currentIso, runtimeNowIso)
-    : currentIso;
+    : isValidIso(runtimeNowIso)
+      ? resolveQueueClock(runtimeNowIso, runtimeNowIso)
+      : currentIso;
   const nowMs = parseTimeOrNaN(effectiveCurrentIso);
   if (!Number.isFinite(nowMs)) {
     return 0;
