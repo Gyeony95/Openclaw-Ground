@@ -526,7 +526,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string | Date)
   if (
     requestedValid &&
     Number.isFinite(wallClockMs) &&
-    candidateMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS
+    candidateMs - wallClockMs >= MAX_MONOTONIC_CLOCK_SKEW_MS
   ) {
     // Ignore pathological future runtime clocks to prevent runaway elapsed intervals.
     if (fallbackMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
@@ -605,7 +605,7 @@ function resolvePreviewIso(requestedNowIso: string | Date): string {
   }
   if (
     Number.isFinite(wallClockMs) &&
-    candidateMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS
+    candidateMs - wallClockMs >= MAX_MONOTONIC_CLOCK_SKEW_MS
   ) {
     return wallClockIso;
   }

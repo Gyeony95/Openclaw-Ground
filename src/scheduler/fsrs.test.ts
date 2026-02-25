@@ -739,6 +739,30 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('rejects preview timestamps at the exact monotonic future-skew boundary', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date(NOW));
+      const card = {
+        ...createNewCard('boundary-preview-clock', 'safe', NOW),
+        state: 'review' as const,
+        updatedAt: NOW,
+        dueAt: addDaysIso(NOW, 1),
+        reps: 6,
+        lapses: 1,
+        stability: 4,
+        difficulty: 5,
+      };
+
+      const previewAtNow = previewIntervals(card, NOW);
+      const previewAtBoundaryFuture = previewIntervals(card, '2026-02-24T00:00:00.000Z');
+
+      expect(previewAtBoundaryFuture).toEqual(previewAtNow);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('repairs review cards whose updatedAt is exactly at the future-skew boundary', () => {
     jest.useFakeTimers();
     try {
