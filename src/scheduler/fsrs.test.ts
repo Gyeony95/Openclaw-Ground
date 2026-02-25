@@ -238,6 +238,31 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('preserves mature review cadence when recovering future-skewed review timelines', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date(NOW));
+      const futureSkewedMatureCard: Card = {
+        ...createNewCard('mature-rollback-cadence', 'safe', NOW),
+        state: 'review',
+        updatedAt: '2026-03-01T12:00:00.000Z',
+        dueAt: '2026-03-31T12:00:00.000Z',
+        reps: 12,
+        lapses: 1,
+        stability: 45,
+        difficulty: 4.6,
+      };
+
+      const reviewed = reviewCard(futureSkewedMatureCard, 3, NOW);
+
+      expect(reviewed.card.updatedAt).toBe(NOW);
+      expect(reviewed.card.state).toBe('review');
+      expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(30);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('keeps near-future creation timestamps that are within monotonic skew tolerance', () => {
     jest.useFakeTimers();
     try {

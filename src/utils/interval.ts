@@ -16,10 +16,10 @@ export function formatIntervalLabel(days: number): string {
     return '<1m';
   }
   if (normalizedDays < HOUR_IN_DAYS) {
-    return `${Math.max(1, Math.round(normalizedDays * 1440))}m`;
+    return `${Math.max(1, Math.floor(normalizedDays * 1440))}m`;
   }
   if (normalizedDays < 1) {
-    return `${Math.max(1, Math.round(normalizedDays * 24))}h`;
+    return `${Math.max(1, Math.floor(normalizedDays * 24))}h`;
   }
   if (normalizedDays < WEEK_IN_DAYS) {
     return `${Math.max(1, Math.floor(normalizedDays))}d`;

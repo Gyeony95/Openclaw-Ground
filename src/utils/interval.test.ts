@@ -44,9 +44,9 @@ describe('formatIntervalLabel', () => {
     expect(formatIntervalLabel(50000)).toBe('100y');
   });
 
-  it('rounds near-boundary labels to better reflect scheduled intervals', () => {
-    expect(formatIntervalLabel(59.6 / 1440)).toBe('60m');
-    expect(formatIntervalLabel(23.6 / 24)).toBe('24h');
+  it('keeps minute and hour labels conservative near boundaries', () => {
+    expect(formatIntervalLabel(59.6 / 1440)).toBe('59m');
+    expect(formatIntervalLabel(23.6 / 24)).toBe('23h');
     expect(formatIntervalLabel(6.6)).toBe('6d');
   });
 

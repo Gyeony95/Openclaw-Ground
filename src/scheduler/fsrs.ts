@@ -1467,7 +1467,8 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
   const rollbackScheduleDays =
     currentState === 'review'
       // Preserve mature review cadence when recovering from future-skewed timelines.
-      ? rollbackScheduleFromStability
+      // Due anchors are already normalized, so keep whichever review cadence is longer.
+      ? Math.max(rollbackScheduleFromStability, rollbackScheduleFromDueAnchor)
       : Math.min(rollbackScheduleFromStability, rollbackScheduleFromDueAnchor);
   const scheduleAnchorUpdatedAt = timelineRolledBack
     ? currentState === 'review'
