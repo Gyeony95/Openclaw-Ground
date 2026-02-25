@@ -44,6 +44,31 @@ describe('parseRuntimeRatingValue', () => {
     expect(parseRuntimeRatingValue(bridged)).toBe(4);
   });
 
+  it('unboxes boxed numeric/string values returned from bridged valueOf/toString', () => {
+    const valueOfBoxedNumber = {
+      valueOf() {
+        return new Number(3);
+      },
+    };
+    const valueOfBoxedString = {
+      valueOf() {
+        return new String(' 2 ');
+      },
+    };
+    const toStringBoxedString = {
+      valueOf() {
+        return {};
+      },
+      toString() {
+        return new String('4');
+      },
+    };
+
+    expect(parseRuntimeRatingValue(valueOfBoxedNumber)).toBe(3);
+    expect(parseRuntimeRatingValue(valueOfBoxedString)).toBe(2);
+    expect(parseRuntimeRatingValue(toStringBoxedString)).toBe(4);
+  });
+
   it('rejects malformed values', () => {
     expect(parseRuntimeRatingValue('0x4')).toBeNaN();
     expect(parseRuntimeRatingValue('Infinity')).toBeNaN();

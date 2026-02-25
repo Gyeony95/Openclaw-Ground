@@ -47,7 +47,7 @@ export function RatingRow({
   const isVeryNarrow = width < 320;
   const isNarrow = width < 380;
   const isWide = width >= 560;
-  const intervalLineCount = isVeryNarrow ? 2 : 1;
+  const intervalLineCount = isCompact ? 2 : 1;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(
     () => new Set(disabledRatings.filter((rating): rating is Rating => validRatings.has(rating))),

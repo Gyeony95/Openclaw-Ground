@@ -1,8 +1,25 @@
 export const RATING_INTEGER_TOLERANCE = 1e-4;
 
+function unwrapStringOrNumberLike(value: unknown): string | number | null {
+  if (typeof value === 'number' || typeof value === 'string') {
+    return value;
+  }
+  if (value instanceof Number) {
+    return value.valueOf();
+  }
+  if (value instanceof String) {
+    return value.valueOf();
+  }
+  return null;
+}
+
 function unboxRatingInput(input: unknown): unknown {
   if (input === null || input === undefined) {
     return input;
+  }
+  const directPrimitive = unwrapStringOrNumberLike(input);
+  if (directPrimitive !== null) {
+    return directPrimitive;
   }
   if (typeof input === 'object') {
     const objectInput = input as { valueOf?: () => unknown; toString?: () => unknown };
@@ -10,8 +27,9 @@ function unboxRatingInput(input: unknown): unknown {
       const valueOf = objectInput.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(input);
-        if (typeof unboxed === 'number' || typeof unboxed === 'string') {
-          return unboxed;
+        const normalizedUnboxed = unwrapStringOrNumberLike(unboxed);
+        if (normalizedUnboxed !== null) {
+          return normalizedUnboxed;
         }
       }
     } catch {
@@ -21,8 +39,9 @@ function unboxRatingInput(input: unknown): unknown {
       const toString = objectInput.toString;
       if (typeof toString === 'function') {
         const stringified = toString.call(input);
-        if (typeof stringified === 'number' || typeof stringified === 'string') {
-          return stringified;
+        const normalizedStringified = unwrapStringOrNumberLike(stringified);
+        if (normalizedStringified !== null) {
+          return normalizedStringified;
         }
       }
     } catch {

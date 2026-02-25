@@ -273,6 +273,43 @@ describe('quiz distractors', () => {
     expect(findQuizOptionById(options, bridgedSelectionId)?.id).toBe(selectedId);
   });
 
+  it('accepts toString-backed selection ids when valueOf throws', () => {
+    const options = composeQuizOptions(target, deck, 'seed-1');
+    const selectedId = options[0].id;
+    const bridgedSelectionId = {
+      valueOf() {
+        throw new Error('runtime bridge valueOf failure');
+      },
+      toString() {
+        return ` ${selectedId} `;
+      },
+    };
+
+    expect(hasValidQuizSelection(bridgedSelectionId as unknown as string, options)).toBe(true);
+    expect(findQuizOptionById(options, bridgedSelectionId)?.id).toBe(selectedId);
+  });
+
+  it('accepts boxed string ids returned from runtime bridge accessors', () => {
+    const options = composeQuizOptions(target, deck, 'seed-1');
+    const selectedId = options[0].id;
+    const valueOfBoxed = {
+      valueOf() {
+        return new String(` ${selectedId} `);
+      },
+    };
+    const toStringBoxed = {
+      valueOf() {
+        return {};
+      },
+      toString() {
+        return new String(selectedId);
+      },
+    };
+
+    expect(hasValidQuizSelection(valueOfBoxed as unknown as string, options)).toBe(true);
+    expect(hasValidQuizSelection(toStringBoxed as unknown as string, options)).toBe(true);
+  });
+
   it('finds selected options by normalized ids when option ids include whitespace', () => {
     const options = [
       { id: '  correct-option  ', cardId: 'c1', text: 'answer', isCorrect: true },

@@ -118,46 +118,64 @@ function safeNormalizedOptionId(option: unknown): string | null {
 }
 
 function selectionIdCandidates(value: unknown): { raw: string | null; normalized: string | null } {
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
+  const fromStringValue = (rawValue: string): { raw: string; normalized: string | null } => {
+    const trimmed = rawValue.trim();
     return {
-      raw: value,
+      raw: rawValue,
       normalized: trimmed.length > 0 ? trimmed : null,
     };
+  };
+  const fromUnknownStringLike = (candidate: unknown): { raw: string | null; normalized: string | null } => {
+    if (typeof candidate === 'string') {
+      return fromStringValue(candidate);
+    }
+    if (candidate instanceof String) {
+      return fromStringValue(candidate.valueOf());
+    }
+    return { raw: null, normalized: null };
+  };
+
+  if (typeof value === 'string') {
+    return fromStringValue(value);
   }
   if (value instanceof String) {
-    const raw = value.valueOf();
-    const trimmed = raw.trim();
-    return {
-      raw,
-      normalized: trimmed.length > 0 ? trimmed : null,
-    };
+    return fromStringValue(value.valueOf());
   }
   if (!value || typeof value !== 'object') {
     return { raw: null, normalized: null };
   }
+  let valueOfResult: unknown;
+  let hasValueOfResult = false;
   try {
     const valueOf = (value as { valueOf?: () => unknown }).valueOf;
     if (typeof valueOf === 'function') {
-      const unboxed = valueOf.call(value);
-      if (typeof unboxed === 'string') {
-        const trimmed = unboxed.trim();
-        return {
-          raw: unboxed,
-          normalized: trimmed.length > 0 ? trimmed : null,
-        };
+      hasValueOfResult = true;
+      valueOfResult = valueOf.call(value);
+      const valueOfCandidate = fromUnknownStringLike(valueOfResult);
+      if (valueOfCandidate.normalized) {
+        return valueOfCandidate;
       }
-      if (unboxed instanceof String) {
-        const raw = unboxed.valueOf();
-        const trimmed = raw.trim();
-        return {
-          raw,
-          normalized: trimmed.length > 0 ? trimmed : null,
-        };
+    }
+  } catch {
+    // Fall through to toString for bridged runtime objects with broken valueOf.
+  }
+  try {
+    const toString = (value as { toString?: () => unknown }).toString;
+    if (typeof toString === 'function') {
+      const stringified = toString.call(value);
+      const toStringCandidate = fromUnknownStringLike(stringified);
+      if (toStringCandidate.normalized) {
+        return toStringCandidate;
       }
     }
   } catch {
     return { raw: null, normalized: null };
+  }
+  if (hasValueOfResult) {
+    const valueOfCandidate = fromUnknownStringLike(valueOfResult);
+    if (valueOfCandidate.raw !== null) {
+      return valueOfCandidate;
+    }
   }
   return { raw: null, normalized: null };
 }

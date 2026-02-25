@@ -218,6 +218,39 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(result.dueAt)).toBeGreaterThan(Date.parse(result.updatedAt));
   });
 
+  it('accepts boxed and bridged numeric ratings from runtime bridges', () => {
+    const reviewCardInput = {
+      ...createNewCard('boxed-rating-review', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const boxedHard = reviewCard(
+      reviewCardInput,
+      new Number(2) as unknown as Rating,
+      addDaysIso(NOW, 2),
+    ).card;
+    const valueOfBoxedGood = reviewCard(
+      reviewCardInput,
+      {
+        valueOf() {
+          return new String('3');
+        },
+      } as unknown as Rating,
+      addDaysIso(NOW, 2),
+    ).card;
+
+    expect(boxedHard.updatedAt).toBe('2026-02-25T12:00:00.000Z');
+    expect(valueOfBoxedGood.updatedAt).toBe('2026-02-25T12:00:00.000Z');
+    expect(Date.parse(boxedHard.dueAt)).toBeGreaterThan(Date.parse(boxedHard.updatedAt));
+    expect(Date.parse(valueOfBoxedGood.dueAt)).toBeGreaterThan(Date.parse(valueOfBoxedGood.updatedAt));
+    expect(Date.parse(valueOfBoxedGood.dueAt)).toBeGreaterThanOrEqual(Date.parse(boxedHard.dueAt));
+  });
+
   it('preserves toString-backed numeric review counters when runtime valueOf throws', () => {
     const runtimeCounters = {
       ...createNewCard('tostring-runtime-counters', 'bridge-safe', NOW),
