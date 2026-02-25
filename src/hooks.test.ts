@@ -2031,6 +2031,23 @@ describe('hasScheduleRepairNeed', () => {
     }
   });
 
+  it('flags cards at the exact future-skew boundary so repair is deterministic', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const boundaryFutureCorrupted = {
+        ...createNewCard('repair-future-boundary', 'test', NOW),
+        state: 'review' as const,
+        updatedAt: '2026-02-24T00:00:00.000Z',
+        dueAt: '2026-02-25T00:00:00.000Z',
+      };
+
+      expect(hasScheduleRepairNeed(boundaryFutureCorrupted)).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('does not flag healthy review cards only because dueAt is days ahead', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
