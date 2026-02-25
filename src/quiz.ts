@@ -323,11 +323,34 @@ interface RankedCandidate {
 }
 
 function isSameCardIdentity(target: Card, candidate: Card): boolean {
+  if (candidate === target) {
+    return true;
+  }
+
+  const targetId = normalizeId(safeReadCardText(target, 'id'), '');
+  const candidateId = normalizeId(safeReadCardText(candidate, 'id'), '');
+  const targetWord = normalizeText(safeReadCardText(target, 'word'));
+  const candidateWord = normalizeText(safeReadCardText(candidate, 'word'));
+
+  if (targetId && candidateId && targetId === candidateId) {
+    // Treat ID + headword matches as the same logical card even if meaning text
+    // drifted during sync/runtime corruption, so stale duplicates never appear
+    // as distractors against the card being reviewed.
+    if (targetWord && candidateWord) {
+      return targetWord === candidateWord;
+    }
+    return true;
+  }
+
+  const targetMeaning = normalizeText(safeReadCardText(target, 'meaning'));
+  const candidateMeaning = normalizeText(safeReadCardText(candidate, 'meaning'));
   return (
-    candidate === target ||
-    (candidate.id === target.id &&
-      candidate.word === target.word &&
-      candidate.meaning === target.meaning)
+    targetWord.length > 0 &&
+    candidateWord.length > 0 &&
+    targetMeaning.length > 0 &&
+    candidateMeaning.length > 0 &&
+    candidateWord === targetWord &&
+    candidateMeaning === targetMeaning
   );
 }
 

@@ -2122,11 +2122,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.md,
     backgroundColor: colors.surfaceAlt,
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 12,
   },
   quizOptionBtnSelected: {
     borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
   },
   quizOptionBtnCorrect: {
     borderColor: colors.success,
@@ -2137,7 +2138,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff5f6',
   },
   quizOptionBtnLocked: {
-    opacity: 0.94,
+    opacity: 0.9,
   },
   quizOptionText: {
     color: colors.ink,

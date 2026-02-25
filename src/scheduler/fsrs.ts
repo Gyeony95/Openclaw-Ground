@@ -205,10 +205,33 @@ function isValidIso(value: string): boolean {
 }
 
 function normalizeIsoInput(value: unknown): string | undefined {
-  if (typeof value !== 'string') {
+  const normalizedValue = (() => {
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (value instanceof String) {
+      return value.valueOf();
+    }
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+    try {
+      const valueOf = (value as { valueOf?: () => unknown }).valueOf;
+      if (typeof valueOf === 'function') {
+        const unboxed = valueOf.call(value);
+        if (typeof unboxed === 'string') {
+          return unboxed;
+        }
+      }
+    } catch {
+      return undefined;
+    }
+    return undefined;
+  })();
+  if (typeof normalizedValue !== 'string') {
     return undefined;
   }
-  const trimmed = value.trim();
+  const trimmed = normalizedValue.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
 

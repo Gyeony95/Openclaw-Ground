@@ -173,6 +173,25 @@ describe('quiz distractors', () => {
     expect(distractors.every((card) => card.meaning !== duplicateIdDeck[0].meaning)).toBe(true);
   });
 
+  it('excludes stale duplicate snapshots of the same card identity from distractors', () => {
+    const duplicateSnapshotDeck = [
+      createCard('same-id', 'anchor', 'to fix firmly in place'),
+      createCard(' same-id ', ' anchor ', 'to keep steady while moving'),
+      createCard('x1', 'pin', 'to fasten with a pin'),
+      createCard('x2', 'clip', 'to hold together'),
+      createCard('x3', 'bind', 'to tie tightly'),
+    ];
+
+    const distractors = generateDistractors(duplicateSnapshotDeck[0], duplicateSnapshotDeck, 3);
+
+    expect(distractors).toHaveLength(3);
+    expect(
+      distractors.some(
+        (card) => card.id.trim() === 'same-id' && card.word.trim().toLowerCase() === 'anchor',
+      ),
+    ).toBe(false);
+  });
+
   it('accepts only selections that still exist in the current option set', () => {
     const options = composeQuizOptions(target, deck, 'seed-1');
     const selectedId = options[0].id;
@@ -320,6 +339,21 @@ describe('quiz distractors', () => {
     expect(new Set(options.map((option) => option.id)).size).toBe(4);
     expect(options.every((option) => option.id.trim().length > 0)).toBe(true);
     expect(options.every((option) => option.text.trim().length > 0)).toBe(true);
+  });
+
+  it('does not include stale duplicate snapshots of the target card in composed options', () => {
+    const duplicateSnapshotDeck = [
+      createCard('same-id', 'anchor', 'to fix firmly in place'),
+      createCard(' same-id ', ' anchor ', 'to keep steady while moving'),
+      createCard('x1', 'pin', 'to fasten with a pin'),
+      createCard('x2', 'clip', 'to hold together'),
+      createCard('x3', 'bind', 'to tie tightly'),
+    ];
+
+    const options = composeQuizOptions(duplicateSnapshotDeck[0], duplicateSnapshotDeck, 'duplicate-snapshot-seed');
+
+    expect(options).toHaveLength(4);
+    expect(options.some((option) => option.text === 'to keep steady while moving')).toBe(false);
   });
 
   it('skips malformed runtime deck entries when generating distractors and options', () => {
