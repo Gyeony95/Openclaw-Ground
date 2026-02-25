@@ -5,7 +5,8 @@ const YEAR_IN_DAYS = 365;
 const MAX_INTERVAL_DAYS = 36500;
 
 export function formatIntervalLabel(days: number): string {
-  const normalizedDays = days === Number.POSITIVE_INFINITY ? MAX_INTERVAL_DAYS : days;
+  const normalizedDays =
+    days === Number.POSITIVE_INFINITY ? MAX_INTERVAL_DAYS : Math.min(days, MAX_INTERVAL_DAYS);
 
   if (!Number.isFinite(normalizedDays) || normalizedDays <= 0) {
     return '<1m';

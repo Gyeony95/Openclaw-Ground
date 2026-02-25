@@ -4546,6 +4546,39 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('preserves review schedule floor when hard-preview branch throws', () => {
+    const base = {
+      ...createNewCard('chi-preview-hard-fallback-floor', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 3),
+      stability: 3,
+      difficulty: 5,
+      reps: 10,
+      lapses: 1,
+    };
+    const originalPow = Math.pow;
+    const powSpy = jest.spyOn(Math, 'pow');
+    let callCount = 0;
+    powSpy.mockImplementation((baseValue: number, exponent: number) => {
+      callCount += 1;
+      if (callCount === 2) {
+        throw new Error('preview hard branch fault');
+      }
+      return originalPow(baseValue, exponent);
+    });
+
+    try {
+      const preview = previewIntervals(base, addDaysIso(NOW, 3));
+
+      expect(preview[2]).toBeGreaterThanOrEqual(3);
+      expect(preview[3]).toBeGreaterThanOrEqual(preview[2]);
+      expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
+    } finally {
+      powSpy.mockRestore();
+    }
+  });
+
   it('keeps half-day review preview intervals from inflating to one day', () => {
     const base = createNewCard('chi-halfday-preview', 'letter', NOW);
     const halfDayReviewCard = {

@@ -1574,17 +1574,38 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
     const previewIso = normalized.currentIso;
     const previewFloor = previewMinimumIntervalByRating(previewCard.state);
     const previewCeiling = previewMaximumIntervalByRating(previewCard.state);
+    const previewScheduledDays = normalizeScheduledDays(
+      daysBetween(previewCard.updatedAt, previewCard.dueAt),
+      previewCard.state,
+    );
+    const reviewFallbackFloorDays =
+      previewCard.state === 'review'
+        ? Math.max(
+            REVIEW_SCHEDULE_FLOOR_DAYS,
+            quantizeReviewIntervalDays(previewScheduledDays, previewScheduledDays),
+          )
+        : REVIEW_SCHEDULE_FLOOR_DAYS;
     const ensureFiniteWithinBounds = (candidate: number, floor: number, ceiling: number): number => {
       if (!Number.isFinite(candidate)) {
         return floor;
       }
       return clamp(candidate, floor, ceiling);
     };
+    const fallbackPreviewForRating = (rating: Rating): number => {
+      if (rating === 1) {
+        return previewFloor[1];
+      }
+      if (previewCard.state === 'review') {
+        return Math.max(previewFloor[rating], reviewFallbackFloorDays);
+      }
+      return previewFloor[rating];
+    };
     const previewForRating = (rating: Rating): number => {
       try {
         return reviewNormalizedCard(previewCard, previewIso, rating).scheduledDays;
       } catch {
-        return previewFloor[rating];
+        // Preserve mature review cadence when a single preview branch fails.
+        return fallbackPreviewForRating(rating);
       }
     };
     const preview = {
