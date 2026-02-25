@@ -1487,10 +1487,11 @@ function normalizeSchedulingCard(
   );
   const normalizedReps = normalizeCounter(snapshot.reps);
   const normalizedLapsesRaw = normalizeCounter(snapshot.lapses);
+  const preserveImportedLapseHistory =
+    normalizedLapsesRaw > normalizedReps &&
+    (countersFromLegacyStrings || normalizedState !== 'learning');
   const normalizedLapses =
-    countersFromLegacyStrings && normalizedLapsesRaw > normalizedReps
-      ? normalizedLapsesRaw
-      : Math.min(normalizedLapsesRaw, normalizedReps);
+    preserveImportedLapseHistory ? normalizedLapsesRaw : Math.min(normalizedLapsesRaw, normalizedReps);
 
   return {
     currentIso,

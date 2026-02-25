@@ -68,8 +68,8 @@ export function RatingRow({
           const lockedIntervalText = `Use Again · ${againInterval}`;
           const intervalText = isRatingLocked ? lockedIntervalText : interval;
           const intervalPrefix = isRatingLocked ? 'Again' : 'Next';
-          const contentTone = isRatingLocked ? item.tone : ratingDisabled ? colors.subInk : item.tone;
-          const lockTone = isRatingLocked ? item.tone : contentTone;
+          const contentTone = ratingDisabled ? colors.subInk : item.tone;
+          const lockTone = isRatingLocked ? colors.warn : contentTone;
           const accessibilityLabel = busy
             ? `Rate ${item.text}. Saving in progress.`
             : isRatingLocked
@@ -101,7 +101,7 @@ export function RatingRow({
                   ? styles.buttonDisabledSurface
                   : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
                 isRatingLocked
-                  ? [styles.buttonLocked, { borderColor: item.tone, backgroundColor: `${item.tone}10` }]
+                  ? [styles.buttonLocked, { borderColor: `${item.tone}88`, backgroundColor: colors.surfaceAlt }]
                   : null,
                 pressed && !ratingDisabled && [styles.buttonPressed, { backgroundColor: `${item.tone}24` }],
                 ratingDisabled && !isRatingLocked && styles.buttonDisabled,
@@ -124,7 +124,7 @@ export function RatingRow({
               </Text>
               {isRatingLocked ? (
                 <Text style={[styles.lockedLabel, { color: lockTone }]} maxFontSizeMultiplier={1.2}>
-                  Again only
+                  Locked
                 </Text>
               ) : null}
               <View style={styles.intervalMeta}>

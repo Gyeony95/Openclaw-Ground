@@ -630,6 +630,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.lapses).toBe(7);
   });
 
+  it('preserves numeric imported lapse history that already exceeds reps', () => {
+    const runtimeCard = {
+      ...createNewCard('preserve-numeric-lapses-over-reps', 'state inference', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 2),
+      reps: 2,
+      lapses: 7,
+      stability: 3,
+      difficulty: 6,
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 3, addDaysIso(NOW, 2)).card;
+
+    expect(reviewed.reps).toBe(3);
+    expect(reviewed.lapses).toBe(7);
+  });
+
   it('preserves imported legacy lapse history on failed reviews when runtime counters are string-backed', () => {
     const runtimeCard = {
       ...createNewCard('preserve-lapses-on-failure', 'state inference', NOW),
@@ -640,6 +658,25 @@ describe('fsrs scheduler', () => {
       lapses: '7',
       stability: '3',
       difficulty: '6',
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 1, addDaysIso(NOW, 2)).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.reps).toBe(3);
+    expect(reviewed.lapses).toBe(8);
+  });
+
+  it('increments preserved numeric imported lapse history on failed reviews', () => {
+    const runtimeCard = {
+      ...createNewCard('preserve-numeric-lapses-on-failure', 'state inference', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 2),
+      reps: 2,
+      lapses: 7,
+      stability: 3,
+      difficulty: 6,
     } as unknown as Card;
 
     const reviewed = reviewCard(runtimeCard, 1, addDaysIso(NOW, 2)).card;
