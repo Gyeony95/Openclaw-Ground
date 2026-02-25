@@ -837,6 +837,39 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('treats recovered relearning timelines as on-time when future-skew rollback is applied', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date(NOW));
+      const onTimeRelearningCard: Card = {
+        ...createNewCard('relearning-on-time-anchor', 'safe', NOW),
+        state: 'relearning',
+        updatedAt: addDaysIso(NOW, -(10 * MINUTE_IN_DAYS)),
+        dueAt: NOW,
+        reps: 7,
+        lapses: 2,
+        stability: 0.5,
+        difficulty: 5.1,
+      };
+      const futureSkewedRelearningCard: Card = {
+        ...onTimeRelearningCard,
+        id: 'relearning-future-skew-anchor',
+        updatedAt: addDaysIso(NOW, 0.5),
+        dueAt: addDaysIso(addDaysIso(NOW, 0.5), 10 * MINUTE_IN_DAYS),
+      };
+
+      const onTimeResult = reviewCard(onTimeRelearningCard, 3, NOW);
+      const recoveredResult = reviewCard(futureSkewedRelearningCard, 3, NOW);
+
+      expect(recoveredResult.card.updatedAt).toBe(NOW);
+      expect(recoveredResult.card.state).toBe('review');
+      expect(recoveredResult.scheduledDays).toBe(onTimeResult.scheduledDays);
+      expect(recoveredResult.card.stability).toBeCloseTo(onTimeResult.card.stability, 10);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('keeps near-future creation timestamps that are within monotonic skew tolerance', () => {
     jest.useFakeTimers();
     try {

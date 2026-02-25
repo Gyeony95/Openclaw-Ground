@@ -1812,9 +1812,10 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
       ? normalizeScheduledDays(anchoredScheduledDays, currentState)
       : rollbackScheduledDays
     : normalizeScheduledDays(anchoredScheduledDays, currentState);
-  const elapsedDays = timelineRolledBack && currentState === 'review'
-    ? previousScheduledDays
-    : anchoredElapsedDays;
+  const elapsedDays =
+    timelineRolledBack && (currentState === 'review' || currentState === 'relearning')
+      ? previousScheduledDays
+      : anchoredElapsedDays;
   const state = nextState(currentState, normalizedRating);
   const phase = currentState;
   const lapseIncrement = shouldCountLapse(currentState, normalizedRating) ? 1 : 0;

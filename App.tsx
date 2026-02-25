@@ -45,6 +45,7 @@ import { dueUrgency, queueTone } from './src/utils/scheduleStatus';
 import { normalizeBoundedText } from './src/utils/text';
 import { isIsoDateTime, nowIso } from './src/utils/time';
 import { queueLoadStatusLabel } from './src/utils/queue';
+import { formatCounterDisplay } from './src/utils/counter';
 import { Rating, ReviewState } from './src/types';
 
 const INVALID_MEANING_PLACEHOLDER = '[invalid meaning]';
@@ -344,6 +345,8 @@ export default function App() {
       ? { tone: colors.warn, label: 'Repair' }
       : stateConfig(dueCard.state)
     : null;
+  const dueCardRepsLabel = dueCard ? formatCounterDisplay(dueCard.reps) : '--';
+  const dueCardLapsesLabel = dueCard ? formatCounterDisplay(dueCard.lapses) : '--';
   const dueCardUrgency = dueUrgency({
     dueAt: dueCard?.dueAt,
     clockIso: runtimeNowForUiIso,
@@ -1263,7 +1266,7 @@ export default function App() {
                               <Text style={styles.metaText}>Difficulty {formatMetricNumber(dueCard.difficulty, 1)}</Text>
                               <Text style={styles.metaText}>Stability {formatMetricNumber(dueCard.stability, 2)}d</Text>
                               <Text style={styles.metaText}>
-                                Reps {dueCard.reps} · Lapses {dueCard.lapses}
+                                Reps {dueCardRepsLabel} · Lapses {dueCardLapsesLabel}
                               </Text>
                             </View>
                           )
