@@ -653,15 +653,15 @@ export function findNextUpcomingCard(cards: Card[], currentIso: string, runtimeN
     return undefined;
   }
 
-  return cards
+  const upcomingCards = cards
     .filter((card): card is Card => {
       if (!isRuntimeCard(card) || hasScheduleRepairNeed(card)) {
         return false;
       }
       const dueMs = parseDueAtOrNaN(card.dueAt);
       return Number.isFinite(dueMs) && dueMs > nowMs;
-    })
-    .sort(compareDueCards)[0];
+    });
+  return stableSortCardsByDuePriority(upcomingCards)[0];
 }
 
 export function countOverdueCards(cards: Card[], currentIso: string, runtimeNowIso = nowIso()): number {
@@ -725,11 +725,23 @@ export function compareDueCards(a: Card, b: Card): number {
   return compareCardIdSortTokens(normalizeCardIdForSort(aId), normalizeCardIdForSort(bId));
 }
 
+function stableSortCardsByDuePriority(cards: Card[]): Card[] {
+  return cards
+    .map((card, index) => ({ card, index }))
+    .sort((left, right) => {
+      const duePriority = compareDueCards(left.card, right.card);
+      if (duePriority !== 0) {
+        return duePriority;
+      }
+      return left.index - right.index;
+    })
+    .map((item) => item.card);
+}
+
 export function collectDueCards(cards: Card[], currentIso: string, runtimeNowIso: string): Card[] {
   const effectiveCurrentIso = resolveQueueClock(currentIso, runtimeNowIso);
-  return cards
-    .filter((card): card is Card => isRuntimeCard(card) && isReviewReadyCard(card, effectiveCurrentIso))
-    .sort(compareDueCards);
+  const dueCards = cards.filter((card): card is Card => isRuntimeCard(card) && isReviewReadyCard(card, effectiveCurrentIso));
+  return stableSortCardsByDuePriority(dueCards);
 }
 
 export function mergeDeckCards(existingCards: Card[], loadedCards: Card[]): Card[] {

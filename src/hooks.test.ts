@@ -967,6 +967,31 @@ describe('compareDueCards', () => {
 });
 
 describe('collectDueCards', () => {
+  it('keeps input order when due-card sort keys tie exactly', () => {
+    const first = {
+      ...createNewCard('tie-first', 'safe', NOW),
+      id: 'same-tie-id',
+      word: 'first-tie-word',
+      meaning: 'first tie meaning',
+      state: 'review' as const,
+      updatedAt: '2026-02-22T12:00:00.000Z',
+      dueAt: NOW,
+      createdAt: '2026-02-20T12:00:00.000Z',
+      stability: 2,
+    };
+    const second = {
+      ...first,
+      word: 'second-tie-word',
+      meaning: 'second tie meaning',
+    };
+
+    const dueCards = collectDueCards([second, first], NOW, NOW);
+
+    expect(dueCards).toHaveLength(2);
+    expect(dueCards[0]).toBe(second);
+    expect(dueCards[1]).toBe(first);
+  });
+
   it('filters due cards using the same wall-safe review clock used for submissions', () => {
     const dueIfFutureClock = {
       ...createNewCard('future-queue-guard', 'clock', NOW),
@@ -1861,6 +1886,29 @@ describe('countUpcomingDueCards', () => {
 });
 
 describe('findNextUpcomingCard', () => {
+  it('keeps deterministic tie ordering by preserving input order when priority keys match', () => {
+    const firstUpcoming = {
+      ...createNewCard('next-upcoming-tie-first', 'safe', NOW),
+      id: 'same-upcoming-id',
+      word: 'first upcoming tie',
+      meaning: 'first upcoming meaning',
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: '2026-02-24T12:00:00.000Z',
+      createdAt: '2026-02-22T12:00:00.000Z',
+      stability: 2,
+    };
+    const secondUpcoming = {
+      ...firstUpcoming,
+      word: 'second upcoming tie',
+      meaning: 'second upcoming meaning',
+    };
+
+    const nextUpcoming = findNextUpcomingCard([secondUpcoming, firstUpcoming], NOW);
+
+    expect(nextUpcoming).toBe(secondUpcoming);
+  });
+
   it('returns the earliest upcoming card with a healthy schedule', () => {
     const firstUpcoming = {
       ...createNewCard('next-upcoming-first', 'safe', NOW),
