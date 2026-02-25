@@ -527,15 +527,6 @@ export default function App() {
 
   useEffect(() => {
     if (pendingReviewCardKey === null) {
-      return;
-    }
-    if (dueCardRevealKey !== pendingReviewCardKey) {
-      setPendingReviewCardKey(null);
-    }
-  }, [dueCardRevealKey, pendingReviewCardKey]);
-
-  useEffect(() => {
-    if (pendingReviewCardKey === null) {
       reviewLockRef.current = false;
       return;
     }

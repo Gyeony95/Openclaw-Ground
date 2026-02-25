@@ -26,6 +26,24 @@ describe('fsrs scheduler', () => {
     expect(input).toEqual(snapshot);
   });
 
+  it('does not mutate the input card while computing preview intervals', () => {
+    const input = {
+      ...createNewCard('preview-immutability-check', 'definition', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 3),
+      updatedAt: NOW,
+      reps: 9,
+      lapses: 2,
+      stability: 7,
+      difficulty: 4.2,
+    };
+    const snapshot = { ...input };
+
+    previewIntervals(input, addDaysIso(NOW, 3));
+
+    expect(input).toEqual(snapshot);
+  });
+
   it('accepts whitespace-padded review timestamps and keeps due dates monotonic', () => {
     const reviewCardInput = {
       ...createNewCard('trimmed-now', 'whitespace-safe', NOW),
