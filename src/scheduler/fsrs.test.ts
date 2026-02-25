@@ -129,6 +129,55 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('rejects stale-timeline recovery review timestamps that are pathologically future-skewed from wall clock', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      const staleCard = {
+        ...createNewCard('stale-future-recovery', 'safe', '1990-01-01T00:00:00.000Z'),
+        state: 'review' as const,
+        dueAt: '1990-01-02T00:00:00.000Z',
+        updatedAt: '1990-01-01T00:00:00.000Z',
+        reps: 6,
+        lapses: 1,
+        stability: 3,
+        difficulty: 5,
+      };
+
+      const reviewed = reviewCard(staleCard, 3, '2030-01-01T00:00:00.000Z').card;
+
+      expect(reviewed.updatedAt).not.toBe('2030-01-01T00:00:00.000Z');
+      expect(reviewed.updatedAt).toBe('1990-01-01T00:00:00.000Z');
+      expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('accepts stale-timeline recovery review timestamps when they are wall-safe', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      const staleCard = {
+        ...createNewCard('stale-safe-recovery', 'safe', '1990-01-01T00:00:00.000Z'),
+        state: 'review' as const,
+        dueAt: '1990-01-02T00:00:00.000Z',
+        updatedAt: '1990-01-01T00:00:00.000Z',
+        reps: 6,
+        lapses: 1,
+        stability: 3,
+        difficulty: 5,
+      };
+
+      const reviewed = reviewCard(staleCard, 3, '2026-02-23T12:30:00.000Z').card;
+
+      expect(reviewed.updatedAt).toBe('2026-02-23T12:30:00.000Z');
+      expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('rejects review timestamps at the exact monotonic future-skew boundary', () => {
     jest.useFakeTimers();
     try {

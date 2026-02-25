@@ -10,6 +10,7 @@ interface MetricCardProps {
 export function MetricCard({ label, value, accent = colors.primary }: MetricCardProps) {
   const { width } = useWindowDimensions();
   const isNarrow = width < 360;
+  const isVeryNarrow = width < 320;
   const hasValue = Number.isFinite(value);
   const normalizedValue = hasValue ? Math.max(0, Math.round(value)) : null;
   const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : '--';
@@ -28,12 +29,12 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
     >
       <View style={[styles.topBorder, { backgroundColor: accent }]} />
       <View style={[styles.accentWash, { backgroundColor: `${accent}12` }]} />
-      <View style={styles.head}>
+      <View style={[styles.head, isVeryNarrow && styles.headCompact]}>
         <View style={[styles.dot, { backgroundColor: accent }]} />
         <Text style={styles.label} numberOfLines={2} ellipsizeMode="tail" maxFontSizeMultiplier={1.3}>
           {label}
         </Text>
-        <View style={[styles.badge, !hasValue && styles.badgeMuted]}>
+        <View style={[styles.badge, isVeryNarrow && styles.badgeCompact, !hasValue && styles.badgeMuted]}>
           <Text style={[styles.badgeText, { color: statusTone }]} maxFontSizeMultiplier={1.3}>
             {statusLabel}
           </Text>
@@ -96,6 +97,10 @@ const styles = StyleSheet.create({
     gap: 7,
     minHeight: 24,
   },
+  headCompact: {
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+  },
   badge: {
     marginLeft: 'auto',
     borderRadius: radii.pill,
@@ -104,6 +109,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
     paddingHorizontal: 8,
     paddingVertical: 3,
+  },
+  badgeCompact: {
+    marginLeft: 0,
   },
   badgeMuted: {
     opacity: 0.85,

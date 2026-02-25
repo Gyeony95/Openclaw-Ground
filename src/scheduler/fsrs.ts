@@ -265,7 +265,11 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     }
     if (Number.isFinite(wallClockMs)) {
       const fallbackIsPathologicallyStale = wallClockMs - fallbackMs > MAX_CREATE_TIME_OFFSET_MS;
-      const candidateIsWallSafe = Math.abs(candidateMs - wallClockMs) <= MAX_CREATE_TIME_OFFSET_MS;
+      const candidateFutureSkewMs = candidateMs - wallClockMs;
+      const candidatePastOffsetMs = wallClockMs - candidateMs;
+      const candidateIsWallSafe =
+        candidateFutureSkewMs <= MAX_MONOTONIC_CLOCK_SKEW_MS &&
+        isWithinCreatePastWindow(candidatePastOffsetMs);
       if (fallbackIsPathologicallyStale && candidateIsWallSafe) {
         // Recover stale/corrupted card timelines by accepting a wall-safe review clock.
         return toCanonicalIso(candidate, fallback);
