@@ -345,7 +345,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
     return fallback;
   }
 
-  if (requestedValid && candidateMs - fallbackMs > MAX_CREATE_TIME_OFFSET_MS) {
+  if (requestedValid && candidateMs - fallbackMs >= MAX_CREATE_TIME_OFFSET_MS) {
     if (!Number.isFinite(wallClockMs)) {
       // Without a reliable wall clock, keep large forward jumps anchored to the
       // existing card timeline to avoid runaway intervals from corrupted inputs.

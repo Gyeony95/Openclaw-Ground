@@ -2313,6 +2313,26 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('ignores exact long-horizon boundary review timestamps when runtime clock is non-finite', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+    const baseUpdatedAt = NOW;
+    const longHorizonBoundary = addDaysIso(baseUpdatedAt, 365 * 20);
+    const reviewed = reviewCard(
+      {
+        ...createNewCard('nan-review-future-boundary-clamp', 'safe', NOW),
+        state: 'review' as const,
+        dueAt: addDaysIso(NOW, 1),
+        updatedAt: baseUpdatedAt,
+      },
+      3,
+      longHorizonBoundary,
+    );
+    nowSpy.mockRestore();
+
+    expect(reviewed.card.updatedAt).toBe(baseUpdatedAt);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('ignores pathologically far-past review timestamps when runtime clock is non-finite', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
     const baseUpdatedAt = NOW;

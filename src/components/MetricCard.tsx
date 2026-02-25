@@ -16,7 +16,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : '--';
   const accessibilityValue = hasValue ? displayValue : 'loading';
   const statusLabel = !hasValue ? 'Loading' : normalizedValue === 0 ? 'Idle' : 'Active';
-  const statusTone = !hasValue ? colors.warn : normalizedValue === 0 ? colors.subInk : accent;
+  const statusTone = !hasValue ? colors.subInk : normalizedValue === 0 ? colors.subInk : accent;
 
   return (
     <View
