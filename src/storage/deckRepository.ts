@@ -32,6 +32,7 @@ const RELEARNING_MAX_SCHEDULE_DAYS = 2;
 const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 const NON_REVIEW_OUTLIER_MULTIPLIER = 6;
 const TIMELINE_JITTER_TOLERANCE_MS = 1000;
+const COUNTER_INTEGER_TOLERANCE = 1e-6;
 
 const VALID_STATES: ReviewState[] = ['learning', 'review', 'relearning'];
 type CounterNormalizationMode = 'sanitize' | 'saturate';
@@ -138,7 +139,9 @@ function asNonNegativeInt(
   if (parsed === null) {
     return fallback;
   }
-  return clamp(Math.floor(parsed), 0, COUNTER_MAX);
+  const rounded = Math.round(parsed);
+  const normalized = Math.abs(parsed - rounded) <= COUNTER_INTEGER_TOLERANCE ? rounded : Math.floor(parsed);
+  return clamp(normalized, 0, COUNTER_MAX);
 }
 
 function isValidState(state: unknown): state is ReviewState {

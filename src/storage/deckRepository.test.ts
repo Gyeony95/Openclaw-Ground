@@ -112,6 +112,33 @@ describe('deck repository', () => {
     expect(deck.cards[0].difficulty).toBe(7.2);
   });
 
+  it('rounds near-integer persisted counters to avoid precision-drift undercounting', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'near-integer-counters',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-24T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            reps: 4.0000004,
+            lapses: '1.9999996',
+            stability: 3.5,
+            difficulty: 7.2,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].reps).toBe(4);
+    expect(deck.cards[0].lapses).toBe(2);
+  });
+
   it('treats Infinity-like scheduler strings as saturated numeric values when loading cards', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

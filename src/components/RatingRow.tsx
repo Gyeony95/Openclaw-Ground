@@ -47,7 +47,7 @@ export function RatingRow({
   const isVeryNarrow = width < 320;
   const isNarrow = width < 380;
   const isWide = width >= 560;
-  const intervalLineCount = isCompact ? 2 : 1;
+  const intervalLineCount = isVeryNarrow ? 1 : isCompact ? 2 : 1;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(
     () => new Set(disabledRatings.filter((rating): rating is Rating => validRatings.has(rating))),
@@ -58,7 +58,10 @@ export function RatingRow({
   const hasConcreteAgainInterval = againInterval !== labels[0].fallbackHint;
   const lockedAgainGuidance = hasConcreteAgainInterval ? `Again (${againInterval})` : 'Again';
   const lockReasonHint =
-    lockedHint ?? `Incorrect selection locked this step. Choose ${lockedAgainGuidance} to continue.`;
+    lockedHint ??
+    (isVeryNarrow
+      ? `Incorrect selection locked this step. Use ${lockedAgainGuidance}.`
+      : `Incorrect selection locked this step. Choose ${lockedAgainGuidance} to continue.`);
 
   return (
     <View style={styles.container}>
