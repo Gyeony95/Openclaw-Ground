@@ -114,6 +114,18 @@ describe('scheduleStatus', () => {
 
       expect(tone).toBe(colors.danger);
     });
+
+    it('accepts lowercase-z UTC timestamps', () => {
+      const tone = queueTone({
+        dueAt: '2026-02-24T11:58:30.000z',
+        clockIso: '2026-02-24T12:00:00.000z',
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(tone).toBe(colors.danger);
+    });
   });
 
   describe('dueUrgency', () => {
@@ -171,6 +183,16 @@ describe('scheduleStatus', () => {
       const urgency = dueUrgency({
         dueAt: ' 2026-02-24T12:00:30.000Z ',
         clockIso: ` ${NOW} `,
+        needsRepair: false,
+      });
+
+      expect(urgency).toEqual({ label: 'Due now', tone: colors.primary });
+    });
+
+    it('accepts lowercase-z UTC timestamps', () => {
+      const urgency = dueUrgency({
+        dueAt: '2026-02-24T12:00:30.000z',
+        clockIso: '2026-02-24T12:00:00.000z',
         needsRepair: false,
       });
 

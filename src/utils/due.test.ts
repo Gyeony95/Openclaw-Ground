@@ -44,6 +44,10 @@ describe('formatDueLabel', () => {
     expect(formatDueLabel('2026-02-23T11:10:00.000Z', ' 2026-02-23T12:00:00.000Z ')).toBe('Overdue 50m');
   });
 
+  it('accepts lowercase-z UTC timestamps', () => {
+    expect(formatDueLabel('2026-02-23T12:35:00.000z', '2026-02-23T12:00:00.000z')).toBe('Due in 35m');
+  });
+
   it('returns repair label for loose non-ISO timestamps', () => {
     expect(formatDueLabel('2026-02-23 12:00:00Z', NOW)).toBe('Needs schedule repair');
     expect(formatDueLabel('2026-02-23T12:00:00.000Z', '2026-02-23 12:00:00Z')).toBe('Needs schedule repair');

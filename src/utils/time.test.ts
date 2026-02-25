@@ -62,6 +62,7 @@ describe('time utils', () => {
 
   it('accepts strict ISO timestamps and rejects loose date-time strings', () => {
     expect(isIsoDateTime('2026-02-24T08:15:30.000Z')).toBe(true);
+    expect(isIsoDateTime('2026-02-24T08:15:30.000z')).toBe(true);
     expect(isIsoDateTime('2026-02-24T08:15:30Z')).toBe(true);
     expect(isIsoDateTime('+275760-09-13T00:00:00.000Z')).toBe(true);
     expect(isIsoDateTime('2026-02-24 08:15:30Z')).toBe(false);

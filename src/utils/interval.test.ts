@@ -14,12 +14,12 @@ describe('formatIntervalLabel', () => {
 
   it('formats week-scale intervals', () => {
     expect(formatIntervalLabel(8)).toBe('1w');
-    expect(formatIntervalLabel(20)).toBe('3w');
+    expect(formatIntervalLabel(20)).toBe('2w');
   });
 
   it('formats long intervals in months', () => {
     expect(formatIntervalLabel(61)).toBe('2mo');
-    expect(formatIntervalLabel(89)).toBe('3mo');
+    expect(formatIntervalLabel(89)).toBe('2mo');
   });
 
   it('formats very long intervals in years', () => {
@@ -37,6 +37,13 @@ describe('formatIntervalLabel', () => {
   it('rounds near-boundary labels to better reflect scheduled intervals', () => {
     expect(formatIntervalLabel(59.6 / 1440)).toBe('60m');
     expect(formatIntervalLabel(23.6 / 24)).toBe('24h');
-    expect(formatIntervalLabel(6.6)).toBe('7d');
+    expect(formatIntervalLabel(6.6)).toBe('6d');
+  });
+
+  it('keeps long-unit labels conservative so they do not overstate the next interval', () => {
+    expect(formatIntervalLabel(13.9)).toBe('1w');
+    expect(formatIntervalLabel(59.9)).toBe('8w');
+    expect(formatIntervalLabel(359.9)).toBe('11mo');
+    expect(formatIntervalLabel(729.9)).toBe('1y');
   });
 });

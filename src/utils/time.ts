@@ -3,7 +3,7 @@ const EPOCH_ISO = '1970-01-01T00:00:00.000Z';
 const EPOCH_MS = Date.parse(EPOCH_ISO);
 const MIN_DATE_MS = -8640000000000000;
 const MAX_DATE_MS = 8640000000000000;
-const ISO_DATE_TIME_RE = /^[+-]?\d{4,6}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
+const ISO_DATE_TIME_RE = /^[+-]?\d{4,6}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:[Zz]|[+-]\d{2}:\d{2})$/;
 
 export function isIsoDateTime(value: unknown): value is string {
   return typeof value === 'string' && ISO_DATE_TIME_RE.test(value) && Number.isFinite(Date.parse(value));

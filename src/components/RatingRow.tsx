@@ -62,7 +62,8 @@ export function RatingRow({
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
-          const intervalText = isRatingLocked ? 'Again first' : interval;
+          const againInterval = resolveIntervalLabel(intervalLabels, 1, labels[0].fallbackHint);
+          const intervalText = isRatingLocked ? `Use Again (${againInterval})` : interval;
           const intervalPrefix = isRatingLocked ? 'Locked' : 'Next';
           const contentTone = ratingDisabled ? colors.subInk : item.tone;
           const lockTone = isRatingLocked ? item.tone : contentTone;
