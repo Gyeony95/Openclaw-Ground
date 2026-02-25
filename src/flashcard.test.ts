@@ -13,6 +13,13 @@ describe('flashcard flow', () => {
     expect(visibility.showRatings).toBe(false);
   });
 
+  it('can force ratings visible on the front side for schedule-repair flows', () => {
+    const visibility = getFlashcardVisibility('front', false, { forceShowRatings: true });
+    expect(visibility.showMeaning).toBe(false);
+    expect(visibility.showExample).toBe(false);
+    expect(visibility.showRatings).toBe(true);
+  });
+
   it('shows meaning and ratings after flip', () => {
     const visibility = getFlashcardVisibility('back', false);
     expect(visibility.showMeaning).toBe(true);

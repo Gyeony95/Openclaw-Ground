@@ -6,16 +6,25 @@ export interface FlashcardVisibility {
   showRatings: boolean;
 }
 
+export interface FlashcardVisibilityOptions {
+  forceShowRatings?: boolean;
+}
+
 export function flipFlashcardSide(side: FlashcardSide): FlashcardSide {
   return side === 'front' ? 'back' : 'front';
 }
 
-export function getFlashcardVisibility(side: FlashcardSide, hasExample: boolean): FlashcardVisibility {
+export function getFlashcardVisibility(
+  side: FlashcardSide,
+  hasExample: boolean,
+  options: FlashcardVisibilityOptions = {},
+): FlashcardVisibility {
+  const forceShowRatings = options.forceShowRatings === true;
   if (side === 'front') {
     return {
       showMeaning: false,
       showExample: false,
-      showRatings: false,
+      showRatings: forceShowRatings,
     };
   }
   return {

@@ -496,9 +496,13 @@ export default function App() {
   const modeSwitchLocked = isStudyModeSwitchLocked(studyMode, hasQuizSelection, isReviewBusy);
   const quizOptionsLocked = isReviewBusy;
   const isFormEditable = !loading && !isAddBusy;
+  const hasDueCardNotes = dueCardNotes.length > 0;
   const flashcardVisibility = useMemo(
-    () => getFlashcardVisibility(flashcardSide, dueCardNotes.length > 0),
-    [dueCardNotes, flashcardSide],
+    () =>
+      getFlashcardVisibility(flashcardSide, hasDueCardNotes, {
+        forceShowRatings: dueNeedsRepair,
+      }),
+    [dueNeedsRepair, flashcardSide, hasDueCardNotes],
   );
   const canShowRatings = studyMode === 'flashcard' ? flashcardVisibility.showRatings : hasQuizSelection;
 
@@ -1207,7 +1211,13 @@ export default function App() {
                             </Text>
                           </View>
                         </View>
-                        {!flashcardVisibility.showMeaning ? <Text style={styles.revealHint}>Tap card to reveal meaning.</Text> : null}
+                        {!flashcardVisibility.showMeaning ? (
+                          <Text style={styles.revealHint}>
+                            {dueNeedsRepair
+                              ? 'Schedule needs repair. Rate now or flip to confirm the answer.'
+                              : 'Tap card to reveal meaning.'}
+                          </Text>
+                        ) : null}
                         {!flashcardVisibility.showMeaning && quickRatingPreviewLabel ? (
                           <Text style={styles.revealPreviewHint} numberOfLines={2} ellipsizeMode="tail">
                             {quickRatingPreviewLabel}
@@ -1375,7 +1385,11 @@ export default function App() {
                           <Text style={styles.flipBackHint}>Interval preview unavailable. Ratings will still schedule normally.</Text>
                         ) : null}
                         {studyMode === 'flashcard' ? (
-                          <Text style={styles.flipBackHint}>Tap card to flip back to word</Text>
+                          <Text style={styles.flipBackHint}>
+                            {dueNeedsRepair && !flashcardVisibility.showMeaning
+                              ? 'Repair can be applied immediately. Flip if you still want to view the answer.'
+                              : 'Tap card to flip back to word'}
+                          </Text>
                         ) : forceAgainForQuizSelection ? (
                           <Text style={styles.flipBackHint}>Incorrect selection recorded as Again for FSRS consistency.</Text>
                         ) : (
