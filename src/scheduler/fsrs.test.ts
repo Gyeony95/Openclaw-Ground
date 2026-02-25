@@ -1781,6 +1781,30 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back to runtime wall clock when both fallback timeline and requested review clock are pathologically skewed', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const staleCorrupted = {
+        ...createNewCard('stale-corrupted-dual-skew', 'timeline', NOW),
+        state: 'review' as const,
+        updatedAt: '1900-01-01T00:00:00.000Z',
+        dueAt: '1900-01-02T00:00:00.000Z',
+        reps: 8,
+        lapses: 2,
+        stability: 4,
+        difficulty: 5.5,
+      };
+
+      const reviewed = reviewCard(staleCorrupted, 3, '2099-01-01T00:00:00.000Z');
+
+      expect(reviewed.card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('resets schedule anchors conservatively when rolling back pathologically future review timelines', () => {
     jest.useFakeTimers();
     try {

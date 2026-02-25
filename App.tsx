@@ -546,12 +546,16 @@ export default function App() {
   }, [pendingReviewCardKey]);
 
   useEffect(() => {
-    Animated.timing(entryAnim, {
+    const animation = Animated.timing(entryAnim, {
       toValue: 1,
       duration: 420,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
-    }).start();
+    });
+    animation.start();
+    return () => {
+      animation.stop();
+    };
   }, [entryAnim]);
 
   useEffect(() => {

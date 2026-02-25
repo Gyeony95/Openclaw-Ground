@@ -138,6 +138,12 @@ export function isStudyModeSwitchLocked(currentMode: StudyMode, hasQuizSelection
 }
 
 type PosTag = 'noun' | 'verb' | 'adjective' | 'adverb' | 'other';
+const LETTER_SEQUENCE_RE = '[\\p{L}\\p{M}]+';
+const ADVERB_RE = new RegExp(`\\b${LETTER_SEQUENCE_RE}ly\\b`, 'u');
+const ADJECTIVE_RE = new RegExp(
+  `\\b${LETTER_SEQUENCE_RE}(?:ous|ive|able|ible|al|ic|ish|less|ful|ary)\\b`,
+  'u',
+);
 
 const STOP_WORDS = new Set([
   'a',
@@ -252,10 +258,10 @@ export function inferPartOfSpeech(meaning: string): PosTag {
   if (/^(to\s+|be\s+|become\s+)/.test(normalized)) {
     return 'verb';
   }
-  if (/\b\w+ly\b/.test(normalized)) {
+  if (ADVERB_RE.test(normalized)) {
     return 'adverb';
   }
-  if (/\b\w+(ous|ive|able|ible|al|ic|ish|less|ful|ary)$/.test(normalized)) {
+  if (ADJECTIVE_RE.test(normalized)) {
     return 'adjective';
   }
   if (/^(a\s+|an\s+|the\s+|someone\s+|something\s+)/.test(normalized)) {
@@ -270,13 +276,15 @@ function closishLengthScore(left: string, right: string): number {
   if (!a || !b) {
     return 0;
   }
+  const aTokens = tokenize(a);
+  const bTokens = tokenize(b);
 
   const charDelta = Math.abs(a.length - b.length);
   const charMax = Math.max(a.length, b.length);
   const charScore = 1 - charDelta / Math.max(1, charMax);
 
-  const tokenDelta = Math.abs(tokenize(a).length - tokenize(b).length);
-  const tokenMax = Math.max(tokenize(a).length, tokenize(b).length, 1);
+  const tokenDelta = Math.abs(aTokens.length - bTokens.length);
+  const tokenMax = Math.max(aTokens.length, bTokens.length, 1);
   const tokenScore = 1 - tokenDelta / tokenMax;
 
   return Math.max(0, Math.min(1, charScore * 0.6 + tokenScore * 0.4));

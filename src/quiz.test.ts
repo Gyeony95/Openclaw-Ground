@@ -55,6 +55,14 @@ describe('quiz distractors', () => {
     expect(inferPartOfSpeech('dangerous and risky')).toBe('adjective');
   });
 
+  it('detects adjective suffixes that appear mid-phrase', () => {
+    expect(inferPartOfSpeech('a harmful reaction in tissue')).toBe('adjective');
+  });
+
+  it('detects adjective suffixes in words with combining marks', () => {
+    expect(inferPartOfSpeech('a cafe\u0301ic tone in writing')).toBe('adjective');
+  });
+
   it('detects adverbs that appear mid-phrase instead of only at the end', () => {
     expect(inferPartOfSpeech('in a quickly changing market')).toBe('adverb');
   });

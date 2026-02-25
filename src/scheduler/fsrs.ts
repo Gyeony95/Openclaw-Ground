@@ -323,6 +323,10 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
         // Recover stale/corrupted card timelines by accepting a wall-safe review clock.
         return toCanonicalIso(candidate, fallback);
       }
+      if (fallbackIsPathologicallyStale) {
+        // If both inputs are unusable, prefer wall clock over preserving stale timelines.
+        return wallClockIso;
+      }
     }
     // Prevent runaway elapsed intervals when review timestamps jump far beyond card history.
     return fallback;
