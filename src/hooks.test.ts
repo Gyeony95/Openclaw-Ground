@@ -2557,6 +2557,12 @@ describe('resolveReviewClock', () => {
     );
   });
 
+  it('falls back to runtime clock when rendered clock is exactly one minute ahead', () => {
+    expect(resolveReviewClock('2026-02-23T12:01:00.000Z', '2026-02-23T12:00:00.000Z')).toBe(
+      '2026-02-23T12:00:00.000Z',
+    );
+  });
+
   it('falls back to the valid timestamp when one clock value is invalid', () => {
     expect(resolveReviewClock('bad-time', '2026-02-23T12:00:00.000Z')).toBe('2026-02-23T12:00:00.000Z');
     expect(resolveReviewClock('2026-02-23T12:00:00.000Z', 'bad-time')).toBe('2026-02-23T12:00:00.000Z');

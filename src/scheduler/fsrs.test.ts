@@ -129,6 +129,20 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('rejects review timestamps at the exact monotonic future-skew boundary', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date(NOW));
+      const reviewCardAtBoundary = createNewCard('boundary-review-clock', 'safe', NOW);
+      const reviewed = reviewCard(reviewCardAtBoundary, 3, '2026-02-24T00:00:00.000Z').card;
+
+      expect(reviewed.updatedAt).toBe(NOW);
+      expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('keeps near-future creation timestamps that are within monotonic skew tolerance', () => {
     jest.useFakeTimers();
     try {

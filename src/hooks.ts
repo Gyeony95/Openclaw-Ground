@@ -786,7 +786,7 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
       }
       return canonicalRenderedIso ?? wallClockIso;
     }
-    if (renderedMs - runtimeMs > MAX_UI_FUTURE_SKEW_MS) {
+    if (renderedMs - runtimeMs >= MAX_UI_FUTURE_SKEW_MS) {
       // Keep due queues aligned to runtime time once rendered UI drift exceeds tolerance.
       return canonicalRuntimeIso ?? wallClockIso;
     }
