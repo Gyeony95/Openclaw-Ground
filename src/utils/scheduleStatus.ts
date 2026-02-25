@@ -1,5 +1,6 @@
 import { colors } from '../theme';
 import { isIsoDateTime } from './time';
+import { formatDueLabel } from './due';
 
 export interface QueueToneInput {
   dueAt?: string;
@@ -74,15 +75,16 @@ export function dueUrgency({ dueAt, clockIso, needsRepair }: DueUrgencyInput): {
   if (!Number.isFinite(dueMs) || !Number.isFinite(nowMs)) {
     return { label: 'Needs repair', tone: colors.warn };
   }
+  const label = formatDueLabel(dueAt, clockIso);
   const deltaMs = dueMs - nowMs;
   if (deltaMs <= 60 * 1000 && deltaMs >= -60 * 1000) {
-    return { label: 'Due now', tone: colors.primary };
+    return { label, tone: colors.primary };
   }
   if (deltaMs < -60 * 1000) {
-    return { label: 'Overdue', tone: colors.danger };
+    return { label, tone: colors.danger };
   }
   if (deltaMs <= 60 * 60 * 1000) {
-    return { label: 'Due soon', tone: colors.warn };
+    return { label, tone: colors.warn };
   }
-  return { label: 'On track', tone: colors.success };
+  return { label, tone: colors.success };
 }

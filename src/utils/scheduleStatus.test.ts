@@ -169,6 +169,36 @@ describe('scheduleStatus', () => {
       expect(urgency).toEqual({ label: 'Due now', tone: colors.primary });
     });
 
+    it('shows minute-level labels for near-future due cards', () => {
+      const urgency = dueUrgency({
+        dueAt: '2026-02-24T12:30:00.000Z',
+        clockIso: NOW,
+        needsRepair: false,
+      });
+
+      expect(urgency).toEqual({ label: 'Due in 30m', tone: colors.warn });
+    });
+
+    it('shows elapsed overdue labels for overdue cards', () => {
+      const urgency = dueUrgency({
+        dueAt: '2026-02-24T10:00:00.000Z',
+        clockIso: NOW,
+        needsRepair: false,
+      });
+
+      expect(urgency).toEqual({ label: 'Overdue 2h', tone: colors.danger });
+    });
+
+    it('shows future due labels for comfortably scheduled cards', () => {
+      const urgency = dueUrgency({
+        dueAt: '2026-02-24T16:00:00.000Z',
+        clockIso: NOW,
+        needsRepair: false,
+      });
+
+      expect(urgency).toEqual({ label: 'Due in 4h', tone: colors.success });
+    });
+
     it('flags loose non-ISO dueAt values as needing repair', () => {
       const urgency = dueUrgency({
         dueAt: '2026-02-24 12:00:30Z',

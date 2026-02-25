@@ -513,6 +513,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(NOW, 10 / 1440));
   });
 
+  it('preserves imported lapse history that already exceeds reps instead of clamping it down', () => {
+    const runtimeCard = {
+      ...createNewCard('preserve-lapses-over-reps', 'state inference', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 2),
+      reps: '2',
+      lapses: '7',
+      stability: '3',
+      difficulty: '6',
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 3, addDaysIso(NOW, 2)).card;
+
+    expect(reviewed.reps).toBe(3);
+    expect(reviewed.lapses).toBe(7);
+  });
+
   it('parses punctuation-corrupted relearning state labels and keeps relearning hard-step cadence', () => {
     const runtimeCard = {
       ...createNewCard('punctuation-relearning-state', 'state inference', NOW),
