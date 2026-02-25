@@ -467,6 +467,32 @@ describe('applyDueReview', () => {
     expect(result.reviewedAt).toBe('2026-02-23T12:00:30.000Z');
   });
 
+  it('keeps runtime review timestamps when rendered/runtime clocks agree but wall clock is far ahead', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-25T12:00:00.000Z'));
+    try {
+      const nearBoundary = {
+        ...createNewCard('wall-skew-runtime-review-clock', 'safe', NOW),
+        dueAt: '2026-02-23T12:00:20.000Z',
+      };
+
+      const result = applyDueReview(
+        [nearBoundary],
+        nearBoundary.id,
+        3,
+        '2026-02-23T12:00:00.000Z',
+        '2026-02-23T12:00:30.000Z',
+      );
+
+      expect(result.reviewed).toBe(true);
+      expect(result.cards[0]).not.toBe(nearBoundary);
+      expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:30.000Z');
+      expect(result.reviewedAt).toBe('2026-02-23T12:00:30.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('uses runtime clock when rendered review clock is stale beyond tolerance', () => {
     const staleClockDue = {
       ...createNewCard('stale-render-clock-review', 'safe', NOW),
@@ -1153,6 +1179,38 @@ describe('collectDueCards', () => {
 
     expect(dueCards).toHaveLength(1);
     expect(dueCards[0].id).toBe(nearFuture.id);
+  });
+
+  it('keeps due-queue eligibility anchored to runtime clock when wall clock is far ahead', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-25T12:00:00.000Z'));
+    try {
+      const nearFuture = {
+        ...createNewCard('runtime-ahead-queue-wall-skew', 'clock', NOW),
+        dueAt: '2026-02-23T12:00:20.000Z',
+      };
+
+      const dueCards = collectDueCards(
+        [nearFuture],
+        '2026-02-23T12:00:00.000Z',
+        '2026-02-23T12:00:21.000Z',
+      );
+      const reviewed = applyDueReview(
+        [nearFuture],
+        nearFuture.id,
+        3,
+        '2026-02-23T12:00:00.000Z',
+        '2026-02-23T12:00:21.000Z',
+      );
+
+      expect(dueCards).toHaveLength(1);
+      expect(dueCards[0].id).toBe(nearFuture.id);
+      expect(reviewed.reviewed).toBe(true);
+      expect(reviewed.cards[0]).not.toBe(nearFuture);
+      expect(reviewed.cards[0].updatedAt).toBe('2026-02-23T12:00:21.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('keeps queue and review submission aligned when runtime clock input is malformed', () => {

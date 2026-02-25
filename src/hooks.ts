@@ -537,19 +537,20 @@ function resolveInteractionClock(currentIso: string, runtimeNowIso: string): str
   const wallClockMs = safeNowMs();
   const canonicalCurrentIso = toCanonicalIso(currentIso);
   const canonicalRuntimeIso = Number.isFinite(runtimeMs) ? toCanonicalIso(runtimeNowIso) : undefined;
-  const currentTooFarFromRuntime =
-    Number.isFinite(runtimeMs) && Math.abs(currentMs - runtimeMs) > MAX_CLOCK_SKEW_MS;
-  const currentTooFarFromWall =
-    Number.isFinite(wallClockMs) && Math.abs(currentMs - wallClockMs) > MAX_CLOCK_SKEW_MS;
-
-  if (currentTooFarFromRuntime || currentTooFarFromWall) {
-    return resolveReviewClock(currentIso, runtimeNowIso);
-  }
-
   if (Number.isFinite(runtimeMs)) {
+    const currentTooFarFromRuntime = Math.abs(currentMs - runtimeMs) > MAX_CLOCK_SKEW_MS;
+    if (currentTooFarFromRuntime) {
+      return resolveReviewClock(currentIso, runtimeNowIso);
+    }
     // Keep submission eligibility aligned with queue visibility to avoid showing cards
     // as due while rejecting the same review action in the same render frame.
     return canonicalRuntimeIso ?? canonicalCurrentIso;
+  }
+
+  const currentTooFarFromWall =
+    Number.isFinite(wallClockMs) && Math.abs(currentMs - wallClockMs) > MAX_CLOCK_SKEW_MS;
+  if (currentTooFarFromWall) {
+    return resolveReviewClock(currentIso, runtimeNowIso);
   }
 
   return canonicalCurrentIso;

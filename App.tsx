@@ -489,7 +489,7 @@ export default function App() {
   const noteCountTone = notesRemaining === 0 ? colors.danger : notesRemaining <= 20 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
   const isCompactLayout = width < 380;
-  const isReviewBusy = pendingReviewCardKey !== null;
+  const isReviewBusy = pendingReviewCardKey !== null && pendingReviewCardKey === dueCardRevealKey;
   const modeSwitchLocked = isStudyModeSwitchLocked(studyMode, hasQuizSelection, isReviewBusy);
   const quizOptionsLocked = isReviewBusy;
   const isFormEditable = !loading && !isAddBusy;
@@ -533,11 +533,16 @@ export default function App() {
       reviewLockRef.current = false;
       return;
     }
+    if (pendingReviewCardKey !== dueCardRevealKey) {
+      reviewLockRef.current = false;
+      setPendingReviewCardKey(null);
+      return;
+    }
     const timer = setTimeout(() => {
       setPendingReviewCardKey(null);
     }, 300);
     return () => clearTimeout(timer);
-  }, [pendingReviewCardKey]);
+  }, [dueCardRevealKey, pendingReviewCardKey]);
 
   useEffect(() => {
     const animation = Animated.timing(entryAnim, {
@@ -693,7 +698,7 @@ export default function App() {
       setReviewActionError('Incorrect answer selected. Use Again to record failed recall.');
       return;
     }
-    if (!dueCard || pendingReviewCardKey !== null || reviewLockRef.current) {
+    if (!dueCard || isReviewBusy || reviewLockRef.current) {
       return;
     }
     setReviewActionError(null);
