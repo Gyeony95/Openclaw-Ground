@@ -1958,7 +1958,7 @@ export function createNewCard(word: string, meaning: string, nowIso: string | Da
   const requestedIsPlausible =
     Number.isFinite(requestedCreatedMs) &&
     (!Number.isFinite(wallClockMs) ||
-      (requestedCreatedMs - wallClockMs < MAX_CREATE_FUTURE_OFFSET_MS &&
+      (requestedCreatedMs - wallClockMs <= MAX_CREATE_FUTURE_OFFSET_MS &&
         isWithinCreatePastWindow(requestedPastOffsetMs)));
   const safeCreatedMs = requestedIsPlausible
     ? requestedCreatedMs

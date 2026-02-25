@@ -994,7 +994,18 @@ export default function App() {
                     <View style={styles.queueProgressHeader}>
                       <Text style={styles.queueProgressLabel}>Queue load</Text>
                       <View style={styles.queueProgressValueWrap}>
-                        <Text style={[styles.queueProgressStatus, { color: queueProgressTone }]}>{queueLoadStatus}</Text>
+                        <Text
+                          style={[
+                            styles.queueProgressStatus,
+                            {
+                              color: queueProgressTone,
+                              borderColor: `${queueProgressTone}55`,
+                              backgroundColor: `${queueProgressTone}12`,
+                            },
+                          ]}
+                        >
+                          {queueLoadStatus}
+                        </Text>
                         <Text style={styles.queueProgressValue}>{queueProgressPercent}%</Text>
                       </View>
                     </View>
@@ -1873,6 +1884,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.55,
+    borderWidth: 1,
+    borderRadius: radii.pill,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
   },
   queueProgressValue: {
     color: colors.ink,

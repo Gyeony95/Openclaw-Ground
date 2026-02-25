@@ -98,6 +98,21 @@ describe('formatDueLabel', () => {
     expect(formatDueLabel(dueLike as unknown as string, nowLike as unknown as string)).toBe('Due in 35m');
   });
 
+  it('accepts boxed primitives returned from runtime bridge accessors', () => {
+    const dueLike = {
+      valueOf() {
+        return new Number(Date.parse('2026-02-23T12:35:00.000Z'));
+      },
+    };
+    const nowLike = {
+      valueOf() {
+        return new String('2026-02-23T12:00:00.000Z');
+      },
+    };
+
+    expect(formatDueLabel(dueLike as unknown as string, nowLike as unknown as string)).toBe('Due in 35m');
+  });
+
   it('accepts valueOf-backed Date objects from runtime bridges', () => {
     const dueLike = {
       valueOf() {
@@ -106,6 +121,27 @@ describe('formatDueLabel', () => {
     };
     const nowLike = {
       valueOf() {
+        return new Date('2026-02-23T12:00:00.000Z');
+      },
+    };
+
+    expect(formatDueLabel(dueLike as unknown as string, nowLike as unknown as string)).toBe('Due in 35m');
+  });
+
+  it('accepts toString-backed Date objects when valueOf throws', () => {
+    const dueLike = {
+      valueOf() {
+        throw new Error('runtime bridge valueOf failure');
+      },
+      toString() {
+        return new Date('2026-02-23T12:35:00.000Z');
+      },
+    };
+    const nowLike = {
+      valueOf() {
+        throw new Error('runtime bridge valueOf failure');
+      },
+      toString() {
         return new Date('2026-02-23T12:00:00.000Z');
       },
     };

@@ -569,15 +569,15 @@ describe('fsrs scheduler', () => {
     }
   });
 
-  it('falls back to runtime wall clock when creation timestamp is exactly at the future-skew boundary', () => {
+  it('keeps creation timestamps when they are exactly at the future-skew boundary', () => {
     jest.useFakeTimers();
     try {
       jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
       const card = createNewCard('future-boundary', 'timestamp', '2026-02-24T02:30:00.000Z');
 
-      expect(card.createdAt).toBe('2026-02-23T14:30:00.000Z');
-      expect(card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
-      expect(card.dueAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.createdAt).toBe('2026-02-24T02:30:00.000Z');
+      expect(card.updatedAt).toBe('2026-02-24T02:30:00.000Z');
+      expect(card.dueAt).toBe('2026-02-24T02:30:00.000Z');
     } finally {
       jest.useRealTimers();
     }

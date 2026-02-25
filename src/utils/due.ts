@@ -18,6 +18,26 @@ function safeIsoFromMs(ms: number): string | undefined {
 
 function parseIso(iso: unknown): number | null {
   const fromObjectValue = (value: unknown): string | undefined => {
+    const normalizeCandidate = (candidate: unknown): string | undefined => {
+      if (typeof candidate === 'string') {
+        return candidate;
+      }
+      if (candidate instanceof String) {
+        return candidate.valueOf();
+      }
+      if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+        return safeIsoFromMs(candidate);
+      }
+      if (candidate instanceof Number) {
+        const numeric = candidate.valueOf();
+        return Number.isFinite(numeric) ? safeIsoFromMs(numeric) : undefined;
+      }
+      if (candidate instanceof Date) {
+        const ms = candidate.getTime();
+        return safeIsoFromMs(ms);
+      }
+      return undefined;
+    };
     if (!value || typeof value !== 'object') {
       return undefined;
     }
@@ -26,15 +46,9 @@ function parseIso(iso: unknown): number | null {
       const valueOf = valueObject.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(value);
-        if (typeof unboxed === 'string') {
-          return unboxed;
-        }
-        if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
-          return safeIsoFromMs(unboxed);
-        }
-        if (unboxed instanceof Date) {
-          const ms = unboxed.getTime();
-          return safeIsoFromMs(ms);
+        const normalized = normalizeCandidate(unboxed);
+        if (normalized !== undefined) {
+          return normalized;
         }
       }
     } catch {
@@ -44,11 +58,9 @@ function parseIso(iso: unknown): number | null {
       const toString = valueObject.toString;
       if (typeof toString === 'function') {
         const stringified = toString.call(value);
-        if (typeof stringified === 'string') {
-          return stringified;
-        }
-        if (typeof stringified === 'number' && Number.isFinite(stringified)) {
-          return safeIsoFromMs(stringified);
+        const normalized = normalizeCandidate(stringified);
+        if (normalized !== undefined) {
+          return normalized;
         }
       }
     } catch {
@@ -57,6 +69,10 @@ function parseIso(iso: unknown): number | null {
     return undefined;
   };
   const normalizedInput = (() => {
+    if (iso instanceof Date) {
+      const ms = iso.getTime();
+      return safeIsoFromMs(ms);
+    }
     if (typeof iso === 'string') {
       return iso;
     }
@@ -69,10 +85,6 @@ function parseIso(iso: unknown): number | null {
     }
     if (typeof iso === 'number') {
       return safeIsoFromMs(iso);
-    }
-    if (iso instanceof Date) {
-      const ms = iso.getTime();
-      return safeIsoFromMs(ms);
     }
     return fromObjectValue(iso);
   })();
