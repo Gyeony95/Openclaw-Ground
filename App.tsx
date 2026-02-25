@@ -1393,7 +1393,9 @@ export default function App() {
                         ) : null}
                         {studyMode === 'flashcard' ? (
                           <Text style={styles.flipBackHint}>
-                            {dueNeedsRepair && !flashcardVisibility.showMeaning
+                            {isReviewBusy
+                              ? 'Saving review...'
+                              : dueNeedsRepair && !flashcardVisibility.showMeaning
                               ? 'Repair can be applied immediately. Flip if you still want to view the answer.'
                               : 'Tap card to flip back to word'}
                           </Text>

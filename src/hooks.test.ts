@@ -1913,6 +1913,17 @@ describe('hasDueCard', () => {
     );
   });
 
+  it('keeps sub-second rendered clock jitter monotonic when runtime trails slightly', () => {
+    const nearBoundary = {
+      ...createNewCard('deterministic-jitter-due-clock', 'safe', NOW),
+      dueAt: '2026-02-23T12:00:00.500Z',
+    };
+
+    expect(hasDueCard([nearBoundary], nearBoundary.id, '2026-02-23T12:00:00.800Z', '2026-02-23T12:00:00.000Z')).toBe(
+      true,
+    );
+  });
+
   it('does not treat cards as due early when rendered clock is ahead of runtime', () => {
     const nearBoundary = {
       ...createNewCard('deterministic-no-early-due-clock', 'safe', NOW),

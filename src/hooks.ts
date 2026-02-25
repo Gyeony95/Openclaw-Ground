@@ -647,6 +647,11 @@ function resolveInteractionClock(currentIso: string, runtimeNowIso: string): str
     if (currentTooFarFromRuntime) {
       return resolveReviewClock(currentIso, runtimeNowIso);
     }
+    if (runtimeMs < currentMs && currentMs - runtimeMs <= TIMELINE_JITTER_TOLERANCE_MS) {
+      // Keep queue/action clocks monotonic only for sub-second jitter so tiny runtime
+      // sampling lag cannot make a boundary due card flicker in/out of the queue.
+      return canonicalCurrentIso;
+    }
     // Keep submission eligibility aligned with queue visibility to avoid showing cards
     // as due while rejecting the same review action in the same render frame.
     return canonicalRuntimeIso ?? canonicalCurrentIso;
