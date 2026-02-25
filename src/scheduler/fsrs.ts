@@ -20,6 +20,7 @@ import {
 const FSRS_DECAY = -0.5;
 const FSRS_FACTOR = 19 / 81;
 const ON_TIME_TOLERANCE_DAYS = MINUTE_IN_DAYS;
+const DAYLIKE_NEAR_ONE_FLOOR_TOLERANCE_DAYS = 5 * MINUTE_IN_DAYS;
 const HARD_RATING_LATE_TOLERANCE_DAYS = 15 * MINUTE_IN_DAYS;
 const HARD_REVIEW_STABILITY_GROWTH_CAP = 1.2;
 const HARD_DAYLIKE_CAP_PROMOTION_THRESHOLD_DAYS = 1.75;
@@ -982,8 +983,8 @@ function dayLikePreserveScheduleFloorDays(scheduledDays: number): number {
   if (!Number.isFinite(scheduledDays)) {
     return 1;
   }
-  if (scheduledDays <= 1 + ON_TIME_TOLERANCE_DAYS) {
-    // A one-day cadence with only minute-level timestamp drift should stay on a one-day floor.
+  if (scheduledDays <= 1 + DAYLIKE_NEAR_ONE_FLOOR_TOLERANCE_DAYS) {
+    // A one-day cadence with small timestamp drift should stay on a one-day floor.
     return 1;
   }
   // Preserve day-like cadence without shrinking into a lower day bucket on on-time

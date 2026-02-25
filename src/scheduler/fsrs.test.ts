@@ -1026,6 +1026,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBe(1);
   });
 
+  it('keeps one-day on-time hard reviews at a one-day floor when drift is only a few minutes', () => {
+    const runtimeCard = {
+      ...createNewCard('daylike-hard-few-minutes-drift-floor', 'interval floor', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1 + 3 / (24 * 60)),
+      reps: 8,
+      lapses: 1,
+      stability: 1,
+      difficulty: 8.6,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 2, runtimeCard.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBe(1);
+  });
+
   it('keeps on-time day-like good reviews from shrinking to a shorter day bucket', () => {
     const runtimeCard = {
       ...createNewCard('daylike-good-preserve-floor', 'interval floor', NOW),
@@ -1068,6 +1086,24 @@ describe('fsrs scheduler', () => {
       state: 'review' as const,
       updatedAt: NOW,
       dueAt: addDaysIso(NOW, 1 + 30 / (24 * 60 * 60)),
+      reps: 8,
+      lapses: 1,
+      stability: 1,
+      difficulty: 8.6,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 3, runtimeCard.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBe(1);
+  });
+
+  it('keeps one-day on-time good reviews at a one-day floor when drift is only a few minutes', () => {
+    const runtimeCard = {
+      ...createNewCard('daylike-good-few-minutes-drift-floor', 'interval floor', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1 + 3 / (24 * 60)),
       reps: 8,
       lapses: 1,
       stability: 1,
