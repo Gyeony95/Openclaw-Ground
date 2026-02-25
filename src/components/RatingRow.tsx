@@ -44,9 +44,10 @@ export function RatingRow({
   const { width } = useWindowDimensions();
   // Keep tap targets readable on smaller phones by stacking sooner.
   const isCompact = width < 340;
+  const isVeryNarrow = width < 320;
   const isNarrow = width < 380;
   const isWide = width >= 560;
-  const intervalLineCount = isCompact ? 1 : 2;
+  const intervalLineCount = isCompact || isVeryNarrow ? 1 : 2;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(
     () => new Set(disabledRatings.filter((rating): rating is Rating => validRatings.has(rating))),
@@ -93,6 +94,7 @@ export function RatingRow({
                 styles.button,
                 isNarrow ? styles.buttonNarrow : null,
                 isCompact ? styles.buttonCompact : null,
+                isVeryNarrow ? styles.buttonVeryNarrow : null,
                 isWide ? styles.buttonWide : null,
                 busy ? styles.buttonBusy : null,
                 ratingDisabled
@@ -191,6 +193,10 @@ const styles = StyleSheet.create({
   buttonCompact: {
     flexBasis: '100%',
   },
+  buttonVeryNarrow: {
+    minHeight: 88,
+    paddingHorizontal: 6,
+  },
   buttonNarrow: {
     paddingVertical: 12,
     paddingHorizontal: 8,
@@ -241,6 +247,7 @@ const styles = StyleSheet.create({
     color: colors.subInk,
     fontWeight: '600',
     letterSpacing: 0.2,
+    textAlign: 'center',
   },
   busyRow: {
     flexDirection: 'row',

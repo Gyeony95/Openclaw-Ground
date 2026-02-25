@@ -321,6 +321,11 @@ export function hasScheduleRepairNeed(
   if (!state) {
     return true;
   }
+  if (state === 'review' && isMaxIsoBound(dueMs) && isMaxIsoBound(updatedMs)) {
+    // Saturated upper-bound review schedules cannot advance beyond the max date
+    // and should remain valid instead of being treated as future-skew corruption.
+    return false;
+  }
   if (Number.isFinite(wallClockMs)) {
     // `dueAt` can legitimately be far in the future for mature review cards.
     // Only treat timeline anchors as corrupted when `updatedAt` itself is future-skewed.
@@ -369,10 +374,6 @@ export function hasScheduleRepairNeed(
       // persisted phase drift and should be repaired before queueing.
       return true;
     }
-    return false;
-  }
-  if (state === 'review' && isMaxIsoBound(dueMs) && isMaxIsoBound(updatedMs)) {
-    // Saturated upper-bound review schedules cannot move forward in time and are still valid.
     return false;
   }
   // Brand-new learning cards are legitimately due at creation time; persisted learning cards should move forward.

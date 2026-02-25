@@ -34,6 +34,11 @@ describe('formatIntervalLabel', () => {
     expect(formatIntervalLabel(-1)).toBe('<1m');
   });
 
+  it('caps overflowed positive infinity intervals to a max horizon label', () => {
+    expect(formatIntervalLabel(Number.POSITIVE_INFINITY)).toBe('100y');
+    expect(formatIntervalLabel(Number.NEGATIVE_INFINITY)).toBe('<1m');
+  });
+
   it('rounds near-boundary labels to better reflect scheduled intervals', () => {
     expect(formatIntervalLabel(59.6 / 1440)).toBe('60m');
     expect(formatIntervalLabel(23.6 / 24)).toBe('24h');

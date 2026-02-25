@@ -1936,6 +1936,26 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(saturatedReview)).toBe(false);
   });
 
+  it('keeps saturated max-date review schedules valid when wall clock is finite and far behind', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const saturatedReview = {
+        ...createNewCard('repair-max-date-review-wall-safe', 'test', NOW),
+        state: 'review' as const,
+        updatedAt: MAX_ISO,
+        dueAt: MAX_ISO,
+        reps: 8,
+        lapses: 1,
+        stability: 36500,
+      };
+
+      expect(hasScheduleRepairNeed(saturatedReview)).toBe(false);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('flags saturated max-date relearning schedules as corrupted', () => {
     const saturatedRelearning = {
       ...createNewCard('repair-max-date-relearning', 'test', NOW),
