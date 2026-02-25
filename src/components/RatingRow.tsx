@@ -47,7 +47,7 @@ export function RatingRow({
   const isCompact = width < 350;
   const isNarrow = width < 380;
   const isWide = width >= 560;
-  const intervalLineCount = isVeryNarrow ? 1 : isCompact ? 2 : 1;
+  const intervalLineCount = isVeryNarrow ? 2 : isCompact ? 2 : 1;
   const isDisabled = disabled || busy;
   const disabledSet = useMemo(
     () => new Set(disabledRatings.filter((rating): rating is Rating => validRatings.has(rating))),
@@ -186,6 +186,7 @@ const styles = StyleSheet.create({
   },
   intervalMeta: {
     alignItems: 'center',
+    minHeight: 34,
     gap: 3,
   },
   button: {
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 10,
     minWidth: 80,
-    minHeight: 108,
+    minHeight: 112,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
@@ -249,9 +250,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonText: {
-    fontSize: 12.5,
+    fontSize: 13,
     fontWeight: '800',
-    letterSpacing: 0.64,
+    letterSpacing: 0.56,
     textTransform: 'uppercase',
   },
   hintLabel: {

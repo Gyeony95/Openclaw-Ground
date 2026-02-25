@@ -3123,6 +3123,50 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(boxedStringReview)).toBe(false);
   });
 
+  it('accepts Date-like timeline fields from runtime bridges when evaluating repair eligibility', () => {
+    const bridgedTimelineReview = {
+      ...createNewCard('repair-review-date-bridge-fields', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: {
+        valueOf() {
+          return new Date('2026-02-23T12:00:00.000Z');
+        },
+      } as unknown as string,
+      dueAt: {
+        valueOf() {
+          return new Date('2026-02-24T12:00:00.000Z');
+        },
+      } as unknown as string,
+    } as Card;
+
+    expect(hasScheduleRepairNeed(bridgedTimelineReview)).toBe(false);
+  });
+
+  it('accepts toString-backed numeric timeline fields when runtime valueOf throws', () => {
+    const bridgedTimelineReview = {
+      ...createNewCard('repair-review-tostring-date-bridge-fields', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: {
+        valueOf() {
+          throw new Error('timeline bridge valueOf failure');
+        },
+        toString() {
+          return String(Date.parse('2026-02-23T12:00:00.000Z'));
+        },
+      } as unknown as string,
+      dueAt: {
+        valueOf() {
+          throw new Error('timeline bridge valueOf failure');
+        },
+        toString() {
+          return String(Date.parse('2026-02-24T12:00:00.000Z'));
+        },
+      } as unknown as string,
+    } as Card;
+
+    expect(hasScheduleRepairNeed(bridgedTimelineReview)).toBe(false);
+  });
+
   it('accepts valueOf-backed string state aliases when evaluating repair eligibility', () => {
     const valueOfStateReview = {
       ...createNewCard('repair-review-valueof-string-state', 'test', NOW),

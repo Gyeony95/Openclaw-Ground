@@ -2012,6 +2012,66 @@ describe('deck repository', () => {
     expect(savedDeck.cards[0].difficulty).toBe(6.25);
   });
 
+  it('accepts runtime-bridged id and timeline fields before persisting deck data', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: new String('bridged-save-id') as unknown as string,
+          word: 'eta',
+          meaning: 'seventh',
+          dueAt: {
+            valueOf() {
+              return new Date('2026-02-23T00:00:00.000Z');
+            },
+          } as unknown as string,
+          createdAt: {
+            valueOf() {
+              return Date.parse('2026-02-20T00:00:00.000Z');
+            },
+          } as unknown as string,
+          updatedAt: {
+            valueOf() {
+              throw new Error('timeline bridge valueOf failure');
+            },
+            toString() {
+              return String(Date.parse('2026-02-22T00:00:00.000Z'));
+            },
+          } as unknown as string,
+          state: 'review',
+          reps: 5,
+          lapses: 1,
+          stability: 2,
+          difficulty: 5.5,
+        },
+      ] as unknown as Array<{
+        id: string;
+        word: string;
+        meaning: string;
+        dueAt: string;
+        createdAt: string;
+        updatedAt: string;
+        state: 'learning' | 'review' | 'relearning';
+        reps: number;
+        lapses: number;
+        stability: number;
+        difficulty: number;
+      }>,
+    });
+
+    expect(mockedStorage.setItem).toHaveBeenCalledTimes(1);
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as {
+      cards: Array<{ id: string; createdAt: string; updatedAt: string; dueAt: string }>;
+    };
+    expect(savedDeck.cards).toHaveLength(1);
+    expect(savedDeck.cards[0].id).toBe('bridged-save-id');
+    expect(savedDeck.cards[0].createdAt).toBe('2026-02-20T00:00:00.000Z');
+    expect(savedDeck.cards[0].updatedAt).toBe('2026-02-22T00:00:00.000Z');
+    expect(savedDeck.cards[0].dueAt).toBe('2026-02-23T00:00:00.000Z');
+  });
+
   it('keeps only valid lastReviewedAt when persisting', async () => {
     mockedStorage.setItem.mockResolvedValueOnce();
 

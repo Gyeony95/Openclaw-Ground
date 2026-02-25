@@ -42,13 +42,55 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function safeReadString(read: () => unknown, fallback = ''): string {
-  try {
-    const value = read();
+  const normalize = (value: unknown): string | null => {
     if (typeof value === 'string') {
       return value;
     }
     if (value instanceof String) {
       return value.valueOf();
+    }
+    if (value instanceof Date) {
+      const ms = value.getTime();
+      return Number.isFinite(ms) ? toSafeIso(ms) : null;
+    }
+    if (typeof value === 'number' || value instanceof Number) {
+      const numeric = value instanceof Number ? value.valueOf() : value;
+      return Number.isFinite(numeric) ? toSafeIso(numeric) : null;
+    }
+    return null;
+  };
+
+  try {
+    const value = read();
+    const normalized = normalize(value);
+    if (normalized !== null) {
+      return normalized;
+    }
+    if (!value || typeof value !== 'object') {
+      return fallback;
+    }
+    const valueObject = value as { valueOf?: () => unknown; toString?: () => unknown };
+    try {
+      const valueOf = valueObject.valueOf;
+      if (typeof valueOf === 'function') {
+        const fromValueOf = normalize(valueOf.call(value));
+        if (fromValueOf !== null) {
+          return fromValueOf;
+        }
+      }
+    } catch {
+      // Fall through to toString for bridged runtime objects with broken valueOf.
+    }
+    try {
+      const toString = valueObject.toString;
+      if (typeof toString === 'function') {
+        const fromToString = normalize(toString.call(value));
+        if (fromToString !== null) {
+          return fromToString;
+        }
+      }
+    } catch {
+      return fallback;
     }
     return fallback;
   } catch {
@@ -347,7 +389,7 @@ function pickFreshestDuplicate(existing: Card, incoming: Card): Card {
 }
 
 function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode = 'sanitize'): Card | null {
-  const id = typeof raw.id === 'string' ? raw.id.trim() : '';
+  const id = safeReadString(() => raw.id).trim();
   const wordValue = normalizeBoundedText(raw.word, WORD_MAX_LENGTH);
   const meaningValue = normalizeBoundedText(raw.meaning, MEANING_MAX_LENGTH);
   const notesValue = normalizeBoundedText(raw.notes, NOTES_MAX_LENGTH);
