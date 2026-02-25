@@ -5302,6 +5302,26 @@ describe('fsrs scheduler', () => {
     expect(malformedReview.scheduledDays).toBe(validReview.scheduledDays);
   });
 
+  it('keeps review cards in review phase when dueAt and stability are both malformed but history exists', () => {
+    const malformedReview = {
+      ...createNewCard('missing-due-invalid-stability', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      createdAt: NOW,
+      dueAt: undefined as unknown as string,
+      reps: 12,
+      lapses: 2,
+      stability: Number.NaN,
+      difficulty: 5,
+    };
+    const reviewAt = addDaysIso(NOW, 0.5);
+    const reviewed = reviewCard(malformedReview, 2, reviewAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(0.5);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
   it('repairs outlier review dueAt values using a conservative short anchor even for mature stability cards', () => {
     const updatedAt = NOW;
     const conservative = {

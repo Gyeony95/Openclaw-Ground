@@ -198,6 +198,33 @@ function isDueOrInvalid(dueAt: string, currentIso: string): boolean {
   return isDue(dueAt, currentIso);
 }
 
+function isStatsRuntimeCardCandidate(value: unknown): value is Pick<
+  Card,
+  'id' | 'word' | 'meaning' | 'dueAt' | 'createdAt' | 'updatedAt' | 'state'
+> {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const candidate = value as Partial<Card>;
+  const id = safeReadString(() => candidate.id);
+  const word = safeReadString(() => candidate.word);
+  const meaning = safeReadString(() => candidate.meaning);
+  const dueAt = safeReadString(() => candidate.dueAt);
+  const createdAt = safeReadString(() => candidate.createdAt);
+  const updatedAt = safeReadString(() => candidate.updatedAt);
+  const state = safeReadString(() => candidate.state);
+
+  return (
+    id.trim().length > 0 &&
+    word.trim().length > 0 &&
+    meaning.trim().length > 0 &&
+    dueAt.trim().length > 0 &&
+    createdAt.trim().length > 0 &&
+    updatedAt.trim().length > 0 &&
+    state.trim().length > 0
+  );
+}
+
 function parseTimeOrMin(iso: string): number {
   if (!isIsoDateTime(iso)) {
     return Number.MIN_SAFE_INTEGER;
@@ -490,9 +517,11 @@ export async function saveDeck(deck: Deck): Promise<void> {
 export function computeDeckStats(cards: Card[], currentIso = nowIso()): DeckStats {
   return cards.reduce<DeckStats>(
     (acc, card) => {
-      const runtimeCard = card as Partial<Card> | undefined;
-      const dueAt = safeReadString(() => runtimeCard?.dueAt);
-      const state = safeReadString(() => runtimeCard?.state);
+      if (!isStatsRuntimeCardCandidate(card)) {
+        return acc;
+      }
+      const dueAt = safeReadString(() => card.dueAt);
+      const state = safeReadString(() => card.state);
       acc.total += 1;
       if (isDueOrInvalid(dueAt, currentIso)) {
         acc.dueNow += 1;

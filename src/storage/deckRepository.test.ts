@@ -541,7 +541,7 @@ describe('deck repository', () => {
     });
   });
 
-  it('keeps stats computation resilient when runtime deck entries are malformed', () => {
+  it('ignores malformed runtime deck entries while still counting valid cards', () => {
     const stats = computeDeckStats(
       [
         null,
@@ -564,15 +564,15 @@ describe('deck repository', () => {
     );
 
     expect(stats).toEqual({
-      total: 3,
-      dueNow: 3,
+      total: 1,
+      dueNow: 1,
       learning: 0,
       review: 1,
       relearning: 0,
     });
   });
 
-  it('keeps stats computation resilient when due/state accessors throw at runtime', () => {
+  it('skips runtime entries when due/state accessors throw', () => {
     const throwingCard = {
       id: 'throwing-card',
       word: 'alpha',
@@ -601,8 +601,8 @@ describe('deck repository', () => {
     const stats = computeDeckStats([throwingCard as any], '2026-02-23T00:00:00.000Z');
 
     expect(stats).toEqual({
-      total: 1,
-      dueNow: 1,
+      total: 0,
+      dueNow: 0,
       learning: 0,
       review: 0,
       relearning: 0,

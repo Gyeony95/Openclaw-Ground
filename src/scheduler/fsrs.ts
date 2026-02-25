@@ -543,9 +543,9 @@ function normalizeTimeline(
   const fallbackDueDaysForStateInference = hasReviewHistoryForStateInference
     ? clampFinite(
         parsedStabilityForStateInference ?? Number.NaN,
-        RELEARNING_SCHEDULE_FLOOR_DAYS,
+        REVIEW_SCHEDULE_FLOOR_DAYS,
         STABILITY_MAX,
-        RELEARNING_SCHEDULE_FLOOR_DAYS,
+        REVIEW_SCHEDULE_FLOOR_DAYS,
       )
     : MINUTE_IN_DAYS;
   const dueAtForStateInference = rawDueAt ?? addDaysIso(updatedAt, fallbackDueDaysForStateInference);
