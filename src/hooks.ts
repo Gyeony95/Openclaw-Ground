@@ -67,6 +67,13 @@ function normalizeCardIdForSort(id: unknown): string {
   return id.trim();
 }
 
+function compareCardIdSortTokens(left: string, right: string): number {
+  if (left === right) {
+    return 0;
+  }
+  return left < right ? -1 : 1;
+}
+
 function isValidCardId(id: unknown): id is string {
   return typeof id === 'string' && id.trim().length > 0;
 }
@@ -625,7 +632,7 @@ export function compareDueCards(a: Card, b: Card): number {
   }
   const aId = safeReadUnknown(() => a?.id);
   const bId = safeReadUnknown(() => b?.id);
-  return normalizeCardIdForSort(aId).localeCompare(normalizeCardIdForSort(bId));
+  return compareCardIdSortTokens(normalizeCardIdForSort(aId), normalizeCardIdForSort(bId));
 }
 
 export function collectDueCards(cards: Card[], currentIso: string, runtimeNowIso: string): Card[] {

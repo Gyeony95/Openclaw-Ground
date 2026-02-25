@@ -1034,6 +1034,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBe(1);
   });
 
+  it('keeps on-time day-like easy reviews from shrinking to a shorter day bucket', () => {
+    const runtimeCard = {
+      ...createNewCard('daylike-easy-preserve-floor', 'interval floor', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 1.1),
+      reps: 8,
+      lapses: 1,
+      stability: 1.1,
+      difficulty: 8.6,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 4, runtimeCard.dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(2);
+  });
+
   it('returns conservative learning preview intervals when runtime card data is corrupted', () => {
     const corrupted = createNewCard('preview-corrupted-learning', 'safe', NOW);
     Object.defineProperty(corrupted, 'difficulty', {

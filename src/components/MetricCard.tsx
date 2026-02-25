@@ -15,7 +15,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const normalizedValue = hasValue ? Math.max(0, Math.round(value)) : null;
   const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : '--';
   const accessibilityValue = hasValue ? displayValue : 'loading';
-  const statusLabel = hasValue ? 'Now' : 'Loading';
+  const statusLabel = hasValue ? 'Live' : 'Loading';
   const statusTone = hasValue ? colors.subInk : colors.warn;
 
   return (
@@ -44,7 +44,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
         style={[styles.value, isNarrow && styles.valueNarrow, !hasValue && styles.valueUnavailable]}
         numberOfLines={1}
         adjustsFontSizeToFit
-        minimumFontScale={0.68}
+        minimumFontScale={0.72}
         maxFontSizeMultiplier={1.3}
       >
         {displayValue}
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 3,
+    height: 4,
   },
   accentWash: {
     position: 'absolute',
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   badgeText: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.subInk,
     textTransform: 'uppercase',
-    letterSpacing: 0.9,
+    letterSpacing: 0.8,
     flexShrink: 1,
     lineHeight: 14,
   },

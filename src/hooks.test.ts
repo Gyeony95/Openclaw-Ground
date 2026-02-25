@@ -880,6 +880,28 @@ describe('compareDueCards', () => {
 
     expect(orderedIds).toEqual(['a-first', '  z-last  ']);
   });
+
+  it('uses locale-independent code-point ordering for id tie-breaks', () => {
+    const base = createNewCard('queue-id-codepoint', 'ordering', NOW);
+    const umlaut = {
+      ...base,
+      id: 'ä-card',
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+    const plain = {
+      ...base,
+      id: 'z-card',
+      dueAt: '2026-02-23T11:30:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+
+    const orderedIds = [umlaut, plain].sort(compareDueCards).map((card) => card.id);
+
+    expect(orderedIds).toEqual(['z-card', 'ä-card']);
+  });
 });
 
 describe('collectDueCards', () => {

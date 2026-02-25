@@ -1135,6 +1135,10 @@ function rawReviewIntervalDays(
   if (phase === 'review' && rating === 3 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {
     floorFromSchedule = Math.max(floorFromSchedule, schedulePreserveFloor);
   }
+  // Keep on-time day-like "Easy" reviews from dropping into a shorter day bucket.
+  if (phase === 'review' && rating === 4 && elapsed + ON_TIME_TOLERANCE_DAYS >= scheduled) {
+    floorFromSchedule = Math.max(floorFromSchedule, schedulePreserveFloor);
+  }
 
   const flooredInterval = quantizeReviewIntervalDays(Math.max(rawInterval, floorFromSchedule), scheduled);
 
