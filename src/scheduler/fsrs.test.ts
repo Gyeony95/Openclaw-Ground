@@ -5062,6 +5062,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(NOW, 10 / 1440));
   });
 
+  it('keeps long review cadence when stability is an Infinity-like string', () => {
+    const stableReviewCard = {
+      ...createNewCard('infinite-string-stability', 'definition', NOW),
+      state: 'review' as const,
+      reps: 12,
+      lapses: 1,
+      stability: 'Infinity' as unknown as number,
+      difficulty: 4,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 30),
+    };
+
+    const reviewed = reviewCard(stableReviewCard as unknown as Card, 3, addDaysIso(NOW, 30));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(30);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(addDaysIso(NOW, 59)));
+  });
+
   it('snapshots runtime timeline accessors once during review scheduling', () => {
     const runtimeCard = {
       ...createNewCard('runtime-snapshot-review', 'definition', NOW),

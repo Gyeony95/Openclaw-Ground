@@ -2357,6 +2357,18 @@ describe('hasScheduleRepairNeed', () => {
 
     expect(hasScheduleRepairNeed(infiniteRepsReview)).toBe(false);
   });
+
+  it('treats Infinity-like stability strings as max stability for review window validation', () => {
+    const infiniteStabilityReview = {
+      ...createNewCard('repair-review-infinity-stability', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-03-23T12:00:00.000Z',
+      stability: 'Infinity' as unknown as number,
+    };
+
+    expect(hasScheduleRepairNeed(infiniteStabilityReview)).toBe(false);
+  });
 });
 
 describe('countScheduleRepairCards', () => {

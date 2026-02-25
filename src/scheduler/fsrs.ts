@@ -178,12 +178,25 @@ function isWithinCreatePastWindow(pastOffsetMs: number): boolean {
 
 function parseRuntimeFiniteNumber(value: unknown): number | null {
   if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null;
+    if (Number.isFinite(value)) {
+      return value;
+    }
+    if (value === Number.POSITIVE_INFINITY || value === Number.NEGATIVE_INFINITY) {
+      return value;
+    }
+    return null;
   }
   if (typeof value !== 'string') {
     return null;
   }
   const trimmed = value.trim();
+  const lowered = trimmed.toLowerCase();
+  if (lowered === 'infinity' || lowered === '+infinity') {
+    return Number.POSITIVE_INFINITY;
+  }
+  if (lowered === '-infinity') {
+    return Number.NEGATIVE_INFINITY;
+  }
   if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(trimmed)) {
     return null;
   }
