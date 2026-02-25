@@ -115,6 +115,26 @@ describe('scheduleStatus', () => {
       expect(tone).toBe(colors.danger);
     });
 
+    it('accepts boxed and numeric timestamps from runtime bridges', () => {
+      const boxedTone = queueTone({
+        dueAt: new String('2026-02-24T11:58:30.000Z') as unknown as string,
+        clockIso: new String(NOW) as unknown as string,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+      const numericTone = queueTone({
+        dueAt: Date.parse('2026-02-24T11:58:30.000Z') as unknown as string,
+        clockIso: Date.parse(NOW) as unknown as string,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(boxedTone).toBe(colors.danger);
+      expect(numericTone).toBe(colors.danger);
+    });
+
     it('accepts lowercase-z UTC timestamps', () => {
       const tone = queueTone({
         dueAt: '2026-02-24T11:58:30.000z',
@@ -217,6 +237,22 @@ describe('scheduleStatus', () => {
       });
 
       expect(urgency).toEqual({ label: 'Due now', tone: colors.primary });
+    });
+
+    it('accepts boxed and numeric due timestamps from runtime bridges', () => {
+      const boxed = dueUrgency({
+        dueAt: new String('2026-02-24T12:00:30.000Z') as unknown as string,
+        clockIso: new String(NOW) as unknown as string,
+        needsRepair: false,
+      });
+      const numeric = dueUrgency({
+        dueAt: Date.parse('2026-02-24T12:00:30.000Z') as unknown as string,
+        clockIso: Date.parse(NOW) as unknown as string,
+        needsRepair: false,
+      });
+
+      expect(boxed).toEqual({ label: 'Due now', tone: colors.primary });
+      expect(numeric).toEqual({ label: 'Due now', tone: colors.primary });
     });
 
     it('accepts lowercase-z UTC timestamps', () => {

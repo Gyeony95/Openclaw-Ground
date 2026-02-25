@@ -6,10 +6,40 @@ const MINUTE_MS = 60 * 1000;
 const NOW_THRESHOLD_MS = 60 * 1000;
 
 function parseIso(iso: unknown): number | null {
-  if (typeof iso !== 'string') {
+  const normalizedInput = (() => {
+    if (typeof iso === 'string') {
+      return iso;
+    }
+    if (iso instanceof String) {
+      return iso.valueOf();
+    }
+    if (typeof iso === 'number') {
+      if (!Number.isFinite(iso)) {
+        return undefined;
+      }
+      try {
+        return new Date(iso).toISOString();
+      } catch {
+        return undefined;
+      }
+    }
+    if (iso instanceof Date) {
+      const ms = iso.getTime();
+      if (!Number.isFinite(ms)) {
+        return undefined;
+      }
+      try {
+        return new Date(ms).toISOString();
+      } catch {
+        return undefined;
+      }
+    }
+    return undefined;
+  })();
+  if (typeof normalizedInput !== 'string') {
     return null;
   }
-  const normalized = iso.trim();
+  const normalized = normalizedInput.trim();
   if (!isIsoDateTime(normalized)) {
     return null;
   }

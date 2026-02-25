@@ -17,11 +17,41 @@ export interface DueUrgencyInput {
   needsRepair: boolean;
 }
 
-function parseIsoOrNaN(value?: string): number {
-  if (typeof value !== 'string') {
+function parseIsoOrNaN(value?: unknown): number {
+  const normalizedInput = (() => {
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (value instanceof String) {
+      return value.valueOf();
+    }
+    if (typeof value === 'number') {
+      if (!Number.isFinite(value)) {
+        return undefined;
+      }
+      try {
+        return new Date(value).toISOString();
+      } catch {
+        return undefined;
+      }
+    }
+    if (value instanceof Date) {
+      const ms = value.getTime();
+      if (!Number.isFinite(ms)) {
+        return undefined;
+      }
+      try {
+        return new Date(ms).toISOString();
+      } catch {
+        return undefined;
+      }
+    }
+    return undefined;
+  })();
+  if (typeof normalizedInput !== 'string') {
     return Number.NaN;
   }
-  const normalized = value.trim();
+  const normalized = normalizedInput.trim();
   if (!isIsoDateTime(normalized)) {
     return Number.NaN;
   }

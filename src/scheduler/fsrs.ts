@@ -213,6 +213,12 @@ function normalizeIsoInput(value: unknown): string | undefined {
       }
       return undefined;
     }
+    if (typeof value === 'number') {
+      if (Number.isFinite(value)) {
+        return toSafeIso(value);
+      }
+      return undefined;
+    }
     if (typeof value === 'string') {
       return value;
     }

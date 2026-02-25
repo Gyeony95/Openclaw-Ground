@@ -530,6 +530,9 @@ function normalizeIsoInput(value: unknown): string | undefined {
       const dateMs = value.getTime();
       return Number.isFinite(dateMs) ? toSafeIso(dateMs) : undefined;
     }
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? toSafeIso(value) : undefined;
+    }
     if (typeof value === 'string') {
       return value;
     }

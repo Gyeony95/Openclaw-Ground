@@ -6689,6 +6689,26 @@ describe('fsrs scheduler', () => {
     expect(boxedNow.card.reps).toBe(primitive.card.reps);
   });
 
+  it('accepts primitive numeric review timestamps so runtime millisecond clocks schedule deterministically', () => {
+    const card = {
+      ...createNewCard('numeric-now-review', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -2),
+      dueAt: NOW,
+      reps: 5,
+      lapses: 1,
+      stability: 2,
+      difficulty: 5,
+    } as Card;
+    const primitive = reviewCard(card, 3, NOW);
+    const numericNow = reviewCard(card, 3, Date.parse(NOW) as unknown as string);
+
+    expect(numericNow.scheduledDays).toBe(primitive.scheduledDays);
+    expect(numericNow.card.updatedAt).toBe(primitive.card.updatedAt);
+    expect(numericNow.card.dueAt).toBe(primitive.card.dueAt);
+    expect(numericNow.card.reps).toBe(primitive.card.reps);
+  });
+
   it('accepts boxed preview timestamps so interval previews match primitive clocks', () => {
     const card = {
       ...createNewCard('boxed-now-preview', 'definition', NOW),
@@ -6709,8 +6729,36 @@ describe('fsrs scheduler', () => {
     expect(boxedNow[4]).toBe(primitive[4]);
   });
 
+  it('accepts primitive numeric preview timestamps so interval previews match canonical clocks', () => {
+    const card = {
+      ...createNewCard('numeric-now-preview', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -3),
+      dueAt: NOW,
+      reps: 6,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    } as Card;
+    const primitive = previewIntervals(card, NOW);
+    const numericNow = previewIntervals(card, Date.parse(NOW) as unknown as string);
+
+    expect(numericNow[1]).toBe(primitive[1]);
+    expect(numericNow[2]).toBe(primitive[2]);
+    expect(numericNow[3]).toBe(primitive[3]);
+    expect(numericNow[4]).toBe(primitive[4]);
+  });
+
   it('accepts boxed creation timestamps so imported cards preserve trusted creation anchors', () => {
     const created = createNewCard('boxed-create-now', 'definition', new String(NOW) as unknown as string);
+
+    expect(created.createdAt).toBe(NOW);
+    expect(created.updatedAt).toBe(NOW);
+    expect(created.dueAt).toBe(NOW);
+  });
+
+  it('accepts primitive numeric creation timestamps so imported cards preserve numeric epoch anchors', () => {
+    const created = createNewCard('numeric-create-now', 'definition', Date.parse(NOW) as unknown as string);
 
     expect(created.createdAt).toBe(NOW);
     expect(created.updatedAt).toBe(NOW);

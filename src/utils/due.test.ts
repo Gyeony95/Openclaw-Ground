@@ -49,6 +49,24 @@ describe('formatDueLabel', () => {
     expect(formatDueLabel('2026-02-23T11:10:00.000Z', ' 2026-02-23T12:00:00.000Z ')).toBe('Overdue 50m');
   });
 
+  it('accepts boxed ISO timestamps from runtime bridges', () => {
+    expect(
+      formatDueLabel(
+        new String('2026-02-23T12:35:00.000Z') as unknown as string,
+        new String('2026-02-23T12:00:00.000Z') as unknown as string,
+      ),
+    ).toBe('Due in 35m');
+  });
+
+  it('accepts primitive numeric timestamps from runtime bridges', () => {
+    expect(
+      formatDueLabel(
+        Date.parse('2026-02-23T12:35:00.000Z') as unknown as string,
+        Date.parse('2026-02-23T12:00:00.000Z') as unknown as string,
+      ),
+    ).toBe('Due in 35m');
+  });
+
   it('accepts lowercase-z UTC timestamps', () => {
     expect(formatDueLabel('2026-02-23T12:35:00.000z', '2026-02-23T12:00:00.000z')).toBe('Due in 35m');
   });
