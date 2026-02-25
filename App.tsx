@@ -43,7 +43,7 @@ import { formatDueLabel } from './src/utils/due';
 import { formatIntervalLabel } from './src/utils/interval';
 import { dueUrgency, queueTone } from './src/utils/scheduleStatus';
 import { normalizeBoundedText } from './src/utils/text';
-import { isIsoDateTime } from './src/utils/time';
+import { isIsoDateTime, nowIso } from './src/utils/time';
 import { queueLoadStatusLabel } from './src/utils/queue';
 import { Rating, ReviewState } from './src/types';
 
@@ -212,6 +212,7 @@ export default function App() {
   const dueCard = dueCards[0];
   const nextDueCard = dueCards[1];
   const dueQueueCount = dueCards.length;
+  const runtimeNowForUiIso = nowIso();
   const dueNeedsRepair = dueCard ? hasScheduleRepairNeed(dueCard) : false;
   const nextDueNeedsRepair = nextDueCard ? hasScheduleRepairNeed(nextDueCard) : false;
   const retentionScore = useMemo(() => {
@@ -221,8 +222,8 @@ export default function App() {
     return clampPercent(((stats.review + stats.relearning * 0.5 + stats.learning * 0.2) / stats.total) * 100);
   }, [stats]);
   const nextUpcomingCard = useMemo(() => {
-    return findNextUpcomingCard(cards, clockIso, clockIso);
-  }, [cards, clockIso]);
+    return findNextUpcomingCard(cards, clockIso, runtimeNowForUiIso);
+  }, [cards, clockIso, runtimeNowForUiIso]);
   const scheduleRepairCount = useMemo(() => countScheduleRepairCards(cards), [cards]);
   const retentionBarWidth = `${retentionScore}%`;
   const retentionTone =
@@ -258,8 +259,8 @@ export default function App() {
   const queueProgressWidth = `${queueProgressPercent}%`;
   const queueLoadStatus = queueLoadStatusLabel(queueProgressPercent, scheduleRepairCount, stats.total);
   const dueWithinDay = useMemo(() => {
-    return countUpcomingDueCards(cards, clockIso, 24, clockIso);
-  }, [cards, clockIso]);
+    return countUpcomingDueCards(cards, clockIso, 24, runtimeNowForUiIso);
+  }, [cards, clockIso, runtimeNowForUiIso]);
   const queueProgressMeta = loading
     ? '--'
     : scheduleRepairCount > 0
@@ -307,8 +308,8 @@ export default function App() {
       ? formatRemainingQueueLabel(Math.max(0, dueQueueCount - 1))
       : 'No cards remaining';
   const overdueNow = useMemo(() => {
-    return countOverdueCards(cards, clockIso, clockIso);
-  }, [cards, clockIso]);
+    return countOverdueCards(cards, clockIso, runtimeNowForUiIso);
+  }, [cards, clockIso, runtimeNowForUiIso]);
   const overdueQueueLabel = loading
     ? '--'
     : overdueNow === 0

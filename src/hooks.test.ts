@@ -2260,6 +2260,26 @@ describe('countOverdueCards', () => {
   });
 });
 
+describe('queue metric coherence', () => {
+  it('keeps upcoming/next/overdue views aligned to the same runtime queue clock', () => {
+    const dueNowAtRuntime = {
+      ...createNewCard('coherence-due-now-runtime', 'test', NOW),
+      dueAt: '2026-02-23T12:00:20.000Z',
+    };
+    const upcoming = {
+      ...createNewCard('coherence-upcoming-runtime', 'test', NOW),
+      dueAt: '2026-02-23T12:05:00.000Z',
+    };
+    const cards = [dueNowAtRuntime, upcoming];
+    const renderedClockIso = '2026-02-23T12:00:00.000Z';
+    const runtimeNowIso = '2026-02-23T12:00:30.000Z';
+
+    expect(countUpcomingDueCards(cards, renderedClockIso, 24, runtimeNowIso)).toBe(1);
+    expect(findNextUpcomingCard(cards, renderedClockIso, runtimeNowIso)).toEqual(upcoming);
+    expect(countOverdueCards(cards, renderedClockIso, runtimeNowIso)).toBe(0);
+  });
+});
+
 describe('hasScheduleRepairNeed', () => {
   it('flags cards with malformed dueAt or updatedAt values', () => {
     const malformedDue = { ...createNewCard('repair-bad-due', 'test', NOW), dueAt: 'bad-due' };

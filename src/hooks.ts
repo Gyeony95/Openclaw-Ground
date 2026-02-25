@@ -1192,13 +1192,13 @@ export function useDeck() {
     };
   }, []);
 
-  const effectiveClockIso = useMemo(() => resolveReviewClock(clockIso, nowIso()), [clockIso]);
+  const runtimeNowIso = nowIso();
+  const effectiveClockIso = useMemo(() => resolveReviewClock(clockIso, runtimeNowIso), [clockIso, runtimeNowIso]);
 
   const dueCards = useMemo(() => {
-    const runtimeNow = nowIso();
-    // Use the rendered UI clock plus runtime clock so queue visibility never runs ahead of submit eligibility.
-    return collectDueCards(deckState.cards, clockIso, runtimeNow);
-  }, [clockIso, deckState.cards]);
+    // Keep queue visibility and action eligibility on the same runtime clock snapshot.
+    return collectDueCards(deckState.cards, clockIso, runtimeNowIso);
+  }, [clockIso, deckState.cards, runtimeNowIso]);
 
   const addCard = useCallback((word: string, meaning: string, notes?: string) => {
     const normalizedWord = normalizeBoundedText(word, WORD_MAX_LENGTH);
