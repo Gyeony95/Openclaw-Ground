@@ -312,7 +312,7 @@ function parseRuntimeFiniteNumber(value: unknown): number | null {
   return null;
 }
 
-function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): string {
+function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string | Date): string {
   const wallClockMs = safeNowMs();
   const wallClockIso = toSafeIso(wallClockMs);
   const normalizedCardUpdatedAt = normalizeIsoInput(cardUpdatedAt);
@@ -440,7 +440,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
   return toCanonicalIso(candidate, fallback);
 }
 
-function resolvePreviewIso(requestedNowIso: string): string {
+function resolvePreviewIso(requestedNowIso: string | Date): string {
   const wallClockMs = safeNowMs();
   const wallClockIso = toSafeIso(wallClockMs);
   const normalizedRequestedNowIso = normalizeIsoInput(requestedNowIso);
@@ -499,7 +499,7 @@ function normalizeRating(input: Rating, currentState: ReviewState): Rating {
 
 function normalizeTimeline(
   card: Card,
-  requestedNowIso: string,
+  requestedNowIso: string | Date,
 ): {
   createdAt: string;
   currentIso: string;
@@ -1507,7 +1507,7 @@ function normalizeNotesValue(notes?: string): string | undefined {
 
 function normalizeSchedulingCard(
   card: Card,
-  requestedNowIso: string,
+  requestedNowIso: string | Date,
 ): { card: Card; currentIso: string } {
   const rawReps = safeReadUnknown(() => card.reps, 0);
   const rawLapses = safeReadUnknown(() => card.lapses, 0);
@@ -1577,7 +1577,7 @@ function normalizeSchedulingCard(
   };
 }
 
-export function reviewCard(card: Card, rating: Rating, nowIso: string): ReviewResult {
+export function reviewCard(card: Card, rating: Rating, nowIso: string | Date): ReviewResult {
   const normalized = normalizeSchedulingCard(card, nowIso);
   return reviewNormalizedCard(normalized.card, normalized.currentIso, rating);
 }
@@ -1718,7 +1718,7 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
   };
 }
 
-export function previewIntervals(card: Card, nowIso: string): RatingIntervalPreview {
+export function previewIntervals(card: Card, nowIso: string | Date): RatingIntervalPreview {
   const previewNowIso = resolvePreviewIso(nowIso);
   const fallbackState = inferStateFromCard({
     state: safeReadString(() => card.state, 'learning'),
@@ -1783,7 +1783,7 @@ export function previewIntervals(card: Card, nowIso: string): RatingIntervalPrev
   }
 }
 
-export function createNewCard(word: string, meaning: string, nowIso: string, notes?: string): Card {
+export function createNewCard(word: string, meaning: string, nowIso: string | Date, notes?: string): Card {
   const wallClockMs = safeNowMs();
   const normalizedNowIso = normalizeIsoInput(nowIso);
   const requestedCreatedMs =

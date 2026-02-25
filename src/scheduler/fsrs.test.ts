@@ -81,6 +81,25 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(result.dueAt)).toBeGreaterThan(Date.parse(result.updatedAt));
   });
 
+  it('accepts Date-like preview timestamps from runtime bridges', () => {
+    const previewCardInput = {
+      ...createNewCard('date-runtime-preview', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const previewAt = new Date(addDaysIso(NOW, 2));
+
+    const fromDate = previewIntervals(previewCardInput, previewAt);
+    const fromIso = previewIntervals(previewCardInput, addDaysIso(NOW, 2));
+
+    expect(fromDate).toEqual(fromIso);
+  });
+
   it('creates new cards with trimmed fields', () => {
     const card = createNewCard('  alpha ', ' first letter  ', NOW, '  note ');
 

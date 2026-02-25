@@ -1156,6 +1156,11 @@ export default function App() {
                         {selectedQuizOptionLetter ? ` (${selectedQuizOptionLetter})` : ''}. Rate this attempt to continue.
                       </Text>
                     ) : null}
+                    {studyMode === 'multiple-choice' && quickRatingPreviewLabel ? (
+                      <Text style={styles.revealPreviewHint} numberOfLines={2} ellipsizeMode="tail">
+                        {quickRatingPreviewLabel}
+                      </Text>
+                    ) : null}
 
                     {studyMode === 'flashcard' ? (
                       <Pressable
