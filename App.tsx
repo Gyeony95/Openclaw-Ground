@@ -380,6 +380,16 @@ export default function App() {
     [quizOptions, selectedQuizOptionId],
   );
   const normalizedSelectedQuizOptionId = normalizedSelectedQuizOption?.id ?? null;
+  const selectedQuizOptionIndex = useMemo(() => {
+    if (!normalizedSelectedQuizOptionId) {
+      return -1;
+    }
+    return quizOptions.findIndex((option) => option.id === normalizedSelectedQuizOptionId);
+  }, [normalizedSelectedQuizOptionId, quizOptions]);
+  const selectedQuizOptionLetter =
+    selectedQuizOptionIndex >= 0 && selectedQuizOptionIndex < 26
+      ? String.fromCharCode(65 + selectedQuizOptionIndex)
+      : null;
   const hasQuizSelection = normalizedSelectedQuizOption !== undefined;
   const quizSelectionLocked = studyMode === 'multiple-choice' && hasQuizSelection;
   const quizSelectionIsCorrect = normalizedSelectedQuizOption?.isCorrect ?? false;
@@ -1131,7 +1141,10 @@ export default function App() {
                       </Text>
                     ) : null}
                     {studyMode === 'multiple-choice' && hasQuizSelection ? (
-                      <Text style={styles.studyModeHelper}>First answer locked. Rate this attempt to continue.</Text>
+                      <Text style={styles.studyModeHelper}>
+                        First answer locked
+                        {selectedQuizOptionLetter ? ` (${selectedQuizOptionLetter})` : ''}. Rate this attempt to continue.
+                      </Text>
                     ) : null}
 
                     {studyMode === 'flashcard' ? (

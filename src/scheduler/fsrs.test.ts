@@ -6096,6 +6096,36 @@ describe('fsrs scheduler', () => {
     expect(boxed.card.reps).toBe(primitive.card.reps);
   });
 
+  it('accepts boxed numeric scheduler fields during review normalization', () => {
+    const primitiveCard = {
+      ...createNewCard('boxed-fields-primitive', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -3),
+      dueAt: NOW,
+      reps: 6,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+    const boxedFieldCard = {
+      ...primitiveCard,
+      id: 'boxed-fields-card',
+      reps: new Number(6) as unknown as number,
+      lapses: new Number(2) as unknown as number,
+      stability: new Number(3) as unknown as number,
+      difficulty: new Number(5) as unknown as number,
+    } as Card;
+
+    const primitive = reviewCard(primitiveCard, 3, NOW);
+    const boxed = reviewCard(boxedFieldCard, 3, NOW);
+
+    expect(boxed.scheduledDays).toBe(primitive.scheduledDays);
+    expect(boxed.card.state).toBe(primitive.card.state);
+    expect(boxed.card.reps).toBe(primitive.card.reps);
+    expect(boxed.card.lapses).toBe(primitive.card.lapses);
+    expect(boxed.card.dueAt).toBe(primitive.card.dueAt);
+  });
+
   it('trims snapshot ids during review normalization so whitespace-padded ids stay stable', () => {
     const card = {
       ...createNewCard('id-trim', 'definition', NOW),

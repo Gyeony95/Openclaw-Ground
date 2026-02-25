@@ -2528,6 +2528,20 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(scientificReview)).toBe(false);
   });
 
+  it('accepts boxed numeric runtime fields when evaluating repair eligibility', () => {
+    const boxedNumericReview = {
+      ...createNewCard('repair-review-boxed-fields', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T12:00:00.000Z',
+      stability: new Number(2) as unknown as number,
+      reps: new Number(7) as unknown as number,
+      lapses: new Number(1) as unknown as number,
+    };
+
+    expect(hasScheduleRepairNeed(boxedNumericReview)).toBe(false);
+  });
+
   it('treats Infinity-like reps strings as valid non-negative counters', () => {
     const infiniteRepsReview = {
       ...createNewCard('repair-review-infinity-reps', 'test', NOW),
