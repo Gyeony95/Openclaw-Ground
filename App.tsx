@@ -1974,10 +1974,12 @@ const styles = StyleSheet.create({
   },
   studyModeToggleRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   studyModeToggleBtn: {
     flex: 1,
+    minWidth: 148,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.pill,

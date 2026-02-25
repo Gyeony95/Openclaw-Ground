@@ -6308,6 +6308,41 @@ describe('fsrs scheduler', () => {
     expect(boxed.card.dueAt).toBe(primitive.card.dueAt);
   });
 
+  it('accepts boxed string scheduler fields during review normalization', () => {
+    const primitiveCard = {
+      ...createNewCard('boxed-strings-primitive', 'definition', NOW),
+      state: 'review' as const,
+      createdAt: addDaysIso(NOW, -5),
+      updatedAt: addDaysIso(NOW, -3),
+      dueAt: NOW,
+      reps: 6,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+    const boxedStringCard = {
+      ...primitiveCard,
+      id: 'boxed-strings-card',
+      state: new String('review') as unknown as Card['state'],
+      createdAt: new String(primitiveCard.createdAt) as unknown as string,
+      updatedAt: new String(primitiveCard.updatedAt) as unknown as string,
+      dueAt: new String(primitiveCard.dueAt) as unknown as string,
+      word: new String(primitiveCard.word) as unknown as string,
+      meaning: new String(primitiveCard.meaning) as unknown as string,
+      notes: new String('  boxed note  ') as unknown as string,
+    } as Card;
+
+    const primitive = reviewCard(primitiveCard, 3, NOW);
+    const boxed = reviewCard(boxedStringCard, 3, NOW);
+
+    expect(boxed.scheduledDays).toBe(primitive.scheduledDays);
+    expect(boxed.card.state).toBe(primitive.card.state);
+    expect(boxed.card.reps).toBe(primitive.card.reps);
+    expect(boxed.card.lapses).toBe(primitive.card.lapses);
+    expect(boxed.card.dueAt).toBe(primitive.card.dueAt);
+    expect(boxed.card.notes).toBe('boxed note');
+  });
+
   it('trims snapshot ids during review normalization so whitespace-padded ids stay stable', () => {
     const card = {
       ...createNewCard('id-trim', 'definition', NOW),

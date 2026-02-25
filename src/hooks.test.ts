@@ -2679,6 +2679,17 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(boxedNumericReview)).toBe(false);
   });
 
+  it('accepts boxed string runtime fields when evaluating repair eligibility', () => {
+    const boxedStringReview = {
+      ...createNewCard('repair-review-boxed-string-fields', 'test', NOW),
+      state: new String('review') as unknown as Card['state'],
+      updatedAt: new String('2026-02-23T12:00:00.000Z') as unknown as string,
+      dueAt: new String('2026-02-24T12:00:00.000Z') as unknown as string,
+    } as Card;
+
+    expect(hasScheduleRepairNeed(boxedStringReview)).toBe(false);
+  });
+
   it('treats Infinity-like reps strings as valid non-negative counters', () => {
     const infiniteRepsReview = {
       ...createNewCard('repair-review-infinity-reps', 'test', NOW),

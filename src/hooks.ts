@@ -43,7 +43,13 @@ function safeReadUnknown(read: () => unknown): unknown {
 function safeReadString(read: () => unknown, fallback = ''): string {
   try {
     const value = read();
-    return typeof value === 'string' ? value : fallback;
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (value instanceof String) {
+      return value.valueOf();
+    }
+    return fallback;
   } catch {
     return fallback;
   }
