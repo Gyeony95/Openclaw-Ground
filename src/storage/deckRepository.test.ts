@@ -141,6 +141,35 @@ describe('deck repository', () => {
     expect(deck.cards[0].difficulty).toBe(10);
   });
 
+  it('treats overflow scientific-notation scheduler strings as saturated numeric values when loading cards', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'overflow-scientific-numbers',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-24T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'review',
+            reps: '1e309',
+            lapses: '-1e309',
+            stability: '1e309',
+            difficulty: '-1e309',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].reps).toBe(Number.MAX_SAFE_INTEGER);
+    expect(deck.cards[0].lapses).toBe(0);
+    expect(deck.cards[0].stability).toBe(36500);
+    expect(deck.cards[0].difficulty).toBe(1);
+  });
+
   it('repairs persisted far-future review due dates using card stability', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({

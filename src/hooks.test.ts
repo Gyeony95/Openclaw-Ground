@@ -2369,6 +2369,18 @@ describe('hasScheduleRepairNeed', () => {
 
     expect(hasScheduleRepairNeed(infiniteStabilityReview)).toBe(false);
   });
+
+  it('treats overflow scientific stability strings as max stability for review window validation', () => {
+    const overflowScientificStabilityReview = {
+      ...createNewCard('repair-review-overflow-scientific-stability', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-03-23T12:00:00.000Z',
+      stability: '1e309' as unknown as number,
+    };
+
+    expect(hasScheduleRepairNeed(overflowScientificStabilityReview)).toBe(false);
+  });
 });
 
 describe('countScheduleRepairCards', () => {

@@ -493,6 +493,7 @@ export default function App() {
       setStudyMode('flashcard');
       setSelectedQuizOptionId(null);
       setFlashcardSide('front');
+      setReviewActionError(null);
     }
   }, [canUseMultipleChoice, dueCard, studyMode]);
 

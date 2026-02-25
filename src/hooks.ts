@@ -165,7 +165,13 @@ function parseRuntimeFiniteNumber(value: unknown): number | null {
     return null;
   }
   const parsed = Number(trimmed);
-  return Number.isFinite(parsed) ? parsed : null;
+  if (Number.isFinite(parsed)) {
+    return parsed;
+  }
+  if (parsed === Number.POSITIVE_INFINITY || parsed === Number.NEGATIVE_INFINITY) {
+    return parsed;
+  }
+  return null;
 }
 
 function normalizeNonNegativeCounter(value: unknown): number | null {
