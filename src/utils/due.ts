@@ -5,7 +5,10 @@ const HOUR_MS = 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 const NOW_THRESHOLD_MS = 60 * 1000;
 
-function parseIso(iso: string): number | null {
+function parseIso(iso: unknown): number | null {
+  if (typeof iso !== 'string') {
+    return null;
+  }
   const normalized = iso.trim();
   if (!isIsoDateTime(normalized)) {
     return null;

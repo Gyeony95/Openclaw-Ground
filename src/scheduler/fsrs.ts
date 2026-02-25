@@ -1129,7 +1129,15 @@ function rawReviewIntervalDays(
     const reviewedEarly = elapsed + ON_TIME_TOLERANCE_DAYS < scheduled;
     const reviewedOnTime = !reviewedEarly && elapsed <= scheduled + ON_TIME_TOLERANCE_DAYS;
     const reviewedSlightlyLate = !reviewedEarly && elapsed <= scheduled + HARD_RATING_LATE_TOLERANCE_DAYS;
-    const earlyCap = scheduleIsDayLike ? Math.max(1, Math.floor(scheduled)) : REVIEW_SCHEDULE_FLOOR_DAYS;
+    const nearTwoDayDayLikeSchedule =
+      scheduleIsDayLike &&
+      scheduled + ON_TIME_TOLERANCE_DAYS >= HARD_DAYLIKE_CAP_PROMOTION_THRESHOLD_DAYS &&
+      scheduled < 2;
+    const earlyCap = scheduleIsDayLike
+      ? nearTwoDayDayLikeSchedule
+        ? quantizedScheduled
+        : Math.max(1, Math.floor(scheduled))
+      : REVIEW_SCHEDULE_FLOOR_DAYS;
     const overdueSubDayCap = elapsed + ON_TIME_TOLERANCE_DAYS >= 1 || scheduleIsDayLike ? 1 : REVIEW_SCHEDULE_FLOOR_DAYS;
     const onTimeHardCap = scheduleIsDayLike
       ? scheduled + ON_TIME_TOLERANCE_DAYS >= HARD_DAYLIKE_CAP_PROMOTION_THRESHOLD_DAYS

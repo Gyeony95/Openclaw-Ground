@@ -4862,6 +4862,24 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(2);
   });
 
+  it('keeps very-early hard reviews from collapsing near-two-day schedules to one day', () => {
+    const updatedAt = '2026-02-23T12:00:00.000Z';
+    const card = {
+      ...reviewCard(createNewCard('threshold-hard-over-early', 'definition', NOW), 4, NOW).card,
+      state: 'review' as const,
+      updatedAt,
+      dueAt: addDaysIso(updatedAt, 1.76),
+      stability: 1.76,
+      difficulty: 5,
+      reps: 12,
+    };
+
+    const reviewed = reviewCard(card, 2, updatedAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(2);
+  });
+
   it('does not inflate imported 1.2-day hard reviews to the next full-day bucket', () => {
     const updatedAt = '2026-02-23T12:00:00.000Z';
     const imported = {

@@ -316,11 +316,11 @@ export default function App() {
     ? normalizeBoundedText(dueCard.meaning, MEANING_MAX_LENGTH) || INVALID_MEANING_PLACEHOLDER
     : '[no answer]';
   const dueCardNotes = dueCard ? normalizeBoundedText(dueCard.notes ?? '', NOTES_MAX_LENGTH) : '';
-  const exactDueLabel = dueNeedsRepair ? 'Needs schedule repair' : exactDateLabel(dueCard?.dueAt);
+  const exactDueLabel = dueNeedsRepair ? 'Schedule repair pending' : exactDateLabel(dueCard?.dueAt);
   const relativeDueLabel = dueCard
     ? !dueNeedsRepair && hasValidIso(dueCard.dueAt)
       ? formatDueLabel(dueCard.dueAt, clockIso)
-      : 'Needs schedule repair'
+      : 'Repair due now'
     : 'Schedule unavailable';
   const asOf = asOfLabel(clockIso);
   const emptyQueueTitle =
