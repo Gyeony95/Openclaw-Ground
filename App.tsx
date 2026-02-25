@@ -1394,7 +1394,7 @@ export default function App() {
                   ref={meaningInputRef}
                   value={meaning}
                   onChangeText={setMeaning}
-                  placeholder="Meaning"
+                  placeholder={normalizedWord ? `Meaning of ${normalizedWord}` : 'Meaning'}
                   style={[
                     styles.input,
                     focusedInput === 'meaning' && styles.inputFocused,
@@ -1431,7 +1431,7 @@ export default function App() {
                   ref={notesInputRef}
                   value={notes}
                   onChangeText={setNotes}
-                  placeholder="Notes (optional)"
+                  placeholder={normalizedWord ? `Usage note for ${normalizedWord} (optional)` : 'Notes (optional)'}
                   style={[styles.input, focusedInput === 'notes' && styles.inputFocused, styles.notesInput]}
                   placeholderTextColor={colors.subInk}
                   multiline

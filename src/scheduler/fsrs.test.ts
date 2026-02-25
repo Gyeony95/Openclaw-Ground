@@ -5830,6 +5830,44 @@ describe('fsrs scheduler', () => {
     expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
   });
 
+  it('avoids inflating on-time hard reviews just above a two-day schedule', () => {
+    const twoPointOneDaySchedule = {
+      ...createNewCard('review-hard-two-day-inflation', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -2.1),
+      dueAt: NOW,
+      reps: 14,
+      lapses: 2,
+      // Imported cards can carry low persisted stability despite a mature cadence.
+      stability: 0.7,
+      difficulty: 6.5,
+    };
+
+    const reviewed = reviewCard(twoPointOneDaySchedule, 2, NOW);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBe(2);
+  });
+
+  it('keeps hard interval previews stable around a two-day on-time schedule', () => {
+    const twoPointOneDaySchedule = {
+      ...createNewCard('review-hard-preview-two-day-inflation', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -2.1),
+      dueAt: NOW,
+      reps: 14,
+      lapses: 2,
+      stability: 0.7,
+      difficulty: 6.5,
+    };
+
+    const preview = previewIntervals(twoPointOneDaySchedule, NOW);
+
+    expect(preview[2]).toBe(2);
+    expect(preview[3]).toBeGreaterThanOrEqual(preview[2]);
+    expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
+  });
+
   it('treats whitespace-padded persisted review timestamps as valid schedule anchors', () => {
     const baseCard = {
       ...createNewCard('trimmed-review-anchors', 'definition', NOW),

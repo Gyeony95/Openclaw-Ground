@@ -1000,9 +1000,13 @@ function dayLikePreserveScheduleFloorDays(scheduledDays: number): number {
     // A one-day cadence with small timestamp drift should stay on a one-day floor.
     return 1;
   }
-  // Preserve day-like cadence without shrinking into a lower day bucket on on-time
-  // Hard/Good reviews (e.g. 1.1d should preserve at least a 2d floor).
-  return Math.max(1, Math.ceil(scheduledDays));
+  if (scheduledDays < 2) {
+    // Near one-day cadence should not collapse back to one day on on-time reviews.
+    return 2;
+  }
+  // Preserve day-like cadence without forcing an additional full-day jump
+  // for mild drift above an integer schedule (e.g. 2.1d should keep a 2d floor).
+  return Math.max(2, Math.round(scheduledDays));
 }
 
 function updateDifficulty(prevDifficulty: number, rating: Rating): number {
