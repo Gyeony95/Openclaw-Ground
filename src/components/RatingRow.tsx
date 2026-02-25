@@ -54,6 +54,7 @@ export function RatingRow({
   );
   const hasLockedRatings = !isDisabled && disabledSet.size > 0;
   const lockReasonHint = lockedHint ?? 'Some ratings are locked for this review.';
+  const againInterval = resolveIntervalLabel(intervalLabels, 1, labels[0].fallbackHint);
 
   return (
     <View style={styles.container}>
@@ -62,7 +63,6 @@ export function RatingRow({
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
-          const againInterval = resolveIntervalLabel(intervalLabels, 1, labels[0].fallbackHint);
           const intervalText = isRatingLocked ? `Use Again (${againInterval})` : interval;
           const intervalPrefix = isRatingLocked ? 'Locked' : 'Next';
           const contentTone = ratingDisabled ? colors.subInk : item.tone;

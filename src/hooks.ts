@@ -293,9 +293,8 @@ export function hasScheduleRepairNeed(
       return true;
     }
   }
-  const dueBeforeUpdatedByMs = updatedMs - dueMs;
-  const dueWithinTimelineJitterTolerance =
-    dueMs < updatedMs && dueBeforeUpdatedByMs <= TIMELINE_JITTER_TOLERANCE_MS;
+  const dueDeltaFromUpdatedMs = dueMs - updatedMs;
+  const dueWithinTimelineJitterTolerance = Math.abs(dueDeltaFromUpdatedMs) <= TIMELINE_JITTER_TOLERANCE_MS;
   const normalizedDueMs = dueWithinTimelineJitterTolerance ? updatedMs : dueMs;
   if (normalizedDueMs < updatedMs) {
     return true;

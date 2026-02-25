@@ -1936,12 +1936,38 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(jitteredLearningDueNow)).toBe(false);
   });
 
+  it('does not flag fresh learning cards when dueAt leads updatedAt by sub-second jitter', () => {
+    const jitteredLearningDueNow = {
+      ...createNewCard('repair-learning-jitter-future-due-now', 'test', NOW),
+      state: 'learning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.500Z',
+      reps: 0,
+      lapses: 0,
+    };
+
+    expect(hasScheduleRepairNeed(jitteredLearningDueNow)).toBe(false);
+  });
+
   it('still flags reviewed learning cards when dueAt trails updatedAt by sub-second jitter', () => {
     const jitteredReviewedLearningDueNow = {
       ...createNewCard('repair-learning-jitter-reviewed', 'test', NOW),
       state: 'learning' as const,
       updatedAt: '2026-02-23T12:00:00.500Z',
       dueAt: '2026-02-23T12:00:00.000Z',
+      reps: 2,
+      lapses: 0,
+    };
+
+    expect(hasScheduleRepairNeed(jitteredReviewedLearningDueNow)).toBe(true);
+  });
+
+  it('still flags reviewed learning cards when dueAt leads updatedAt by sub-second jitter', () => {
+    const jitteredReviewedLearningDueNow = {
+      ...createNewCard('repair-learning-jitter-reviewed-future', 'test', NOW),
+      state: 'learning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:00.500Z',
       reps: 2,
       lapses: 0,
     };
