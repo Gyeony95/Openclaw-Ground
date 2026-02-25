@@ -40,6 +40,15 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+function safeReadString(read: () => unknown, fallback = ''): string {
+  try {
+    const value = read();
+    return typeof value === 'string' ? value : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function parseRuntimeFiniteNumber(value: unknown): number | null {
   if (typeof value === 'number') {
     if (Number.isFinite(value)) {
@@ -454,17 +463,20 @@ export async function saveDeck(deck: Deck): Promise<void> {
 export function computeDeckStats(cards: Card[], currentIso = nowIso()): DeckStats {
   return cards.reduce<DeckStats>(
     (acc, card) => {
+      const runtimeCard = card as Partial<Card> | undefined;
+      const dueAt = safeReadString(() => runtimeCard?.dueAt);
+      const state = safeReadString(() => runtimeCard?.state);
       acc.total += 1;
-      if (isDueOrInvalid(card.dueAt, currentIso)) {
+      if (isDueOrInvalid(dueAt, currentIso)) {
         acc.dueNow += 1;
       }
-      if (card.state === 'learning') {
+      if (state === 'learning') {
         acc.learning += 1;
       }
-      if (card.state === 'review') {
+      if (state === 'review') {
         acc.review += 1;
       }
-      if (card.state === 'relearning') {
+      if (state === 'relearning') {
         acc.relearning += 1;
       }
       return acc;

@@ -152,6 +152,20 @@ function clampFinite(value: number, min: number, max: number, fallback: number):
   return clamp(value, min, max);
 }
 
+function normalizeRuntimeBoundedNumber(value: unknown, min: number, max: number, fallback: number): number {
+  const parsed = parseRuntimeFiniteNumber(value);
+  if (parsed === Number.POSITIVE_INFINITY) {
+    return max;
+  }
+  if (parsed === Number.NEGATIVE_INFINITY) {
+    return min;
+  }
+  if (parsed === null) {
+    return clamp(fallback, min, max);
+  }
+  return clamp(parsed, min, max);
+}
+
 function isValidIso(value: string): boolean {
   return isIsoDateTime(value);
 }
@@ -1334,9 +1348,8 @@ function normalizeSchedulingCard(
     dueAt,
   });
   const normalizedScheduledDays = normalizeScheduledDays(daysBetween(updatedAt, dueAt), normalizedState);
-  const parsedDifficulty = parseRuntimeFiniteNumber(snapshot.difficulty);
-  const normalizedDifficulty = clampFinite(
-    parsedDifficulty ?? snapshot.difficulty,
+  const normalizedDifficulty = normalizeRuntimeBoundedNumber(
+    snapshot.difficulty,
     DIFFICULTY_MIN,
     DIFFICULTY_MAX,
     DIFFICULTY_MEAN_REVERSION,
@@ -1348,7 +1361,7 @@ function normalizeSchedulingCard(
   // amplifying corrupted historical stability into runaway intervals.
   const stabilityInput =
     dueNeedsRepair && normalizedState !== 'learning' ? normalizedScheduledDays : parsedStability ?? snapshot.stability;
-  const normalizedStabilityBase = clampFinite(
+  const normalizedStabilityBase = normalizeRuntimeBoundedNumber(
     stabilityInput,
     STABILITY_MIN,
     STABILITY_MAX,

@@ -757,6 +757,43 @@ describe('fsrs scheduler', () => {
     expect(scientificReviewed.card.dueAt).toBe(numericReviewed.card.dueAt);
   });
 
+  it('saturates infinite runtime difficulty values to scheduler bounds instead of mean-reversion fallback', () => {
+    const runtimeCard = {
+      ...createNewCard('infinite-difficulty', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 4),
+      reps: 5,
+      lapses: 1,
+      stability: 4,
+      difficulty: 'Infinity',
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 3, addDaysIso(NOW, 4)).card;
+
+    expect(reviewed.difficulty).toBeGreaterThan(8);
+    expect(reviewed.difficulty).toBeLessThanOrEqual(10);
+  });
+
+  it('saturates infinite runtime stability values before review scheduling', () => {
+    const runtimeCard = {
+      ...createNewCard('infinite-stability', 'safe', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 4),
+      reps: 5,
+      lapses: 1,
+      stability: 'Infinity',
+      difficulty: 6,
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 3, addDaysIso(NOW, 4));
+
+    expect(reviewed.card.stability).toBeGreaterThan(40);
+    expect(reviewed.card.stability).toBeLessThanOrEqual(STABILITY_MAX);
+    expect(reviewed.scheduledDays).toBeGreaterThan(20);
+  });
+
   it('treats overflow scientific-notation counters as saturated review history for phase inference', () => {
     const runtimeCard = {
       ...createNewCard('overflow-scientific-history', 'state inference', NOW),

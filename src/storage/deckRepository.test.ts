@@ -512,6 +512,74 @@ describe('deck repository', () => {
     });
   });
 
+  it('keeps stats computation resilient when runtime deck entries are malformed', () => {
+    const stats = computeDeckStats(
+      [
+        null,
+        { id: 'missing-fields' },
+        {
+          id: 'valid',
+          word: 'alpha',
+          meaning: 'first',
+          dueAt: '2026-02-22T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'review',
+          reps: 2,
+          lapses: 0,
+          stability: 2,
+          difficulty: 5,
+        },
+      ] as unknown as any[],
+      '2026-02-23T00:00:00.000Z',
+    );
+
+    expect(stats).toEqual({
+      total: 3,
+      dueNow: 3,
+      learning: 0,
+      review: 1,
+      relearning: 0,
+    });
+  });
+
+  it('keeps stats computation resilient when due/state accessors throw at runtime', () => {
+    const throwingCard = {
+      id: 'throwing-card',
+      word: 'alpha',
+      meaning: 'first',
+      createdAt: '2026-02-20T00:00:00.000Z',
+      updatedAt: '2026-02-22T00:00:00.000Z',
+      reps: 2,
+      lapses: 0,
+      stability: 2,
+      difficulty: 5,
+    } as Partial<{
+      dueAt: string;
+      state: string;
+    }>;
+    Object.defineProperty(throwingCard, 'dueAt', {
+      get() {
+        throw new Error('bad runtime dueAt');
+      },
+    });
+    Object.defineProperty(throwingCard, 'state', {
+      get() {
+        throw new Error('bad runtime state');
+      },
+    });
+
+    const stats = computeDeckStats([throwingCard as any], '2026-02-23T00:00:00.000Z');
+
+    expect(stats).toEqual({
+      total: 1,
+      dueNow: 1,
+      learning: 0,
+      review: 0,
+      relearning: 0,
+    });
+  });
+
   it('treats loose non-ISO dueAt values as due-now so malformed schedules remain visible', () => {
     const stats = computeDeckStats(
       [
