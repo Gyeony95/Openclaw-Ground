@@ -2053,6 +2053,17 @@ describe('countUpcomingDueCards', () => {
     expect(countUpcomingDueCards([upcoming], NOW, new Number(24) as unknown as number)).toBe(1);
   });
 
+  it('accepts valueOf-boxed upcoming windows from runtime bridge wrappers', () => {
+    const upcoming = { ...createNewCard('upcoming-window-valueof-boxed', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
+    const bridgedHours = {
+      valueOf() {
+        return new Number(24);
+      },
+    };
+
+    expect(countUpcomingDueCards([upcoming], NOW, bridgedHours as unknown as number)).toBe(1);
+  });
+
   it('accepts numeric-string upcoming windows from runtime-serialized inputs', () => {
     const upcoming = { ...createNewCard('upcoming-window-string', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
 

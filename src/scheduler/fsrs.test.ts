@@ -192,6 +192,40 @@ describe('fsrs scheduler', () => {
     expect(fromValueOfDate).toEqual(fromIso);
   });
 
+  it('accepts boxed numeric scheduler fields from runtime valueOf bridges', () => {
+    const numericCard = {
+      ...createNewCard('valueof-boxed-numbers', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 3),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 4,
+      difficulty: 6.2,
+    };
+    const boxedCard = {
+      ...numericCard,
+      stability: {
+        valueOf() {
+          return new Number(4);
+        },
+      } as unknown as number,
+      difficulty: {
+        valueOf() {
+          return new Number(6.2);
+        },
+      } as unknown as number,
+    };
+
+    const numericReview = reviewCard(numericCard, 3, addDaysIso(NOW, 3));
+    const boxedReview = reviewCard(boxedCard, 3, addDaysIso(NOW, 3));
+    const numericPreview = previewIntervals(numericCard, addDaysIso(NOW, 3));
+    const boxedPreview = previewIntervals(boxedCard, addDaysIso(NOW, 3));
+
+    expect(boxedReview).toEqual(numericReview);
+    expect(boxedPreview).toEqual(numericPreview);
+  });
+
   it('accepts toString-backed review timestamps when runtime valueOf throws', () => {
     const reviewCardInput = {
       ...createNewCard('tostring-runtime-review', 'bridge-safe', NOW),

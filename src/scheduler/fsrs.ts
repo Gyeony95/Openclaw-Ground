@@ -329,6 +329,18 @@ function isWithinCreatePastWindow(pastOffsetMs: number): boolean {
 }
 
 function parseRuntimeFiniteNumber(value: unknown): number | null {
+  const unwrapNumberLike = (candidate: unknown): string | number | null => {
+    if (typeof candidate === 'number' || typeof candidate === 'string') {
+      return candidate;
+    }
+    if (candidate instanceof Number) {
+      return candidate.valueOf();
+    }
+    if (candidate instanceof String) {
+      return candidate.valueOf();
+    }
+    return null;
+  };
   const normalizedValue = (() => {
     if (value === null || value === undefined) {
       return value;
@@ -341,8 +353,9 @@ function parseRuntimeFiniteNumber(value: unknown): number | null {
       const valueOf = valueObject.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(value);
-        if (typeof unboxed === 'number' || typeof unboxed === 'string') {
-          return unboxed;
+        const normalizedUnboxed = unwrapNumberLike(unboxed);
+        if (normalizedUnboxed !== null) {
+          return normalizedUnboxed;
         }
       }
     } catch {
@@ -352,8 +365,9 @@ function parseRuntimeFiniteNumber(value: unknown): number | null {
       const toString = valueObject.toString;
       if (typeof toString === 'function') {
         const stringified = toString.call(value);
-        if (typeof stringified === 'number' || typeof stringified === 'string') {
-          return stringified;
+        const normalizedStringified = unwrapNumberLike(stringified);
+        if (normalizedStringified !== null) {
+          return normalizedStringified;
         }
       }
     } catch {
