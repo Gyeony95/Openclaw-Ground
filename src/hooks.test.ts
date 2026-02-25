@@ -214,6 +214,28 @@ describe('applyDueReview', () => {
     }
   });
 
+  it('reviews future-skewed timelines at the exact skew boundary for deterministic repair', () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+    try {
+      const boundaryFutureCorrupted = {
+        ...createNewCard('gamma-future-boundary', 'third', NOW),
+        state: 'review' as const,
+        updatedAt: '2026-02-24T00:00:00.000Z',
+        dueAt: '2026-02-25T00:00:00.000Z',
+      };
+
+      const result = applyDueReview([boundaryFutureCorrupted], boundaryFutureCorrupted.id, 3, NOW);
+
+      expect(result.reviewed).toBe(true);
+      expect(result.cards[0]).not.toBe(boundaryFutureCorrupted);
+      expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(Date.parse(result.cards[0].dueAt)).toBeGreaterThan(Date.parse(result.cards[0].updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('prioritizes malformed dueAt duplicates for immediate schedule repair', () => {
     const validDue = {
       ...createNewCard('valid-duplicate-due', 'first', NOW),

@@ -1293,6 +1293,8 @@ export default function App() {
                                       showCorrect && styles.quizOptionTextCorrect,
                                       showIncorrect && styles.quizOptionTextIncorrect,
                                     ]}
+                                    numberOfLines={3}
+                                    ellipsizeMode="tail"
                                   >
                                     <Text style={styles.quizOptionLabel}>{optionLetter}. </Text>
                                     {optionPrefix}

@@ -372,6 +372,14 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
   // Keep review time monotonic to avoid negative elapsed intervals on clock drift.
   if (candidateMs < fallbackMs) {
     const skewMs = fallbackMs - candidateMs;
+    if (Number.isFinite(wallClockMs) && fallbackMs - wallClockMs >= MAX_MONOTONIC_CLOCK_SKEW_MS) {
+      // Recover timestamps that are exactly at the skew boundary so queue-level
+      // repair detection and scheduler rollback behavior stay aligned.
+      if (wallClockMs - candidateMs > MAX_MONOTONIC_CLOCK_SKEW_MS) {
+        return wallClockIso;
+      }
+      return toCanonicalIso(candidate, fallback);
+    }
     if (skewMs <= MAX_MONOTONIC_CLOCK_SKEW_MS) {
       return fallback;
     }
@@ -666,11 +674,11 @@ function normalizeTimeline(
   const updatedAtLooksCorruptedFuture =
     Number.isFinite(updatedAtMs) &&
     Number.isFinite(wallClockMs) &&
-    updatedAtMs - wallClockMs > MAX_MONOTONIC_CLOCK_SKEW_MS;
+    updatedAtMs - wallClockMs >= MAX_MONOTONIC_CLOCK_SKEW_MS;
   const recoveryWantsRollback =
     Number.isFinite(updatedAtMs) &&
     Number.isFinite(resolvedCurrentMs) &&
-    updatedAtMs - resolvedCurrentMs > MAX_MONOTONIC_CLOCK_SKEW_MS;
+    updatedAtMs - resolvedCurrentMs >= MAX_MONOTONIC_CLOCK_SKEW_MS;
   const monotonicMs = Number.isFinite(resolvedCurrentMs) && Number.isFinite(updatedAtMs)
     ? Math.max(resolvedCurrentMs, updatedAtMs)
     : Number.isFinite(updatedAtMs)

@@ -318,6 +318,30 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('repairs review cards whose updatedAt is exactly at the future-skew boundary', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date(NOW));
+      const boundaryFutureCard = {
+        ...createNewCard('boundary-future-card', 'safe', NOW),
+        state: 'review' as const,
+        updatedAt: '2026-02-24T00:00:00.000Z',
+        dueAt: '2026-02-25T00:00:00.000Z',
+        reps: 7,
+        lapses: 1,
+        stability: 5,
+        difficulty: 5,
+      };
+
+      const reviewed = reviewCard(boundaryFutureCard, 3, NOW).card;
+
+      expect(reviewed.updatedAt).toBe(NOW);
+      expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('falls back to wall clock when invalid review timestamps coincide with exact future-skew card timelines', () => {
     jest.useFakeTimers();
     try {
