@@ -2364,6 +2364,32 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(jitteredLearningDueNow)).toBe(false);
   });
 
+  it('does not flag fresh learning cards when dueAt leads updatedAt by short positive drift', () => {
+    const driftedFreshLearningDueNow = {
+      ...createNewCard('repair-learning-short-drift-fresh', 'test', NOW),
+      state: 'learning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:30.000Z',
+      reps: 0,
+      lapses: 0,
+    };
+
+    expect(hasScheduleRepairNeed(driftedFreshLearningDueNow)).toBe(false);
+  });
+
+  it('still flags short positive drift when learning counters indicate prior review history', () => {
+    const driftedReviewedLearningDueNow = {
+      ...createNewCard('repair-learning-short-drift-reviewed', 'test', NOW),
+      state: 'learning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:00:30.000Z',
+      reps: 1,
+      lapses: 0,
+    };
+
+    expect(hasScheduleRepairNeed(driftedReviewedLearningDueNow)).toBe(true);
+  });
+
   it('still flags reviewed learning cards when dueAt trails updatedAt by sub-second jitter', () => {
     const jitteredReviewedLearningDueNow = {
       ...createNewCard('repair-learning-jitter-reviewed', 'test', NOW),

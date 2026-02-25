@@ -413,9 +413,26 @@ export function hasScheduleRepairNeed(
   }
   if (normalizedDueMs > updatedMs) {
     const scheduleMs = normalizedDueMs - updatedMs;
+    const repsProvided = repsValue !== undefined && repsValue !== null;
+    const lapsesProvided = lapsesValue !== undefined && lapsesValue !== null;
+    const reps = normalizeNonNegativeCounter(repsValue);
+    const lapsesMissing = !lapsesProvided;
+    const lapses = lapsesMissing ? 0 : normalizeNonNegativeCounter(lapsesValue);
+    const countersCorrupted = reps === null || lapses === null;
+    const hasReviewHistory = reps !== null && lapses !== null && (reps > 0 || lapses > 0);
+    const learningCountersMalformed =
+      !isWholeNonNegativeCounter(repsValue) || (lapsesProvided && !isWholeNonNegativeCounter(lapsesValue));
     // Keep queue-side repair checks aligned with scheduler jitter tolerance so
     // valid near-boundary schedules are not repeatedly surfaced as corruption.
     if (scheduleMs + TIMELINE_JITTER_TOLERANCE_MS < minScheduleMsForState(state)) {
+      if (state === 'learning') {
+        if (countersCorrupted || learningCountersMalformed) {
+          return true;
+        }
+        // Fresh learning cards can arrive with tiny positive drift from runtime/storage jitter.
+        // Treat these as due-now equivalents unless counters indicate prior review history.
+        return hasReviewHistory;
+      }
       return true;
     }
     if (state === 'relearning' && scheduleMs + TIMELINE_JITTER_TOLERANCE_MS >= REVIEW_MIN_SCHEDULE_MS) {
@@ -426,12 +443,6 @@ export function hasScheduleRepairNeed(
     if (scheduleMs - TIMELINE_JITTER_TOLERANCE_MS > maxScheduleMsBeforeRepair(state, stabilityValue)) {
       return true;
     }
-    const repsProvided = repsValue !== undefined && repsValue !== null;
-    const lapsesProvided = lapsesValue !== undefined && lapsesValue !== null;
-    const reps = normalizeNonNegativeCounter(repsValue);
-    const lapsesMissing = !lapsesProvided;
-    const lapses = lapsesMissing ? 0 : normalizeNonNegativeCounter(lapsesValue);
-    const countersCorrupted = reps === null || lapses === null;
     if (
       state !== 'learning' &&
       ((repsProvided && reps === null) || (lapsesProvided && lapses === null))
@@ -445,15 +456,11 @@ export function hasScheduleRepairNeed(
       // inference; always repair before queueing regardless of schedule length.
       return true;
     }
-    if (
-      state === 'learning' &&
-      (!isWholeNonNegativeCounter(repsValue) || (lapsesProvided && !isWholeNonNegativeCounter(lapsesValue)))
-    ) {
+    if (state === 'learning' && learningCountersMalformed) {
       // Learning counters should be whole numbers; fractional drift can hide
       // prior review history and keep phase-repair cards in the active queue.
       return true;
     }
-    const hasReviewHistory = reps > 0 || lapses > 0;
     if (state === 'learning' && hasReviewHistory && scheduleMs >= REVIEW_MIN_SCHEDULE_MS) {
       // Learning steps with review history should remain short; day-like intervals indicate
       // persisted phase drift and should be repaired before queueing.

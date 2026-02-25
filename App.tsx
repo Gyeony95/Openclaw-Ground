@@ -793,7 +793,7 @@ export default function App() {
           ref={scrollRef}
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
           contentInsetAdjustmentBehavior="automatic"
           automaticallyAdjustKeyboardInsets
           showsVerticalScrollIndicator={false}
