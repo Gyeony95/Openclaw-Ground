@@ -25,6 +25,33 @@ describe('text normalization', () => {
     expect(normalizeBoundedText(42, 10)).toBe('');
   });
 
+  it('accepts boxed strings and valueOf-backed string wrappers', () => {
+    expect(normalizeBoundedText(new String('  alpha  '), 20)).toBe('alpha');
+    expect(
+      normalizeBoundedText(
+        {
+          valueOf() {
+            return '  beta  gamma  ';
+          },
+        },
+        20,
+      ),
+    ).toBe('beta gamma');
+  });
+
+  it('returns empty string for runtime wrappers with non-string values', () => {
+    expect(
+      normalizeBoundedText(
+        {
+          valueOf() {
+            return 42;
+          },
+        },
+        20,
+      ),
+    ).toBe('');
+  });
+
   it('guards non-finite and negative max lengths', () => {
     expect(normalizeBoundedText('alpha', Number.NaN)).toBe('');
     expect(normalizeBoundedText('alpha', -3)).toBe('');

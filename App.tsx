@@ -457,6 +457,8 @@ export default function App() {
     ? 'Loading...'
     : isAddBusy
       ? 'Adding...'
+      : isAddLocked
+        ? 'Syncing...'
       : showAddSuccess
         ? 'Added'
         : canAdd
@@ -466,6 +468,8 @@ export default function App() {
     ? 'Loading deck...'
     : isAddBusy
       ? 'Adding card...'
+      : isAddLocked
+        ? 'Finishing add...'
       : showAddSuccess
         ? 'Card added'
       : canAdd
@@ -479,6 +483,8 @@ export default function App() {
     ? colors.subInk
     : showAddSuccess
       ? colors.success
+    : isAddLocked
+      ? colors.primary
     : canAdd
       ? colors.success
       : addAttempted
@@ -495,7 +501,7 @@ export default function App() {
   const isReviewBusy = pendingReviewCardKey !== null && pendingReviewCardKey === dueCardRevealKey;
   const modeSwitchLocked = isStudyModeSwitchLocked(studyMode, hasQuizSelection, isReviewBusy);
   const quizOptionsLocked = isReviewBusy;
-  const isFormEditable = !loading && !isAddBusy;
+  const isFormEditable = !loading && !isAddBusy && !isAddLocked;
   const hasDueCardNotes = dueCardNotes.length > 0;
   const flashcardVisibility = useMemo(
     () =>
