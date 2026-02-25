@@ -310,11 +310,17 @@ function normalizeReviewState(value: unknown): Card['state'] | null {
     return null;
   }
   const normalized = value.trim().toLowerCase();
+  if (normalized === 'reviewing') {
+    return 'review';
+  }
   if (normalized === 'rev') {
     return 'review';
   }
   const folded = normalized.replace(/[\s_-]+/g, '');
   if (folded === 'review') {
+    return 'review';
+  }
+  if (folded === 'reviewing') {
     return 'review';
   }
   if (folded === 'rev') {
@@ -328,6 +334,9 @@ function normalizeReviewState(value: unknown): Card['state'] | null {
   }
   const alphaFolded = normalized.replace(/[^a-z]+/g, '');
   if (alphaFolded === 'review') {
+    return 'review';
+  }
+  if (alphaFolded === 'reviewing') {
     return 'review';
   }
   if (alphaFolded === 'rev') {

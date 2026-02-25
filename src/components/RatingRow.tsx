@@ -67,6 +67,7 @@ export function RatingRow({
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
+          const isRecommended = item.rating === 3 && !isRatingLocked;
           const lockedIntervalText = hasConcreteAgainInterval ? `Again ${againInterval}` : 'Again';
           const intervalText = isRatingLocked ? lockedIntervalText : interval;
           const intervalPrefix = isRatingLocked ? 'Only' : 'Next';
@@ -102,6 +103,7 @@ export function RatingRow({
                 ratingDisabled
                   ? styles.buttonDisabledSurface
                   : { borderColor: item.tone, backgroundColor: `${item.tone}16` },
+                isRecommended && !ratingDisabled ? styles.buttonRecommended : null,
                 isRatingLocked
                   ? [styles.buttonLocked, { borderColor: `${item.tone}88`, backgroundColor: colors.surfaceAlt }]
                   : null,
@@ -124,6 +126,11 @@ export function RatingRow({
               <Text style={[styles.buttonText, { color: contentTone }]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
                 {item.text}
               </Text>
+              {isRecommended && !ratingDisabled ? (
+                <Text style={styles.recommendedLabel} maxFontSizeMultiplier={1.2}>
+                  Recommended
+                </Text>
+              ) : null}
               {isRatingLocked ? (
                 <Text style={[styles.lockedLabel, { color: lockTone }]} maxFontSizeMultiplier={1.2}>
                   Again only
@@ -224,6 +231,11 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     opacity: 0.94,
   },
+  buttonRecommended: {
+    borderWidth: 1.5,
+    shadowOpacity: 0.09,
+    elevation: 2,
+  },
   buttonText: {
     fontSize: 12.5,
     fontWeight: '800',
@@ -242,6 +254,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     color: colors.subInk,
+  },
+  recommendedLabel: {
+    fontSize: 9,
+    letterSpacing: 0.45,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    color: colors.primary,
   },
   lockedHint: {
     fontSize: 11.5,

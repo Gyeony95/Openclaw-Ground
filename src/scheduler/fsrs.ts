@@ -799,6 +799,9 @@ function parseState(input: unknown): ReviewState | undefined {
   }
   if (typeof input === 'string') {
     const normalized = input.trim().toLowerCase();
+    if (normalized === 'reviewing') {
+      return 'review';
+    }
     if (normalized === 'review' || normalized === 'relearning' || normalized === 'learning') {
       return normalized;
     }
@@ -807,6 +810,9 @@ function parseState(input: unknown): ReviewState | undefined {
     }
     const folded = normalized.replace(/[\s_-]+/g, '');
     if (folded === 'review') {
+      return 'review';
+    }
+    if (folded === 'reviewing') {
       return 'review';
     }
     if (folded === 'rev') {
@@ -820,6 +826,9 @@ function parseState(input: unknown): ReviewState | undefined {
     }
     const alphaFolded = normalized.replace(/[^a-z]+/g, '');
     if (alphaFolded === 'review') {
+      return 'review';
+    }
+    if (alphaFolded === 'reviewing') {
       return 'review';
     }
     if (alphaFolded === 'rev') {

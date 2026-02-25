@@ -2841,6 +2841,20 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(shortReviewAlias)).toBe(false);
   });
 
+  it('accepts reviewing state aliases when schedule is otherwise healthy', () => {
+    const reviewingAlias = {
+      ...createNewCard('repair-reviewing-alias', 'test', NOW),
+      state: ' reviewing ' as unknown as Card['state'],
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T12:00:00.000Z',
+      stability: 4,
+      reps: 3,
+      lapses: 1,
+    };
+
+    expect(hasScheduleRepairNeed(reviewingAlias)).toBe(false);
+  });
+
   it('does not flag healthy schedules', () => {
     const healthy = {
       ...createNewCard('repair-healthy', 'test', NOW),

@@ -1068,6 +1068,32 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(addDaysIso(NOW, 10 / 1440), 15 / 1440));
   });
 
+  it('treats reviewing aliases as review state so mature cards keep review scheduling', () => {
+    const reviewAliasCard = {
+      ...createNewCard('reviewing-state-alias', 'state inference', NOW),
+      state: ' reviewing ' as unknown as Card['state'],
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 2),
+      reps: 4,
+      lapses: 1,
+      stability: 4,
+      difficulty: 5,
+    };
+
+    const canonicalReviewCard = {
+      ...reviewAliasCard,
+      state: 'review' as const,
+    };
+    const reviewIso = addDaysIso(NOW, 2);
+
+    const fromAlias = reviewCard(reviewAliasCard, 3, reviewIso);
+    const fromCanonical = reviewCard(canonicalReviewCard, 3, reviewIso);
+
+    expect(fromAlias.card.state).toBe('review');
+    expect(fromAlias.scheduledDays).toBe(fromCanonical.scheduledDays);
+    expect(fromAlias.card.dueAt).toBe(fromCanonical.card.dueAt);
+  });
+
   it('infers relearning from sub-day retry windows when lapse count is corrupted but review history exists', () => {
     const runtimeCard = {
       ...createNewCard('relearning-inference-history', 'state inference', NOW),

@@ -26,6 +26,9 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
     return null;
   }
   const normalized = state.trim().toLowerCase();
+  if (normalized === 'reviewing') {
+    return 'review';
+  }
   if (normalized === 'rev') {
     return 'review';
   }
@@ -34,6 +37,9 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
   }
   const folded = normalized.replace(/[\s_-]+/g, '');
   if (folded === 'review') {
+    return 'review';
+  }
+  if (folded === 'reviewing') {
     return 'review';
   }
   if (folded === 'rev') {
@@ -47,6 +53,9 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
   }
   const alphaFolded = normalized.replace(/[^a-z]+/g, '');
   if (alphaFolded === 'review') {
+    return 'review';
+  }
+  if (alphaFolded === 'reviewing') {
     return 'review';
   }
   if (alphaFolded === 'rev') {
