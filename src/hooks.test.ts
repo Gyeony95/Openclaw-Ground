@@ -3001,6 +3001,22 @@ describe('resolveReviewClock', () => {
     expect(resolved).toBe('2026-02-23T12:00:00.000Z');
   });
 
+  it('keeps rendered clock when runtime clock is exactly at the forward skew boundary', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
+    const resolved = resolveReviewClock('2026-02-23T12:00:00.000Z', '2026-02-24T00:00:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:00:00.000Z');
+  });
+
+  it('falls back to wall clock when runtime-only clock is exactly at the backward skew boundary', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
+    const resolved = resolveReviewClock('bad-time', '2026-02-23T00:00:00.000Z');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:00:00.000Z');
+  });
+
   it('falls back to wall clock when runtime is pathologically ahead and rendered time is pathologically stale', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
     const resolved = resolveReviewClock('2026-02-20T00:00:00.000Z', '2099-01-01T00:00:00.000Z');

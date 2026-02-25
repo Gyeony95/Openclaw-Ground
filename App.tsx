@@ -129,6 +129,9 @@ function formatMetricNumber(value: number, digits: number): string {
 
 function formatCountLabel(length: number, max: number): string {
   const remaining = Math.max(0, max - length);
+  if (remaining === 0) {
+    return 'Limit reached';
+  }
   const suffix = remaining === 1 ? 'char left' : 'chars left';
   return `${remaining.toLocaleString()} ${suffix}`;
 }
