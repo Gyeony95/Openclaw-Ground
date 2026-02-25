@@ -404,15 +404,17 @@ export function hasScheduleRepairNeed(
   }
   if (normalizedDueMs > updatedMs) {
     const scheduleMs = normalizedDueMs - updatedMs;
-    if (scheduleMs < minScheduleMsForState(state)) {
+    // Keep queue-side repair checks aligned with scheduler jitter tolerance so
+    // valid near-boundary schedules are not repeatedly surfaced as corruption.
+    if (scheduleMs + TIMELINE_JITTER_TOLERANCE_MS < minScheduleMsForState(state)) {
       return true;
     }
-    if (state === 'relearning' && scheduleMs >= REVIEW_MIN_SCHEDULE_MS) {
+    if (state === 'relearning' && scheduleMs + TIMELINE_JITTER_TOLERANCE_MS >= REVIEW_MIN_SCHEDULE_MS) {
       // Day-like relearning windows indicate phase drift; scheduler inference
       // treats these as review cadence and should be normalized via repair.
       return true;
     }
-    if (scheduleMs > maxScheduleMsBeforeRepair(state, stabilityValue)) {
+    if (scheduleMs - TIMELINE_JITTER_TOLERANCE_MS > maxScheduleMsBeforeRepair(state, stabilityValue)) {
       return true;
     }
     const repsProvided = repsValue !== undefined && repsValue !== null;

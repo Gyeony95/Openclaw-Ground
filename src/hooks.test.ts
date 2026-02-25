@@ -2457,6 +2457,17 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(reviewTooSoon)).toBe(true);
   });
 
+  it('does not flag review cards only for sub-second drift below the half-day review floor', () => {
+    const reviewNearFloor = {
+      ...createNewCard('repair-review-floor-jitter', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T23:59:59.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(reviewNearFloor)).toBe(false);
+  });
+
   it('does not flag valid review schedules only because counters have fractional runtime drift', () => {
     const reviewWithFractionalCounters = {
       ...createNewCard('repair-review-fractional-counter-drift', 'test', NOW),
@@ -2504,6 +2515,17 @@ describe('hasScheduleRepairNeed', () => {
     };
 
     expect(hasScheduleRepairNeed(relearningDayLike)).toBe(true);
+  });
+
+  it('does not flag relearning cards only for sub-second drift below the day-like review threshold', () => {
+    const relearningNearDayLike = {
+      ...createNewCard('repair-relearning-daylike-jitter', 'test', NOW),
+      state: 'relearning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T23:59:59.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(relearningNearDayLike)).toBe(false);
   });
 
   it('flags relearning cards with explicitly malformed counter values for repair', () => {
