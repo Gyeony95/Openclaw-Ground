@@ -786,10 +786,24 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
         return parsedState;
       }
       if (scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS) {
-        return hasReviewHistory ? 'relearning' : 'learning';
+        if (hasReviewHistory) {
+          return 'relearning';
+        }
+        // Imported review cards can arrive with missing counters but still carry
+        // mature stability; keep them in review-phase scheduling semantics.
+        if (normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+          return 'review';
+        }
+        return 'learning';
       }
       if (scheduledDays > 0) {
-        return hasReviewHistory ? 'relearning' : 'learning';
+        if (hasReviewHistory) {
+          return 'relearning';
+        }
+        if (normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+          return 'review';
+        }
+        return 'learning';
       }
       if (hasReviewHistory || normalizedStability >= REVIEW_SCHEDULE_FLOOR_DAYS) {
         // Keep explicit review cards in review phase when timelines collapse to zero.

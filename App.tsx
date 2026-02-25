@@ -128,12 +128,13 @@ function formatMetricNumber(value: number, digits: number): string {
 }
 
 function formatCountLabel(length: number, max: number): string {
+  const safeLength = Math.max(0, Math.min(max, length));
   const remaining = Math.max(0, max - length);
   if (remaining === 0) {
-    return 'Limit reached';
+    return `Limit reached · ${safeLength.toLocaleString()}/${max.toLocaleString()}`;
   }
   const suffix = remaining === 1 ? 'char left' : 'chars left';
-  return `${remaining.toLocaleString()} ${suffix}`;
+  return `${remaining.toLocaleString()} ${suffix} · ${safeLength.toLocaleString()}/${max.toLocaleString()}`;
 }
 
 function trimmedLength(value: string, max: number): number {

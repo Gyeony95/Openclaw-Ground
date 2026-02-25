@@ -255,6 +255,25 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('keeps mature explicit review cards in review-phase scheduling when counters are missing', () => {
+    const importedReview = {
+      ...createNewCard('review-missing-counters', 'imported', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 0.25),
+      reps: 0,
+      lapses: 0,
+      stability: 12,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(importedReview, 3, addDaysIso(NOW, 0.25));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThan(0.5);
+    expect(reviewed.card.stability).toBeGreaterThan(1);
+  });
+
   it('rejects stale-timeline recovery review timestamps at the exact wall future-skew boundary', () => {
     jest.useFakeTimers();
     try {
