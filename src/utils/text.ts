@@ -1,4 +1,4 @@
-const INVISIBLE_CHARACTERS = /[\u200B-\u200D\uFEFF]/g;
+const INVISIBLE_CHARACTERS = /[\u00AD\u200B-\u200F\u2060\uFEFF]/g;
 
 function clampMaxLength(maxLength: number): number {
   if (!Number.isFinite(maxLength)) {

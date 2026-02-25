@@ -678,9 +678,11 @@ export default function App() {
 
   function handleRate(rating: Rating) {
     if (studyMode === 'multiple-choice' && !hasQuizSelection) {
+      setReviewActionError('Select one answer first to unlock rating buttons.');
       return;
     }
     if (forceAgainForQuizSelection && rating !== 1) {
+      setReviewActionError('Incorrect answer selected. Use Again to record failed recall.');
       return;
     }
     if (!dueCard || pendingReviewCardKey !== null || reviewLockRef.current) {

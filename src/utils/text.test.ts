@@ -15,6 +15,11 @@ describe('text normalization', () => {
     expect(normalizeOptionalBoundedText('\u200B\uFEFF', 20)).toBeUndefined();
   });
 
+  it('removes additional invisible formatting characters from clipboard text', () => {
+    expect(normalizeBoundedText('\u200E\u200F\u2060\u00ADalpha\u2060', 20)).toBe('alpha');
+    expect(normalizeOptionalBoundedText('\u200E\u200F\u2060\u00AD', 20)).toBeUndefined();
+  });
+
   it('returns empty string for non-string bounded values', () => {
     expect(normalizeBoundedText(undefined, 10)).toBe('');
     expect(normalizeBoundedText(42, 10)).toBe('');

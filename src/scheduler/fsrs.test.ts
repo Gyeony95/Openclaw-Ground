@@ -33,6 +33,14 @@ describe('fsrs scheduler', () => {
     expect(card.notes).toBe('note');
   });
 
+  it('repairs additional invisible-only clipboard characters when creating cards', () => {
+    const card = createNewCard('\u200E\u200F\u2060\u00AD', '\u200E\u200F\u2060\u00AD', NOW, '\u2060 note \u200E');
+
+    expect(card.word).toBe('[invalid word]');
+    expect(card.meaning).toBe('[invalid meaning]');
+    expect(card.notes).toBe('note');
+  });
+
   it('enforces scheduler-side field length limits when creating cards', () => {
     const card = createNewCard('a'.repeat(120), 'b'.repeat(220), NOW, 'c'.repeat(320));
 
