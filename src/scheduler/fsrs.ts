@@ -635,7 +635,8 @@ function normalizeTimeline(
     !hasSaturatedUpperBoundTimeline;
   const dueBelowStateFloor =
     Number.isFinite(dueDaysFromUpdated) &&
-    dueDaysFromUpdated < floorWithTimelineToleranceDays;
+    dueDaysFromUpdated < floorWithTimelineToleranceDays &&
+    !(hasSaturatedUpperBoundTimeline && normalizedState === 'review');
   const dueBelowReviewFloor = normalizedState === 'review' && dueBelowStateFloor;
   const dueBeyondReviewMaxWindow =
     normalizedState === 'review' &&

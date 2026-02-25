@@ -2878,6 +2878,32 @@ describe('fsrs scheduler', () => {
     expect(lowPreview[4]).toBeGreaterThanOrEqual(lowPreview[3]);
   });
 
+  it('preserves stability signal for saturated upper-bound review timelines during review scheduling', () => {
+    const saturatedHighStability = {
+      ...createNewCard('saturated-max-high-review', 'bound', NOW),
+      state: 'review' as const,
+      updatedAt: MAX_ISO,
+      dueAt: MAX_ISO,
+      reps: 8,
+      lapses: 1,
+      stability: 180,
+      difficulty: 5,
+    };
+    const saturatedLowStability = {
+      ...saturatedHighStability,
+      id: 'saturated-max-low-review',
+      stability: 0.5,
+    };
+
+    const highReviewed = reviewCard(saturatedHighStability, 3, NOW);
+    const lowReviewed = reviewCard(saturatedLowStability, 3, NOW);
+
+    expect(highReviewed.scheduledDays).toBeGreaterThan(lowReviewed.scheduledDays);
+    expect(highReviewed.card.stability).toBeGreaterThan(lowReviewed.card.stability);
+    expect(highReviewed.card.state).toBe('review');
+    expect(lowReviewed.card.state).toBe('review');
+  });
+
   it('normalizes whitespace-padded review state strings at runtime', () => {
     const reviewCardBase = {
       ...createNewCard('runtime-state-review', 'letter', NOW),
