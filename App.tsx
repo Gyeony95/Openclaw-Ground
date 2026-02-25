@@ -1446,6 +1446,7 @@ export default function App() {
                   blurOnSubmit={false}
                   editable={isFormEditable}
                   accessibilityLabel="Word input"
+                  accessibilityHint="Enter the vocabulary term you want to study"
                   onFocus={() => setFocusedInput('word')}
                   onBlur={() => setFocusedInput((current) => (current === 'word' ? null : current))}
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
@@ -1480,6 +1481,7 @@ export default function App() {
                   blurOnSubmit={false}
                   editable={isFormEditable}
                   accessibilityLabel="Meaning input"
+                  accessibilityHint="Enter a concise definition for this word"
                   onFocus={() => setFocusedInput('meaning')}
                   onBlur={() => setFocusedInput((current) => (current === 'meaning' ? null : current))}
                   onSubmitEditing={() => {
@@ -1514,6 +1516,7 @@ export default function App() {
                   selectionColor={colors.primary}
                   editable={isFormEditable}
                   accessibilityLabel="Notes input"
+                  accessibilityHint="Optional context, mnemonic, or usage note"
                   onFocus={() => setFocusedInput('notes')}
                   onBlur={() => setFocusedInput((current) => (current === 'notes' ? null : current))}
                   returnKeyType="done"

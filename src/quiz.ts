@@ -29,6 +29,9 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
   if (normalized === 'reviewing') {
     return 'review';
   }
+  if (normalized === 'reviewed') {
+    return 'review';
+  }
   if (normalized === 'rev') {
     return 'review';
   }
@@ -40,6 +43,9 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
     return 'review';
   }
   if (folded === 'reviewing') {
+    return 'review';
+  }
+  if (folded === 'reviewed') {
     return 'review';
   }
   if (folded === 'rev') {
@@ -56,6 +62,9 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
     return 'review';
   }
   if (alphaFolded === 'reviewing') {
+    return 'review';
+  }
+  if (alphaFolded === 'reviewed') {
     return 'review';
   }
   if (alphaFolded === 'rev') {
