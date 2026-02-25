@@ -6076,4 +6076,46 @@ describe('fsrs scheduler', () => {
     expect(boxed.card.dueAt).toBe(primitive.card.dueAt);
     expect(boxed.card.reps).toBe(primitive.card.reps);
   });
+
+  it('trims snapshot ids during review normalization so whitespace-padded ids stay stable', () => {
+    const card = {
+      ...createNewCard('id-trim', 'definition', NOW),
+      id: '  spaced-id  ',
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -2),
+      dueAt: NOW,
+      reps: 4,
+      lapses: 1,
+      stability: 2,
+      difficulty: 5,
+    } as Card;
+
+    const reviewed = reviewCard(card, 3, NOW).card;
+
+    expect(reviewed.id).toBe('spaced-id');
+    expect(reviewed.reps).toBe(card.reps + 1);
+    expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+  });
+
+  it('recovers a deterministic non-empty id when review normalization receives a blank runtime id', () => {
+    const card = {
+      ...createNewCard('id-recovery', 'definition', NOW),
+      id: '   ',
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -2),
+      dueAt: NOW,
+      reps: 4,
+      lapses: 1,
+      stability: 2,
+      difficulty: 5,
+    } as Card;
+
+    const reviewed = reviewCard(card, 3, NOW).card;
+
+    expect(reviewed.id.startsWith('recovered-')).toBe(true);
+    expect(reviewed.id.endsWith('-id-recovery-definition')).toBe(true);
+    expect(reviewed.id).not.toContain(' ');
+    expect(reviewed.id.length).toBeGreaterThan(0);
+    expect(reviewed.reps).toBe(card.reps + 1);
+  });
 });

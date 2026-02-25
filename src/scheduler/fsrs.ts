@@ -132,6 +132,22 @@ function cardIdAnchorToken(ms: number): string {
   return `n${Math.abs(truncated)}`;
 }
 
+function normalizeSnapshotIdToken(value: string): string {
+  const normalized = normalizeBoundedText(value, 24)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return normalized.length > 0 ? normalized : 'card';
+}
+
+function fallbackSnapshotCardId(fallbackUpdatedAt: string, word: string, meaning: string): string {
+  const anchorMs = Date.parse(fallbackUpdatedAt);
+  const anchorToken = cardIdAnchorToken(Number.isFinite(anchorMs) ? anchorMs : 0);
+  const wordToken = normalizeSnapshotIdToken(word);
+  const meaningToken = normalizeSnapshotIdToken(meaning);
+  return `recovered-${anchorToken}-${wordToken}-${meaningToken}`;
+}
+
 function toSafeIso(ms: number): string {
   const safeMs = Number.isFinite(ms)
     ? Math.min(MAX_DATE_MS, Math.max(MIN_DATE_MS, ms))
@@ -1357,11 +1373,17 @@ function snapshotSchedulingCard(card: Card): Card {
   const fallbackIso = toSafeIso(safeNowMs());
   const fallbackUpdatedAt = safeReadString(() => card.updatedAt, fallbackIso);
   const fallbackDueAt = safeReadString(() => card.dueAt, fallbackUpdatedAt);
+  const snapshotWord = safeReadString(() => card.word, '');
+  const snapshotMeaning = safeReadString(() => card.meaning, '');
+  const rawId = safeReadString(() => card.id, '');
+  const normalizedId = rawId.trim();
+  const snapshotId =
+    normalizedId.length > 0 ? normalizedId : fallbackSnapshotCardId(fallbackUpdatedAt, snapshotWord, snapshotMeaning);
   // Snapshot runtime-backed properties once so normalization and scheduling stay deterministic.
   return {
-    id: safeReadString(() => card.id, ''),
-    word: safeReadString(() => card.word, ''),
-    meaning: safeReadString(() => card.meaning, ''),
+    id: snapshotId,
+    word: snapshotWord,
+    meaning: snapshotMeaning,
     notes: safeReadString(() => card.notes, ''),
     createdAt: safeReadString(() => card.createdAt, fallbackUpdatedAt),
     updatedAt: fallbackUpdatedAt,

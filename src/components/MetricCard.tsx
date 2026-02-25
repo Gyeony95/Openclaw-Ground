@@ -15,8 +15,8 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const normalizedValue = hasValue ? Math.max(0, Math.round(value)) : null;
   const displayValue = normalizedValue !== null ? normalizedValue.toLocaleString() : '--';
   const accessibilityValue = hasValue ? displayValue : 'loading';
-  const statusLabel = hasValue ? 'Ready' : 'Loading';
-  const statusTone = hasValue ? colors.subInk : colors.warn;
+  const statusLabel = !hasValue ? 'Loading' : normalizedValue === 0 ? 'Idle' : 'Active';
+  const statusTone = !hasValue ? colors.warn : normalizedValue === 0 ? colors.subInk : accent;
 
   return (
     <View
@@ -34,7 +34,14 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
         <Text style={styles.label} numberOfLines={2} ellipsizeMode="tail" maxFontSizeMultiplier={1.3}>
           {label}
         </Text>
-        <View style={[styles.badge, isVeryNarrow && styles.badgeCompact, !hasValue && styles.badgeMuted]}>
+        <View
+          style={[
+            styles.badge,
+            isVeryNarrow && styles.badgeCompact,
+            !hasValue && styles.badgeMuted,
+            hasValue && normalizedValue !== null && normalizedValue > 0 ? styles.badgeActive : null,
+          ]}
+        >
           <Text style={[styles.badgeText, { color: statusTone }]} maxFontSizeMultiplier={1.3}>
             {statusLabel}
           </Text>
@@ -115,6 +122,10 @@ const styles = StyleSheet.create({
   },
   badgeMuted: {
     opacity: 0.85,
+  },
+  badgeActive: {
+    backgroundColor: colors.surface,
+    borderColor: `${colors.border}cc`,
   },
   badgeText: {
     fontSize: 9.5,
