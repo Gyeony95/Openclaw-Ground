@@ -2166,6 +2166,19 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(corruptedCounterSubday)).toBe(true);
   });
 
+  it('flags learning cards with fractional counters even when schedule remains sub-day', () => {
+    const fractionalCounterSubday = {
+      ...createNewCard('repair-learning-subday-fractional-counters', 'test', NOW),
+      state: 'learning' as const,
+      reps: 0.5,
+      lapses: 0.25,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:30:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(fractionalCounterSubday)).toBe(true);
+  });
+
   it('flags cards with unknown state values for scheduler repair', () => {
     const unknownState = {
       ...createNewCard('repair-unknown-state', 'test', NOW),

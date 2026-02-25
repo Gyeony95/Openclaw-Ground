@@ -321,6 +321,14 @@ export function hasScheduleRepairNeed(
       // inference; always repair before queueing regardless of schedule length.
       return true;
     }
+    if (
+      state === 'learning' &&
+      (!isWholeNonNegativeCounter(repsValue) || !isWholeNonNegativeCounter(lapsesValue))
+    ) {
+      // Learning counters should be whole numbers; fractional drift can hide
+      // prior review history and keep phase-repair cards in the active queue.
+      return true;
+    }
     const hasReviewHistory = reps > 0 || lapses > 0;
     if (state === 'learning' && hasReviewHistory && scheduleMs >= REVIEW_MIN_SCHEDULE_MS) {
       // Learning steps with review history should remain short; day-like intervals indicate
