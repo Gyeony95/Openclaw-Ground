@@ -1,8 +1,10 @@
 export function queueLoadStatusLabel(percent: number, repairCount: number, total: number): string {
-  if (repairCount > 0) {
+  const safeRepairCount = Number.isFinite(repairCount) ? Math.max(0, repairCount) : 0;
+  if (safeRepairCount > 0) {
     return 'Repair needed';
   }
-  if (total <= 0) {
+  const safeTotal = Number.isFinite(total) ? total : 0;
+  if (safeTotal <= 0) {
     return 'Clear';
   }
   const boundedPercent = Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;

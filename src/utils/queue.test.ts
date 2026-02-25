@@ -22,6 +22,17 @@ describe('queueLoadStatusLabel', () => {
     expect(queueLoadStatusLabel(-25, 0, 10)).toBe('Clear');
   });
 
+  it('treats malformed queue totals as clear when no repairs exist', () => {
+    expect(queueLoadStatusLabel(75, 0, Number.NaN)).toBe('Clear');
+    expect(queueLoadStatusLabel(75, 0, Number.POSITIVE_INFINITY)).toBe('Clear');
+  });
+
+  it('ignores malformed repair counters unless they are finite and positive', () => {
+    expect(queueLoadStatusLabel(75, Number.NaN, 10)).toBe('Moderate');
+    expect(queueLoadStatusLabel(75, Number.NEGATIVE_INFINITY, 10)).toBe('Moderate');
+    expect(queueLoadStatusLabel(75, Number.POSITIVE_INFINITY, 10)).toBe('Moderate');
+  });
+
   it('clamps oversized percentages into the heavy band', () => {
     expect(queueLoadStatusLabel(1000, 0, 10)).toBe('Heavy');
   });

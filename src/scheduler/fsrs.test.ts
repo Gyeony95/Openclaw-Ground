@@ -192,6 +192,30 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('rejects stale-timeline recovery review timestamps at the exact wall future-skew boundary', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      const staleCard = {
+        ...createNewCard('stale-boundary-recovery', 'safe', '1990-01-01T00:00:00.000Z'),
+        state: 'review' as const,
+        dueAt: '1990-01-02T00:00:00.000Z',
+        updatedAt: '1990-01-01T00:00:00.000Z',
+        reps: 6,
+        lapses: 1,
+        stability: 3,
+        difficulty: 5,
+      };
+
+      const reviewed = reviewCard(staleCard, 3, '2026-02-24T00:00:00.000Z').card;
+
+      expect(reviewed.updatedAt).toBe('1990-01-01T00:00:00.000Z');
+      expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('rejects review timestamps at the exact monotonic future-skew boundary', () => {
     jest.useFakeTimers();
     try {

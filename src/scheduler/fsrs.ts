@@ -269,7 +269,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
       const candidateFutureSkewMs = candidateMs - wallClockMs;
       const candidatePastOffsetMs = wallClockMs - candidateMs;
       const candidateIsWallSafe =
-        candidateFutureSkewMs <= MAX_MONOTONIC_CLOCK_SKEW_MS &&
+        candidateFutureSkewMs < MAX_MONOTONIC_CLOCK_SKEW_MS &&
         isWithinCreatePastWindow(candidatePastOffsetMs);
       if (fallbackIsPathologicallyStale && candidateIsWallSafe) {
         // Recover stale/corrupted card timelines by accepting a wall-safe review clock.

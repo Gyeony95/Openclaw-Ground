@@ -252,8 +252,13 @@ const styles = StyleSheet.create({
   busyRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
     gap: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surfaceAlt,
   },
   hint: {
     fontSize: 12.5,
