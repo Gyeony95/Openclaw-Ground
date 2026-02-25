@@ -290,7 +290,9 @@ export default function App() {
     ? '--'
     : dueCard
       ? formatReviewQueueLabel(dueQueueCount)
-      : queueShareLabel;
+      : scheduleRepairCount > 0
+        ? `${scheduleRepairCount.toLocaleString()} ${scheduleRepairCount === 1 ? 'repair pending' : 'repairs pending'}`
+        : queueShareLabel;
   const followUpQueueLabel = loading
     ? '--'
     : nextDueCard

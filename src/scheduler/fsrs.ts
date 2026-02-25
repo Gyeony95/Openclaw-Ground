@@ -803,13 +803,13 @@ function normalizeTimeline(
     normalizedState !== 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
     dueDaysFromUpdated > maxStateScheduleDays;
-  const dueWithinModerateNonReviewOutlierWindow =
+  const useNonReviewMaxWindowFallbackForDueRepair =
     normalizedState !== 'review' &&
     rawDueAtIsValid &&
     !dueNotAfterUpdatedAt &&
     !dueBelowStateFloor &&
     Number.isFinite(dueDaysFromUpdated) &&
-    dueDaysFromUpdated <= maxStateScheduleDays * NON_REVIEW_OUTLIER_MULTIPLIER;
+    dueDaysFromUpdated > maxStateScheduleDays;
   const reviewStabilityOutlierWindowDays = Math.max(
     REVIEW_SCHEDULE_FLOOR_DAYS,
     expectedReviewScheduleDays * REVIEW_STABILITY_OUTLIER_MULTIPLIER,
@@ -843,7 +843,7 @@ function normalizeTimeline(
       ? addDaysIso(updatedAt, repairedReviewScheduleDaysForInvalidDue)
       : useReviewStabilityFallbackForOutlierDue
         ? addDaysIso(updatedAt, repairedReviewScheduleDaysForOutlierDue)
-        : dueWithinModerateNonReviewOutlierWindow
+        : useNonReviewMaxWindowFallbackForDueRepair
           ? addDaysIso(updatedAt, maxStateScheduleDays)
           : timelineRepairDueAt
     : rawDueAt ?? fallbackDueAt;
