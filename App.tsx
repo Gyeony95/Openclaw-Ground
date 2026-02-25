@@ -363,6 +363,7 @@ export default function App() {
   const dueCardRevealKey = dueCard
     ? `${dueCard.id}:${dueCard.updatedAt}:${dueCard.dueAt}:${dueCard.state}:${dueCard.reps}:${dueCard.lapses}`
     : 'none';
+  const isReviewBusy = pendingReviewCardKey !== null && pendingReviewCardKey === dueCardRevealKey;
   const quizSeed = dueCard ? `${dueCard.id}:${dueCard.updatedAt}` : 'none';
   const quizOptions = useMemo(() => (dueCard ? composeQuizOptions(dueCard, cards, quizSeed, 3) : []), [cards, dueCard, quizSeed]);
   const correctQuizOption = useMemo(() => quizOptions.find((option) => option.isCorrect), [quizOptions]);
@@ -399,6 +400,7 @@ export default function App() {
       : null;
   const hasQuizSelection = normalizedSelectedQuizOption !== undefined;
   const quizSelectionLocked = studyMode === 'multiple-choice' && hasQuizSelection;
+  const quizOptionsLocked = isReviewBusy;
   const quizSelectionIsCorrect = normalizedSelectedQuizOption?.isCorrect ?? false;
   const forceAgainForQuizSelection = studyMode === 'multiple-choice' && hasQuizSelection && !quizSelectionIsCorrect;
   const disabledRatingsInQuizMode = forceAgainForQuizSelection ? ([2, 3, 4] as Rating[]) : [];
@@ -499,7 +501,6 @@ export default function App() {
   const noteCountTone = notesRemaining === 0 ? colors.danger : notesRemaining <= 20 ? colors.warn : colors.subInk;
   const isWideLayout = width >= 980;
   const isCompactLayout = width < 380;
-  const isReviewBusy = pendingReviewCardKey !== null && pendingReviewCardKey === dueCardRevealKey;
   const modeSwitchLocked = isStudyModeSwitchLocked(studyMode, hasQuizSelection, isReviewBusy);
   const isFormEditable = !loading && !isAddBusy && !isAddLocked;
   const hasDueCardNotes = dueCardNotes.length > 0;

@@ -123,6 +123,29 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(result.dueAt)).toBeGreaterThan(Date.parse(result.updatedAt));
   });
 
+  it('accepts valueOf-backed Date review timestamps from runtime bridges', () => {
+    const reviewCardInput = {
+      ...createNewCard('valueof-date-runtime-review', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const valueOfDateNow = {
+      valueOf() {
+        return new Date(addDaysIso(NOW, 2));
+      },
+    };
+
+    const result = reviewCard(reviewCardInput, 3, valueOfDateNow as unknown as string).card;
+
+    expect(result.updatedAt).toBe('2026-02-25T12:00:00.000Z');
+    expect(Date.parse(result.dueAt)).toBeGreaterThan(Date.parse(result.updatedAt));
+  });
+
   it('accepts valueOf-backed preview timestamps from runtime bridges', () => {
     const previewCardInput = {
       ...createNewCard('valueof-runtime-preview', 'bridge-safe', NOW),
@@ -144,6 +167,29 @@ describe('fsrs scheduler', () => {
     const fromIso = previewIntervals(previewCardInput, addDaysIso(NOW, 2));
 
     expect(fromValueOf).toEqual(fromIso);
+  });
+
+  it('accepts valueOf-backed Date preview timestamps from runtime bridges', () => {
+    const previewCardInput = {
+      ...createNewCard('valueof-date-runtime-preview', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const valueOfDateNow = {
+      valueOf() {
+        return new Date(addDaysIso(NOW, 2));
+      },
+    };
+
+    const fromValueOfDate = previewIntervals(previewCardInput, valueOfDateNow as unknown as string);
+    const fromIso = previewIntervals(previewCardInput, addDaysIso(NOW, 2));
+
+    expect(fromValueOfDate).toEqual(fromIso);
   });
 
   it('accepts toString-backed review timestamps when runtime valueOf throws', () => {
@@ -263,6 +309,19 @@ describe('fsrs scheduler', () => {
 
   it('accepts Date-like creation timestamps from runtime bridges', () => {
     const card = createNewCard('date-runtime-create', 'bridge-safe', new Date(NOW) as unknown as string);
+
+    expect(card.createdAt).toBe(NOW);
+    expect(card.updatedAt).toBe(NOW);
+    expect(card.dueAt).toBe(NOW);
+  });
+
+  it('accepts valueOf-backed Date creation timestamps from runtime bridges', () => {
+    const valueOfDateNow = {
+      valueOf() {
+        return new Date(NOW);
+      },
+    };
+    const card = createNewCard('valueof-date-runtime-create', 'bridge-safe', valueOfDateNow as unknown as string);
 
     expect(card.createdAt).toBe(NOW);
     expect(card.updatedAt).toBe(NOW);
