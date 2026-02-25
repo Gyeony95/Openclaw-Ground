@@ -68,7 +68,7 @@ export function RatingRow({
           const lockedIntervalText = `Use Again · ${againInterval}`;
           const intervalText = isRatingLocked ? lockedIntervalText : interval;
           const intervalPrefix = isRatingLocked ? 'Again' : 'Next';
-          const contentTone = ratingDisabled ? colors.subInk : item.tone;
+          const contentTone = isRatingLocked ? item.tone : ratingDisabled ? colors.subInk : item.tone;
           const lockTone = isRatingLocked ? item.tone : contentTone;
           const accessibilityLabel = busy
             ? `Rate ${item.text}. Saving in progress.`

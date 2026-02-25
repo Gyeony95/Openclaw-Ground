@@ -1876,6 +1876,39 @@ describe('deck repository', () => {
     expect(savedDeck.cards[0].lapses).toBe(Number.MAX_SAFE_INTEGER);
   });
 
+  it('normalizes boxed numeric scheduler fields before persisting deck data', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: 'boxed-numbers-save',
+          word: 'zeta',
+          meaning: 'sixth',
+          dueAt: '2026-02-23T00:00:00.000Z',
+          createdAt: '2026-02-20T00:00:00.000Z',
+          updatedAt: '2026-02-22T00:00:00.000Z',
+          state: 'review',
+          reps: new Number(8) as unknown as number,
+          lapses: new Number(3) as unknown as number,
+          stability: new Number(2.75) as unknown as number,
+          difficulty: new Number(6.25) as unknown as number,
+        },
+      ],
+    });
+
+    expect(mockedStorage.setItem).toHaveBeenCalledTimes(1);
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as {
+      cards: Array<{ reps: number; lapses: number; stability: number; difficulty: number }>;
+    };
+    expect(savedDeck.cards).toHaveLength(1);
+    expect(savedDeck.cards[0].reps).toBe(8);
+    expect(savedDeck.cards[0].lapses).toBe(3);
+    expect(savedDeck.cards[0].stability).toBe(2.75);
+    expect(savedDeck.cards[0].difficulty).toBe(6.25);
+  });
+
   it('keeps only valid lastReviewedAt when persisting', async () => {
     mockedStorage.setItem.mockResolvedValueOnce();
 

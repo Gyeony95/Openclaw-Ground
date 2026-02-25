@@ -50,19 +50,40 @@ function safeReadString(read: () => unknown, fallback = ''): string {
 }
 
 function parseRuntimeFiniteNumber(value: unknown): number | null {
-  if (typeof value === 'number') {
-    if (Number.isFinite(value)) {
+  const normalizedValue = (() => {
+    if (value === null || value === undefined) {
       return value;
     }
-    if (value === Number.POSITIVE_INFINITY || value === Number.NEGATIVE_INFINITY) {
+    if (typeof value !== 'object') {
       return value;
+    }
+    try {
+      const valueOf = (value as { valueOf?: () => unknown }).valueOf;
+      if (typeof valueOf === 'function') {
+        const unboxed = valueOf.call(value);
+        if (typeof unboxed === 'number' || typeof unboxed === 'string') {
+          return unboxed;
+        }
+      }
+    } catch {
+      return null;
+    }
+    return value;
+  })();
+
+  if (typeof normalizedValue === 'number') {
+    if (Number.isFinite(normalizedValue)) {
+      return normalizedValue;
+    }
+    if (normalizedValue === Number.POSITIVE_INFINITY || normalizedValue === Number.NEGATIVE_INFINITY) {
+      return normalizedValue;
     }
     return null;
   }
-  if (typeof value !== 'string') {
+  if (typeof normalizedValue !== 'string') {
     return null;
   }
-  const trimmed = value.trim();
+  const trimmed = normalizedValue.trim();
   const lowered = trimmed.toLowerCase();
   if (lowered === 'infinity' || lowered === '+infinity' || lowered === 'inf' || lowered === '+inf') {
     return Number.POSITIVE_INFINITY;
