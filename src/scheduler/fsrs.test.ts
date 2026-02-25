@@ -5666,6 +5666,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(NOW, 10 / 1440));
   });
 
+  it('treats inf shorthand string counters as existing review history during state inference', () => {
+    const malformedStateCard = {
+      ...createNewCard('inf-string-reps', 'definition', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: 'inf',
+      lapses: '0',
+      stability: 2,
+      difficulty: 5,
+    } as unknown as Card;
+
+    const reviewed = reviewCard(malformedStateCard, 1, NOW).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.lapses).toBe(1);
+    expect(reviewed.dueAt).toBe(addDaysIso(NOW, 10 / 1440));
+  });
+
   it('keeps long review cadence when stability is an Infinity-like string', () => {
     const stableReviewCard = {
       ...createNewCard('infinite-string-stability', 'definition', NOW),
@@ -5673,6 +5692,25 @@ describe('fsrs scheduler', () => {
       reps: 12,
       lapses: 1,
       stability: 'Infinity' as unknown as number,
+      difficulty: 4,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 30),
+    };
+
+    const reviewed = reviewCard(stableReviewCard as unknown as Card, 3, addDaysIso(NOW, 30));
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(30);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(addDaysIso(NOW, 59)));
+  });
+
+  it('keeps long review cadence when stability uses inf shorthand string', () => {
+    const stableReviewCard = {
+      ...createNewCard('inf-string-stability', 'definition', NOW),
+      state: 'review' as const,
+      reps: 12,
+      lapses: 1,
+      stability: 'inf' as unknown as number,
       difficulty: 4,
       updatedAt: NOW,
       dueAt: addDaysIso(NOW, 30),

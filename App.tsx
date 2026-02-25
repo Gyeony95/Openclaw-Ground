@@ -1344,14 +1344,6 @@ export default function App() {
                         ) : (
                           <Text style={styles.flipBackHint}>Rate confidence after checking the answer.</Text>
                         )}
-                        {isReviewBusy ? (
-                          <View style={styles.reviewingHintRow}>
-                            <ActivityIndicator size="small" color={colors.subInk} />
-                            <Text style={styles.reviewingHint} accessibilityLiveRegion="polite">
-                              Recording review...
-                            </Text>
-                          </View>
-                        ) : null}
                       </View>
                     ) : null}
                     {reviewActionError ? (
@@ -2306,18 +2298,5 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-  },
-  reviewingHint: {
-    color: colors.subInk,
-    fontSize: 11.5,
-    fontWeight: '600',
-    letterSpacing: 0.25,
-    textAlign: 'center',
-  },
-  reviewingHintRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
   },
 });

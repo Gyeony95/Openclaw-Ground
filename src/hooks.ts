@@ -215,10 +215,10 @@ function parseRuntimeFiniteNumber(value: unknown): number | null {
   }
   const trimmed = normalizedValue.trim();
   const lowered = trimmed.toLowerCase();
-  if (lowered === 'infinity' || lowered === '+infinity') {
+  if (lowered === 'infinity' || lowered === '+infinity' || lowered === 'inf' || lowered === '+inf') {
     return Number.POSITIVE_INFINITY;
   }
-  if (lowered === '-infinity') {
+  if (lowered === '-infinity' || lowered === '-inf') {
     return Number.NEGATIVE_INFINITY;
   }
   if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(trimmed)) {
@@ -615,16 +615,20 @@ export function countUpcomingDueCards(
   if (!Number.isFinite(nowMs)) {
     return 0;
   }
-  if (hours === Number.POSITIVE_INFINITY) {
-    hours = MAX_UPCOMING_HOURS;
-  }
-  if (!Number.isFinite(hours)) {
+  const normalizedHours = parseRuntimeFiniteNumber(hours);
+  if (normalizedHours === null) {
     return 0;
   }
-  if (hours <= 0) {
+  if (normalizedHours === Number.NEGATIVE_INFINITY) {
     return 0;
   }
-  const safeHours = Math.min(hours, MAX_UPCOMING_HOURS);
+  const safeHours =
+    normalizedHours === Number.POSITIVE_INFINITY
+      ? MAX_UPCOMING_HOURS
+      : Math.min(normalizedHours, MAX_UPCOMING_HOURS);
+  if (!Number.isFinite(safeHours) || safeHours <= 0) {
+    return 0;
+  }
   const windowMs = safeHours * 60 * 60 * 1000;
   const cutoffMs = Number.isFinite(windowMs) ? nowMs + windowMs : Number.POSITIVE_INFINITY;
 

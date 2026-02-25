@@ -1792,6 +1792,19 @@ describe('countUpcomingDueCards', () => {
     expect(countUpcomingDueCards([upcoming], NOW, Number.NaN)).toBe(0);
   });
 
+  it('accepts boxed-number upcoming windows from runtime-bridged inputs', () => {
+    const upcoming = { ...createNewCard('upcoming-window-boxed', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
+
+    expect(countUpcomingDueCards([upcoming], NOW, new Number(24) as unknown as number)).toBe(1);
+  });
+
+  it('accepts numeric-string upcoming windows from runtime-serialized inputs', () => {
+    const upcoming = { ...createNewCard('upcoming-window-string', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
+
+    expect(countUpcomingDueCards([upcoming], NOW, '24' as unknown as number)).toBe(1);
+    expect(countUpcomingDueCards([upcoming], NOW, 'NaN' as unknown as number)).toBe(0);
+  });
+
   it('treats infinite upcoming windows as capped windows instead of dropping matches', () => {
     const upcoming = { ...createNewCard('upcoming-window-infinity', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
 
@@ -2581,6 +2594,19 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(infiniteRepsReview)).toBe(false);
   });
 
+  it('treats inf shorthand reps strings as valid non-negative counters', () => {
+    const infiniteRepsReview = {
+      ...createNewCard('repair-review-inf-reps', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T12:00:00.000Z',
+      reps: 'inf' as unknown as number,
+      stability: 2,
+    };
+
+    expect(hasScheduleRepairNeed(infiniteRepsReview)).toBe(false);
+  });
+
   it('treats overflow scientific reps strings as saturated non-negative counters', () => {
     const overflowRepsReview = {
       ...createNewCard('repair-review-overflow-reps', 'test', NOW),
@@ -2601,6 +2627,18 @@ describe('hasScheduleRepairNeed', () => {
       updatedAt: '2026-02-23T12:00:00.000Z',
       dueAt: '2026-03-23T12:00:00.000Z',
       stability: 'Infinity' as unknown as number,
+    };
+
+    expect(hasScheduleRepairNeed(infiniteStabilityReview)).toBe(false);
+  });
+
+  it('treats inf shorthand stability strings as max stability for review window validation', () => {
+    const infiniteStabilityReview = {
+      ...createNewCard('repair-review-inf-stability', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-03-23T12:00:00.000Z',
+      stability: 'inf' as unknown as number,
     };
 
     expect(hasScheduleRepairNeed(infiniteStabilityReview)).toBe(false);

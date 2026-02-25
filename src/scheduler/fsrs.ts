@@ -253,10 +253,10 @@ function parseRuntimeFiniteNumber(value: unknown): number | null {
   }
   const trimmed = normalizedValue.trim();
   const lowered = trimmed.toLowerCase();
-  if (lowered === 'infinity' || lowered === '+infinity') {
+  if (lowered === 'infinity' || lowered === '+infinity' || lowered === 'inf' || lowered === '+inf') {
     return Number.POSITIVE_INFINITY;
   }
-  if (lowered === '-infinity') {
+  if (lowered === '-infinity' || lowered === '-inf') {
     return Number.NEGATIVE_INFINITY;
   }
   if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(trimmed)) {
