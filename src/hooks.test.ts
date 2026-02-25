@@ -1774,6 +1774,15 @@ describe('countUpcomingDueCards', () => {
 
     expect(countUpcomingDueCards([malformedSchedule], NOW)).toBe(0);
   });
+
+  it('uses runtime-aligned queue clock so due-now cards are not counted as upcoming', () => {
+    const nearFuture = {
+      ...createNewCard('upcoming-runtime-aligned', 'test', NOW),
+      dueAt: '2026-02-23T12:00:20.000Z',
+    };
+
+    expect(countUpcomingDueCards([nearFuture], '2026-02-23T12:00:00.000Z', 24, '2026-02-23T12:00:30.000Z')).toBe(0);
+  });
 });
 
 describe('findNextUpcomingCard', () => {
@@ -1821,6 +1830,25 @@ describe('findNextUpcomingCard', () => {
     };
 
     expect(findNextUpcomingCard([upcoming], 'bad-clock')).toBeUndefined();
+  });
+
+  it('uses runtime-aligned queue clock when selecting the next upcoming card', () => {
+    const dueNowAtRuntime = {
+      ...createNewCard('next-upcoming-runtime-due', 'safe', NOW),
+      dueAt: '2026-02-23T12:00:20.000Z',
+    };
+    const stillUpcoming = {
+      ...createNewCard('next-upcoming-runtime-future', 'safe', NOW),
+      dueAt: '2026-02-23T12:05:00.000Z',
+    };
+
+    const nextUpcoming = findNextUpcomingCard(
+      [dueNowAtRuntime, stillUpcoming],
+      '2026-02-23T12:00:00.000Z',
+      '2026-02-23T12:00:30.000Z',
+    );
+
+    expect(nextUpcoming).toEqual(stillUpcoming);
   });
 });
 

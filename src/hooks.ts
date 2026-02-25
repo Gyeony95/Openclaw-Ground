@@ -542,8 +542,14 @@ function pickFreshestCard(existing: Card, loaded: Card): Card {
   return existing;
 }
 
-export function countUpcomingDueCards(cards: Card[], currentIso: string, hours = 24): number {
-  const nowMs = parseTimeOrNaN(currentIso);
+export function countUpcomingDueCards(
+  cards: Card[],
+  currentIso: string,
+  hours = 24,
+  runtimeNowIso = nowIso(),
+): number {
+  const effectiveCurrentIso = resolveQueueClock(currentIso, runtimeNowIso);
+  const nowMs = parseTimeOrNaN(effectiveCurrentIso);
   if (!Number.isFinite(nowMs)) {
     return 0;
   }
@@ -573,8 +579,9 @@ export function countUpcomingDueCards(cards: Card[], currentIso: string, hours =
   }).length;
 }
 
-export function findNextUpcomingCard(cards: Card[], currentIso: string): Card | undefined {
-  const nowMs = parseTimeOrNaN(currentIso);
+export function findNextUpcomingCard(cards: Card[], currentIso: string, runtimeNowIso = nowIso()): Card | undefined {
+  const effectiveCurrentIso = resolveQueueClock(currentIso, runtimeNowIso);
+  const nowMs = parseTimeOrNaN(effectiveCurrentIso);
   if (!Number.isFinite(nowMs)) {
     return undefined;
   }
