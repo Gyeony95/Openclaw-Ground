@@ -76,6 +76,13 @@ describe('formatDueLabel', () => {
     ).toBe('Due in 35m');
   });
 
+  it('returns repair label for out-of-range numeric timestamps from runtime bridges', () => {
+    expect(formatDueLabel(Number.MAX_VALUE as unknown as string, NOW)).toBe('Needs schedule repair');
+    expect(formatDueLabel('2026-02-23T12:35:00.000Z', Number.MAX_VALUE as unknown as string)).toBe(
+      'Needs schedule repair',
+    );
+  });
+
   it('accepts valueOf-backed date-like runtime objects', () => {
     const dueLike = {
       valueOf() {

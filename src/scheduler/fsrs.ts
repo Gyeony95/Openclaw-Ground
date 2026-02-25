@@ -100,6 +100,16 @@ function safeReadCounter(read: () => unknown, fallback: number): number {
   }
 }
 
+function safeReadIsoLike(read: () => unknown, fallback: string): string {
+  try {
+    const value = read();
+    const normalized = normalizeIsoInput(value);
+    return normalized ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function isStringLikeRuntimeValue(value: unknown): boolean {
   if (typeof value === 'string' || value instanceof String) {
     return true;
@@ -1615,8 +1625,8 @@ function normalizeCardText(
 
 function snapshotSchedulingCard(card: Card): Card {
   const fallbackIso = toSafeIso(safeNowMs());
-  const fallbackUpdatedAt = safeReadString(() => card.updatedAt, fallbackIso);
-  const fallbackDueAt = safeReadString(() => card.dueAt, fallbackUpdatedAt);
+  const fallbackUpdatedAt = safeReadIsoLike(() => card.updatedAt, fallbackIso);
+  const fallbackDueAt = safeReadIsoLike(() => card.dueAt, fallbackUpdatedAt);
   const snapshotWord = safeReadString(() => card.word, '');
   const snapshotMeaning = safeReadString(() => card.meaning, '');
   const rawId = safeReadString(() => card.id, '');
@@ -1629,7 +1639,7 @@ function snapshotSchedulingCard(card: Card): Card {
     word: snapshotWord,
     meaning: snapshotMeaning,
     notes: safeReadString(() => card.notes, ''),
-    createdAt: safeReadString(() => card.createdAt, fallbackUpdatedAt),
+    createdAt: safeReadIsoLike(() => card.createdAt, fallbackUpdatedAt),
     updatedAt: fallbackUpdatedAt,
     dueAt: fallbackDueAt,
     state: normalizeState(safeReadString(() => card.state, 'learning')),

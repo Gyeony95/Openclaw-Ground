@@ -42,9 +42,9 @@ export function RatingRow({
   lockedHint,
 }: RatingRowProps) {
   const { width } = useWindowDimensions();
-  // Keep tap targets readable on smaller phones by stacking sooner.
-  const isCompact = width < 340;
+  // Keep two-column layout on common small phones and stack only for very narrow widths.
   const isVeryNarrow = width < 320;
+  const isCompact = width < 350;
   const isNarrow = width < 380;
   const isWide = width >= 560;
   const intervalLineCount = isVeryNarrow ? 1 : isCompact ? 2 : 1;
@@ -101,7 +101,7 @@ export function RatingRow({
               style={({ pressed }) => [
                 styles.button,
                 isNarrow ? styles.buttonNarrow : null,
-                isCompact ? styles.buttonCompact : null,
+                isVeryNarrow ? styles.buttonCompact : null,
                 isVeryNarrow ? styles.buttonVeryNarrow : null,
                 isWide ? styles.buttonWide : null,
                 busy ? styles.buttonBusy : null,

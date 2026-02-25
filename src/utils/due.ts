@@ -5,6 +5,17 @@ const HOUR_MS = 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 const NOW_THRESHOLD_MS = 60 * 1000;
 
+function safeIsoFromMs(ms: number): string | undefined {
+  if (!Number.isFinite(ms)) {
+    return undefined;
+  }
+  try {
+    return new Date(ms).toISOString();
+  } catch {
+    return undefined;
+  }
+}
+
 function parseIso(iso: unknown): number | null {
   const fromObjectValue = (value: unknown): string | undefined => {
     if (!value || typeof value !== 'object') {
@@ -19,13 +30,11 @@ function parseIso(iso: unknown): number | null {
           return unboxed;
         }
         if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
-          return new Date(unboxed).toISOString();
+          return safeIsoFromMs(unboxed);
         }
         if (unboxed instanceof Date) {
           const ms = unboxed.getTime();
-          if (Number.isFinite(ms)) {
-            return new Date(ms).toISOString();
-          }
+          return safeIsoFromMs(ms);
         }
       }
     } catch {
@@ -39,7 +48,7 @@ function parseIso(iso: unknown): number | null {
           return stringified;
         }
         if (typeof stringified === 'number' && Number.isFinite(stringified)) {
-          return new Date(stringified).toISOString();
+          return safeIsoFromMs(stringified);
         }
       }
     } catch {
@@ -56,35 +65,14 @@ function parseIso(iso: unknown): number | null {
     }
     if (iso instanceof Number) {
       const value = iso.valueOf();
-      if (!Number.isFinite(value)) {
-        return undefined;
-      }
-      try {
-        return new Date(value).toISOString();
-      } catch {
-        return undefined;
-      }
+      return safeIsoFromMs(value);
     }
     if (typeof iso === 'number') {
-      if (!Number.isFinite(iso)) {
-        return undefined;
-      }
-      try {
-        return new Date(iso).toISOString();
-      } catch {
-        return undefined;
-      }
+      return safeIsoFromMs(iso);
     }
     if (iso instanceof Date) {
       const ms = iso.getTime();
-      if (!Number.isFinite(ms)) {
-        return undefined;
-      }
-      try {
-        return new Date(ms).toISOString();
-      } catch {
-        return undefined;
-      }
+      return safeIsoFromMs(ms);
     }
     return fromObjectValue(iso);
   })();

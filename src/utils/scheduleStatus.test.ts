@@ -135,6 +135,18 @@ describe('scheduleStatus', () => {
       expect(numericTone).toBe(colors.danger);
     });
 
+    it('treats out-of-range numeric timestamps as malformed schedule inputs', () => {
+      const tone = queueTone({
+        dueAt: Number.MAX_VALUE as unknown as string,
+        clockIso: NOW,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(tone).toBe(colors.warn);
+    });
+
     it('accepts boxed numeric and valueOf-backed timestamps from runtime bridges', () => {
       const boxedNumericTone = queueTone({
         dueAt: new Number(Date.parse('2026-02-24T11:58:30.000Z')) as unknown as string,
@@ -258,6 +270,16 @@ describe('scheduleStatus', () => {
         dueAt: undefined,
         clockIso: NOW,
         needsRepair: true,
+      });
+
+      expect(urgency).toEqual({ label: 'Needs repair', tone: colors.warn });
+    });
+
+    it('returns repair label for out-of-range numeric timestamps from runtime bridges', () => {
+      const urgency = dueUrgency({
+        dueAt: Number.MAX_VALUE as unknown as string,
+        clockIso: NOW,
+        needsRepair: false,
       });
 
       expect(urgency).toEqual({ label: 'Needs repair', tone: colors.warn });

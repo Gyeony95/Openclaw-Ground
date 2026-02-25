@@ -17,6 +17,17 @@ export interface DueUrgencyInput {
   needsRepair: boolean;
 }
 
+function safeIsoFromMs(ms: number): string | undefined {
+  if (!Number.isFinite(ms)) {
+    return undefined;
+  }
+  try {
+    return new Date(ms).toISOString();
+  } catch {
+    return undefined;
+  }
+}
+
 function parseIsoOrNaN(value?: unknown): number {
   const normalizeStringOrNumber = (candidate: unknown): string | undefined => {
     if (typeof candidate === 'string') {
@@ -26,19 +37,15 @@ function parseIsoOrNaN(value?: unknown): number {
       return candidate.valueOf();
     }
     if (typeof candidate === 'number' && Number.isFinite(candidate)) {
-      return new Date(candidate).toISOString();
+      return safeIsoFromMs(candidate);
     }
     if (candidate instanceof Number) {
       const unboxed = candidate.valueOf();
-      if (Number.isFinite(unboxed)) {
-        return new Date(unboxed).toISOString();
-      }
+      return safeIsoFromMs(unboxed);
     }
     if (candidate instanceof Date) {
       const ms = candidate.getTime();
-      if (Number.isFinite(ms)) {
-        return new Date(ms).toISOString();
-      }
+      return safeIsoFromMs(ms);
     }
     return undefined;
   };

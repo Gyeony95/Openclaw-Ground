@@ -100,6 +100,68 @@ describe('fsrs scheduler', () => {
     expect(fromDate).toEqual(fromIso);
   });
 
+  it('normalizes Date-like persisted timeline fields from runtime bridges during review', () => {
+    const isoCard = {
+      ...createNewCard('date-like-fields-review', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      createdAt: addDaysIso(NOW, -10),
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const bridgedCard = {
+      ...isoCard,
+      createdAt: new Date(addDaysIso(NOW, -10)) as unknown as string,
+      updatedAt: {
+        valueOf() {
+          return new Date(NOW);
+        },
+      } as unknown as string,
+      dueAt: new Number(Date.parse(addDaysIso(NOW, 2))) as unknown as string,
+    };
+
+    const reviewedIso = reviewCard(isoCard, 3, addDaysIso(NOW, 2));
+    const reviewedBridged = reviewCard(bridgedCard as unknown as Card, 3, addDaysIso(NOW, 2));
+
+    expect(reviewedBridged).toEqual(reviewedIso);
+  });
+
+  it('normalizes Date-like persisted timeline fields from runtime bridges during preview', () => {
+    const isoCard = {
+      ...createNewCard('date-like-fields-preview', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      createdAt: addDaysIso(NOW, -10),
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const bridgedCard = {
+      ...isoCard,
+      createdAt: new Date(addDaysIso(NOW, -10)) as unknown as string,
+      updatedAt: {
+        valueOf() {
+          return new Number(Date.parse(NOW));
+        },
+      } as unknown as string,
+      dueAt: {
+        valueOf() {
+          return new Date(addDaysIso(NOW, 2));
+        },
+      } as unknown as string,
+    };
+
+    const previewIso = previewIntervals(isoCard, addDaysIso(NOW, 2));
+    const previewBridged = previewIntervals(bridgedCard as unknown as Card, addDaysIso(NOW, 2));
+
+    expect(previewBridged).toEqual(previewIso);
+  });
+
   it('accepts valueOf-backed review timestamps from runtime bridges', () => {
     const reviewCardInput = {
       ...createNewCard('valueof-runtime-review', 'bridge-safe', NOW),
