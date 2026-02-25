@@ -470,6 +470,28 @@ describe('deck repository', () => {
     expect(deck.cards[1].state).toBe('relearning');
   });
 
+  it('normalizes short review aliases in persisted state', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'state-alias-short-review',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: ' rev ',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].state).toBe('review');
+  });
+
   it('computes due and state counts', () => {
     const stats = computeDeckStats(
       [

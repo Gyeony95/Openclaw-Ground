@@ -752,8 +752,14 @@ function parseState(input: unknown): ReviewState | undefined {
     if (normalized === 'review' || normalized === 'relearning' || normalized === 'learning') {
       return normalized;
     }
+    if (normalized === 'rev') {
+      return 'review';
+    }
     const folded = normalized.replace(/[\s_-]+/g, '');
     if (folded === 'review') {
+      return 'review';
+    }
+    if (folded === 'rev') {
       return 'review';
     }
     if (folded === 'learning' || folded === 'learn') {
@@ -764,6 +770,9 @@ function parseState(input: unknown): ReviewState | undefined {
     }
     const alphaFolded = normalized.replace(/[^a-z]+/g, '');
     if (alphaFolded === 'review') {
+      return 'review';
+    }
+    if (alphaFolded === 'rev') {
       return 'review';
     }
     if (alphaFolded === 'learning' || alphaFolded === 'learn') {

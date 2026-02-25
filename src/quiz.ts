@@ -26,11 +26,17 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
     return null;
   }
   const normalized = state.trim().toLowerCase();
+  if (normalized === 'rev') {
+    return 'review';
+  }
   if (normalized === 'review' || normalized === 'learning' || normalized === 'relearning') {
     return normalized;
   }
   const folded = normalized.replace(/[\s_-]+/g, '');
   if (folded === 'review') {
+    return 'review';
+  }
+  if (folded === 'rev') {
     return 'review';
   }
   if (folded === 'learning' || folded === 'learn') {
@@ -41,6 +47,9 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
   }
   const alphaFolded = normalized.replace(/[^a-z]+/g, '');
   if (alphaFolded === 'review') {
+    return 'review';
+  }
+  if (alphaFolded === 'rev') {
     return 'review';
   }
   if (alphaFolded === 'learning' || alphaFolded === 'learn') {
@@ -81,6 +90,15 @@ function safeOptionId(option: unknown): string | null {
   }
 }
 
+function safeNormalizedOptionId(option: unknown): string | null {
+  const raw = safeOptionId(option);
+  if (typeof raw !== 'string') {
+    return null;
+  }
+  const trimmed = raw.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 export function hasValidQuizSelection(selectedOptionId: string | null, options: QuizOption[]): boolean {
   return findQuizOptionById(options, selectedOptionId) !== undefined;
 }
@@ -96,13 +114,16 @@ export function findQuizOptionById(
   if (normalizedSelectedId.length === 0) {
     return undefined;
   }
-  const exactMatch = options.find((option) => safeOptionId(option) === selectedOptionId);
+  const exactMatch = options.find((option) => {
+    const rawOptionId = safeOptionId(option);
+    return rawOptionId === selectedOptionId && rawOptionId.trim().length > 0;
+  });
   if (exactMatch) {
     return exactMatch;
   }
   return options.find((option) => {
-    const optionId = safeOptionId(option);
-    return typeof optionId === 'string' && optionId.trim() === normalizedSelectedId;
+    const optionId = safeNormalizedOptionId(option);
+    return optionId === normalizedSelectedId;
   });
 }
 

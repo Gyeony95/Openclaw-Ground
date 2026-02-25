@@ -359,7 +359,9 @@ export default function App() {
       return null;
     }
   }, [clockIso, dueCard]);
-  const dueCardRevealKey = dueCard ? `${dueCard.id}:${dueCard.updatedAt}:${dueCard.dueAt}` : 'none';
+  const dueCardRevealKey = dueCard
+    ? `${dueCard.id}:${dueCard.updatedAt}:${dueCard.dueAt}:${dueCard.state}:${dueCard.reps}:${dueCard.lapses}`
+    : 'none';
   const quizSeed = dueCard ? `${dueCard.id}:${dueCard.updatedAt}` : 'none';
   const quizOptions = useMemo(() => (dueCard ? composeQuizOptions(dueCard, cards, quizSeed, 3) : []), [cards, dueCard, quizSeed]);
   const correctQuizOption = useMemo(() => quizOptions.find((option) => option.isCorrect), [quizOptions]);

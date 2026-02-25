@@ -139,11 +139,17 @@ function normalizeState(state: unknown): ReviewState {
   }
   if (typeof state === 'string') {
     const normalized = state.trim().toLowerCase();
+    if (normalized === 'rev') {
+      return 'review';
+    }
     if (normalized === 'relearn' || normalized === 're-learn') {
       return 'relearning';
     }
     const folded = normalized.replace(/[\s_-]+/g, '');
     if (folded === 'review') {
+      return 'review';
+    }
+    if (folded === 'rev') {
       return 'review';
     }
     if (folded === 'learning' || folded === 'learn') {
@@ -154,6 +160,9 @@ function normalizeState(state: unknown): ReviewState {
     }
     const alphaFolded = normalized.replace(/[^a-z]+/g, '');
     if (alphaFolded === 'review') {
+      return 'review';
+    }
+    if (alphaFolded === 'rev') {
       return 'review';
     }
     if (alphaFolded === 'learning' || alphaFolded === 'learn') {

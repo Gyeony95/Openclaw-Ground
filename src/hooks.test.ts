@@ -2715,6 +2715,20 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(punctuationReview)).toBe(false);
   });
 
+  it('accepts short review state aliases when schedule is otherwise healthy', () => {
+    const shortReviewAlias = {
+      ...createNewCard('repair-short-review-alias', 'test', NOW),
+      state: ' rev ' as unknown as Card['state'],
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T12:00:00.000Z',
+      stability: 4,
+      reps: 3,
+      lapses: 1,
+    };
+
+    expect(hasScheduleRepairNeed(shortReviewAlias)).toBe(false);
+  });
+
   it('does not flag healthy schedules', () => {
     const healthy = {
       ...createNewCard('repair-healthy', 'test', NOW),

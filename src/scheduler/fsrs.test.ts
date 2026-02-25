@@ -2107,6 +2107,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.card.state).toBe('relearning');
   });
 
+  it('normalizes short review state aliases before applying ratings', () => {
+    const foldedReview = {
+      ...createNewCard('folded-review-short-alias', 'state alias', NOW),
+      state: ' rev ' as unknown as 'review',
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 2),
+      reps: 6,
+      lapses: 1,
+      stability: 4,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(foldedReview, 1, addDaysIso(NOW, 2));
+
+    expect(reviewed.card.state).toBe('relearning');
+    expect(reviewed.card.lapses).toBe(foldedReview.lapses + 1);
+    expect(reviewed.scheduledDays).toBe(10 / 1440);
+  });
+
   it('infers review phase for malformed states when mature schedule history exists', () => {
     const matureWithMalformedState = {
       ...createNewCard('malformed-state-review-infer', 'state fallback', NOW),

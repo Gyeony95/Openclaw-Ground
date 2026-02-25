@@ -211,6 +211,17 @@ describe('quiz distractors', () => {
     expect(hasValidQuizSelection('valid-option', malformedOptions)).toBe(true);
   });
 
+  it('ignores blank option ids during selection lookup', () => {
+    const options = [
+      { id: '   ', cardId: 'blank-option', text: 'bad', isCorrect: false },
+      { id: 'valid-option', cardId: 'c3', text: 'good', isCorrect: true },
+    ];
+
+    expect(hasValidQuizSelection('   ', options)).toBe(false);
+    expect(findQuizOptionById(options, '   ')).toBeUndefined();
+    expect(hasValidQuizSelection('valid-option', options)).toBe(true);
+  });
+
   it('ignores options whose id getter throws during selection lookup', () => {
     const throwingOption = { cardId: 'bad', text: 'bad', isCorrect: false } as {
       id: string;
@@ -509,6 +520,7 @@ describe('quiz distractors', () => {
   it('keeps malformed correct-selection ratings neutral for normalized review-like state strings', () => {
     expect(resolveMultipleChoiceRating(Number.NaN as Rating, true, ' Review ' as unknown as Card['state'])).toBe(3);
     expect(resolveMultipleChoiceRating(9 as Rating, true, 're-view!!' as unknown as Card['state'])).toBe(3);
+    expect(resolveMultipleChoiceRating(9 as Rating, true, 'rev' as unknown as Card['state'])).toBe(3);
   });
 
   it('maps malformed correct-selection ratings to Again in learning/relearning states', () => {
