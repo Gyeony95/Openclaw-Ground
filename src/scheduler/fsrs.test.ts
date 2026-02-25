@@ -146,6 +146,64 @@ describe('fsrs scheduler', () => {
     expect(fromValueOf).toEqual(fromIso);
   });
 
+  it('accepts toString-backed review timestamps when runtime valueOf throws', () => {
+    const reviewCardInput = {
+      ...createNewCard('tostring-runtime-review', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const toStringNow = {
+      valueOf() {
+        throw new Error('runtime bridge valueOf failure');
+      },
+      toString() {
+        return addDaysIso(NOW, 2);
+      },
+    };
+
+    const result = reviewCard(reviewCardInput, 3, toStringNow as unknown as string).card;
+
+    expect(result.updatedAt).toBe('2026-02-25T12:00:00.000Z');
+    expect(Date.parse(result.dueAt)).toBeGreaterThan(Date.parse(result.updatedAt));
+  });
+
+  it('preserves toString-backed numeric review counters when runtime valueOf throws', () => {
+    const runtimeCounters = {
+      ...createNewCard('tostring-runtime-counters', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: {
+        valueOf() {
+          throw new Error('runtime bridge valueOf failure');
+        },
+        toString() {
+          return '6';
+        },
+      } as unknown as number,
+      lapses: {
+        valueOf() {
+          throw new Error('runtime bridge valueOf failure');
+        },
+        toString() {
+          return '2';
+        },
+      } as unknown as number,
+      stability: 3,
+      difficulty: 5.5,
+    };
+
+    const result = reviewCard(runtimeCounters, 3, addDaysIso(NOW, 2)).card;
+
+    expect(result.reps).toBe(7);
+    expect(result.lapses).toBe(2);
+  });
+
   it('creates new cards with trimmed fields', () => {
     const card = createNewCard('  alpha ', ' first letter  ', NOW, '  note ');
 

@@ -10,8 +10,9 @@ function parseIso(iso: unknown): number | null {
     if (!value || typeof value !== 'object') {
       return undefined;
     }
+    const valueObject = value as { valueOf?: () => unknown; toString?: () => unknown };
     try {
-      const valueOf = (value as { valueOf?: () => unknown }).valueOf;
+      const valueOf = valueObject.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(value);
         if (typeof unboxed === 'string') {
@@ -25,6 +26,20 @@ function parseIso(iso: unknown): number | null {
           if (Number.isFinite(ms)) {
             return new Date(ms).toISOString();
           }
+        }
+      }
+    } catch {
+      // Fall through to toString for bridged runtime objects with broken valueOf.
+    }
+    try {
+      const toString = valueObject.toString;
+      if (typeof toString === 'function') {
+        const stringified = toString.call(value);
+        if (typeof stringified === 'string') {
+          return stringified;
+        }
+        if (typeof stringified === 'number' && Number.isFinite(stringified)) {
+          return new Date(stringified).toISOString();
         }
       }
     } catch {

@@ -183,6 +183,32 @@ describe('scheduleStatus', () => {
       expect(tone).toBe(colors.danger);
     });
 
+    it('accepts toString-backed runtime objects when valueOf throws', () => {
+      const tone = queueTone({
+        dueAt: {
+          valueOf() {
+            throw new Error('runtime bridge valueOf failure');
+          },
+          toString() {
+            return '2026-02-24T11:58:30.000Z';
+          },
+        } as unknown as string,
+        clockIso: {
+          valueOf() {
+            throw new Error('runtime bridge valueOf failure');
+          },
+          toString() {
+            return NOW;
+          },
+        } as unknown as string,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(tone).toBe(colors.danger);
+    });
+
     it('accepts lowercase-z UTC timestamps', () => {
       const tone = queueTone({
         dueAt: '2026-02-24T11:58:30.000z',

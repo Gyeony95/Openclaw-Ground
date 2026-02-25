@@ -22,8 +22,9 @@ function parseIsoOrNaN(value?: unknown): number {
     if (!input || typeof input !== 'object') {
       return undefined;
     }
+    const valueObject = input as { valueOf?: () => unknown; toString?: () => unknown };
     try {
-      const valueOf = (input as { valueOf?: () => unknown }).valueOf;
+      const valueOf = valueObject.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(input);
         if (typeof unboxed === 'string') {
@@ -37,6 +38,20 @@ function parseIsoOrNaN(value?: unknown): number {
           if (Number.isFinite(ms)) {
             return new Date(ms).toISOString();
           }
+        }
+      }
+    } catch {
+      // Fall through to toString for bridged runtime objects with broken valueOf.
+    }
+    try {
+      const toString = valueObject.toString;
+      if (typeof toString === 'function') {
+        const stringified = toString.call(input);
+        if (typeof stringified === 'string') {
+          return stringified;
+        }
+        if (typeof stringified === 'number' && Number.isFinite(stringified)) {
+          return new Date(stringified).toISOString();
         }
       }
     } catch {

@@ -193,12 +193,24 @@ function parseRuntimeFiniteNumber(value: unknown): number | null {
     if (typeof value !== 'object') {
       return value;
     }
+    const valueObject = value as { valueOf?: () => unknown; toString?: () => unknown };
     try {
-      const valueOf = (value as { valueOf?: () => unknown }).valueOf;
+      const valueOf = valueObject.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(value);
         if (typeof unboxed === 'number' || typeof unboxed === 'string') {
           return unboxed;
+        }
+      }
+    } catch {
+      // Fall through to toString for bridged runtime objects with broken valueOf.
+    }
+    try {
+      const toString = valueObject.toString;
+      if (typeof toString === 'function') {
+        const stringified = toString.call(value);
+        if (typeof stringified === 'number' || typeof stringified === 'string') {
+          return stringified;
         }
       }
     } catch {
@@ -548,8 +560,9 @@ function normalizeIsoInput(value: unknown): string | undefined {
     if (!value || typeof value !== 'object') {
       return undefined;
     }
+    const valueObject = value as { valueOf?: () => unknown; toString?: () => unknown };
     try {
-      const valueOf = (value as { valueOf?: () => unknown }).valueOf;
+      const valueOf = valueObject.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(value);
         if (typeof unboxed === 'string') {
@@ -557,6 +570,20 @@ function normalizeIsoInput(value: unknown): string | undefined {
         }
         if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
           return toSafeIso(unboxed);
+        }
+      }
+    } catch {
+      // Fall through to toString for bridged runtime objects with broken valueOf.
+    }
+    try {
+      const toString = valueObject.toString;
+      if (typeof toString === 'function') {
+        const stringified = toString.call(value);
+        if (typeof stringified === 'string') {
+          return stringified;
+        }
+        if (typeof stringified === 'number' && Number.isFinite(stringified)) {
+          return toSafeIso(stringified);
         }
       }
     } catch {
