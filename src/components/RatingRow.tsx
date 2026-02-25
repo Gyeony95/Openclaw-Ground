@@ -13,10 +13,10 @@ interface RatingRowProps {
 }
 
 const labels: Array<{ rating: Rating; text: string; fallbackHint: string; tone: string }> = [
-  { rating: 1, text: 'Again', fallbackHint: 'In minutes', tone: colors.danger },
-  { rating: 2, text: 'Hard', fallbackHint: 'Keep short', tone: colors.warn },
-  { rating: 3, text: 'Good', fallbackHint: 'On schedule', tone: colors.primary },
-  { rating: 4, text: 'Easy', fallbackHint: 'Stretch out', tone: colors.success },
+  { rating: 1, text: 'Again', fallbackHint: 'Retry soon', tone: colors.danger },
+  { rating: 2, text: 'Hard', fallbackHint: 'Short step', tone: colors.warn },
+  { rating: 3, text: 'Good', fallbackHint: 'On track', tone: colors.primary },
+  { rating: 4, text: 'Easy', fallbackHint: 'Long step', tone: colors.success },
 ];
 const validRatings = new Set<Rating>(labels.map((item) => item.rating));
 
@@ -62,7 +62,7 @@ export function RatingRow({
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
-          const intervalText = isRatingLocked ? 'Use Again' : interval;
+          const intervalText = isRatingLocked ? 'Again first' : interval;
           const intervalPrefix = isRatingLocked ? 'Locked' : 'Next';
           const contentTone = ratingDisabled ? colors.subInk : item.tone;
           const lockTone = isRatingLocked ? item.tone : contentTone;

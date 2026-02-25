@@ -457,6 +457,11 @@ function normalizeTimeline(
     rawDueMs >= MAX_DATE_MS &&
     updatedAtMs >= MAX_DATE_MS;
   const stateScheduleFloorDays = scheduleFallbackForState(normalizedState);
+  const timelineJitterToleranceDays = TIMELINE_JITTER_TOLERANCE_MS / DAY_MS;
+  const floorWithTimelineToleranceDays = Math.max(
+    0,
+    stateScheduleFloorDays - timelineJitterToleranceDays,
+  );
   const parsedReviewStability = parseRuntimeFiniteNumber(card.stability);
   const expectedReviewScheduleDays = normalizeScheduledDays(
     parsedReviewStability ?? (typeof card.stability === 'number' ? card.stability : Number.NaN),
@@ -479,7 +484,7 @@ function normalizeTimeline(
     !hasSaturatedUpperBoundTimeline;
   const dueBelowStateFloor =
     Number.isFinite(dueDaysFromUpdated) &&
-    dueDaysFromUpdated < stateScheduleFloorDays;
+    dueDaysFromUpdated < floorWithTimelineToleranceDays;
   const dueBelowReviewFloor = normalizedState === 'review' && dueBelowStateFloor;
   const dueBeyondReviewMaxWindow =
     normalizedState === 'review' &&

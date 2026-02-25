@@ -4275,6 +4275,38 @@ describe('fsrs scheduler', () => {
     expect(minuteScaleReview.card.stability).toBeCloseTo(normalizedReview.card.stability, 6);
   });
 
+  it('does not over-repair relearning schedules that are only below floor by timeline jitter', () => {
+    const card = createNewCard('psi-relearning-jitter-floor', 'letter', NOW);
+    const graduated = reviewCard(card, 4, NOW).card;
+    const failed = reviewCard(graduated, 1, '2026-02-24T12:00:00.000Z').card;
+    const baseTime = Date.parse(failed.updatedAt);
+    const exactFloorDueAt = new Date(baseTime + 10 * 60 * 1000).toISOString();
+    const jitteredNearFloorDueAt = new Date(baseTime + 10 * 60 * 1000 - 500).toISOString();
+    const reviewAt = exactFloorDueAt;
+    const matureStability = 120;
+    const normalized = {
+      ...failed,
+      dueAt: exactFloorDueAt,
+      stability: matureStability,
+      reps: 8,
+      lapses: 2,
+    };
+    const jittered = {
+      ...failed,
+      dueAt: jitteredNearFloorDueAt,
+      stability: matureStability,
+      reps: 8,
+      lapses: 2,
+    };
+
+    const normalizedReview = reviewCard(normalized, 3, reviewAt);
+    const jitteredReview = reviewCard(jittered, 3, reviewAt);
+
+    expect(jitteredReview.scheduledDays).toBe(normalizedReview.scheduledDays);
+    expect(jitteredReview.card.stability).toBeCloseTo(normalizedReview.card.stability, 6);
+    expect(jitteredReview.card.stability).toBeGreaterThan(10);
+  });
+
   it('treats pathologically-future relearning schedules like the 10-minute relearning floor', () => {
     const card = createNewCard('psi-relearning-future-floor', 'letter', NOW);
     const graduated = reviewCard(card, 4, NOW).card;
