@@ -2869,9 +2869,9 @@ describe('resolveReviewClock', () => {
     expect(resolveReviewClock('2026-02-23T12:00:00Z', '2026-02-23T12:00:10Z')).toBe('2026-02-23T12:00:10.000Z');
   });
 
-  it('keeps rendered clock when runtime clock moves backward', () => {
+  it('uses runtime clock when runtime clock moves backward slightly', () => {
     expect(resolveReviewClock('2026-02-23T12:00:10.000Z', '2026-02-23T12:00:00.000Z')).toBe(
-      '2026-02-23T12:00:10.000Z',
+      '2026-02-23T12:00:00.000Z',
     );
   });
 

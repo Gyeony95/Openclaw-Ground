@@ -909,7 +909,9 @@ export function resolveReviewClock(renderedClockIso: string, runtimeNowIso: stri
       }
       return canonicalRuntimeIso ?? wallClockIso;
     }
-    return runtimeMs < renderedMs ? canonicalRenderedIso ?? wallClockIso : canonicalRuntimeIso ?? wallClockIso;
+    // Prefer runtime for review actions whenever it is wall-safe so timestamps
+    // stay anchored to actual interaction time instead of stale rendered frames.
+    return canonicalRuntimeIso ?? wallClockIso;
   }
   if (Number.isFinite(runtimeMs)) {
     if (runtimeTooFarAheadOfWall || runtimeTooFarBehindWall) {
