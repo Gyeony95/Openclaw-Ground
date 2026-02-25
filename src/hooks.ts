@@ -982,6 +982,7 @@ export function resolveAddCardClock(renderedClockIso: string, runtimeNowIso: str
   const resolved = resolveNextUiClock(renderedClockIso, runtimeNowIso);
   const resolvedMs = parseTimeOrNaN(resolved);
   const runtimeMs = parseTimeOrNaN(runtimeNowIso);
+  const wallClockMs = safeNowMs();
 
   const runtimeSkewMs = Number.isFinite(resolvedMs) && Number.isFinite(runtimeMs) ? resolvedMs - runtimeMs : Number.NaN;
   const runtimeIsPlausiblyCurrent =
@@ -992,6 +993,15 @@ export function resolveAddCardClock(renderedClockIso: string, runtimeNowIso: str
   if (runtimeIsPlausiblyCurrent && resolvedMs > runtimeMs) {
     // Added cards should not be anchored in the future; keep creation immediately due.
     return toCanonicalIso(runtimeNowIso);
+  }
+
+  if (
+    Number.isFinite(resolvedMs) &&
+    Number.isFinite(wallClockMs) &&
+    resolvedMs - wallClockMs > TIMELINE_JITTER_TOLERANCE_MS
+  ) {
+    // If runtime now is malformed, still avoid creating cards in the future.
+    return toSafeIso(wallClockMs);
   }
 
   return resolved;

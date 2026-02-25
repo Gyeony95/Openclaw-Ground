@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 10,
     minWidth: 80,
-    minHeight: 98,
+    minHeight: 104,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     flexBasis: '100%',
   },
   buttonVeryNarrow: {
-    minHeight: 94,
+    minHeight: 98,
     paddingHorizontal: 6,
   },
   buttonNarrow: {

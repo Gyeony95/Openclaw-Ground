@@ -3307,6 +3307,14 @@ describe('resolveAddCardClock', () => {
 
     expect(resolved).toBe('2026-02-23T12:34:30.000Z');
   });
+
+  it('falls back to wall clock when runtime clock is malformed and rendered clock is slightly future-skewed', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:34:56.000Z'));
+    const resolved = resolveAddCardClock('2026-02-23T12:35:20.000Z', 'bad-runtime-time');
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:34:56.000Z');
+  });
 });
 
 describe('resolveDeckClockTick', () => {
