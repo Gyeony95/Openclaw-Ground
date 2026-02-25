@@ -232,7 +232,7 @@ export default function App() {
     ? 'Loading'
     : dueCard
       ? !dueNeedsRepair && hasValidIso(dueCard.dueAt)
-        ? formatDueLabel(dueCard.dueAt, clockIso)
+        ? formatDueLabel(dueCard.dueAt, runtimeNowForUiIso)
         : 'Needs schedule repair'
       : scheduleRepairCount > 0
         ? 'Repair backlog'
@@ -240,13 +240,13 @@ export default function App() {
   const nextUpcomingLabel = loading
     ? '--'
     : nextUpcomingCard
-      ? `Next ${formatDueLabel(nextUpcomingCard.dueAt, clockIso)}`
+      ? `Next ${formatDueLabel(nextUpcomingCard.dueAt, runtimeNowForUiIso)}`
       : scheduleRepairCount > 0
         ? 'Next card needs schedule repair'
         : 'No upcoming card';
   const queueLabelTone = queueTone({
     dueAt: dueCard?.dueAt,
-    clockIso,
+    clockIso: runtimeNowForUiIso,
     loading,
     hasDueCard: Boolean(dueCard),
     needsRepair: dueNeedsRepair,
@@ -295,7 +295,7 @@ export default function App() {
     : nextDueCard
       ? nextDueNeedsRepair || !hasValidIso(nextDueCard.dueAt)
         ? 'Then needs schedule repair'
-        : `Then ${formatDueLabel(nextDueCard.dueAt, clockIso)}`
+        : `Then ${formatDueLabel(nextDueCard.dueAt, runtimeNowForUiIso)}`
       : 'No second card queued';
   const queuePositionLabel = loading
     ? '--'
@@ -328,10 +328,10 @@ export default function App() {
   const exactDueLabel = dueNeedsRepair ? 'Schedule repair pending' : exactDateLabel(dueCard?.dueAt);
   const relativeDueLabel = dueCard
     ? !dueNeedsRepair && hasValidIso(dueCard.dueAt)
-      ? formatDueLabel(dueCard.dueAt, clockIso)
+      ? formatDueLabel(dueCard.dueAt, runtimeNowForUiIso)
       : 'Review to repair schedule'
     : 'Schedule unavailable';
-  const asOf = asOfLabel(clockIso);
+  const asOf = asOfLabel(runtimeNowForUiIso);
   const emptyQueueTitle =
     scheduleRepairCount > 0
       ? `No cards due right now. ${scheduleRepairCount.toLocaleString()} schedule ${
@@ -346,7 +346,7 @@ export default function App() {
     : null;
   const dueCardUrgency = dueUrgency({
     dueAt: dueCard?.dueAt,
-    clockIso,
+    clockIso: runtimeNowForUiIso,
     needsRepair: dueNeedsRepair,
   });
   const ratingIntervals = useMemo(() => {
@@ -354,12 +354,12 @@ export default function App() {
       return null;
     }
     try {
-      return previewIntervals(dueCard, clockIso);
+      return previewIntervals(dueCard, runtimeNowForUiIso);
     } catch {
       // Keep the review surface interactive even if preview math fails for malformed runtime data.
       return null;
     }
-  }, [clockIso, dueCard]);
+  }, [dueCard, runtimeNowForUiIso]);
   const dueCardRevealKey = dueCard
     ? `${dueCard.id}:${dueCard.updatedAt}:${dueCard.dueAt}:${dueCard.state}:${dueCard.reps}:${dueCard.lapses}`
     : 'none';
@@ -1026,7 +1026,7 @@ export default function App() {
                     <Text style={styles.info}>{emptyQueueTitle}</Text>
                     {nextUpcomingCard ? (
                       <Text style={styles.emptyQueueMeta}>
-                        Next card {formatDueLabel(nextUpcomingCard.dueAt, clockIso)} at{' '}
+                        Next card {formatDueLabel(nextUpcomingCard.dueAt, runtimeNowForUiIso)} at{' '}
                         {exactDateLabel(nextUpcomingCard.dueAt)}
                       </Text>
                     ) : (

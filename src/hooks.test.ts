@@ -2869,6 +2869,19 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(reviewedAlias)).toBe(false);
   });
 
+  it('accepts relearned state aliases when schedule is otherwise healthy', () => {
+    const relearnedAlias = {
+      ...createNewCard('repair-relearned-alias', 'test', NOW),
+      state: ' re-learned ' as unknown as Card['state'],
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:10:00.000Z',
+      reps: 3,
+      lapses: 1,
+    };
+
+    expect(hasScheduleRepairNeed(relearnedAlias)).toBe(false);
+  });
+
   it('does not flag healthy schedules', () => {
     const healthy = {
       ...createNewCard('repair-healthy', 'test', NOW),
