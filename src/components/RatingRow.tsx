@@ -56,7 +56,7 @@ export function RatingRow({
   const hasLockedRatings = !isDisabled && disabledSet.size > 0;
   const againInterval = resolveIntervalLabel(intervalLabels, 1, labels[0].fallbackHint);
   const lockReasonHint =
-    lockedHint ?? `Some ratings are locked for this review. Use Again (${againInterval}) to continue.`;
+    lockedHint ?? `Incorrect selection locked this step. Use Again (${againInterval}) to continue.`;
 
   return (
     <View style={styles.container}>
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   intervalMeta: {
     alignItems: 'center',
-    gap: 2,
+    gap: 3,
   },
   button: {
     borderWidth: 1,
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 10,
     minWidth: 80,
-    minHeight: 96,
+    minHeight: 98,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     opacity: 0.92,
   },
   buttonDisabled: {
-    opacity: 0.72,
+    opacity: 0.82,
   },
   buttonDisabledSurface: {
     borderColor: colors.border,
@@ -223,14 +223,14 @@ const styles = StyleSheet.create({
     opacity: 0.94,
   },
   buttonText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '800',
-    letterSpacing: 0.72,
+    letterSpacing: 0.64,
     textTransform: 'uppercase',
   },
   hintLabel: {
-    fontSize: 10.5,
-    letterSpacing: 0.6,
+    fontSize: 10,
+    letterSpacing: 0.55,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
@@ -263,8 +263,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
   },
   hint: {
-    fontSize: 12.5,
-    letterSpacing: 0.35,
+    fontSize: 12,
+    letterSpacing: 0.3,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
     lineHeight: 16,

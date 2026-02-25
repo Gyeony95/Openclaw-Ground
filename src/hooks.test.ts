@@ -2254,6 +2254,19 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(reviewWithFractionalCounters)).toBe(false);
   });
 
+  it('flags review cards with explicitly malformed counter values for repair', () => {
+    const malformedReviewCounters = {
+      ...createNewCard('repair-review-malformed-counter-values', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T12:00:00.000Z',
+      reps: Number.NaN,
+      lapses: 0,
+    };
+
+    expect(hasScheduleRepairNeed(malformedReviewCounters)).toBe(true);
+  });
+
   it('flags relearning cards scheduled below the 10-minute relearning floor', () => {
     const relearningTooSoon = {
       ...createNewCard('repair-relearning-too-soon', 'test', NOW),
@@ -2274,6 +2287,19 @@ describe('hasScheduleRepairNeed', () => {
     };
 
     expect(hasScheduleRepairNeed(relearningDayLike)).toBe(true);
+  });
+
+  it('flags relearning cards with explicitly malformed counter values for repair', () => {
+    const malformedRelearningCounters = {
+      ...createNewCard('repair-relearning-malformed-counter-values', 'test', NOW),
+      state: 'relearning' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T13:00:00.000Z',
+      reps: 2,
+      lapses: Number.NaN,
+    };
+
+    expect(hasScheduleRepairNeed(malformedRelearningCounters)).toBe(true);
   });
 
   it('does not flag learning cards scheduled at the one-minute learning floor', () => {

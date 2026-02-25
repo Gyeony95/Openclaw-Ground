@@ -409,9 +409,19 @@ export function hasScheduleRepairNeed(
     if (scheduleMs > maxScheduleMsBeforeRepair(state, stabilityValue)) {
       return true;
     }
+    const repsProvided = repsValue !== undefined && repsValue !== null;
+    const lapsesProvided = lapsesValue !== undefined && lapsesValue !== null;
     const reps = normalizeNonNegativeCounter(repsValue);
     const lapses = normalizeNonNegativeCounter(lapsesValue);
     const countersCorrupted = reps === null || lapses === null;
+    if (
+      state !== 'learning' &&
+      ((repsProvided && reps === null) || (lapsesProvided && lapses === null))
+    ) {
+      // Non-learning cards with explicitly malformed counters should be normalized
+      // before scheduling so FSRS history fields remain trustworthy.
+      return true;
+    }
     if (state === 'learning' && countersCorrupted) {
       // Corrupted learning counters can mask review history and distort phase
       // inference; always repair before queueing regardless of schedule length.
