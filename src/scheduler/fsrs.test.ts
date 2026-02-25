@@ -1,7 +1,7 @@
 import { createNewCard, previewIntervals, reviewCard } from './fsrs';
 import { Card, Rating } from '../types';
 import { addDaysIso } from '../utils/time';
-import { STABILITY_MAX } from './constants';
+import { MINUTE_IN_DAYS, STABILITY_MAX } from './constants';
 
 const NOW = '2026-02-23T12:00:00.000Z';
 const MAX_ISO = '+275760-09-13T00:00:00.000Z';
@@ -3436,6 +3436,26 @@ describe('fsrs scheduler', () => {
 
     expect(reviewed.card.state).toBe('review');
     expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+  });
+
+  it('keeps near-half-day review schedule jitter in review phase instead of demoting to relearning', () => {
+    const nearHalfDayScheduleDays = 0.5 - 0.5 * MINUTE_IN_DAYS;
+    const dueAt = addDaysIso(NOW, nearHalfDayScheduleDays);
+    const card = {
+      ...createNewCard('nu-near-half-day-good', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt,
+      stability: 4.2,
+      difficulty: 5.1,
+      reps: 10,
+      lapses: 2,
+    };
+
+    const reviewed = reviewCard(card, 3, dueAt);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThan(0.5);
   });
 
   it('keeps difficulty within bounds', () => {

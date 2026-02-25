@@ -44,6 +44,7 @@ type SchedulerPhase = 'learning' | 'review' | 'relearning';
 type ReviewIntervalsByRating = Record<2 | 3 | 4, number>;
 const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 const RELEARNING_SCHEDULE_FLOOR_DAYS = 10 * MINUTE_IN_DAYS;
+const REVIEW_STATE_INFERENCE_TOLERANCE_DAYS = MINUTE_IN_DAYS;
 const LEARNING_MAX_SCHEDULE_DAYS = 1;
 const RELEARNING_MAX_SCHEDULE_DAYS = 2;
 const REVIEW_LAPSE_STABILITY_CEILING_DAYS = 1;
@@ -725,6 +726,7 @@ function parseState(input: unknown): ReviewState | undefined {
 
 function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stability' | 'updatedAt' | 'dueAt'>): ReviewState {
   const scheduledDays = normalizeElapsedDays(daysBetween(card.updatedAt, card.dueAt));
+  const reviewScheduleFloorForInference = Math.max(0, REVIEW_SCHEDULE_FLOOR_DAYS - REVIEW_STATE_INFERENCE_TOLERANCE_DAYS);
   const reps = normalizeCounter(card.reps);
   const lapses = normalizeCounter(card.lapses);
   const hasReviewHistory = reps > 0 || lapses > 0;
@@ -737,7 +739,7 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
   const parsedState = parseState(card.state);
   if (parsedState) {
     if (parsedState === 'review') {
-      if (scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+      if (scheduledDays >= reviewScheduleFloorForInference) {
         return parsedState;
       }
       if (scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS) {
@@ -787,7 +789,7 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
 
   // Prefer schedule-based inference so short-step cards are not accidentally
   // promoted by stale/corrupted stability values.
-  if (scheduledDays >= REVIEW_SCHEDULE_FLOOR_DAYS) {
+  if (scheduledDays >= reviewScheduleFloorForInference) {
     if (!hasReviewHistory && normalizedStability < REVIEW_SCHEDULE_FLOOR_DAYS) {
       return 'learning';
     }
