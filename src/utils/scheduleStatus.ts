@@ -18,6 +18,30 @@ export interface DueUrgencyInput {
 }
 
 function parseIsoOrNaN(value?: unknown): number {
+  const normalizeStringOrNumber = (candidate: unknown): string | undefined => {
+    if (typeof candidate === 'string') {
+      return candidate;
+    }
+    if (candidate instanceof String) {
+      return candidate.valueOf();
+    }
+    if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+      return new Date(candidate).toISOString();
+    }
+    if (candidate instanceof Number) {
+      const unboxed = candidate.valueOf();
+      if (Number.isFinite(unboxed)) {
+        return new Date(unboxed).toISOString();
+      }
+    }
+    if (candidate instanceof Date) {
+      const ms = candidate.getTime();
+      if (Number.isFinite(ms)) {
+        return new Date(ms).toISOString();
+      }
+    }
+    return undefined;
+  };
   const fromObjectValue = (input: unknown): string | undefined => {
     if (!input || typeof input !== 'object') {
       return undefined;
@@ -27,17 +51,9 @@ function parseIsoOrNaN(value?: unknown): number {
       const valueOf = valueObject.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(input);
-        if (typeof unboxed === 'string') {
-          return unboxed;
-        }
-        if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
-          return new Date(unboxed).toISOString();
-        }
-        if (unboxed instanceof Date) {
-          const ms = unboxed.getTime();
-          if (Number.isFinite(ms)) {
-            return new Date(ms).toISOString();
-          }
+        const normalizedUnboxed = normalizeStringOrNumber(unboxed);
+        if (normalizedUnboxed !== undefined) {
+          return normalizedUnboxed;
         }
       }
     } catch {
@@ -47,11 +63,9 @@ function parseIsoOrNaN(value?: unknown): number {
       const toString = valueObject.toString;
       if (typeof toString === 'function') {
         const stringified = toString.call(input);
-        if (typeof stringified === 'string') {
-          return stringified;
-        }
-        if (typeof stringified === 'number' && Number.isFinite(stringified)) {
-          return new Date(stringified).toISOString();
+        const normalizedStringified = normalizeStringOrNumber(stringified);
+        if (normalizedStringified !== undefined) {
+          return normalizedStringified;
         }
       }
     } catch {
@@ -71,32 +85,16 @@ function parseIsoOrNaN(value?: unknown): number {
       if (!Number.isFinite(unboxed)) {
         return undefined;
       }
-      try {
-        return new Date(unboxed).toISOString();
-      } catch {
-        return undefined;
-      }
+      return normalizeStringOrNumber(unboxed);
     }
     if (typeof value === 'number') {
       if (!Number.isFinite(value)) {
         return undefined;
       }
-      try {
-        return new Date(value).toISOString();
-      } catch {
-        return undefined;
-      }
+      return normalizeStringOrNumber(value);
     }
     if (value instanceof Date) {
-      const ms = value.getTime();
-      if (!Number.isFinite(ms)) {
-        return undefined;
-      }
-      try {
-        return new Date(ms).toISOString();
-      } catch {
-        return undefined;
-      }
+      return normalizeStringOrNumber(value);
     }
     return fromObjectValue(value);
   })();

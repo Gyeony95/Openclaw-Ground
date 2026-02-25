@@ -192,6 +192,45 @@ describe('fsrs scheduler', () => {
     expect(fromValueOfDate).toEqual(fromIso);
   });
 
+  it('accepts boxed string and boxed numeric timestamps returned by runtime bridge accessors', () => {
+    const bridgeCard = {
+      ...createNewCard('boxed-runtime-review', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const boxedStringNow = {
+      valueOf() {
+        return new String(addDaysIso(NOW, 2));
+      },
+    };
+    const boxedNumericNow = {
+      valueOf() {
+        return new Number(Date.parse(addDaysIso(NOW, 2)));
+      },
+    };
+
+    const boxedStringReview = reviewCard(bridgeCard, 3, boxedStringNow as unknown as string);
+    const boxedNumericReview = reviewCard(bridgeCard, 3, boxedNumericNow as unknown as string);
+    const isoReview = reviewCard(bridgeCard, 3, addDaysIso(NOW, 2));
+    const boxedStringPreview = previewIntervals(bridgeCard, boxedStringNow as unknown as string);
+    const boxedNumericPreview = previewIntervals(bridgeCard, boxedNumericNow as unknown as string);
+    const isoPreview = previewIntervals(bridgeCard, addDaysIso(NOW, 2));
+    const createdFromBoxedString = createNewCard('boxed-create-string', 'bridge-safe', boxedStringNow as unknown as string);
+    const createdFromBoxedNumeric = createNewCard('boxed-create-numeric', 'bridge-safe', boxedNumericNow as unknown as string);
+
+    expect(boxedStringReview).toEqual(isoReview);
+    expect(boxedNumericReview).toEqual(isoReview);
+    expect(boxedStringPreview).toEqual(isoPreview);
+    expect(boxedNumericPreview).toEqual(isoPreview);
+    expect(createdFromBoxedString.createdAt).toBe(addDaysIso(NOW, 2));
+    expect(createdFromBoxedNumeric.createdAt).toBe(addDaysIso(NOW, 2));
+  });
+
   it('accepts boxed numeric scheduler fields from runtime valueOf bridges', () => {
     const numericCard = {
       ...createNewCard('valueof-boxed-numbers', 'bridge-safe', NOW),

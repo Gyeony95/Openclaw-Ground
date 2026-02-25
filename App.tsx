@@ -620,6 +620,14 @@ export default function App() {
   }, [meaning, notes, showAddSuccess, word]);
 
   useEffect(() => {
+    if (isFormEditable) {
+      return;
+    }
+    Keyboard.dismiss();
+    setFocusedInput(null);
+  }, [isFormEditable]);
+
+  useEffect(() => {
     if (addActionError === null) {
       return;
     }
@@ -1449,6 +1457,7 @@ export default function App() {
                   editable={isFormEditable}
                   accessibilityLabel="Word input"
                   accessibilityHint="Enter the vocabulary term you want to study"
+                  accessibilityState={{ disabled: !isFormEditable, invalid: addAttempted && missingWord }}
                   onFocus={() => setFocusedInput('word')}
                   onBlur={() => setFocusedInput((current) => (current === 'word' ? null : current))}
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
@@ -1484,6 +1493,7 @@ export default function App() {
                   editable={isFormEditable}
                   accessibilityLabel="Meaning input"
                   accessibilityHint="Enter a concise definition for this word"
+                  accessibilityState={{ disabled: !isFormEditable, invalid: addAttempted && missingMeaning }}
                   onFocus={() => setFocusedInput('meaning')}
                   onBlur={() => setFocusedInput((current) => (current === 'meaning' ? null : current))}
                   onSubmitEditing={() => {
@@ -1519,6 +1529,7 @@ export default function App() {
                   editable={isFormEditable}
                   accessibilityLabel="Notes input"
                   accessibilityHint="Optional context, mnemonic, or usage note"
+                  accessibilityState={{ disabled: !isFormEditable }}
                   onFocus={() => setFocusedInput('notes')}
                   onBlur={() => setFocusedInput((current) => (current === 'notes' ? null : current))}
                   returnKeyType="done"

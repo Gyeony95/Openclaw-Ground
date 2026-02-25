@@ -1300,6 +1300,47 @@ describe('collectDueCards', () => {
     expect(dueCards[0].id).toBe(nearFuture.id);
   });
 
+  it('accepts boxed primitives returned from queue clock runtime accessors', () => {
+    const nearFuture = {
+      ...createNewCard('boxed-accessor-queue-clock', 'clock', NOW),
+      dueAt: '2026-02-23T12:00:20.000Z',
+    };
+
+    const dueCards = collectDueCards(
+      [nearFuture],
+      {
+        valueOf() {
+          return new String('2026-02-23T12:00:00.000Z');
+        },
+      } as unknown as string,
+      {
+        valueOf() {
+          return new Number(Date.parse('2026-02-23T12:00:21.000Z'));
+        },
+      } as unknown as string,
+    );
+    const reviewed = applyDueReview(
+      [nearFuture],
+      nearFuture.id,
+      3,
+      {
+        valueOf() {
+          return new String('2026-02-23T12:00:00.000Z');
+        },
+      } as unknown as string,
+      {
+        valueOf() {
+          return new Number(Date.parse('2026-02-23T12:00:21.000Z'));
+        },
+      } as unknown as string,
+    );
+
+    expect(dueCards).toHaveLength(1);
+    expect(dueCards[0].id).toBe(nearFuture.id);
+    expect(reviewed.reviewed).toBe(true);
+    expect(reviewed.cards[0]).not.toBe(nearFuture);
+  });
+
   it('keeps due-queue eligibility anchored to runtime clock when wall clock is far ahead', () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-02-25T12:00:00.000Z'));

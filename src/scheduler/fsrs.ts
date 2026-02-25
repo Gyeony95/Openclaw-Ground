@@ -244,6 +244,24 @@ function isValidIso(value: string): boolean {
 
 function normalizeIsoInput(value: unknown): string | undefined {
   const normalizedValue = (() => {
+    const normalizeStringOrNumber = (candidate: unknown): string | undefined => {
+      if (typeof candidate === 'string') {
+        return candidate;
+      }
+      if (candidate instanceof String) {
+        return candidate.valueOf();
+      }
+      if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+        return toSafeIso(candidate);
+      }
+      if (candidate instanceof Number) {
+        const unboxed = candidate.valueOf();
+        if (Number.isFinite(unboxed)) {
+          return toSafeIso(unboxed);
+        }
+      }
+      return undefined;
+    };
     if (value instanceof Date) {
       const dateMs = value.getTime();
       if (Number.isFinite(dateMs)) {
@@ -277,11 +295,9 @@ function normalizeIsoInput(value: unknown): string | undefined {
             return toSafeIso(dateMs);
           }
         }
-        if (typeof unboxed === 'string') {
-          return unboxed;
-        }
-        if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
-          return toSafeIso(unboxed);
+        const normalizedUnboxed = normalizeStringOrNumber(unboxed);
+        if (normalizedUnboxed !== undefined) {
+          return normalizedUnboxed;
         }
       }
     } catch {
@@ -297,11 +313,9 @@ function normalizeIsoInput(value: unknown): string | undefined {
             return toSafeIso(dateMs);
           }
         }
-        if (typeof stringified === 'string') {
-          return stringified;
-        }
-        if (typeof stringified === 'number' && Number.isFinite(stringified)) {
-          return toSafeIso(stringified);
+        const normalizedStringified = normalizeStringOrNumber(stringified);
+        if (normalizedStringified !== undefined) {
+          return normalizedStringified;
         }
       }
     } catch {

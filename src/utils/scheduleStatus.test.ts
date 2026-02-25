@@ -183,6 +183,26 @@ describe('scheduleStatus', () => {
       expect(tone).toBe(colors.danger);
     });
 
+    it('accepts boxed primitives returned from runtime bridge accessors', () => {
+      const tone = queueTone({
+        dueAt: {
+          valueOf() {
+            return new String('2026-02-24T11:58:30.000Z');
+          },
+        } as unknown as string,
+        clockIso: {
+          valueOf() {
+            return new Number(Date.parse(NOW));
+          },
+        } as unknown as string,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(tone).toBe(colors.danger);
+    });
+
     it('accepts toString-backed runtime objects when valueOf throws', () => {
       const tone = queueTone({
         dueAt: {
@@ -327,6 +347,24 @@ describe('scheduleStatus', () => {
 
       expect(boxed).toEqual({ label: 'Due now', tone: colors.primary });
       expect(numeric).toEqual({ label: 'Due now', tone: colors.primary });
+    });
+
+    it('accepts boxed primitives returned from due-urgency runtime bridge accessors', () => {
+      const urgency = dueUrgency({
+        dueAt: {
+          valueOf() {
+            return new String('2026-02-24T12:00:30.000Z');
+          },
+        } as unknown as string,
+        clockIso: {
+          valueOf() {
+            return new Number(Date.parse(NOW));
+          },
+        } as unknown as string,
+        needsRepair: false,
+      });
+
+      expect(urgency).toEqual({ label: 'Due now', tone: colors.primary });
     });
 
     it('accepts boxed numeric and valueOf-backed due timestamps from runtime bridges', () => {

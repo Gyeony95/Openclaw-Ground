@@ -579,6 +579,24 @@ function normalizeMergeCounter(value: number): number {
 
 function normalizeIsoInput(value: unknown): string | undefined {
   const normalizedValue = (() => {
+    const normalizeStringOrNumber = (candidate: unknown): string | undefined => {
+      if (typeof candidate === 'string') {
+        return candidate;
+      }
+      if (candidate instanceof String) {
+        return candidate.valueOf();
+      }
+      if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+        return toSafeIso(candidate);
+      }
+      if (candidate instanceof Number) {
+        const unboxed = candidate.valueOf();
+        if (Number.isFinite(unboxed)) {
+          return toSafeIso(unboxed);
+        }
+      }
+      return undefined;
+    };
     if (value instanceof Date) {
       const dateMs = value.getTime();
       return Number.isFinite(dateMs) ? toSafeIso(dateMs) : undefined;
@@ -600,11 +618,9 @@ function normalizeIsoInput(value: unknown): string | undefined {
       const valueOf = valueObject.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(value);
-        if (typeof unboxed === 'string') {
-          return unboxed;
-        }
-        if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
-          return toSafeIso(unboxed);
+        const normalizedUnboxed = normalizeStringOrNumber(unboxed);
+        if (normalizedUnboxed !== undefined) {
+          return normalizedUnboxed;
         }
       }
     } catch {
@@ -614,11 +630,9 @@ function normalizeIsoInput(value: unknown): string | undefined {
       const toString = valueObject.toString;
       if (typeof toString === 'function') {
         const stringified = toString.call(value);
-        if (typeof stringified === 'string') {
-          return stringified;
-        }
-        if (typeof stringified === 'number' && Number.isFinite(stringified)) {
-          return toSafeIso(stringified);
+        const normalizedStringified = normalizeStringOrNumber(stringified);
+        if (normalizedStringified !== undefined) {
+          return normalizedStringified;
         }
       }
     } catch {
