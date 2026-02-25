@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 10,
     minWidth: 80,
-    minHeight: 104,
+    minHeight: 108,
     flexBasis: '48%',
     flex: 1,
     alignItems: 'center',
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   buttonNarrow: {
-    paddingVertical: 12,
+    paddingVertical: 13,
     paddingHorizontal: 8,
   },
   buttonBusy: {
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     flexBasis: '23%',
   },
   buttonPressed: {
-    transform: [{ translateY: 1 }, { scale: 0.985 }],
+    transform: [{ translateY: 1 }, { scale: 0.99 }],
     opacity: 0.92,
   },
   buttonDisabled: {
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
   },
   hint: {
-    fontSize: 12,
+    fontSize: 12.5,
     letterSpacing: 0.3,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],

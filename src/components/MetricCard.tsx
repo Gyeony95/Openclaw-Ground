@@ -17,6 +17,11 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
   const accessibilityValue = hasValue ? displayValue : 'loading';
   const statusLabel = !hasValue ? 'Loading' : normalizedValue === 0 ? 'Idle' : 'Active';
   const statusTone = !hasValue ? colors.subInk : normalizedValue === 0 ? colors.subInk : accent;
+  const statusBadgeSurface = !hasValue
+    ? colors.surfaceAlt
+    : normalizedValue === 0
+      ? colors.surfaceAlt
+      : `${statusTone}14`;
 
   return (
     <View
@@ -40,6 +45,7 @@ export function MetricCard({ label, value, accent = colors.primary }: MetricCard
             isVeryNarrow && styles.badgeCompact,
             !hasValue && styles.badgeMuted,
             hasValue && normalizedValue !== null && normalizedValue > 0 ? styles.badgeActive : null,
+            { borderColor: `${statusTone}33`, backgroundColor: statusBadgeSurface },
           ]}
         >
           <Text style={[styles.badgeText, { color: statusTone }]} maxFontSizeMultiplier={1.3}>
@@ -64,7 +70,7 @@ const styles = StyleSheet.create({
   card: {
     flexGrow: 1,
     flexBasis: '48%',
-    minHeight: 112,
+    minHeight: 116,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -88,7 +94,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 4,
+    height: 5,
   },
   accentWash: {
     position: 'absolute',
@@ -140,7 +146,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   value: {
-    fontSize: 30,
+    fontSize: 31,
     fontWeight: '800',
     color: colors.ink,
     letterSpacing: -0.4,
