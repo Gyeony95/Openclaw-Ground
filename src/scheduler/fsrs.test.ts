@@ -5172,6 +5172,45 @@ describe('fsrs scheduler', () => {
     expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
   });
 
+  it('keeps on-time good reviews from collapsing near-two-day schedules to one day', () => {
+    const onePointSixDaySchedule = {
+      ...createNewCard('review-good-floor', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -1.6),
+      dueAt: NOW,
+      reps: 12,
+      lapses: 1,
+      // Low persisted stability can occur on imported cards and previously let
+      // on-time "Good" reviews collapse to 1d without a day-like floor.
+      stability: 0.55,
+      difficulty: 7,
+    };
+
+    const reviewed = reviewCard(onePointSixDaySchedule, 3, NOW);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(2);
+  });
+
+  it('keeps hard interval previews from collapsing near-two-day schedules to one day', () => {
+    const onePointSixDaySchedule = {
+      ...createNewCard('review-hard-preview-floor-quantized', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -1.6),
+      dueAt: NOW,
+      reps: 12,
+      lapses: 1,
+      stability: 0.55,
+      difficulty: 7,
+    };
+
+    const preview = previewIntervals(onePointSixDaySchedule, NOW);
+
+    expect(preview[2]).toBeGreaterThanOrEqual(2);
+    expect(preview[3]).toBeGreaterThanOrEqual(preview[2]);
+    expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
+  });
+
   it('treats whitespace-padded persisted review timestamps as valid schedule anchors', () => {
     const baseCard = {
       ...createNewCard('trimmed-review-anchors', 'definition', NOW),

@@ -62,12 +62,13 @@ export function RatingRow({
           const interval = resolveIntervalLabel(intervalLabels, item.rating, item.fallbackHint);
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
+          const intervalText = isRatingLocked ? 'Use Again' : interval;
           const contentTone = ratingDisabled ? colors.subInk : item.tone;
           const lockTone = isRatingLocked ? item.tone : contentTone;
           const accessibilityLabel = busy
             ? `Rate ${item.text}. Saving in progress.`
             : isRatingLocked
-              ? `Rate ${item.text}. Locked. ${lockReasonHint}`
+              ? `Rate ${item.text}. Locked. Use Again to continue. ${lockReasonHint}`
               : ratingDisabled
                 ? `Rate ${item.text}. Unavailable.`
                 : `Rate ${item.text}. Next interval ${interval}.`;
@@ -103,7 +104,7 @@ export function RatingRow({
                 busy
                   ? 'Saving current review, rating buttons are temporarily disabled'
                   : isRatingLocked
-                    ? lockReasonHint
+                    ? `Use Again to record this attempt. ${lockReasonHint}`
                     : ratingDisabled
                       ? 'Rating is currently unavailable'
                       : `Schedules next review ${interval}`
@@ -129,7 +130,7 @@ export function RatingRow({
                   minimumFontScale={0.8}
                   maxFontSizeMultiplier={1.3}
                 >
-                  {interval}
+                  {intervalText}
                 </Text>
               </View>
             </Pressable>
