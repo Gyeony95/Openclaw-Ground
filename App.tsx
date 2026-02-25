@@ -1034,7 +1034,13 @@ export default function App() {
                         {relativeDueLabel}
                       </Text>
                       {dueNeedsRepair ? (
-                        <Text style={styles.reviewTimelineRepair}>Malformed schedule will be repaired on review.</Text>
+                        <Text
+                          style={styles.reviewTimelineRepair}
+                          accessibilityRole="status"
+                          accessibilityLiveRegion="polite"
+                        >
+                          Schedule repair will be applied on this review.
+                        </Text>
                       ) : null}
                       <Text style={styles.reviewTimelineMeta}>{cardActivityLabel(dueCard.updatedAt, dueCard.reps)}</Text>
                       <Text style={styles.reviewTimelineMeta}>{queuePositionLabel}</Text>
@@ -1905,6 +1911,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.25,
+    borderWidth: 1,
+    borderColor: `${colors.warn}66`,
+    backgroundColor: `${colors.warn}14`,
+    borderRadius: radii.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    alignSelf: 'flex-start',
   },
   reviewTimelineMeta: {
     color: colors.subInk,

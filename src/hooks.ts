@@ -850,7 +850,13 @@ export function resolveAddCardClock(renderedClockIso: string, runtimeNowIso: str
   const resolvedMs = parseTimeOrNaN(resolved);
   const runtimeMs = parseTimeOrNaN(runtimeNowIso);
 
-  if (Number.isFinite(resolvedMs) && Number.isFinite(runtimeMs) && resolvedMs > runtimeMs) {
+  const runtimeSkewMs = Number.isFinite(resolvedMs) && Number.isFinite(runtimeMs) ? resolvedMs - runtimeMs : Number.NaN;
+  const runtimeIsPlausiblyCurrent =
+    Number.isFinite(runtimeSkewMs) &&
+    runtimeSkewMs >= 0 &&
+    runtimeSkewMs <= MAX_CLOCK_SKEW_MS;
+
+  if (runtimeIsPlausiblyCurrent && resolvedMs > runtimeMs) {
     // Added cards should not be anchored in the future; keep creation immediately due.
     return toCanonicalIso(runtimeNowIso);
   }
