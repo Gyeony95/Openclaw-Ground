@@ -802,6 +802,9 @@ function parseState(input: unknown): ReviewState | undefined {
     if (normalized === 'reviewing') {
       return 'review';
     }
+    if (normalized === 'reviewed') {
+      return 'review';
+    }
     if (normalized === 'review' || normalized === 'relearning' || normalized === 'learning') {
       return normalized;
     }
@@ -813,6 +816,9 @@ function parseState(input: unknown): ReviewState | undefined {
       return 'review';
     }
     if (folded === 'reviewing') {
+      return 'review';
+    }
+    if (folded === 'reviewed') {
       return 'review';
     }
     if (folded === 'rev') {
@@ -829,6 +835,9 @@ function parseState(input: unknown): ReviewState | undefined {
       return 'review';
     }
     if (alphaFolded === 'reviewing') {
+      return 'review';
+    }
+    if (alphaFolded === 'reviewed') {
       return 'review';
     }
     if (alphaFolded === 'rev') {

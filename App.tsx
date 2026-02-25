@@ -212,7 +212,7 @@ export default function App() {
   const dueCard = dueCards[0];
   const nextDueCard = dueCards[1];
   const dueQueueCount = dueCards.length;
-  const runtimeNowForUiIso = nowIso();
+  const runtimeNowForUiIso = isIsoDateTime(clockIso) ? clockIso : nowIso();
   const dueNeedsRepair = dueCard ? hasScheduleRepairNeed(dueCard) : false;
   const nextDueNeedsRepair = nextDueCard ? hasScheduleRepairNeed(nextDueCard) : false;
   const retentionScore = useMemo(() => {
