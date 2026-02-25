@@ -29,6 +29,7 @@ const MAX_CREATE_TIME_OFFSET_MS = 20 * 365 * DAY_MS;
 const MAX_CREATE_FUTURE_OFFSET_MS = MAX_MONOTONIC_CLOCK_SKEW_MS;
 const MIN_DATE_MS = -8640000000000000;
 const MAX_DATE_MS = 8640000000000000;
+const TIMELINE_JITTER_TOLERANCE_MS = 1000;
 export interface ReviewResult {
   card: Card;
   scheduledDays: number;
@@ -468,7 +469,7 @@ function normalizeTimeline(
   );
   const dueNotAfterUpdatedAt =
     Number.isFinite(rawDueMs) &&
-    rawDueMs <= updatedAtMs &&
+    rawDueMs < updatedAtMs - TIMELINE_JITTER_TOLERANCE_MS &&
     !hasSaturatedUpperBoundTimeline;
   const dueBelowStateFloor =
     Number.isFinite(dueDaysFromUpdated) &&

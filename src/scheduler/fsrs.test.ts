@@ -262,6 +262,41 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
   });
 
+  it('treats sub-second due/updated skew as timeline jitter instead of repairing to a long review window', () => {
+    const jittered = {
+      ...createNewCard('review-jitter-tolerance', 'safe', NOW),
+      state: 'review' as const,
+      reps: 8,
+      lapses: 1,
+      stability: 16,
+      difficulty: 4,
+      updatedAt: NOW,
+      dueAt: '2026-02-23T11:59:59.500Z',
+    };
+
+    const reviewed = reviewCard(jittered, 2, NOW);
+
+    expect(reviewed.scheduledDays).toBe(0.5);
+    expect(reviewed.card.dueAt).toBe('2026-02-24T00:00:00.000Z');
+  });
+
+  it('still repairs materially backward due anchors beyond jitter tolerance', () => {
+    const backwardSkewed = {
+      ...createNewCard('review-jitter-repair', 'safe', NOW),
+      state: 'review' as const,
+      reps: 8,
+      lapses: 1,
+      stability: 16,
+      difficulty: 4,
+      updatedAt: NOW,
+      dueAt: '2026-02-23T11:59:58.000Z',
+    };
+
+    const reviewed = reviewCard(backwardSkewed, 2, NOW);
+
+    expect(reviewed.scheduledDays).toBeGreaterThan(0.5);
+  });
+
   it('keeps review scheduling functional when runtime stability/difficulty accessors throw', () => {
     const runtimeCard = {
       ...createNewCard('stability-difficulty-accessor-throw', 'safe', NOW),

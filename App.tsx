@@ -929,7 +929,7 @@ export default function App() {
                     <Text
                       style={[
                         styles.panelSubKpi,
-                        scheduleRepairCount > 0 && !loading ? styles.panelSubKpiAlert : null,
+                        scheduleRepairCount > 0 && !loading ? styles.panelSubKpiWarn : null,
                       ]}
                       numberOfLines={1}
                       ellipsizeMode="tail"
@@ -1712,6 +1712,9 @@ const styles = StyleSheet.create({
   },
   panelSubKpiAlert: {
     color: colors.danger,
+  },
+  panelSubKpiWarn: {
+    color: colors.warn,
   },
   queueProgressWrap: {
     marginBottom: 14,
