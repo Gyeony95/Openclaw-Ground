@@ -328,12 +328,12 @@ export default function App() {
   const relativeDueLabel = dueCard
     ? !dueNeedsRepair && hasValidIso(dueCard.dueAt)
       ? formatDueLabel(dueCard.dueAt, clockIso)
-      : 'Repair due now'
+      : 'Review to repair schedule'
     : 'Schedule unavailable';
   const asOf = asOfLabel(clockIso);
   const emptyQueueTitle =
     scheduleRepairCount > 0
-      ? `No cards due. ${scheduleRepairCount.toLocaleString()} schedule ${
+      ? `No cards due right now. ${scheduleRepairCount.toLocaleString()} schedule ${
           scheduleRepairCount === 1 ? 'repair' : 'repairs'
         } pending.`
       : 'No cards due. Add new words below.';

@@ -211,6 +211,28 @@ describe('quiz distractors', () => {
     expect(hasValidQuizSelection('valid-option', malformedOptions)).toBe(true);
   });
 
+  it('ignores options whose id getter throws during selection lookup', () => {
+    const throwingOption = { cardId: 'bad', text: 'bad', isCorrect: false } as {
+      id: string;
+      cardId: string;
+      text: string;
+      isCorrect: boolean;
+    };
+    Object.defineProperty(throwingOption, 'id', {
+      get() {
+        throw new Error('bad runtime option id');
+      },
+    });
+    const options = [
+      throwingOption,
+      { id: 'valid-option', cardId: 'c3', text: 'good', isCorrect: true },
+    ];
+
+    expect(() => findQuizOptionById(options, 'valid-option')).not.toThrow();
+    expect(findQuizOptionById(options, 'valid-option')?.id).toBe('valid-option');
+    expect(hasValidQuizSelection('valid-option', options)).toBe(true);
+  });
+
   it('treats whitespace-padded selection ids as valid when the target option exists', () => {
     const options = composeQuizOptions(target, deck, 'seed-1');
     const selectedId = options[0].id;

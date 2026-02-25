@@ -18,6 +18,32 @@ describe('parseRuntimeRatingValue', () => {
     expect(parseRuntimeRatingValue(new String(' 4 '))).toBe(4);
   });
 
+  it('falls back to string coercion for bridged objects with non-primitive valueOf', () => {
+    const bridged = {
+      valueOf() {
+        return {};
+      },
+      toString() {
+        return ' 3 ';
+      },
+    };
+
+    expect(parseRuntimeRatingValue(bridged)).toBe(3);
+  });
+
+  it('falls back to string coercion when bridged valueOf throws', () => {
+    const bridged = {
+      valueOf() {
+        throw new Error('runtime bridge valueOf failure');
+      },
+      toString() {
+        return '4';
+      },
+    };
+
+    expect(parseRuntimeRatingValue(bridged)).toBe(4);
+  });
+
   it('rejects malformed values', () => {
     expect(parseRuntimeRatingValue('0x4')).toBeNaN();
     expect(parseRuntimeRatingValue('Infinity')).toBeNaN();

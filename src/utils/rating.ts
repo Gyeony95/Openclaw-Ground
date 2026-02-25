@@ -5,12 +5,24 @@ function unboxRatingInput(input: unknown): unknown {
     return input;
   }
   if (typeof input === 'object') {
+    const objectInput = input as { valueOf?: () => unknown; toString?: () => unknown };
     try {
-      const valueOf = (input as { valueOf?: () => unknown }).valueOf;
+      const valueOf = objectInput.valueOf;
       if (typeof valueOf === 'function') {
         const unboxed = valueOf.call(input);
         if (typeof unboxed === 'number' || typeof unboxed === 'string') {
           return unboxed;
+        }
+      }
+    } catch {
+      // Fall through to toString for bridged runtime objects with broken valueOf.
+    }
+    try {
+      const toString = objectInput.toString;
+      if (typeof toString === 'function') {
+        const stringified = toString.call(input);
+        if (typeof stringified === 'number' || typeof stringified === 'string') {
+          return stringified;
         }
       }
     } catch {

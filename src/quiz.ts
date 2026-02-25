@@ -69,6 +69,18 @@ function isInvalidOptionText(value: unknown): boolean {
   return normalizeOptionText(value) === INVALID_MEANING_PLACEHOLDER;
 }
 
+function safeOptionId(option: unknown): string | null {
+  if (!option || typeof option !== 'object') {
+    return null;
+  }
+  try {
+    const id = (option as { id?: unknown }).id;
+    return typeof id === 'string' ? id : null;
+  } catch {
+    return null;
+  }
+}
+
 export function hasValidQuizSelection(selectedOptionId: string | null, options: QuizOption[]): boolean {
   return findQuizOptionById(options, selectedOptionId) !== undefined;
 }
@@ -84,11 +96,14 @@ export function findQuizOptionById(
   if (normalizedSelectedId.length === 0) {
     return undefined;
   }
-  const exactMatch = options.find((option) => typeof option?.id === 'string' && option.id === selectedOptionId);
+  const exactMatch = options.find((option) => safeOptionId(option) === selectedOptionId);
   if (exactMatch) {
     return exactMatch;
   }
-  return options.find((option) => typeof option?.id === 'string' && option.id.trim() === normalizedSelectedId);
+  return options.find((option) => {
+    const optionId = safeOptionId(option);
+    return typeof optionId === 'string' && optionId.trim() === normalizedSelectedId;
+  });
 }
 
 export function resolveLockedQuizSelection(

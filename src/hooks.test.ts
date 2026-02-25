@@ -737,6 +737,34 @@ describe('applyDueReview', () => {
     expect(result.cards[0].lapses).toBe(0);
     expect(result.cards[0].reps).toBe(1);
   });
+
+  it('accepts bridged rating objects with throwing valueOf and numeric toString', () => {
+    const due = {
+      ...createNewCard('bridged-rating-review-hook', 'safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 1),
+      updatedAt: NOW,
+      reps: 3,
+      lapses: 1,
+      stability: 2,
+      difficulty: 5,
+    };
+    const bridgedRating = {
+      valueOf() {
+        throw new Error('runtime bridge valueOf failure');
+      },
+      toString() {
+        return '3';
+      },
+    } as unknown as Rating;
+
+    const result = applyDueReview([due], due.id, bridgedRating, addDaysIso(NOW, 1));
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0].state).toBe('review');
+    expect(result.cards[0].lapses).toBe(1);
+    expect(Date.parse(result.cards[0].dueAt)).toBeGreaterThan(Date.parse(result.cards[0].updatedAt));
+  });
 });
 
 describe('applyReviewToDeckState', () => {
