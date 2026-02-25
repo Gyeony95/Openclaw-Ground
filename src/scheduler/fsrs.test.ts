@@ -1064,6 +1064,25 @@ describe('fsrs scheduler', () => {
     expect(reviewed.lapses).toBe(8);
   });
 
+  it('preserves imported legacy lapse history on failed reviews when runtime counters are boxed strings', () => {
+    const runtimeCard = {
+      ...createNewCard('preserve-lapses-on-failure-boxed', 'state inference', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 2),
+      reps: new String('2') as unknown as number,
+      lapses: new String('7') as unknown as number,
+      stability: '3',
+      difficulty: '6',
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 1, addDaysIso(NOW, 2)).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.reps).toBe(3);
+    expect(reviewed.lapses).toBe(8);
+  });
+
   it('increments preserved numeric imported lapse history on failed reviews', () => {
     const runtimeCard = {
       ...createNewCard('preserve-numeric-lapses-on-failure', 'state inference', NOW),

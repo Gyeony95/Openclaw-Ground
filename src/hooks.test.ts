@@ -172,6 +172,26 @@ describe('applyDueReview', () => {
     expect(result.cards[0].lapses).toBe(7);
   });
 
+  it('preserves imported legacy lapse history when reviewing boxed string-backed runtime counters', () => {
+    const legacyCounters = {
+      ...createNewCard('legacy-lapses-boxed', 'third', NOW),
+      id: 'legacy-lapses-boxed-id',
+      state: 'legacy-review-state' as unknown as Card['state'],
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: new String('2') as unknown as number,
+      lapses: new String('7') as unknown as number,
+      stability: 3,
+      difficulty: 5,
+    };
+
+    const result = applyDueReview([legacyCounters as unknown as Card], legacyCounters.id, 3, NOW);
+
+    expect(result.reviewed).toBe(true);
+    expect(result.cards[0].reps).toBe(3);
+    expect(result.cards[0].lapses).toBe(7);
+  });
+
   it('preserves imported legacy lapse history when reviewing numeric runtime counters', () => {
     const legacyCounters = {
       ...createNewCard('legacy-lapses-numeric', 'third', NOW),

@@ -1218,7 +1218,9 @@ export function useDeck() {
     };
   }, []);
 
-  const runtimeNowIso = nowIso();
+  // Keep runtime snapshots tied to deck-clock updates so parent UI state changes
+  // do not continuously churn queue/stat recomputation.
+  const runtimeNowIso = useMemo(() => nowIso(), [clockIso]);
   const effectiveClockIso = useMemo(() => resolveReviewClock(clockIso, runtimeNowIso), [clockIso, runtimeNowIso]);
 
   const dueCards = useMemo(() => {

@@ -100,6 +100,39 @@ function safeReadCounter(read: () => unknown, fallback: number): number {
   }
 }
 
+function isStringLikeRuntimeValue(value: unknown): boolean {
+  if (typeof value === 'string' || value instanceof String) {
+    return true;
+  }
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const valueObject = value as { valueOf?: () => unknown; toString?: () => unknown };
+  try {
+    const valueOf = valueObject.valueOf;
+    if (typeof valueOf === 'function') {
+      const unboxed = valueOf.call(value);
+      if (typeof unboxed === 'string' || unboxed instanceof String) {
+        return true;
+      }
+    }
+  } catch {
+    // Fall through to toString for bridged runtime objects with broken valueOf.
+  }
+  try {
+    const toString = valueObject.toString;
+    if (typeof toString === 'function') {
+      const stringified = toString.call(value);
+      if (typeof stringified === 'string' || stringified instanceof String) {
+        return true;
+      }
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
+
 function safeNowMs(): number {
   const runtimeNow = Date.now();
   if (Number.isFinite(runtimeNow)) {
@@ -1595,9 +1628,9 @@ function normalizeSchedulingCard(
   card: Card,
   requestedNowIso: string | Date,
 ): { card: Card; currentIso: string } {
-  const rawReps = safeReadUnknown(() => card.reps, 0);
-  const rawLapses = safeReadUnknown(() => card.lapses, 0);
-  const countersFromLegacyStrings = typeof rawReps === 'string' || typeof rawLapses === 'string';
+  const rawReps = safeReadUnknown(() => card.reps);
+  const rawLapses = safeReadUnknown(() => card.lapses);
+  const countersFromLegacyStrings = isStringLikeRuntimeValue(rawReps) || isStringLikeRuntimeValue(rawLapses);
   const snapshot = snapshotSchedulingCard(card);
   const { createdAt, currentIso, updatedAt, dueAt, dueNeedsRepair } = normalizeTimeline(snapshot, requestedNowIso);
   const normalizedText = normalizeCardText(snapshot);

@@ -79,7 +79,9 @@ export function RatingRow({
               ? `Rate ${item.text}. Locked. Use Again to continue. ${lockReasonHint}`
               : ratingDisabled
                 ? `Rate ${item.text}. Unavailable.`
-                : `Rate ${item.text}. Next interval ${interval}.`;
+                : isRecommended
+                  ? `Rate ${item.text}. Recommended. Next interval ${interval}.`
+                  : `Rate ${item.text}. Next interval ${interval}.`;
           return (
             <Pressable
               key={item.rating}
@@ -261,6 +263,10 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     color: colors.primary,
+    backgroundColor: `${colors.primary}1a`,
+    borderRadius: radii.pill,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
   },
   lockedHint: {
     fontSize: 11.5,
