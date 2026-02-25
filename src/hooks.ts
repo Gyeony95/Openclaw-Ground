@@ -696,6 +696,7 @@ export function countUpcomingDueCards(
   }
   const windowMs = safeHours * 60 * 60 * 1000;
   const cutoffMs = Number.isFinite(windowMs) ? nowMs + windowMs : Number.POSITIVE_INFINITY;
+  const upcomingFloorMs = nowMs + TIMELINE_JITTER_TOLERANCE_MS;
 
   return cards.filter((card) => {
     if (!isRuntimeCard(card)) {
@@ -705,8 +706,9 @@ export function countUpcomingDueCards(
       return false;
     }
     const dueMs = parseDueAtOrNaN(safeReadString(() => card.dueAt));
-    // "Upcoming" should represent future workload, excluding cards already due now.
-    return Number.isFinite(dueMs) && dueMs > nowMs && dueMs <= cutoffMs;
+    // "Upcoming" should represent future workload, excluding cards already due now
+    // within the same jitter tolerance used by review eligibility checks.
+    return Number.isFinite(dueMs) && dueMs > upcomingFloorMs && dueMs <= cutoffMs;
   }).length;
 }
 
@@ -716,6 +718,7 @@ export function findNextUpcomingCard(cards: Card[], currentIso: string, runtimeN
   if (!Number.isFinite(nowMs)) {
     return undefined;
   }
+  const upcomingFloorMs = nowMs + TIMELINE_JITTER_TOLERANCE_MS;
 
   const upcomingCards = cards
     .filter((card): card is Card => {
@@ -723,7 +726,7 @@ export function findNextUpcomingCard(cards: Card[], currentIso: string, runtimeN
         return false;
       }
       const dueMs = parseDueAtOrNaN(card.dueAt);
-      return Number.isFinite(dueMs) && dueMs > nowMs;
+      return Number.isFinite(dueMs) && dueMs > upcomingFloorMs;
     });
   return stableSortCardsByDuePriority(upcomingCards)[0];
 }

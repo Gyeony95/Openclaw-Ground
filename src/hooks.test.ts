@@ -2062,6 +2062,19 @@ describe('countUpcomingDueCards', () => {
 
     expect(countUpcomingDueCards([nearFuture], '2026-02-23T12:00:00.000Z', 24, '2026-02-23T12:00:30.000Z')).toBe(0);
   });
+
+  it('excludes cards within one-second due-now jitter from upcoming counts', () => {
+    const jitterDueNow = {
+      ...createNewCard('upcoming-jitter-due-now', 'test', NOW),
+      dueAt: '2026-02-23T12:00:00.900Z',
+    };
+    const trulyUpcoming = {
+      ...createNewCard('upcoming-jitter-future', 'test', NOW),
+      dueAt: '2026-02-23T12:00:01.001Z',
+    };
+
+    expect(countUpcomingDueCards([jitterDueNow, trulyUpcoming], NOW)).toBe(1);
+  });
 });
 
 describe('findNextUpcomingCard', () => {
@@ -2151,6 +2164,21 @@ describe('findNextUpcomingCard', () => {
     );
 
     expect(nextUpcoming).toEqual(stillUpcoming);
+  });
+
+  it('skips one-second jitter due-now cards when selecting next upcoming card', () => {
+    const jitterDueNow = {
+      ...createNewCard('next-upcoming-jitter-due-now', 'safe', NOW),
+      dueAt: '2026-02-23T12:00:00.900Z',
+    };
+    const upcomingAfterJitter = {
+      ...createNewCard('next-upcoming-jitter-future', 'safe', NOW),
+      dueAt: '2026-02-23T12:00:01.001Z',
+    };
+
+    const nextUpcoming = findNextUpcomingCard([jitterDueNow, upcomingAfterJitter], NOW);
+
+    expect(nextUpcoming).toEqual(upcomingAfterJitter);
   });
 });
 
