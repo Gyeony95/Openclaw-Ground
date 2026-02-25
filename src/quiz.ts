@@ -15,7 +15,41 @@ export type StudyMode = 'flashcard' | 'multiple-choice';
 
 function fallbackRatingForState(state?: Card['state']): Rating {
   // Keep malformed/unknown state fallbacks conservative to avoid accidental promotions.
-  return state === 'review' ? 3 : 1;
+  return normalizeStateForFallback(state) === 'review' ? 3 : 1;
+}
+
+function normalizeStateForFallback(state: unknown): Card['state'] | null {
+  if (state === 'review' || state === 'learning' || state === 'relearning') {
+    return state;
+  }
+  if (typeof state !== 'string') {
+    return null;
+  }
+  const normalized = state.trim().toLowerCase();
+  if (normalized === 'review' || normalized === 'learning' || normalized === 'relearning') {
+    return normalized;
+  }
+  const folded = normalized.replace(/[\s_-]+/g, '');
+  if (folded === 'review') {
+    return 'review';
+  }
+  if (folded === 'learning' || folded === 'learn') {
+    return 'learning';
+  }
+  if (folded === 'relearning' || folded === 'relearn') {
+    return 'relearning';
+  }
+  const alphaFolded = normalized.replace(/[^a-z]+/g, '');
+  if (alphaFolded === 'review') {
+    return 'review';
+  }
+  if (alphaFolded === 'learning' || alphaFolded === 'learn') {
+    return 'learning';
+  }
+  if (alphaFolded === 'relearning' || alphaFolded === 'relearn') {
+    return 'relearning';
+  }
+  return null;
 }
 
 function normalizeId(value: unknown, fallback: string): string {

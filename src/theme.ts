@@ -13,6 +13,7 @@ export const colors = {
   border: '#cad8e6',
   shadow: '#0a1a2d',
   accent: '#008d79',
+  focusRing: '#0a7ea4',
 };
 
 export const radii = {

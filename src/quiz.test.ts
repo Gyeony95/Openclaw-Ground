@@ -442,6 +442,11 @@ describe('quiz distractors', () => {
     expect(resolveMultipleChoiceRating(9 as Rating, true, 'review')).toBe(3);
   });
 
+  it('keeps malformed correct-selection ratings neutral for normalized review-like state strings', () => {
+    expect(resolveMultipleChoiceRating(Number.NaN as Rating, true, ' Review ' as unknown as Card['state'])).toBe(3);
+    expect(resolveMultipleChoiceRating(9 as Rating, true, 're-view!!' as unknown as Card['state'])).toBe(3);
+  });
+
   it('maps malformed correct-selection ratings to Again in learning/relearning states', () => {
     expect(resolveMultipleChoiceRating(Number.NaN as Rating, true, 'learning')).toBe(1);
     expect(resolveMultipleChoiceRating(2.5 as Rating, true, 'learning')).toBe(1);

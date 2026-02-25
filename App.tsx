@@ -192,6 +192,7 @@ export default function App() {
   const [showAddSuccess, setShowAddSuccess] = useState(false);
   const [addActionError, setAddActionError] = useState<string | null>(null);
   const [reviewActionError, setReviewActionError] = useState<string | null>(null);
+  const [focusedInput, setFocusedInput] = useState<'word' | 'meaning' | 'notes' | null>(null);
   const [entryAnim] = useState(() => new Animated.Value(0));
   const scrollRef = useRef<ScrollView>(null);
   const wordInputRef = useRef<TextInput>(null);
@@ -1339,7 +1340,12 @@ export default function App() {
                   value={word}
                   onChangeText={setWord}
                   placeholder="Word"
-                  style={[styles.input, addAttempted && missingWord && styles.inputError]}
+                  style={[
+                    styles.input,
+                    focusedInput === 'word' && styles.inputFocused,
+                    addAttempted && missingWord && styles.inputError,
+                    focusedInput === 'word' && addAttempted && missingWord && styles.inputErrorFocused,
+                  ]}
                   placeholderTextColor={colors.subInk}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -1352,6 +1358,8 @@ export default function App() {
                   blurOnSubmit={false}
                   editable={isFormEditable}
                   accessibilityLabel="Word input"
+                  onFocus={() => setFocusedInput('word')}
+                  onBlur={() => setFocusedInput((current) => (current === 'word' ? null : current))}
                   onSubmitEditing={() => meaningInputRef.current?.focus()}
                 />
                 <Text style={[styles.charCount, { color: wordCountTone }]}>
@@ -1364,7 +1372,12 @@ export default function App() {
                   value={meaning}
                   onChangeText={setMeaning}
                   placeholder="Meaning"
-                  style={[styles.input, addAttempted && missingMeaning && styles.inputError]}
+                  style={[
+                    styles.input,
+                    focusedInput === 'meaning' && styles.inputFocused,
+                    addAttempted && missingMeaning && styles.inputError,
+                    focusedInput === 'meaning' && addAttempted && missingMeaning && styles.inputErrorFocused,
+                  ]}
                   placeholderTextColor={colors.subInk}
                   autoCorrect={false}
                   autoComplete="off"
@@ -1376,6 +1389,8 @@ export default function App() {
                   blurOnSubmit={false}
                   editable={isFormEditable}
                   accessibilityLabel="Meaning input"
+                  onFocus={() => setFocusedInput('meaning')}
+                  onBlur={() => setFocusedInput((current) => (current === 'meaning' ? null : current))}
                   onSubmitEditing={() => {
                     if (normalizedNotes.length === 0) {
                       handleAddCard();
@@ -1394,7 +1409,7 @@ export default function App() {
                   value={notes}
                   onChangeText={setNotes}
                   placeholder="Notes (optional)"
-                  style={[styles.input, styles.notesInput]}
+                  style={[styles.input, focusedInput === 'notes' && styles.inputFocused, styles.notesInput]}
                   placeholderTextColor={colors.subInk}
                   multiline
                   textAlignVertical="top"
@@ -1405,6 +1420,8 @@ export default function App() {
                   selectionColor={colors.primary}
                   editable={isFormEditable}
                   accessibilityLabel="Notes input"
+                  onFocus={() => setFocusedInput('notes')}
+                  onBlur={() => setFocusedInput((current) => (current === 'notes' ? null : current))}
                   returnKeyType="done"
                   enterKeyHint="done"
                   blurOnSubmit
@@ -2108,6 +2125,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 21,
   },
+  inputFocused: {
+    borderColor: colors.focusRing,
+    shadowColor: colors.focusRing,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    elevation: 2,
+  },
   inputLabel: {
     fontSize: 11,
     fontWeight: '700',
@@ -2118,6 +2143,9 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: colors.danger,
     backgroundColor: '#fff5f6',
+  },
+  inputErrorFocused: {
+    shadowColor: colors.danger,
   },
   inputErrorText: {
     marginTop: -5,
