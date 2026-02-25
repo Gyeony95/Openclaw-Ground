@@ -30,6 +30,7 @@ const LEARNING_MAX_SCHEDULE_DAYS = 1;
 const RELEARNING_MAX_SCHEDULE_DAYS = 2;
 const REVIEW_SCHEDULE_FLOOR_DAYS = 0.5;
 const NON_REVIEW_OUTLIER_MULTIPLIER = 6;
+const TIMELINE_JITTER_TOLERANCE_MS = 1000;
 
 const VALID_STATES: ReviewState[] = ['learning', 'review', 'relearning'];
 type CounterNormalizationMode = 'sanitize' | 'saturate';
@@ -265,6 +266,8 @@ function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode
   const updatedAt = isValidIso(raw.updatedAt) ? raw.updatedAt : normalizedCreatedAt;
   const dueIsValid = isValidIso(raw.dueAt);
   const dueAt = dueIsValid ? raw.dueAt : updatedAt;
+  const normalizedReps = asNonNegativeInt(raw.reps, 0, counterMode);
+  const normalizedLapses = asNonNegativeInt(raw.lapses, 0, counterMode);
   const normalizedStability = clamp(asFiniteNumber(raw.stability) ?? 0.5, STABILITY_MIN, STABILITY_MAX);
   const createdMs = Date.parse(normalizedCreatedAt);
   const updatedMs = normalizeWallSafeTimestamp(updatedAt);
@@ -273,19 +276,33 @@ function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode
   const normalizedUpdatedAt = toSafeIso(normalizedUpdatedMs, normalizedCreatedMs);
   let normalizedDueMs = Math.max(dueMs, normalizedUpdatedMs);
   let scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
+  const createdAtMatchesUpdatedAt =
+    Math.abs(normalizedUpdatedMs - createdMs) <= TIMELINE_JITTER_TOLERANCE_MS;
+  const dueAtMatchesUpdatedAt =
+    Math.abs(normalizedDueMs - normalizedUpdatedMs) <= TIMELINE_JITTER_TOLERANCE_MS;
+  const preserveFreshLearningImmediateDue =
+    state === 'learning' &&
+    normalizedReps === 0 &&
+    normalizedLapses === 0 &&
+    createdAtMatchesUpdatedAt &&
+    dueAtMatchesUpdatedAt;
   if (scheduleDays <= 0) {
-    const shouldUseReviewStabilityFallback =
-      state === 'review' &&
-      Number.isFinite(normalizedStability);
-    const fallbackDays = shouldUseReviewStabilityFallback
-      ? clamp(
-          normalizedStability,
-          REVIEW_SCHEDULE_FLOOR_DAYS,
-          REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
-        )
-      : scheduleFallbackForState(state);
-    normalizedDueMs = normalizedUpdatedMs + fallbackDays * DAY_MS;
-    scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
+    if (preserveFreshLearningImmediateDue) {
+      scheduleDays = 0;
+    } else {
+      const shouldUseReviewStabilityFallback =
+        state === 'review' &&
+        Number.isFinite(normalizedStability);
+      const fallbackDays = shouldUseReviewStabilityFallback
+        ? clamp(
+            normalizedStability,
+            REVIEW_SCHEDULE_FLOOR_DAYS,
+            REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
+          )
+        : scheduleFallbackForState(state);
+      normalizedDueMs = normalizedUpdatedMs + fallbackDays * DAY_MS;
+      scheduleDays = (normalizedDueMs - normalizedUpdatedMs) / DAY_MS;
+    }
   }
   const stateScheduleFloorDays = scheduleFallbackForState(state);
   if (scheduleDays > 0 && scheduleDays < stateScheduleFloorDays) {
@@ -352,8 +369,8 @@ function normalizeCard(raw: Partial<Card>, counterMode: CounterNormalizationMode
     createdAt: normalizedCreatedAt,
     updatedAt: normalizedUpdatedAt,
     state,
-    reps: asNonNegativeInt(raw.reps, 0, counterMode),
-    lapses: asNonNegativeInt(raw.lapses, 0, counterMode),
+    reps: normalizedReps,
+    lapses: normalizedLapses,
     stability: normalizedStability,
     difficulty: clamp(asFiniteNumber(raw.difficulty) ?? 5, DIFFICULTY_MIN, DIFFICULTY_MAX),
   };

@@ -1119,6 +1119,30 @@ describe('deck repository', () => {
     expect(deck.cards[0].dueAt).toBe('2026-02-24T00:01:00.000Z');
   });
 
+  it('keeps fresh learning cards immediately due when createdAt, updatedAt, and dueAt are aligned', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'learning-fresh-immediate-load',
+            word: 'eta-learning-fresh',
+            meaning: 'letter',
+            dueAt: '2026-02-24T00:00:00.000Z',
+            createdAt: '2026-02-24T00:00:00.000Z',
+            updatedAt: '2026-02-24T00:00:00.000Z',
+            state: 'learning',
+            reps: 0,
+            lapses: 0,
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards[0].updatedAt).toBe('2026-02-24T00:00:00.000Z');
+    expect(deck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
+  });
+
   it('repairs relearning cards with dueAt before updatedAt to a short fallback interval', async () => {
     mockedStorage.getItem.mockResolvedValueOnce(
       JSON.stringify({
@@ -1793,6 +1817,36 @@ describe('deck repository', () => {
     expect(savedDeck.cards.find((card) => card.id === 'state-save-1')?.state).toBe('review');
     expect(savedDeck.cards.find((card) => card.id === 'state-save-2')?.state).toBe('learning');
     expect(savedDeck.cards.find((card) => card.id === 'state-save-3')?.state).toBe('relearning');
+  });
+
+  it('keeps fresh learning cards immediately due when persisting aligned timestamps', async () => {
+    mockedStorage.setItem.mockResolvedValueOnce();
+
+    await saveDeck({
+      cards: [
+        {
+          id: 'learning-fresh-immediate-save',
+          word: 'alpha',
+          meaning: 'first',
+          dueAt: '2026-02-24T00:00:00.000Z',
+          createdAt: '2026-02-24T00:00:00.000Z',
+          updatedAt: '2026-02-24T00:00:00.000Z',
+          state: 'learning',
+          reps: 0,
+          lapses: 0,
+          stability: 0.5,
+          difficulty: 5,
+        },
+      ],
+    });
+
+    const [, rawSavedDeck] = mockedStorage.setItem.mock.calls[0];
+    const savedDeck = JSON.parse(rawSavedDeck) as {
+      cards: Array<{ dueAt: string; updatedAt: string }>;
+    };
+    expect(savedDeck.cards).toHaveLength(1);
+    expect(savedDeck.cards[0].updatedAt).toBe('2026-02-24T00:00:00.000Z');
+    expect(savedDeck.cards[0].dueAt).toBe('2026-02-24T00:00:00.000Z');
   });
 
   it('repairs pathologically-future review dueAt values before persisting deck data', async () => {
