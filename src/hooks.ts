@@ -412,7 +412,8 @@ export function hasScheduleRepairNeed(
     const repsProvided = repsValue !== undefined && repsValue !== null;
     const lapsesProvided = lapsesValue !== undefined && lapsesValue !== null;
     const reps = normalizeNonNegativeCounter(repsValue);
-    const lapses = normalizeNonNegativeCounter(lapsesValue);
+    const lapsesMissing = !lapsesProvided;
+    const lapses = lapsesMissing ? 0 : normalizeNonNegativeCounter(lapsesValue);
     const countersCorrupted = reps === null || lapses === null;
     if (
       state !== 'learning' &&
@@ -429,7 +430,7 @@ export function hasScheduleRepairNeed(
     }
     if (
       state === 'learning' &&
-      (!isWholeNonNegativeCounter(repsValue) || !isWholeNonNegativeCounter(lapsesValue))
+      (!isWholeNonNegativeCounter(repsValue) || (lapsesProvided && !isWholeNonNegativeCounter(lapsesValue)))
     ) {
       // Learning counters should be whole numbers; fractional drift can hide
       // prior review history and keep phase-repair cards in the active queue.

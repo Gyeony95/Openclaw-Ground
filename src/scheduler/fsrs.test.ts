@@ -242,6 +242,31 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('anchors malformed timelines to wall-safe clocks instead of accepting stale review timestamps', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      const malformedTimelineCard = {
+        ...createNewCard('malformed-timeline-clock-anchor', 'safe', NOW),
+        createdAt: 'not-a-date',
+        updatedAt: 'not-a-date',
+        dueAt: 'not-a-date',
+        state: 'review' as const,
+        reps: 3,
+        lapses: 1,
+        stability: 2,
+        difficulty: 5,
+      } as unknown as Card;
+
+      const reviewed = reviewCard(malformedTimelineCard, 3, '2010-01-01T00:00:00.000Z').card;
+
+      expect(reviewed.updatedAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('rejects review timestamps at the exact monotonic future-skew boundary', () => {
     jest.useFakeTimers();
     try {

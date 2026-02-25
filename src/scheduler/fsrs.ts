@@ -463,7 +463,7 @@ function normalizeTimeline(
       : Number.NaN;
   const requestedNowLooksWallSafe =
     Number.isFinite(requestedNowMs) &&
-    (!Number.isFinite(wallClockMs) || Math.abs(requestedNowMs - wallClockMs) <= MAX_CREATE_TIME_OFFSET_MS);
+    (!Number.isFinite(wallClockMs) || Math.abs(requestedNowMs - wallClockMs) <= MAX_MONOTONIC_CLOCK_SKEW_MS);
   const fallbackMs = requestedNowLooksWallSafe ? requestedNowMs : wallClockMs;
   const fallback = toSafeIso(fallbackMs);
   const normalizedCreatedAtInput = normalizeValidIsoInput(card.createdAt);

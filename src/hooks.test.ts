@@ -2591,6 +2591,19 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(stringRepsLearningDueNow)).toBe(false);
   });
 
+  it('accepts learning sub-day schedules when lapses are missing but reps are valid', () => {
+    const missingLapsesLearning = {
+      ...createNewCard('repair-learning-missing-lapses-subday', 'test', NOW),
+      state: 'learning' as const,
+      reps: 0,
+      lapses: undefined as unknown as number,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-23T12:10:00.000Z',
+    };
+
+    expect(hasScheduleRepairNeed(missingLapsesLearning)).toBe(false);
+  });
+
   it('accepts scientific-notation numeric strings for runtime schedule fields', () => {
     const scientificReview = {
       ...createNewCard('repair-review-scientific-fields', 'test', NOW),
