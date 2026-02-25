@@ -844,7 +844,7 @@ export default function App() {
               <Text style={styles.title} accessibilityRole="header">
                 Retention Dashboard
               </Text>
-              <Text style={styles.subtitle}>FSRS-inspired scheduler calibrated for consistent long-term recall.</Text>
+              <Text style={styles.subtitle}>FSRS scheduler tuned for consistent long-term recall.</Text>
               <View style={styles.heroTags}>
                 <Text
                   style={[

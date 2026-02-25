@@ -2119,6 +2119,20 @@ describe('countUpcomingDueCards', () => {
     expect(countUpcomingDueCards([upcoming], NOW, Number.NEGATIVE_INFINITY)).toBe(0);
   });
 
+  it('counts far-future review cards when requesting an infinite upcoming window', () => {
+    const farFuture = {
+      ...createNewCard('upcoming-window-far-future', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 365 * 30),
+      stability: 365 * 30,
+      reps: 8,
+      lapses: 1,
+    };
+
+    expect(countUpcomingDueCards([farFuture], NOW, Number.POSITIVE_INFINITY)).toBe(1);
+  });
+
   it('caps pathologically large upcoming windows instead of dropping all matches', () => {
     const upcoming = { ...createNewCard('upcoming-window-3', 'test', NOW), dueAt: '2026-02-23T18:00:00.000Z' };
 
