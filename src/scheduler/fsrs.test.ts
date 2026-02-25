@@ -342,6 +342,31 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('treats exact future-skew rollback boundaries as rollback-safe for mature review cadence', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date(NOW));
+      const boundaryFutureMatureCard: Card = {
+        ...createNewCard('boundary-future-mature-cadence', 'safe', NOW),
+        state: 'review',
+        updatedAt: '2026-02-24T00:00:00.000Z',
+        dueAt: '2026-03-26T00:00:00.000Z',
+        reps: 10,
+        lapses: 1,
+        stability: 1,
+        difficulty: 5.2,
+      };
+
+      const reviewed = reviewCard(boundaryFutureMatureCard, 3, NOW);
+
+      expect(reviewed.card.updatedAt).toBe(NOW);
+      expect(reviewed.card.state).toBe('review');
+      expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(20);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('falls back to wall clock when invalid review timestamps coincide with exact future-skew card timelines', () => {
     jest.useFakeTimers();
     try {

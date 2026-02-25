@@ -1548,7 +1548,7 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
   const timelineRolledBack =
     Number.isFinite(updatedAtMs) &&
     Number.isFinite(currentMs) &&
-    updatedAtMs - currentMs > MAX_MONOTONIC_CLOCK_SKEW_MS;
+    updatedAtMs - currentMs >= MAX_MONOTONIC_CLOCK_SKEW_MS;
   const rollbackScheduleFromStability = rollbackScheduleFallbackForState(currentState, baseCard.stability);
   const rollbackScheduleFromDueAnchor = normalizeScheduledDays(daysBetween(updatedAt, dueAt), currentState);
   const rollbackScheduleDays =

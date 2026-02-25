@@ -958,7 +958,7 @@ export function resolveNextUiClock(currentClockIso: string, reviewedAtIso?: stri
     }
     const candidateMs = Date.parse(candidate);
     if (hasFiniteWallClock) {
-      if (candidateMs - wallClockMs > MAX_UI_FUTURE_SKEW_MS) {
+      if (candidateMs - wallClockMs >= MAX_UI_FUTURE_SKEW_MS) {
         return undefined;
       }
       if (wallClockMs - candidateMs > MAX_CLOCK_SKEW_MS) {
