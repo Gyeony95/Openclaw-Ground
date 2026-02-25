@@ -1209,13 +1209,21 @@ export default function App() {
                         {flashcardVisibility.showMeaning ? <Text style={styles.meaning}>{dueCardMeaning}</Text> : null}
                         {flashcardVisibility.showExample ? <Text style={styles.notes}>{dueCardNotes}</Text> : null}
                         {flashcardVisibility.showMeaning ? (
-                          <View style={styles.metaRow}>
-                            <Text style={styles.metaText}>Difficulty {formatMetricNumber(dueCard.difficulty, 1)}</Text>
-                            <Text style={styles.metaText}>Stability {formatMetricNumber(dueCard.stability, 2)}d</Text>
-                            <Text style={styles.metaText}>
-                              Reps {dueCard.reps} · Lapses {dueCard.lapses}
-                            </Text>
-                          </View>
+                          dueNeedsRepair ? (
+                            <View style={styles.metaRow}>
+                              <Text style={[styles.metaText, styles.metaTextWarn]}>
+                                Schedule repair pending
+                              </Text>
+                            </View>
+                          ) : (
+                            <View style={styles.metaRow}>
+                              <Text style={styles.metaText}>Difficulty {formatMetricNumber(dueCard.difficulty, 1)}</Text>
+                              <Text style={styles.metaText}>Stability {formatMetricNumber(dueCard.stability, 2)}d</Text>
+                              <Text style={styles.metaText}>
+                                Reps {dueCard.reps} · Lapses {dueCard.lapses}
+                              </Text>
+                            </View>
+                          )
                         ) : null}
                       </Pressable>
                     ) : (
@@ -2187,6 +2195,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.45,
     fontVariant: ['tabular-nums'],
+  },
+  metaTextWarn: {
+    color: colors.warn,
+    borderColor: `${colors.warn}80`,
+    backgroundColor: `${colors.warn}14`,
   },
   input: {
     borderWidth: 1,

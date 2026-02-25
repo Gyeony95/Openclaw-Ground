@@ -206,6 +206,13 @@ function isValidIso(value: string): boolean {
 
 function normalizeIsoInput(value: unknown): string | undefined {
   const normalizedValue = (() => {
+    if (value instanceof Date) {
+      const dateMs = value.getTime();
+      if (Number.isFinite(dateMs)) {
+        return toSafeIso(dateMs);
+      }
+      return undefined;
+    }
     if (typeof value === 'string') {
       return value;
     }
@@ -221,6 +228,9 @@ function normalizeIsoInput(value: unknown): string | undefined {
         const unboxed = valueOf.call(value);
         if (typeof unboxed === 'string') {
           return unboxed;
+        }
+        if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
+          return toSafeIso(unboxed);
         }
       }
     } catch {

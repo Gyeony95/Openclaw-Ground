@@ -62,6 +62,25 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(result.dueAt)).toBeGreaterThan(Date.parse(result.updatedAt));
   });
 
+  it('accepts Date-like review timestamps from runtime bridges', () => {
+    const reviewCardInput = {
+      ...createNewCard('date-runtime-review', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const reviewedAt = new Date(addDaysIso(NOW, 2));
+
+    const result = reviewCard(reviewCardInput, 3, reviewedAt as unknown as string).card;
+
+    expect(result.updatedAt).toBe('2026-02-25T12:00:00.000Z');
+    expect(Date.parse(result.dueAt)).toBeGreaterThan(Date.parse(result.updatedAt));
+  });
+
   it('creates new cards with trimmed fields', () => {
     const card = createNewCard('  alpha ', ' first letter  ', NOW, '  note ');
 
@@ -117,6 +136,14 @@ describe('fsrs scheduler', () => {
     expect(card.createdAt).toBe(historicalNow);
     expect(card.updatedAt).toBe(historicalNow);
     expect(card.dueAt).toBe(historicalNow);
+  });
+
+  it('accepts Date-like creation timestamps from runtime bridges', () => {
+    const card = createNewCard('date-runtime-create', 'bridge-safe', new Date(NOW) as unknown as string);
+
+    expect(card.createdAt).toBe(NOW);
+    expect(card.updatedAt).toBe(NOW);
+    expect(card.dueAt).toBe(NOW);
   });
 
   it('keeps historical import timestamps when they are within the allowed skew window', () => {
