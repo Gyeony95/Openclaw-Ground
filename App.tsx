@@ -1290,7 +1290,11 @@ export default function App() {
                           </View>
                         )}
                         {hasQuizSelection && correctQuizOption ? (
-                          <Text style={[styles.quizFeedback, { color: quizSelectionIsCorrect ? colors.success : colors.danger }]}>
+                          <Text
+                            style={[styles.quizFeedback, { color: quizSelectionIsCorrect ? colors.success : colors.danger }]}
+                            accessibilityRole="status"
+                            accessibilityLiveRegion="polite"
+                          >
                             {quizSelectionIsCorrect
                               ? 'Correct. Selection locked. Rate how easy this felt.'
                               : `Incorrect. Selection locked. Correct answer: ${correctQuizOptionText}. This review will be recorded as Again.`}

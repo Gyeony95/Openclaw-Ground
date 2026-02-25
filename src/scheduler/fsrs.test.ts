@@ -2944,6 +2944,25 @@ describe('fsrs scheduler', () => {
     expect(next.scheduledDays).toBeGreaterThanOrEqual(2);
   });
 
+  it('keeps late irregular day-like hard reviews from rounding down below preserved schedule floor', () => {
+    const card = {
+      ...createNewCard('nu-hard-irregular-late-floor', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 2.2),
+      stability: 2.8,
+      difficulty: 6.1,
+      reps: 12,
+      lapses: 2,
+    };
+    const lateIso = addDaysIso(card.dueAt, 20 / 1440);
+
+    const next = reviewCard(card, 2, lateIso);
+
+    expect(next.card.state).toBe('review');
+    expect(next.scheduledDays).toBeGreaterThanOrEqual(3);
+  });
+
   it('allows early hard reviews to keep shorter intervals than the current schedule', () => {
     const card = createNewCard('nu-hard-early', 'letter', NOW);
     const first = reviewCard(card, 4, NOW).card;
