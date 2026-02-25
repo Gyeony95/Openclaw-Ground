@@ -151,6 +151,12 @@ function normalizeState(state: unknown): ReviewState {
   }
   if (typeof state === 'string') {
     const normalized = state.trim().toLowerCase();
+    if (normalized === 'reviewing' || normalized === 'reviewed') {
+      return 'review';
+    }
+    if (normalized === 'relearned') {
+      return 'relearning';
+    }
     if (normalized === 'rev') {
       return 'review';
     }
@@ -161,17 +167,23 @@ function normalizeState(state: unknown): ReviewState {
     if (folded === 'review') {
       return 'review';
     }
+    if (folded === 'reviewing' || folded === 'reviewed') {
+      return 'review';
+    }
     if (folded === 'rev') {
       return 'review';
     }
     if (folded === 'learning' || folded === 'learn') {
       return 'learning';
     }
-    if (folded === 'relearning' || folded === 'relearn') {
+    if (folded === 'relearning' || folded === 'relearn' || folded === 'relearned') {
       return 'relearning';
     }
     const alphaFolded = normalized.replace(/[^a-z]+/g, '');
     if (alphaFolded === 'review') {
+      return 'review';
+    }
+    if (alphaFolded === 'reviewing' || alphaFolded === 'reviewed') {
       return 'review';
     }
     if (alphaFolded === 'rev') {
@@ -180,7 +192,7 @@ function normalizeState(state: unknown): ReviewState {
     if (alphaFolded === 'learning' || alphaFolded === 'learn') {
       return 'learning';
     }
-    if (alphaFolded === 'relearning' || alphaFolded === 'relearn') {
+    if (alphaFolded === 'relearning' || alphaFolded === 'relearn' || alphaFolded === 'relearned') {
       return 'relearning';
     }
     if (isValidState(normalized)) {

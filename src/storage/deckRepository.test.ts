@@ -492,6 +492,60 @@ describe('deck repository', () => {
     expect(deck.cards[0].state).toBe('review');
   });
 
+  it('normalizes reviewed/reviewing aliases in persisted state', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'state-alias-reviewed',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: ' reviewed ',
+          },
+          {
+            id: 'state-alias-reviewing',
+            word: 'beta',
+            meaning: 'second',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: 'reviewing',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(2);
+    expect(deck.cards[0].state).toBe('review');
+    expect(deck.cards[1].state).toBe('review');
+  });
+
+  it('normalizes relearned aliases in persisted state', async () => {
+    mockedStorage.getItem.mockResolvedValueOnce(
+      JSON.stringify({
+        cards: [
+          {
+            id: 'state-alias-relearned',
+            word: 'alpha',
+            meaning: 'first',
+            dueAt: '2026-02-23T00:00:00.000Z',
+            createdAt: '2026-02-20T00:00:00.000Z',
+            updatedAt: '2026-02-22T00:00:00.000Z',
+            state: ' relearned ',
+          },
+        ],
+      }),
+    );
+
+    const deck = await loadDeck();
+    expect(deck.cards).toHaveLength(1);
+    expect(deck.cards[0].state).toBe('relearning');
+  });
+
   it('computes due and state counts', () => {
     const stats = computeDeckStats(
       [

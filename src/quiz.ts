@@ -38,6 +38,9 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
   if (normalized === 'review' || normalized === 'learning' || normalized === 'relearning') {
     return normalized;
   }
+  if (normalized === 'relearned') {
+    return 'relearning';
+  }
   const folded = normalized.replace(/[\s_-]+/g, '');
   if (folded === 'review') {
     return 'review';
@@ -54,7 +57,7 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
   if (folded === 'learning' || folded === 'learn') {
     return 'learning';
   }
-  if (folded === 'relearning' || folded === 'relearn') {
+  if (folded === 'relearning' || folded === 'relearn' || folded === 'relearned') {
     return 'relearning';
   }
   const alphaFolded = normalized.replace(/[^a-z]+/g, '');
@@ -73,7 +76,7 @@ function normalizeStateForFallback(state: unknown): Card['state'] | null {
   if (alphaFolded === 'learning' || alphaFolded === 'learn') {
     return 'learning';
   }
-  if (alphaFolded === 'relearning' || alphaFolded === 'relearn') {
+  if (alphaFolded === 'relearning' || alphaFolded === 'relearn' || alphaFolded === 'relearned') {
     return 'relearning';
   }
   return null;
