@@ -122,7 +122,12 @@ function idEntropySalt(): string {
     // Fall through to Math.random for older runtimes.
   }
 
-  const fallbackRandom = Math.random();
+  let fallbackRandom = Number.NaN;
+  try {
+    fallbackRandom = Math.random();
+  } catch {
+    return '0';
+  }
   if (Number.isFinite(fallbackRandom) && fallbackRandom >= 0 && fallbackRandom < 1) {
     return Math.floor(fallbackRandom * 0x100000000).toString(36);
   }

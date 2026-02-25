@@ -2771,6 +2771,38 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('keeps creating cards when runtime entropy APIs throw', () => {
+    const originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    const randomSpy = jest.spyOn(Math, 'random').mockImplementation(() => {
+      throw new Error('rng unavailable');
+    });
+
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      value: {
+        getRandomValues() {
+          throw new Error('crypto unavailable');
+        },
+      },
+    });
+
+    try {
+      const first = createNewCard('alpha-id-entropy-fallback-1', 'first', NOW);
+      const second = createNewCard('alpha-id-entropy-fallback-2', 'second', NOW);
+
+      expect(first.id).not.toBe(second.id);
+      expect(first.id.split('-').length).toBe(4);
+      expect(second.id.split('-').length).toBe(4);
+    } finally {
+      randomSpy.mockRestore();
+      if (originalCryptoDescriptor) {
+        Object.defineProperty(globalThis, 'crypto', originalCryptoDescriptor);
+      } else {
+        delete (globalThis as { crypto?: unknown }).crypto;
+      }
+    }
+  });
+
   it('includes a deterministic runtime salt segment in generated card IDs', () => {
     jest.useFakeTimers();
     try {

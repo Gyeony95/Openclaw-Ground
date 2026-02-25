@@ -91,6 +91,21 @@ describe('formatDueLabel', () => {
     expect(formatDueLabel(dueLike as unknown as string, nowLike as unknown as string)).toBe('Due in 35m');
   });
 
+  it('accepts valueOf-backed Date objects from runtime bridges', () => {
+    const dueLike = {
+      valueOf() {
+        return new Date('2026-02-23T12:35:00.000Z');
+      },
+    };
+    const nowLike = {
+      valueOf() {
+        return new Date('2026-02-23T12:00:00.000Z');
+      },
+    };
+
+    expect(formatDueLabel(dueLike as unknown as string, nowLike as unknown as string)).toBe('Due in 35m');
+  });
+
   it('accepts lowercase-z UTC timestamps', () => {
     expect(formatDueLabel('2026-02-23T12:35:00.000z', '2026-02-23T12:00:00.000z')).toBe('Due in 35m');
   });

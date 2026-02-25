@@ -163,6 +163,26 @@ describe('scheduleStatus', () => {
       expect(valueOfTone).toBe(colors.danger);
     });
 
+    it('accepts valueOf-backed Date objects from runtime bridges', () => {
+      const tone = queueTone({
+        dueAt: {
+          valueOf() {
+            return new Date('2026-02-24T11:58:30.000Z');
+          },
+        } as unknown as string,
+        clockIso: {
+          valueOf() {
+            return new Date(NOW);
+          },
+        } as unknown as string,
+        loading: false,
+        hasDueCard: true,
+        needsRepair: false,
+      });
+
+      expect(tone).toBe(colors.danger);
+    });
+
     it('accepts lowercase-z UTC timestamps', () => {
       const tone = queueTone({
         dueAt: '2026-02-24T11:58:30.000z',
@@ -305,6 +325,24 @@ describe('scheduleStatus', () => {
 
       expect(boxedNumeric).toEqual({ label: 'Due now', tone: colors.primary });
       expect(valueOfBacked).toEqual({ label: 'Due now', tone: colors.primary });
+    });
+
+    it('accepts valueOf-backed Date due timestamps from runtime bridges', () => {
+      const urgency = dueUrgency({
+        dueAt: {
+          valueOf() {
+            return new Date('2026-02-24T12:00:30.000Z');
+          },
+        } as unknown as string,
+        clockIso: {
+          valueOf() {
+            return new Date(NOW);
+          },
+        } as unknown as string,
+        needsRepair: false,
+      });
+
+      expect(urgency).toEqual({ label: 'Due now', tone: colors.primary });
     });
 
     it('accepts lowercase-z UTC timestamps', () => {

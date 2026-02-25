@@ -20,6 +20,12 @@ function parseIso(iso: unknown): number | null {
         if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
           return new Date(unboxed).toISOString();
         }
+        if (unboxed instanceof Date) {
+          const ms = unboxed.getTime();
+          if (Number.isFinite(ms)) {
+            return new Date(ms).toISOString();
+          }
+        }
       }
     } catch {
       return undefined;
