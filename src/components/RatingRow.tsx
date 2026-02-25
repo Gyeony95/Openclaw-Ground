@@ -53,8 +53,9 @@ export function RatingRow({
     [disabledRatings],
   );
   const hasLockedRatings = !isDisabled && disabledSet.size > 0;
-  const lockReasonHint = lockedHint ?? 'Some ratings are locked for this review.';
   const againInterval = resolveIntervalLabel(intervalLabels, 1, labels[0].fallbackHint);
+  const lockReasonHint =
+    lockedHint ?? `Some ratings are locked for this review. Use Again (${againInterval}) to continue.`;
 
   return (
     <View style={styles.container}>

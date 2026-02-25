@@ -971,9 +971,9 @@ function dayLikePreserveScheduleFloorDays(scheduledDays: number): number {
   if (!Number.isFinite(scheduledDays)) {
     return 1;
   }
-  // Preserve day-like cadence using the same day-quantization path as review intervals.
-  // This avoids 1.5-1.99d schedules collapsing to 1d on on-time Good/Hard reviews.
-  return Math.max(1, quantizeReviewIntervalDays(scheduledDays, scheduledDays));
+  // Preserve day-like cadence without shrinking into a lower day bucket on on-time
+  // Hard/Good reviews (e.g. 1.1d should preserve at least a 2d floor).
+  return Math.max(1, Math.ceil(scheduledDays));
 }
 
 function updateDifficulty(prevDifficulty: number, rating: Rating): number {
