@@ -99,24 +99,66 @@ function safeNormalizedOptionId(option: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function selectionIdCandidates(value: unknown): { raw: string | null; normalized: string | null } {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return {
+      raw: value,
+      normalized: trimmed.length > 0 ? trimmed : null,
+    };
+  }
+  if (value instanceof String) {
+    const raw = value.valueOf();
+    const trimmed = raw.trim();
+    return {
+      raw,
+      normalized: trimmed.length > 0 ? trimmed : null,
+    };
+  }
+  if (!value || typeof value !== 'object') {
+    return { raw: null, normalized: null };
+  }
+  try {
+    const valueOf = (value as { valueOf?: () => unknown }).valueOf;
+    if (typeof valueOf === 'function') {
+      const unboxed = valueOf.call(value);
+      if (typeof unboxed === 'string') {
+        const trimmed = unboxed.trim();
+        return {
+          raw: unboxed,
+          normalized: trimmed.length > 0 ? trimmed : null,
+        };
+      }
+      if (unboxed instanceof String) {
+        const raw = unboxed.valueOf();
+        const trimmed = raw.trim();
+        return {
+          raw,
+          normalized: trimmed.length > 0 ? trimmed : null,
+        };
+      }
+    }
+  } catch {
+    return { raw: null, normalized: null };
+  }
+  return { raw: null, normalized: null };
+}
+
 export function hasValidQuizSelection(selectedOptionId: string | null, options: QuizOption[]): boolean {
   return findQuizOptionById(options, selectedOptionId) !== undefined;
 }
 
 export function findQuizOptionById(
   options: QuizOption[],
-  selectedOptionId: string | null,
+  selectedOptionId: unknown,
 ): QuizOption | undefined {
-  if (typeof selectedOptionId !== 'string') {
-    return undefined;
-  }
-  const normalizedSelectedId = selectedOptionId.trim();
-  if (normalizedSelectedId.length === 0) {
+  const { raw: rawSelectedId, normalized: normalizedSelectedId } = selectionIdCandidates(selectedOptionId);
+  if (!normalizedSelectedId) {
     return undefined;
   }
   const exactMatch = options.find((option) => {
     const rawOptionId = safeOptionId(option);
-    return rawOptionId === selectedOptionId && rawOptionId.trim().length > 0;
+    return rawSelectedId !== null && rawOptionId === rawSelectedId && rawOptionId.trim().length > 0;
   });
   if (exactMatch) {
     return exactMatch;
@@ -129,8 +171,8 @@ export function findQuizOptionById(
 
 export function resolveLockedQuizSelection(
   options: QuizOption[],
-  currentSelectedOptionId: string | null,
-  requestedOptionId: string,
+  currentSelectedOptionId: unknown,
+  requestedOptionId: unknown,
 ): string | null {
   const current = findQuizOptionById(options, currentSelectedOptionId);
   if (current) {

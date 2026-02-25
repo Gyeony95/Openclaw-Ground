@@ -100,6 +100,52 @@ describe('fsrs scheduler', () => {
     expect(fromDate).toEqual(fromIso);
   });
 
+  it('accepts valueOf-backed review timestamps from runtime bridges', () => {
+    const reviewCardInput = {
+      ...createNewCard('valueof-runtime-review', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const valueOfNow = {
+      valueOf() {
+        return addDaysIso(NOW, 2);
+      },
+    };
+
+    const result = reviewCard(reviewCardInput, 3, valueOfNow as unknown as string).card;
+
+    expect(result.updatedAt).toBe('2026-02-25T12:00:00.000Z');
+    expect(Date.parse(result.dueAt)).toBeGreaterThan(Date.parse(result.updatedAt));
+  });
+
+  it('accepts valueOf-backed preview timestamps from runtime bridges', () => {
+    const previewCardInput = {
+      ...createNewCard('valueof-runtime-preview', 'bridge-safe', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 6,
+      lapses: 1,
+      stability: 3,
+      difficulty: 5.5,
+    };
+    const valueOfNow = {
+      valueOf() {
+        return addDaysIso(NOW, 2);
+      },
+    };
+
+    const fromValueOf = previewIntervals(previewCardInput, valueOfNow as unknown as string);
+    const fromIso = previewIntervals(previewCardInput, addDaysIso(NOW, 2));
+
+    expect(fromValueOf).toEqual(fromIso);
+  });
+
   it('creates new cards with trimmed fields', () => {
     const card = createNewCard('  alpha ', ' first letter  ', NOW, '  note ');
 

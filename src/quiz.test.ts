@@ -252,6 +252,27 @@ describe('quiz distractors', () => {
     expect(hasValidQuizSelection('   ', options)).toBe(false);
   });
 
+  it('accepts boxed selection ids from runtime bridges', () => {
+    const options = composeQuizOptions(target, deck, 'seed-1');
+    const selectedId = options[0].id;
+
+    expect(hasValidQuizSelection(new String(selectedId) as unknown as string, options)).toBe(true);
+    expect(findQuizOptionById(options, new String(selectedId))?.id).toBe(selectedId);
+  });
+
+  it('accepts valueOf-backed selection ids from runtime bridges', () => {
+    const options = composeQuizOptions(target, deck, 'seed-1');
+    const selectedId = options[0].id;
+    const bridgedSelectionId = {
+      valueOf() {
+        return `  ${selectedId}  `;
+      },
+    };
+
+    expect(hasValidQuizSelection(bridgedSelectionId as unknown as string, options)).toBe(true);
+    expect(findQuizOptionById(options, bridgedSelectionId)?.id).toBe(selectedId);
+  });
+
   it('finds selected options by normalized ids when option ids include whitespace', () => {
     const options = [
       { id: '  correct-option  ', cardId: 'c1', text: 'answer', isCorrect: true },
@@ -291,6 +312,17 @@ describe('quiz distractors', () => {
 
     const firstSelection = resolveLockedQuizSelection(options, null, firstId);
     const attemptedChange = resolveLockedQuizSelection(options, firstSelection, secondId);
+
+    expect(firstSelection).toBe(firstId);
+    expect(attemptedChange).toBe(firstId);
+  });
+
+  it('locks quiz selection when requested ids come from boxed runtime strings', () => {
+    const options = composeQuizOptions(target, deck, 'seed-1');
+    const firstId = options[0].id;
+    const secondId = options[1].id;
+    const firstSelection = resolveLockedQuizSelection(options, null, new String(firstId));
+    const attemptedChange = resolveLockedQuizSelection(options, firstSelection, new String(secondId));
 
     expect(firstSelection).toBe(firstId);
     expect(attemptedChange).toBe(firstId);
