@@ -902,6 +902,28 @@ describe('compareDueCards', () => {
 
     expect(orderedIds).toEqual(['z-card', 'ä-card']);
   });
+
+  it('keeps deterministic ordering when due timestamps approach JS date bounds', () => {
+    const base = createNewCard('queue-extreme-dates', 'ordering', NOW);
+    const maxDue = {
+      ...base,
+      id: 'max-due',
+      dueAt: '+275760-09-13T00:00:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+    const minDue = {
+      ...base,
+      id: 'min-due',
+      dueAt: '-271821-04-20T00:00:00.000Z',
+      updatedAt: '2026-02-23T10:00:00.000Z',
+      createdAt: '2026-02-20T00:00:00.000Z',
+    };
+
+    const orderedIds = [maxDue, minDue].sort(compareDueCards).map((card) => card.id);
+
+    expect(orderedIds).toEqual(['min-due', 'max-due']);
+  });
 });
 
 describe('collectDueCards', () => {

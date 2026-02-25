@@ -7,6 +7,24 @@ const NOW = '2026-02-23T12:00:00.000Z';
 const MAX_ISO = '+275760-09-13T00:00:00.000Z';
 
 describe('fsrs scheduler', () => {
+  it('does not mutate the input card while computing a review result', () => {
+    const input = {
+      ...createNewCard('immutability-check', 'definition', NOW),
+      state: 'review' as const,
+      dueAt: addDaysIso(NOW, 2),
+      updatedAt: NOW,
+      reps: 8,
+      lapses: 1,
+      stability: 6,
+      difficulty: 4.5,
+    };
+    const snapshot = { ...input };
+
+    reviewCard(input, 3, addDaysIso(NOW, 2));
+
+    expect(input).toEqual(snapshot);
+  });
+
   it('creates new cards with trimmed fields', () => {
     const card = createNewCard('  alpha ', ' first letter  ', NOW, '  note ');
 

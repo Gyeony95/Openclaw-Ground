@@ -75,6 +75,13 @@ function compareCardIdSortTokens(left: string, right: string): number {
   return left < right ? -1 : 1;
 }
 
+function compareSortPriority(left: number, right: number): number {
+  if (left === right) {
+    return 0;
+  }
+  return left < right ? -1 : 1;
+}
+
 function isValidCardId(id: unknown): id is string {
   return typeof id === 'string' && id.trim().length > 0;
 }
@@ -659,17 +666,23 @@ export function compareDueCards(a: Card, b: Card): number {
   const bUpdatedAt = safeReadString(() => b?.updatedAt);
   const aCreatedAt = safeReadString(() => a?.createdAt);
   const bCreatedAt = safeReadString(() => b?.createdAt);
-  const dueDelta = parseDueTimeForSort(aDueAt) - parseDueTimeForSort(bDueAt);
-  if (dueDelta !== 0) {
-    return dueDelta;
+  const duePriority = compareSortPriority(parseDueTimeForSort(aDueAt), parseDueTimeForSort(bDueAt));
+  if (duePriority !== 0) {
+    return duePriority;
   }
-  const updatedDelta = parseTimeOrRepairPriority(aUpdatedAt) - parseTimeOrRepairPriority(bUpdatedAt);
-  if (updatedDelta !== 0) {
-    return updatedDelta;
+  const updatedPriority = compareSortPriority(
+    parseTimeOrRepairPriority(aUpdatedAt),
+    parseTimeOrRepairPriority(bUpdatedAt),
+  );
+  if (updatedPriority !== 0) {
+    return updatedPriority;
   }
-  const createdDelta = parseTimeOrRepairPriority(aCreatedAt) - parseTimeOrRepairPriority(bCreatedAt);
-  if (createdDelta !== 0) {
-    return createdDelta;
+  const createdPriority = compareSortPriority(
+    parseTimeOrRepairPriority(aCreatedAt),
+    parseTimeOrRepairPriority(bCreatedAt),
+  );
+  if (createdPriority !== 0) {
+    return createdPriority;
   }
   const aId = safeReadUnknown(() => a?.id);
   const bId = safeReadUnknown(() => b?.id);

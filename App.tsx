@@ -1372,7 +1372,9 @@ export default function App() {
                   placeholderTextColor={colors.subInk}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  spellCheck={false}
                   autoComplete="off"
+                  importantForAutofill="no"
                   textContentType="none"
                   returnKeyType="next"
                   enterKeyHint="next"
@@ -1403,7 +1405,9 @@ export default function App() {
                   ]}
                   placeholderTextColor={colors.subInk}
                   autoCorrect={false}
+                  spellCheck={false}
                   autoComplete="off"
+                  importantForAutofill="no"
                   textContentType="none"
                   returnKeyType="next"
                   enterKeyHint="next"
@@ -1437,7 +1441,9 @@ export default function App() {
                   multiline
                   textAlignVertical="top"
                   autoCorrect={false}
+                  spellCheck={false}
                   autoComplete="off"
+                  importantForAutofill="no"
                   textContentType="none"
                   maxLength={NOTES_MAX_LENGTH}
                   selectionColor={colors.primary}
