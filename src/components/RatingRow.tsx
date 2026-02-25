@@ -63,6 +63,7 @@ export function RatingRow({
           const ratingDisabled = isDisabled || disabledSet.has(item.rating);
           const isRatingLocked = !isDisabled && disabledSet.has(item.rating);
           const intervalText = isRatingLocked ? 'Use Again' : interval;
+          const intervalPrefix = isRatingLocked ? 'Locked' : 'Next';
           const contentTone = ratingDisabled ? colors.subInk : item.tone;
           const lockTone = isRatingLocked ? item.tone : contentTone;
           const accessibilityLabel = busy
@@ -121,7 +122,7 @@ export function RatingRow({
               ) : null}
               <View style={styles.intervalMeta}>
                 <Text style={[styles.hintLabel, { color: contentTone }]} numberOfLines={1} maxFontSizeMultiplier={1.3}>
-                  Next
+                  {intervalPrefix}
                 </Text>
                 <Text
                   style={[styles.hint, styles.hintCentered, { color: contentTone }]}

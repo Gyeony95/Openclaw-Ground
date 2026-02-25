@@ -26,6 +26,8 @@ const HARD_DAYLIKE_CAP_PROMOTION_THRESHOLD_DAYS = 1.75;
 const MAX_MONOTONIC_CLOCK_SKEW_MS = 12 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_CREATE_TIME_OFFSET_MS = 20 * 365 * DAY_MS;
+const MAX_CREATE_HISTORICAL_LEAP_TOLERANCE_MS = 6 * DAY_MS;
+const MAX_CREATE_PAST_OFFSET_MS = MAX_CREATE_TIME_OFFSET_MS + MAX_CREATE_HISTORICAL_LEAP_TOLERANCE_MS;
 const MAX_CREATE_FUTURE_OFFSET_MS = MAX_MONOTONIC_CLOCK_SKEW_MS;
 const MIN_DATE_MS = -8640000000000000;
 const MAX_DATE_MS = 8640000000000000;
@@ -170,6 +172,10 @@ function normalizeValidIsoInput(value: unknown): string | undefined {
   return toCanonicalIso(normalized, normalized);
 }
 
+function isWithinCreatePastWindow(pastOffsetMs: number): boolean {
+  return pastOffsetMs <= MAX_CREATE_PAST_OFFSET_MS;
+}
+
 function parseRuntimeFiniteNumber(value: unknown): number | null {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : null;
@@ -254,7 +260,7 @@ function resolveReviewIso(cardUpdatedAt: string, requestedNowIso: string): strin
   if (
     requestedValid &&
     Number.isFinite(wallClockMs) &&
-    wallClockMs - candidateMs > MAX_CREATE_TIME_OFFSET_MS
+    !isWithinCreatePastWindow(wallClockMs - candidateMs)
   ) {
     if (Math.abs(fallbackMs - wallClockMs) > MAX_CREATE_TIME_OFFSET_MS) {
       return wallClockIso;
@@ -316,7 +322,7 @@ function resolvePreviewIso(requestedNowIso: string): string {
   }
   if (
     Number.isFinite(wallClockMs) &&
-    wallClockMs - candidateMs > MAX_CREATE_TIME_OFFSET_MS
+    !isWithinCreatePastWindow(wallClockMs - candidateMs)
   ) {
     return wallClockIso;
   }
@@ -408,7 +414,7 @@ function normalizeTimeline(
   if (
     Number.isFinite(createdMsCandidate) &&
     Number.isFinite(latestAnchorMs) &&
-    latestAnchorMs - createdMsCandidate > MAX_CREATE_TIME_OFFSET_MS
+    !isWithinCreatePastWindow(latestAnchorMs - createdMsCandidate)
   ) {
     // Keep persisted creation timestamps within the same bounded historical window
     // used for runtime imports, while preserving monotonicity against timeline anchors.
@@ -1527,7 +1533,7 @@ export function createNewCard(word: string, meaning: string, nowIso: string, not
     Number.isFinite(requestedCreatedMs) &&
     (!Number.isFinite(wallClockMs) ||
       (requestedCreatedMs - wallClockMs <= MAX_CREATE_FUTURE_OFFSET_MS &&
-        requestedPastOffsetMs <= MAX_CREATE_TIME_OFFSET_MS));
+        isWithinCreatePastWindow(requestedPastOffsetMs)));
   const safeCreatedMs = requestedIsPlausible
     ? requestedCreatedMs
     : Number.isFinite(wallClockMs)

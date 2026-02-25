@@ -71,6 +71,21 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('keeps historical import timestamps that are exactly 20 calendar years old including leap-day drift', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-24T00:00:00.000Z'));
+      const historicalNow = '2006-02-24T00:00:00.000Z';
+      const card = createNewCard('legacy-leap-window', 'imported', historicalNow);
+
+      expect(card.createdAt).toBe(historicalNow);
+      expect(card.updatedAt).toBe(historicalNow);
+      expect(card.dueAt).toBe(historicalNow);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('falls back to runtime wall clock when historical import timestamp is pathologically far past', () => {
     jest.useFakeTimers();
     try {
@@ -1013,6 +1028,33 @@ describe('fsrs scheduler', () => {
       const staleSkewed = previewIntervals(reviewCardBase, '1980-01-01T00:00:00.000Z');
 
       expect(staleSkewed).toEqual(expected);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('keeps preview clocks at the 20-calendar-year boundary instead of forcing wall-clock fallback', () => {
+    jest.useFakeTimers();
+    try {
+      const wallSafeNow = '2026-02-25T12:00:00.000Z';
+      jest.setSystemTime(new Date(wallSafeNow));
+      const reviewCardBase = {
+        ...createNewCard('preview-leap-window-boundary', 'safe', NOW),
+        state: 'review' as const,
+        updatedAt: NOW,
+        dueAt: addDaysIso(NOW, 3),
+        reps: 6,
+        lapses: 1,
+        stability: 3,
+        difficulty: 5.5,
+      };
+
+      const boundaryStale = previewIntervals(reviewCardBase, '2006-02-25T12:00:00.000Z');
+      const anchored = previewIntervals(reviewCardBase, reviewCardBase.updatedAt);
+      const wallSafePreview = previewIntervals(reviewCardBase, wallSafeNow);
+
+      expect(boundaryStale).toEqual(anchored);
+      expect(boundaryStale).not.toEqual(wallSafePreview);
     } finally {
       jest.useRealTimers();
     }
