@@ -256,6 +256,30 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back to wall clock when invalid review timestamps coincide with exact future-skew card timelines', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T12:00:00.000Z'));
+      const skewedCard = {
+        ...createNewCard('invalid-now-future-boundary', 'safe', '2026-02-23T12:00:00.000Z'),
+        state: 'review' as const,
+        updatedAt: '2026-02-24T00:00:00.000Z',
+        dueAt: '2026-02-25T00:00:00.000Z',
+        reps: 5,
+        lapses: 1,
+        stability: 2.5,
+        difficulty: 4.5,
+      };
+
+      const reviewed = reviewCard(skewedCard, 3, 'not-a-date').card;
+
+      expect(reviewed.updatedAt).toBe('2026-02-23T12:00:00.000Z');
+      expect(Date.parse(reviewed.dueAt)).toBeGreaterThan(Date.parse(reviewed.updatedAt));
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('preserves mature review cadence when recovering future-skewed review timelines', () => {
     jest.useFakeTimers();
     try {
