@@ -470,6 +470,19 @@ function normalizeTimeline(
   }
   const rawDueAtIsValid = Boolean(normalizedDueAtInput);
   const rawDueAt = normalizedDueAtInput;
+  const repsForStateInference = normalizeCounter(card.reps);
+  const lapsesForStateInference = normalizeCounter(card.lapses);
+  const hasReviewHistoryForStateInference = repsForStateInference > 0 || lapsesForStateInference > 0;
+  const parsedStabilityForStateInference = parseRuntimeFiniteNumber(card.stability);
+  const fallbackDueDaysForStateInference = hasReviewHistoryForStateInference
+    ? clampFinite(
+        parsedStabilityForStateInference ?? Number.NaN,
+        RELEARNING_SCHEDULE_FLOOR_DAYS,
+        STABILITY_MAX,
+        RELEARNING_SCHEDULE_FLOOR_DAYS,
+      )
+    : MINUTE_IN_DAYS;
+  const dueAtForStateInference = rawDueAt ?? addDaysIso(updatedAt, fallbackDueDaysForStateInference);
   const normalizedState =
     parseState(card.state) ??
     inferStateFromCard({
@@ -478,7 +491,7 @@ function normalizeTimeline(
       lapses: card.lapses,
       stability: card.stability,
       updatedAt,
-      dueAt: rawDueAt ?? addDaysIso(updatedAt, MINUTE_IN_DAYS),
+      dueAt: dueAtForStateInference,
     });
   const reviewFallbackDueDays =
     normalizedState === 'review'

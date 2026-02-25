@@ -1797,6 +1797,32 @@ describe('fsrs scheduler', () => {
     expect(reviewed.scheduledDays).toBeCloseTo(15 / 1440, 10);
   });
 
+  it('keeps malformed-state cards with review history on review cadence when dueAt is invalid', () => {
+    const reviewAt = addDaysIso(NOW, 6);
+    const baseline = {
+      ...createNewCard('malformed-state-invalid-due-baseline', 'state fallback', NOW),
+      state: 'unknown_state' as unknown as 'learning',
+      reps: 12,
+      lapses: 2,
+      stability: 6,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 6),
+    };
+    const invalidDue = {
+      ...baseline,
+      id: 'malformed-state-invalid-due',
+      dueAt: 'bad-time',
+    };
+
+    const baselineReview = reviewCard(baseline, 3, reviewAt);
+    const invalidDueReview = reviewCard(invalidDue, 3, reviewAt);
+
+    expect(invalidDueReview.card.state).toBe('review');
+    expect(invalidDueReview.card.updatedAt).toBe(baselineReview.card.updatedAt);
+    expect(invalidDueReview.card.stability).toBeCloseTo(baselineReview.card.stability, 6);
+    expect(invalidDueReview.scheduledDays).toBe(baselineReview.scheduledDays);
+  });
+
   it('keeps malformed-state day-like schedules on the review path even when lapse history exists', () => {
     const relearningWithMalformedState = {
       ...createNewCard('malformed-state-relearning-day-like', 'state fallback', NOW),

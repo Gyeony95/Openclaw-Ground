@@ -264,8 +264,10 @@ export default function App() {
   const queueProgressMetaCompact = loading
     ? '--'
     : scheduleRepairCount > 0
-      ? `${dueQueueCount.toLocaleString()}/${stats.total.toLocaleString()} due · ${scheduleRepairCount.toLocaleString()} ${scheduleRepairCount === 1 ? 'repair' : 'repairs'}`
-    : stats.total === 0
+      ? stats.total <= 0
+        ? `${scheduleRepairCount.toLocaleString()} ${scheduleRepairCount === 1 ? 'repair pending' : 'repairs pending'}`
+        : `${dueQueueCount.toLocaleString()}/${stats.total.toLocaleString()} due · ${scheduleRepairCount.toLocaleString()} ${scheduleRepairCount === 1 ? 'repair' : 'repairs'}`
+      : stats.total === 0
       ? 'No cards yet'
       : `${dueQueueCount.toLocaleString()}/${stats.total.toLocaleString()} due · ${dueWithinDay.toLocaleString()} next 24h`;
   const queueProgressTone = loading
