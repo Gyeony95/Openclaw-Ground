@@ -995,6 +995,7 @@ export default function App() {
                     <Pressable
                       style={({ pressed }) => [
                         styles.emptyQueueAction,
+                        scheduleRepairCount > 0 && styles.emptyQueueActionRepair,
                         !isFormEditable && styles.emptyQueueActionDisabled,
                         pressed && isFormEditable && styles.ghostBtnPressed,
                       ]}
@@ -1006,6 +1007,7 @@ export default function App() {
                       accessibilityState={{ disabled: !isFormEditable }}
                     >
                       <Text style={styles.emptyQueueActionText}>{emptyQueueActionLabel}</Text>
+                      <Text style={styles.emptyQueueActionSubText}>Jump to add form</Text>
                     </Pressable>
                   </View>
                 ) : null}
@@ -1819,6 +1821,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     backgroundColor: colors.surface,
+    gap: 2,
+  },
+  emptyQueueActionRepair: {
+    borderColor: `${colors.warn}55`,
+    backgroundColor: `${colors.warn}10`,
   },
   emptyQueueActionDisabled: {
     opacity: 0.55,
@@ -1828,6 +1835,12 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontWeight: '700',
     letterSpacing: 0.2,
+  },
+  emptyQueueActionSubText: {
+    fontSize: 10.5,
+    color: colors.subInk,
+    fontWeight: '600',
+    letterSpacing: 0.25,
   },
   emptyQueueMeta: {
     color: colors.primary,

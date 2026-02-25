@@ -500,6 +500,7 @@ function normalizeTimeline(
     stateScheduleFloorDays - timelineJitterToleranceDays,
   );
   const parsedReviewStability = parseRuntimeFiniteNumber(card.stability);
+  const hasFiniteReviewStability = Number.isFinite(parsedReviewStability);
   const expectedReviewScheduleDays = normalizeScheduledDays(
     parsedReviewStability ?? (typeof card.stability === 'number' ? card.stability : Number.NaN),
     'review',
@@ -527,6 +528,11 @@ function normalizeTimeline(
     normalizedState === 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
     dueDaysFromUpdated > STABILITY_MAX;
+  const dueBeyondReviewInvalidStabilityWindow =
+    normalizedState === 'review' &&
+    !hasFiniteReviewStability &&
+    Number.isFinite(dueDaysFromUpdated) &&
+    dueDaysFromUpdated > REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS;
   const dueBeyondStateWindow =
     normalizedState !== 'review' &&
     Number.isFinite(dueDaysFromUpdated) &&
@@ -557,14 +563,15 @@ function normalizeTimeline(
   const useReviewStabilityFallbackForOutlierDue =
     normalizedState === 'review' &&
     Number.isFinite(expectedReviewScheduleDays) &&
-    (dueBeyondReviewMaxWindow || dueBeyondReviewStabilityWindow);
+    (dueBeyondReviewMaxWindow || dueBeyondReviewStabilityWindow || dueBeyondReviewInvalidStabilityWindow);
   const dueNeedsRepair =
     !rawDueAtIsValid ||
     dueNotAfterUpdatedAt ||
     dueBelowStateFloor ||
     dueBeyondStateWindow ||
     dueBeyondReviewMaxWindow ||
-    dueBeyondReviewStabilityWindow;
+    dueBeyondReviewStabilityWindow ||
+    dueBeyondReviewInvalidStabilityWindow;
   const dueTimelineAnchor = dueNeedsRepair
     ? useReviewStabilityFallbackForDueRepair
       ? addDaysIso(updatedAt, repairedReviewScheduleDaysForInvalidDue)

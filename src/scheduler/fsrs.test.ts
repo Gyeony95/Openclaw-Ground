@@ -3496,6 +3496,44 @@ describe('fsrs scheduler', () => {
     expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
+  it('repairs long review schedules conservatively when stability is malformed', () => {
+    const card = {
+      ...createNewCard('due-anchor-malformed-stability-review', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 14),
+      stability: Number.NaN,
+      difficulty: 5,
+      reps: 20,
+      lapses: 2,
+    };
+
+    const reviewed = reviewCard(card, 3, NOW);
+
+    expect(reviewed.card.state).toBe('review');
+    expect(reviewed.scheduledDays).toBeLessThanOrEqual(2);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
+  });
+
+  it('keeps review interval previews conservative for malformed-stability long schedules', () => {
+    const card = {
+      ...createNewCard('preview-malformed-stability-review', 'letter', NOW),
+      state: 'review' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 14),
+      stability: Number.NaN,
+      difficulty: 5,
+      reps: 20,
+      lapses: 2,
+    };
+
+    const preview = previewIntervals(card, NOW);
+
+    expect(preview[2]).toBeLessThanOrEqual(2);
+    expect(preview[3]).toBeLessThanOrEqual(2);
+    expect(preview[4]).toBeLessThanOrEqual(2);
+  });
+
   it('treats far-future review due timestamps as outliers and repairs them toward stability windows', () => {
     const reviewAt = addDaysIso(NOW, 4);
     const baseline = {
