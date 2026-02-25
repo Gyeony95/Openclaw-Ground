@@ -828,6 +828,26 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(NOW, 15 / 1440));
   });
 
+  it('treats numeric infinite counters as saturated review history for phase inference', () => {
+    const runtimeCard = {
+      ...createNewCard('overflow-numeric-history', 'state inference', NOW),
+      state: 'legacy-review-state',
+      updatedAt: NOW,
+      dueAt: NOW,
+      reps: Number.POSITIVE_INFINITY as unknown as number,
+      lapses: 0,
+      stability: '0.2',
+      difficulty: '6.2',
+    } as unknown as Card;
+
+    const reviewed = reviewCard(runtimeCard, 2, NOW).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.reps).toBe(Number.MAX_SAFE_INTEGER);
+    expect(reviewed.lapses).toBe(0);
+    expect(reviewed.dueAt).toBe(addDaysIso(NOW, 15 / 1440));
+  });
+
   it('coerces string stability for invalid review due dates without changing repair scheduling', () => {
     const reviewedAt = addDaysIso(NOW, 4);
     const numericCard = {

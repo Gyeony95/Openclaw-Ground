@@ -2373,6 +2373,19 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(infiniteRepsReview)).toBe(false);
   });
 
+  it('treats overflow scientific reps strings as saturated non-negative counters', () => {
+    const overflowRepsReview = {
+      ...createNewCard('repair-review-overflow-reps', 'test', NOW),
+      state: 'review' as const,
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T12:00:00.000Z',
+      reps: '1e309' as unknown as number,
+      stability: 2,
+    };
+
+    expect(hasScheduleRepairNeed(overflowRepsReview)).toBe(false);
+  });
+
   it('treats Infinity-like stability strings as max stability for review window validation', () => {
     const infiniteStabilityReview = {
       ...createNewCard('repair-review-infinity-stability', 'test', NOW),

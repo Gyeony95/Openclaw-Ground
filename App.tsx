@@ -432,6 +432,7 @@ export default function App() {
     () => !loading && !isAddBusy && !isAddLocked && trimmedWordLength > 0 && trimmedMeaningLength > 0,
     [isAddBusy, isAddLocked, loading, trimmedWordLength, trimmedMeaningLength],
   );
+  const addButtonDisabled = !canAttemptAdd || !canAdd;
   const addButtonLabel = loading
     ? 'Loading...'
     : isAddBusy
@@ -1442,15 +1443,15 @@ export default function App() {
                   style={({ pressed }) => [
                     styles.primaryBtn,
                     pressed && styles.primaryBtnPressed,
-                    !canAttemptAdd && styles.primaryBtnDisabled,
+                    addButtonDisabled && styles.primaryBtnDisabled,
                     !canAdd && canAttemptAdd && styles.primaryBtnInactive,
                   ]}
                   onPress={handleAddCard}
-                  disabled={!canAttemptAdd}
+                  disabled={addButtonDisabled}
                   accessibilityRole="button"
                   accessibilityLabel={`Add card. ${addButtonLabel}.`}
                   accessibilityHint={canAdd ? 'Adds this word to your study deck' : addFormHint}
-                  accessibilityState={{ disabled: !canAttemptAdd, busy: isAddBusy }}
+                  accessibilityState={{ disabled: addButtonDisabled, busy: isAddBusy }}
                 >
                   <View style={styles.primaryBtnContent}>
                     {isAddBusy ? <ActivityIndicator size="small" color="#fff" /> : null}

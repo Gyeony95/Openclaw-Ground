@@ -756,6 +756,12 @@ function normalizeCounter(value: unknown): number {
     }
   }
   const parsed = parseRuntimeFiniteNumber(value);
+  if (parsed === Number.POSITIVE_INFINITY) {
+    return COUNTER_MAX;
+  }
+  if (parsed === Number.NEGATIVE_INFINITY) {
+    return 0;
+  }
   if (!Number.isFinite(parsed)) {
     return 0;
   }

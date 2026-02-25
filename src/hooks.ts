@@ -178,6 +178,9 @@ function normalizeNonNegativeCounter(value: unknown): number | null {
   if (value === Number.POSITIVE_INFINITY) {
     return Number.MAX_SAFE_INTEGER;
   }
+  if (value === Number.NEGATIVE_INFINITY) {
+    return null;
+  }
   if (typeof value === 'string') {
     const trimmed = value.trim().toLowerCase();
     if (trimmed === 'infinity' || trimmed === '+infinity') {
@@ -189,6 +192,12 @@ function normalizeNonNegativeCounter(value: unknown): number | null {
   }
   const parsed = parseRuntimeFiniteNumber(value);
   if (parsed === null) {
+    return null;
+  }
+  if (parsed === Number.POSITIVE_INFINITY) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+  if (parsed === Number.NEGATIVE_INFINITY) {
     return null;
   }
   if (parsed < 0) {
