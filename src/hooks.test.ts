@@ -1870,6 +1870,21 @@ describe('countOverdueCards', () => {
     expect(countOverdueCards([atGraceCutoff], NOW)).toBe(1);
   });
 
+  it('uses runtime-aligned queue clocks so overdue metrics match queue eligibility', () => {
+    const recentlyOverdueAtRuntime = {
+      ...createNewCard('overdue-runtime-aligned', 'test', NOW),
+      dueAt: '2026-02-23T12:01:30.000Z',
+    };
+
+    expect(
+      countOverdueCards(
+        [recentlyOverdueAtRuntime],
+        '2026-02-23T12:00:00.000Z',
+        '2026-02-23T12:03:00.000Z',
+      ),
+    ).toBe(1);
+  });
+
   it('returns zero for invalid runtime clocks', () => {
     const overdue = { ...createNewCard('overdue-invalid-clock', 'test', NOW), dueAt: '2026-02-23T10:00:00.000Z' };
     expect(countOverdueCards([overdue], 'bad-clock')).toBe(0);

@@ -117,6 +117,30 @@ function isRuntimeCard(value: unknown): value is Card {
   );
 }
 
+function isRuntimeCardTimelineCandidate(
+  value: unknown,
+): value is Pick<Card, 'id' | 'word' | 'meaning' | 'state' | 'createdAt' | 'updatedAt'> &
+  Partial<Pick<Card, 'dueAt' | 'stability' | 'reps' | 'lapses'>> {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const candidate = value as Partial<Card>;
+  const id = safeReadUnknown(() => candidate.id);
+  const word = safeReadUnknown(() => candidate.word);
+  const meaning = safeReadUnknown(() => candidate.meaning);
+  const state = safeReadUnknown(() => candidate.state);
+  const createdAt = safeReadUnknown(() => candidate.createdAt);
+  const updatedAt = safeReadUnknown(() => candidate.updatedAt);
+  return (
+    isValidCardId(id) &&
+    typeof word === 'string' &&
+    typeof meaning === 'string' &&
+    typeof state === 'string' &&
+    typeof createdAt === 'string' &&
+    typeof updatedAt === 'string'
+  );
+}
+
 function parseTimeOrNaN(iso: string): number {
   const normalized = normalizeIsoInput(iso);
   if (!normalized || !isIsoDateTime(normalized)) {
@@ -597,15 +621,18 @@ export function findNextUpcomingCard(cards: Card[], currentIso: string, runtimeN
     .sort(compareDueCards)[0];
 }
 
-export function countOverdueCards(cards: Card[], currentIso: string): number {
-  const nowMs = parseTimeOrNaN(currentIso);
+export function countOverdueCards(cards: Card[], currentIso: string, runtimeNowIso = nowIso()): number {
+  const effectiveCurrentIso = isValidIso(currentIso)
+    ? resolveQueueClock(currentIso, runtimeNowIso)
+    : currentIso;
+  const nowMs = parseTimeOrNaN(effectiveCurrentIso);
   if (!Number.isFinite(nowMs)) {
     return 0;
   }
   const overdueCutoff = nowMs - OVERDUE_GRACE_MS;
 
   return cards.filter((card) => {
-    if (!isRuntimeCard(card)) {
+    if (!isRuntimeCardTimelineCandidate(card)) {
       return false;
     }
     if (hasScheduleRepairNeed(card)) {

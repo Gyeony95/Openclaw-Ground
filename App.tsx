@@ -303,7 +303,7 @@ export default function App() {
       ? formatRemainingQueueLabel(Math.max(0, dueQueueCount - 1))
       : 'No cards remaining';
   const overdueNow = useMemo(() => {
-    return countOverdueCards(cards, clockIso);
+    return countOverdueCards(cards, clockIso, nowIso());
   }, [cards, clockIso]);
   const overdueQueueLabel = loading
     ? '--'
