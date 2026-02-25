@@ -613,11 +613,13 @@ export default function App() {
     }
     setAddActionError(null);
     if (!normalizedWord) {
+      setShowAddSuccess(false);
       setAddAttempted(true);
       wordInputRef.current?.focus();
       return;
     }
     if (!normalizedMeaning) {
+      setShowAddSuccess(false);
       setAddAttempted(true);
       meaningInputRef.current?.focus();
       return;
@@ -631,6 +633,7 @@ export default function App() {
     try {
       addCard(normalizedWord, normalizedMeaning, normalizedNotes || undefined);
     } catch {
+      setShowAddSuccess(false);
       addLockRef.current = false;
       setIsAddLocked(false);
       setIsAddBusy(false);

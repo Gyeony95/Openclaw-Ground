@@ -129,6 +129,20 @@ describe('fsrs scheduler', () => {
     }
   });
 
+  it('falls back to runtime wall clock when creation timestamp is exactly at the future-skew boundary', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const card = createNewCard('future-boundary', 'timestamp', '2026-02-24T02:30:00.000Z');
+
+      expect(card.createdAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.updatedAt).toBe('2026-02-23T14:30:00.000Z');
+      expect(card.dueAt).toBe('2026-02-23T14:30:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('rejects stale-timeline recovery review timestamps that are pathologically future-skewed from wall clock', () => {
     jest.useFakeTimers();
     try {
@@ -201,6 +215,20 @@ describe('fsrs scheduler', () => {
       expect(card.createdAt).toBe('2026-02-23T16:00:00.000Z');
       expect(card.updatedAt).toBe('2026-02-23T16:00:00.000Z');
       expect(card.dueAt).toBe('2026-02-23T16:00:00.000Z');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('keeps creation timestamps that are just below the future-skew boundary', () => {
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-02-23T14:30:00.000Z'));
+      const card = createNewCard('small-skew-boundary', 'timestamp', '2026-02-24T02:29:59.999Z');
+
+      expect(card.createdAt).toBe('2026-02-24T02:29:59.999Z');
+      expect(card.updatedAt).toBe('2026-02-24T02:29:59.999Z');
+      expect(card.dueAt).toBe('2026-02-24T02:29:59.999Z');
     } finally {
       jest.useRealTimers();
     }
