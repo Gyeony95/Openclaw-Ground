@@ -5,6 +5,7 @@ import { MINUTE_IN_DAYS, STABILITY_MAX } from './constants';
 
 const NOW = '2026-02-23T12:00:00.000Z';
 const MAX_ISO = '+275760-09-13T00:00:00.000Z';
+const MIN_ISO = '-271821-04-20T00:00:00.000Z';
 
 describe('fsrs scheduler', () => {
   it('does not mutate the input card while computing a review result', () => {
@@ -2301,6 +2302,25 @@ describe('fsrs scheduler', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('keeps rollback review cadence stable when recovered anchors hit minimum ISO bounds', () => {
+    const boundaryRollback = {
+      ...createNewCard('rollback-min-iso', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: '-271821-04-21T12:00:00.000Z',
+      dueAt: '-271821-04-22T12:00:00.000Z',
+      stability: 1,
+      difficulty: 5,
+      reps: 8,
+      lapses: 1,
+    };
+
+    const reviewed = reviewCard(boundaryRollback, 3, MIN_ISO);
+
+    expect(reviewed.card.updatedAt).toBe(MIN_ISO);
+    expect(reviewed.scheduledDays).toBeGreaterThanOrEqual(1);
+    expect(Date.parse(reviewed.card.dueAt)).toBeGreaterThan(Date.parse(reviewed.card.updatedAt));
   });
 
   it('keeps valid dueAt as a timeline anchor when runtime wall clock is non-finite', () => {

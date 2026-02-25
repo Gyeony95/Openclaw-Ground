@@ -1555,9 +1555,17 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
       ? currentIso
       : addDaysIso(currentIso, rollbackScheduleDays)
     : dueAt;
-  const elapsedDays = normalizeElapsedDays(daysBetween(scheduleAnchorUpdatedAt, currentIso));
-  const scheduledDays = daysBetween(scheduleAnchorUpdatedAt, scheduleAnchorDueAt);
-  const previousScheduledDays = normalizeScheduledDays(scheduledDays, currentState);
+  const anchoredElapsedDays = normalizeElapsedDays(daysBetween(scheduleAnchorUpdatedAt, currentIso));
+  const anchoredScheduledDays = daysBetween(scheduleAnchorUpdatedAt, scheduleAnchorDueAt);
+  const rollbackScheduledDays = normalizeScheduledDays(rollbackScheduleDays, currentState);
+  const previousScheduledDays = timelineRolledBack
+    ? anchoredScheduledDays > 0
+      ? normalizeScheduledDays(anchoredScheduledDays, currentState)
+      : rollbackScheduledDays
+    : normalizeScheduledDays(anchoredScheduledDays, currentState);
+  const elapsedDays = timelineRolledBack && currentState === 'review'
+    ? previousScheduledDays
+    : anchoredElapsedDays;
   const state = nextState(currentState, normalizedRating);
   const phase = currentState;
   const lapseIncrement = shouldCountLapse(currentState, normalizedRating) ? 1 : 0;
