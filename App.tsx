@@ -760,6 +760,10 @@ export default function App() {
     if (!dueCard || isReviewBusy || studyMode !== 'multiple-choice') {
       return;
     }
+    if (quizSelectionLocked && normalizedSelectedQuizOptionId && normalizedSelectedQuizOptionId !== optionId) {
+      setReviewActionError('Answer is locked for this attempt. Rate this card to continue.');
+      return;
+    }
     setSelectedQuizOptionId((currentSelectedOptionId) => {
       const nextSelectionId = resolveLockedQuizSelection(quizOptions, currentSelectedOptionId, optionId);
       if (!nextSelectionId || !hasValidQuizSelection(nextSelectionId, quizOptions)) {

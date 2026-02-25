@@ -614,11 +614,13 @@ function normalizeTimeline(
     REVIEW_SCHEDULE_FLOOR_DAYS,
     REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
   );
-  const repairedReviewScheduleDaysForOutlierDue = clamp(
-    expectedReviewScheduleDays,
-    REVIEW_SCHEDULE_FLOOR_DAYS,
-    REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
-  );
+  const repairedReviewScheduleDaysForOutlierDue = hasFiniteReviewStability
+    ? clamp(
+        expectedReviewScheduleDays,
+        REVIEW_SCHEDULE_FLOOR_DAYS,
+        REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS,
+      )
+    : REVIEW_INVALID_DUE_STABILITY_FALLBACK_MAX_DAYS;
   const dueNotAfterUpdatedAt =
     Number.isFinite(rawDueMs) &&
     rawDueMs < updatedAtMs - TIMELINE_JITTER_TOLERANCE_MS &&
