@@ -447,6 +447,23 @@ describe('applyDueReview', () => {
     expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:00.000Z');
   });
 
+  it('accepts boxed and Date-like review clocks from runtime bridges', () => {
+    const due = createNewCard('boxed-review-clock', 'safe', NOW);
+    const reviewedAt = new Date('2026-02-23T12:00:30.000Z');
+
+    const result = applyDueReview(
+      [due],
+      due.id,
+      3,
+      new String('2026-02-23T12:00:00.000Z') as unknown as string,
+      reviewedAt as unknown as string,
+    );
+
+    expect(result.reviewed).toBe(true);
+    expect(result.reviewedAt).toBe('2026-02-23T12:00:30.000Z');
+    expect(result.cards[0].updatedAt).toBe('2026-02-23T12:00:30.000Z');
+  });
+
   it('uses runtime review clock when rendered clock trails so visible due cards remain reviewable', () => {
     const nearBoundary = {
       ...createNewCard('deterministic-valid-review-clock', 'safe', NOW),
@@ -1175,6 +1192,22 @@ describe('collectDueCards', () => {
       [nearFuture],
       '2026-02-23T12:00:00.000Z',
       '2026-02-23T12:00:21.000Z',
+    );
+
+    expect(dueCards).toHaveLength(1);
+    expect(dueCards[0].id).toBe(nearFuture.id);
+  });
+
+  it('accepts boxed and Date-like queue clock values from runtime bridges', () => {
+    const nearFuture = {
+      ...createNewCard('boxed-queue-clock', 'clock', NOW),
+      dueAt: '2026-02-23T12:00:20.000Z',
+    };
+
+    const dueCards = collectDueCards(
+      [nearFuture],
+      new String('2026-02-23T12:00:00.000Z') as unknown as string,
+      new Date('2026-02-23T12:00:21.000Z') as unknown as string,
     );
 
     expect(dueCards).toHaveLength(1);
@@ -3014,6 +3047,15 @@ describe('resolveReviewClock', () => {
     expect(resolveReviewClock('2026-02-23T12:00:00Z', '2026-02-23T12:00:10Z')).toBe('2026-02-23T12:00:10.000Z');
   });
 
+  it('accepts boxed and Date-like clocks from runtime bridges', () => {
+    expect(
+      resolveReviewClock(
+        new String('2026-02-23T12:00:00.000Z') as unknown as string,
+        new Date('2026-02-23T12:00:10.000Z') as unknown as string,
+      ),
+    ).toBe('2026-02-23T12:00:10.000Z');
+  });
+
   it('uses runtime clock when runtime clock moves backward slightly', () => {
     expect(resolveReviewClock('2026-02-23T12:00:10.000Z', '2026-02-23T12:00:00.000Z')).toBe(
       '2026-02-23T12:00:00.000Z',
@@ -3314,6 +3356,17 @@ describe('resolveAddCardClock', () => {
     nowSpy.mockRestore();
 
     expect(resolved).toBe('2026-02-23T12:34:56.000Z');
+  });
+
+  it('accepts boxed and Date-like add-card clocks from runtime bridges', () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-02-23T12:00:00.000Z'));
+    const resolved = resolveAddCardClock(
+      new String('2026-02-23T12:00:30.000Z') as unknown as string,
+      new Date('2026-02-23T12:00:00.000Z') as unknown as string,
+    );
+    nowSpy.mockRestore();
+
+    expect(resolved).toBe('2026-02-23T12:00:00.000Z');
   });
 });
 

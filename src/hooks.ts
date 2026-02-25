@@ -507,10 +507,40 @@ function normalizeMergeCounter(value: number): number {
 }
 
 function normalizeIsoInput(value: unknown): string | undefined {
-  if (typeof value !== 'string') {
+  const normalizedValue = (() => {
+    if (value instanceof Date) {
+      const dateMs = value.getTime();
+      return Number.isFinite(dateMs) ? toSafeIso(dateMs) : undefined;
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (value instanceof String) {
+      return value.valueOf();
+    }
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+    try {
+      const valueOf = (value as { valueOf?: () => unknown }).valueOf;
+      if (typeof valueOf === 'function') {
+        const unboxed = valueOf.call(value);
+        if (typeof unboxed === 'string') {
+          return unboxed;
+        }
+        if (typeof unboxed === 'number' && Number.isFinite(unboxed)) {
+          return toSafeIso(unboxed);
+        }
+      }
+    } catch {
+      return undefined;
+    }
+    return undefined;
+  })();
+  if (typeof normalizedValue !== 'string') {
     return undefined;
   }
-  const trimmed = value.trim();
+  const trimmed = normalizedValue.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
