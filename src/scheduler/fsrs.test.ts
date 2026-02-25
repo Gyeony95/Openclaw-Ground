@@ -925,6 +925,41 @@ describe('fsrs scheduler', () => {
     expect(reviewed.dueAt).toBe(addDaysIso(addDaysIso(NOW, 10 / 1440), 15 / 1440));
   });
 
+  it('keeps explicit learning cards with review history on short retry windows in relearning cadence', () => {
+    const runtimeCard = {
+      ...createNewCard('learning-with-history-short-retry', 'state inference', NOW),
+      state: 'learning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 5 / 1440),
+      reps: 4,
+      lapses: 1,
+      stability: 0.3,
+      difficulty: 5.8,
+    };
+
+    const reviewed = reviewCard(runtimeCard, 2, addDaysIso(NOW, 5 / 1440)).card;
+
+    expect(reviewed.state).toBe('relearning');
+    expect(reviewed.dueAt).toBe(addDaysIso(addDaysIso(NOW, 5 / 1440), 15 / 1440));
+  });
+
+  it('keeps preview intervals aligned with relearning for explicit learning cards with review history', () => {
+    const runtimeCard = {
+      ...createNewCard('learning-preview-history-short-retry', 'state inference', NOW),
+      state: 'learning' as const,
+      updatedAt: NOW,
+      dueAt: addDaysIso(NOW, 5 / 1440),
+      reps: 4,
+      lapses: 1,
+      stability: 0.3,
+      difficulty: 5.8,
+    };
+
+    const preview = previewIntervals(runtimeCard, addDaysIso(NOW, 5 / 1440));
+
+    expect(preview[2]).toBe(15 / 1440);
+  });
+
   it('infers relearning from collapsed timelines when review history exists and stability is sub-day', () => {
     const runtimeCard = {
       ...createNewCard('relearning-collapsed-history', 'state inference', NOW),

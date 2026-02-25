@@ -1288,9 +1288,12 @@ export default function App() {
                               const optionLetter = String.fromCharCode(65 + index);
                               const optionPrefix = showCorrect ? 'Correct: ' : showIncorrect ? 'Incorrect: ' : '';
                               const quizOptionLocked = quizOptionsLocked || quizSelectionLocked;
+                              const selectionLockedByChoice = quizSelectionLocked && hasQuizSelection;
                               const quizOptionHint = quizOptionLocked
-                                ? hasQuizSelection
-                                  ? 'Selection is locked until this review is rated'
+                                ? selectionLockedByChoice
+                                  ? isSelected
+                                    ? 'Selected answer is locked until this review is rated'
+                                    : 'Another answer is locked for this attempt'
                                   : 'Answer options are temporarily unavailable'
                                 : 'Select this meaning';
                               return (
@@ -1311,6 +1314,7 @@ export default function App() {
                                   accessibilityHint={quizOptionHint}
                                   accessibilityState={{
                                     selected: isSelected,
+                                    checked: isSelected,
                                     disabled: quizOptionLocked,
                                   }}
                                 >
@@ -1328,6 +1332,9 @@ export default function App() {
                                     {optionPrefix}
                                     {option.text}
                                   </Text>
+                                  {isSelected && hasQuizSelection ? (
+                                    <Text style={styles.quizOptionSelectionTag}>Selected choice</Text>
+                                  ) : null}
                                 </Pressable>
                               );
                             })}
@@ -2178,6 +2185,15 @@ const styles = StyleSheet.create({
   },
   quizOptionTextIncorrect: {
     color: colors.danger,
+  },
+  quizOptionSelectionTag: {
+    marginTop: 4,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '700',
+    color: colors.subInk,
+    textTransform: 'uppercase',
+    letterSpacing: 0.45,
   },
   quizFeedback: {
     fontSize: 12,

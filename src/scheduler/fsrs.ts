@@ -859,6 +859,11 @@ function inferStateFromCard(card: Pick<Card, 'state' | 'reps' | 'lapses' | 'stab
     if (scheduledDays >= RELEARNING_SCHEDULE_FLOOR_DAYS) {
       return 'relearning';
     }
+    if (hasReviewHistory) {
+      // Explicit learning with review history on short retry windows should
+      // stay in relearning semantics rather than collapsing to fresh learning.
+      return 'relearning';
+    }
     return parsedState;
   }
 
