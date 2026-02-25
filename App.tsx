@@ -263,10 +263,10 @@ export default function App() {
       : `${queueShareLabel} · ${dueWithinDay.toLocaleString()} due in next 24h`;
   const queueProgressMetaCompact = loading
     ? '--'
-    : stats.total === 0
-      ? 'No cards yet'
     : scheduleRepairCount > 0
       ? `${dueQueueCount.toLocaleString()}/${stats.total.toLocaleString()} due · ${scheduleRepairCount.toLocaleString()} ${scheduleRepairCount === 1 ? 'repair' : 'repairs'}`
+    : stats.total === 0
+      ? 'No cards yet'
       : `${dueQueueCount.toLocaleString()}/${stats.total.toLocaleString()} due · ${dueWithinDay.toLocaleString()} next 24h`;
   const queueProgressTone = loading
     ? colors.primary

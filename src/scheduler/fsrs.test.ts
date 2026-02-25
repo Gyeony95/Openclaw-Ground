@@ -5860,6 +5860,46 @@ describe('fsrs scheduler', () => {
     expect(reviewed.lapses).toBeLessThanOrEqual(reviewed.reps);
   });
 
+  it('keeps repaired lapse counters bounded after successful reviews', () => {
+    const corruptedCounters = {
+      ...createNewCard('counter-repair-success', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -2),
+      dueAt: NOW,
+      reps: 0,
+      lapses: 6,
+      stability: 2,
+      difficulty: 5,
+    };
+
+    const reviewed = reviewCard(corruptedCounters, 4, NOW).card;
+
+    expect(reviewed.reps).toBe(1);
+    expect(reviewed.lapses).toBe(0);
+    expect(reviewed.lapses).toBeLessThanOrEqual(reviewed.reps);
+  });
+
+  it('keeps preview intervals finite and ordered when persisted lapses exceed reps', () => {
+    const corruptedCounters = {
+      ...createNewCard('counter-repair-preview', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -3),
+      dueAt: NOW,
+      reps: 1,
+      lapses: 9,
+      stability: 2,
+      difficulty: 5,
+    };
+
+    const preview = previewIntervals(corruptedCounters, NOW);
+
+    expect(Number.isFinite(preview[1])).toBe(true);
+    expect(preview[1]).toBeGreaterThan(0);
+    expect(preview[2]).toBeGreaterThanOrEqual(preview[1]);
+    expect(preview[3]).toBeGreaterThanOrEqual(preview[2]);
+    expect(preview[4]).toBeGreaterThanOrEqual(preview[3]);
+  });
+
   it('accepts boxed numeric ratings so runtime-bridged review events still schedule correctly', () => {
     const card = {
       ...createNewCard('boxed-rating', 'definition', NOW),

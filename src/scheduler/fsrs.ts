@@ -1411,7 +1411,7 @@ function normalizeSchedulingCard(
     normalizedStabilityFallback,
   );
   const normalizedReps = normalizeCounter(snapshot.reps);
-  const normalizedLapses = normalizeCounter(snapshot.lapses);
+  const normalizedLapses = Math.min(normalizeCounter(snapshot.lapses), normalizedReps);
 
   return {
     currentIso,
@@ -1539,6 +1539,8 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
     Number.isFinite(nextUpdatedMs) && Number.isFinite(createdMs) && createdMs > nextUpdatedMs
       ? currentIso
       : createdAt;
+  const nextReps = Math.min(COUNTER_MAX, previousReps + 1);
+  const nextLapses = Math.min(nextReps, Math.min(COUNTER_MAX, previousLapses + lapseIncrement));
 
   return {
     scheduledDays: safeScheduledDays,
@@ -1548,8 +1550,8 @@ function reviewNormalizedCard(baseCard: Card, currentIso: string, rating: Rating
       state,
       difficulty: nextDifficulty,
       stability: normalizedNextStability,
-      reps: Math.min(COUNTER_MAX, previousReps + 1),
-      lapses: Math.min(COUNTER_MAX, previousLapses + lapseIncrement),
+      reps: nextReps,
+      lapses: nextLapses,
       updatedAt: currentIso,
       dueAt: nextDueAt,
     },
