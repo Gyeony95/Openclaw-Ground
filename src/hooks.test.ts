@@ -3109,6 +3109,39 @@ describe('hasScheduleRepairNeed', () => {
     expect(hasScheduleRepairNeed(boxedStringReview)).toBe(false);
   });
 
+  it('accepts valueOf-backed string state aliases when evaluating repair eligibility', () => {
+    const valueOfStateReview = {
+      ...createNewCard('repair-review-valueof-string-state', 'test', NOW),
+      state: {
+        valueOf() {
+          return new String(' reviewed ');
+        },
+      } as unknown as Card['state'],
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T12:00:00.000Z',
+    } as Card;
+
+    expect(hasScheduleRepairNeed(valueOfStateReview)).toBe(false);
+  });
+
+  it('accepts toString-backed state aliases when valueOf throws during repair evaluation', () => {
+    const toStringStateReview = {
+      ...createNewCard('repair-review-tostring-state', 'test', NOW),
+      state: {
+        valueOf() {
+          throw new Error('state bridge valueOf failure');
+        },
+        toString() {
+          return ' rev ';
+        },
+      } as unknown as Card['state'],
+      updatedAt: '2026-02-23T12:00:00.000Z',
+      dueAt: '2026-02-24T12:00:00.000Z',
+    } as Card;
+
+    expect(hasScheduleRepairNeed(toStringStateReview)).toBe(false);
+  });
+
   it('treats Infinity-like reps strings as valid non-negative counters', () => {
     const infiniteRepsReview = {
       ...createNewCard('repair-review-infinity-reps', 'test', NOW),

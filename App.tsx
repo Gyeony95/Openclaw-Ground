@@ -1079,7 +1079,7 @@ export default function App() {
                       isReviewBusy && styles.reviewCardBusy,
                     ]}
                     accessible
-                    accessibilityLabel={`Review card ${dueCardWord}. ${dueCardStateConfig?.label ?? 'Learning'}. ${relativeDueLabel}.`}
+                    accessibilityLabel={`Review card ${dueCardWord}. ${dueCardStateConfig?.label ?? 'Learning'}. ${relativeDueLabel}. ${queuePositionLabel}. ${remainingQueueLabel}.`}
                     accessibilityState={{ busy: isReviewBusy || undefined }}
                   >
                     <View style={[styles.reviewTimeline, { borderColor: `${dueCardUrgency.tone}44` }]}>

@@ -317,13 +317,51 @@ function isWholeNonNegativeCounter(value: unknown): boolean {
 }
 
 function normalizeReviewState(value: unknown): Card['state'] | null {
-  if (value === 'review' || value === 'relearning' || value === 'learning') {
-    return value;
+  const normalizedInput = (() => {
+    if (typeof value === 'string' || value instanceof String) {
+      return value.valueOf();
+    }
+    if (!value || typeof value !== 'object') {
+      return null;
+    }
+    const valueObject = value as { valueOf?: () => unknown; toString?: () => unknown };
+    try {
+      const valueOf = valueObject.valueOf;
+      if (typeof valueOf === 'function') {
+        const unboxed = valueOf.call(value);
+        if (typeof unboxed === 'string') {
+          return unboxed;
+        }
+        if (unboxed instanceof String) {
+          return unboxed.valueOf();
+        }
+      }
+    } catch {
+      // Fall through to toString for bridged runtime objects with broken valueOf.
+    }
+    try {
+      const toString = valueObject.toString;
+      if (typeof toString === 'function') {
+        const stringified = toString.call(value);
+        if (typeof stringified === 'string') {
+          return stringified;
+        }
+        if (stringified instanceof String) {
+          return stringified.valueOf();
+        }
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  })();
+  if (normalizedInput === 'review' || normalizedInput === 'relearning' || normalizedInput === 'learning') {
+    return normalizedInput;
   }
-  if (typeof value !== 'string') {
+  if (typeof normalizedInput !== 'string') {
     return null;
   }
-  const normalized = value.trim().toLowerCase();
+  const normalized = normalizedInput.trim().toLowerCase();
   if (normalized === 'reviewing') {
     return 'review';
   }

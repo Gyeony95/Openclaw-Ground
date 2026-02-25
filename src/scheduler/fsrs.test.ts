@@ -7150,6 +7150,71 @@ describe('fsrs scheduler', () => {
     expect(boxed.card.notes).toBe('boxed note');
   });
 
+  it('accepts valueOf-backed string state aliases during review normalization', () => {
+    const primitiveCard = {
+      ...createNewCard('valueof-state-primitive', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -3),
+      dueAt: NOW,
+      reps: 6,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+    const valueOfStateCard = {
+      ...primitiveCard,
+      id: 'valueof-state-card',
+      state: {
+        valueOf() {
+          return new String(' reviewed ');
+        },
+      } as unknown as Card['state'],
+    } as Card;
+
+    const primitive = reviewCard(primitiveCard, 3, NOW);
+    const valueOfState = reviewCard(valueOfStateCard, 3, NOW);
+
+    expect(valueOfState.scheduledDays).toBe(primitive.scheduledDays);
+    expect(valueOfState.card.state).toBe(primitive.card.state);
+    expect(valueOfState.card.reps).toBe(primitive.card.reps);
+    expect(valueOfState.card.lapses).toBe(primitive.card.lapses);
+    expect(valueOfState.card.dueAt).toBe(primitive.card.dueAt);
+  });
+
+  it('accepts toString-backed state aliases when valueOf throws during review normalization', () => {
+    const primitiveCard = {
+      ...createNewCard('tostring-state-primitive', 'definition', NOW),
+      state: 'review' as const,
+      updatedAt: addDaysIso(NOW, -3),
+      dueAt: NOW,
+      reps: 6,
+      lapses: 2,
+      stability: 3,
+      difficulty: 5,
+    };
+    const toStringStateCard = {
+      ...primitiveCard,
+      id: 'tostring-state-card',
+      state: {
+        valueOf() {
+          throw new Error('state bridge valueOf failure');
+        },
+        toString() {
+          return ' rev ';
+        },
+      } as unknown as Card['state'],
+    } as Card;
+
+    const primitive = reviewCard(primitiveCard, 3, NOW);
+    const toStringState = reviewCard(toStringStateCard, 3, NOW);
+
+    expect(toStringState.scheduledDays).toBe(primitive.scheduledDays);
+    expect(toStringState.card.state).toBe(primitive.card.state);
+    expect(toStringState.card.reps).toBe(primitive.card.reps);
+    expect(toStringState.card.lapses).toBe(primitive.card.lapses);
+    expect(toStringState.card.dueAt).toBe(primitive.card.dueAt);
+  });
+
   it('accepts boxed review timestamps so runtime-bridged clocks keep scheduling deterministic', () => {
     const card = {
       ...createNewCard('boxed-now-review', 'definition', NOW),
